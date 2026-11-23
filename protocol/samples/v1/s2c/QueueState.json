@@ -1,0 +1,12 @@
+{
+  "v": 1,
+  "id": "m_queuestate",
+  "type": "QueueState",
+  "ts": "2026-11-15T10:00:00Z",
+  "seq": 12,
+  "payload": {
+    "waitingMs": 30000,
+    "waitingPlayers": 4,
+    "ratingWindow": 300
+  }
+}

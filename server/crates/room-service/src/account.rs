@@ -148,8 +148,21 @@ impl AccountStore {
     }
 
     /// 账号页面视图：绑定状态与掩码手机号，不暴露原始身份。
+    /// 天梯字段由调用方按积分存储补全。
     pub fn view(&self, player_id: &str) -> Option<AccountView> {
         self.by_id.get(player_id).map(account_view)
+    }
+
+    /// 全部账号 id，按持久化序号（内存模式为创建顺序的 `BTreeMap` 顺序）。
+    pub fn player_ids(&self) -> Vec<String> {
+        self.by_id.keys().cloned().collect()
+    }
+
+    /// 账号展示名；账号不存在返回 `None`。
+    pub fn display_name(&self, player_id: &str) -> Option<&str> {
+        self.by_id
+            .get(player_id)
+            .map(|account| account.display_name.as_str())
     }
 
     /// 账号已解锁的成就 id，按 id 升序。
@@ -327,6 +340,10 @@ fn account_view(account: &Account) -> AccountView {
         steam_bound: account.steam_id.is_some(),
         phone_bound: account.phone.is_some(),
         masked_phone: account.phone.as_deref().map(mask_phone),
+        // 未结算账号按初始分与青铜展示；下发前由房间服务按积分存储补全。
+        rating: u64::try_from(crate::rating::DEFAULT_RATING).unwrap_or(0),
+        tier: crate::rating::TIERS[1].to_string(),
+        highest_tier: crate::rating::TIERS[1].to_string(),
     }
 }
 

@@ -660,6 +660,13 @@ async fn forfeit_mid_game_ranks_departed_and_finishes_at_one_left() {
     .expect("仅剩 1 人时应立即结束对局");
 
     assert_eq!(game_over.ranking.len(), 8, "排名应包含全部 8 个座位");
+    assert!(
+        game_over.rating_delta.is_none()
+            && game_over.rating_after.is_none()
+            && game_over.tier_before.is_none()
+            && game_over.tier_after.is_none(),
+        "房间局不计分，天梯字段必须为 null"
+    );
     let place_of = |player_id: &str| {
         game_over
             .ranking

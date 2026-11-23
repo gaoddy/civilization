@@ -32,6 +32,8 @@ fn client_variant(message: &ClientMessage) -> &'static str {
         ClientMessage::CreateRoom(_) => "CreateRoom",
         ClientMessage::JoinRoom(_) => "JoinRoom",
         ClientMessage::LeaveRoom(_) => "LeaveRoom",
+        ClientMessage::JoinQueue(_) => "JoinQueue",
+        ClientMessage::LeaveQueue(_) => "LeaveQueue",
         ClientMessage::Ready(_) => "Ready",
         ClientMessage::SelectHeroCard(_) => "SelectHeroCard",
         ClientMessage::Intent(_) => "Intent",
@@ -50,6 +52,8 @@ fn client_variant(message: &ClientMessage) -> &'static str {
         ClientMessage::BindPhone(_) => "BindPhone",
         ClientMessage::CreateRoomInvite(_) => "CreateRoomInvite",
         ClientMessage::RedeemRoomInvite(_) => "RedeemRoomInvite",
+        ClientMessage::RequestLeaderboard(_) => "RequestLeaderboard",
+        ClientMessage::RequestProfile(_) => "RequestProfile",
     }
 }
 
@@ -75,6 +79,10 @@ fn server_variant(message: &ServerMessage) -> &'static str {
         ServerMessage::RoomInviteCode(_) => "RoomInviteCode",
         ServerMessage::AchievementState(_) => "AchievementState",
         ServerMessage::AchievementUnlocked(_) => "AchievementUnlocked",
+        ServerMessage::QueueState(_) => "QueueState",
+        ServerMessage::MatchFound(_) => "MatchFound",
+        ServerMessage::Leaderboard(_) => "Leaderboard",
+        ServerMessage::PlayerProfile(_) => "PlayerProfile",
     }
 }
 

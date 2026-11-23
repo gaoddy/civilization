@@ -604,6 +604,15 @@ func _close_gallery() -> void:
 		_gallery.visible = false
 
 
+## Android 系统返回：图鉴覆盖层带页内返回按钮，先收起它；其余状态没有返回动作，
+## 不退出对局，也不退出应用。
+func system_back() -> bool:
+	if _gallery != null and _gallery.visible:
+		_close_gallery()
+		return true
+	return false
+
+
 func _refresh_overlay(self_state: Dictionary, recruited: bool) -> void:
 	var choices: Array = self_state.get("pendingChoices", [])
 	var phase := str(GameStore.view.get("phase", GameStore.phase))

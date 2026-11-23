@@ -40,13 +40,20 @@ pub mod error {
 ///  "type": "object",
 ///  "required": [
 ///    "displayName",
+///    "highestTier",
 ///    "phoneBound",
 ///    "playerCode",
 ///    "playerId",
-///    "steamBound"
+///    "rating",
+///    "steamBound",
+///    "tier"
 ///  ],
 ///  "properties": {
 ///    "displayName": {
+///      "type": "string"
+///    },
+///    "highestTier": {
+///      "description": "历史最高段位 id，按最高积分与当前配置计算",
 ///      "type": "string"
 ///    },
 ///    "maskedPhone": {
@@ -68,9 +75,18 @@ pub mod error {
 ///      "description": "内部不透明标识，不向玩家展示",
 ///      "type": "string"
 ///    },
+///    "rating": {
+///      "description": "当前天梯积分；未结算过为 1000",
+///      "type": "integer",
+///      "minimum": 0.0
+///    },
 ///    "steamBound": {
 ///      "description": "账号是否绑定 Steam 身份",
 ///      "type": "boolean"
+///    },
+///    "tier": {
+///      "description": "当前段位 id",
+///      "type": "string"
 ///    }
 ///  },
 ///  "additionalProperties": false
@@ -82,6 +98,9 @@ pub mod error {
 pub struct AccountView {
     #[serde(rename = "displayName")]
     pub display_name: ::std::string::String,
+    ///历史最高段位 id，按最高积分与当前配置计算
+    #[serde(rename = "highestTier")]
+    pub highest_tier: ::std::string::String,
     ///前 3 位与后 4 位保留，其余用 *；未绑定为 null
     #[serde(
         rename = "maskedPhone",
@@ -98,9 +117,13 @@ pub struct AccountView {
     ///内部不透明标识，不向玩家展示
     #[serde(rename = "playerId")]
     pub player_id: ::std::string::String,
+    ///当前天梯积分；未结算过为 1000
+    pub rating: u64,
     ///账号是否绑定 Steam 身份
     #[serde(rename = "steamBound")]
     pub steam_bound: bool,
+    ///当前段位 id
+    pub tier: ::std::string::String,
 }
 impl ::std::convert::From<&AccountView> for AccountView {
     fn from(value: &AccountView) -> Self {
@@ -2248,6 +2271,9 @@ impl ::std::convert::From<ErrorMessage> for Error {
 ///    "CODE_INVALID",
 ///    "CODE_EXPIRED",
 ///    "ALREADY_IN_ROOM",
+///    "QUEUE_ALREADY",
+///    "QUEUE_IN_ROOM",
+///    "QUEUE_NOT_JOINED",
 ///    "INTERNAL_ERROR"
 ///  ]
 ///}
@@ -2362,6 +2388,12 @@ pub enum ErrorCode {
     CodeExpired,
     #[serde(rename = "ALREADY_IN_ROOM")]
     AlreadyInRoom,
+    #[serde(rename = "QUEUE_ALREADY")]
+    QueueAlready,
+    #[serde(rename = "QUEUE_IN_ROOM")]
+    QueueInRoom,
+    #[serde(rename = "QUEUE_NOT_JOINED")]
+    QueueNotJoined,
     #[serde(rename = "INTERNAL_ERROR")]
     InternalError,
 }
@@ -2421,6 +2453,9 @@ impl ::std::fmt::Display for ErrorCode {
             Self::CodeInvalid => f.write_str("CODE_INVALID"),
             Self::CodeExpired => f.write_str("CODE_EXPIRED"),
             Self::AlreadyInRoom => f.write_str("ALREADY_IN_ROOM"),
+            Self::QueueAlready => f.write_str("QUEUE_ALREADY"),
+            Self::QueueInRoom => f.write_str("QUEUE_IN_ROOM"),
+            Self::QueueNotJoined => f.write_str("QUEUE_NOT_JOINED"),
             Self::InternalError => f.write_str("INTERNAL_ERROR"),
         }
     }
@@ -2479,6 +2514,9 @@ impl ::std::str::FromStr for ErrorCode {
             "CODE_INVALID" => Ok(Self::CodeInvalid),
             "CODE_EXPIRED" => Ok(Self::CodeExpired),
             "ALREADY_IN_ROOM" => Ok(Self::AlreadyInRoom),
+            "QUEUE_ALREADY" => Ok(Self::QueueAlready),
+            "QUEUE_IN_ROOM" => Ok(Self::QueueInRoom),
+            "QUEUE_NOT_JOINED" => Ok(Self::QueueNotJoined),
             "INTERNAL_ERROR" => Ok(Self::InternalError),
             _ => Err("invalid value".into()),
         }
@@ -3556,7 +3594,11 @@ impl ::std::convert::TryFrom<::std::string::String> for GameEventKind {
 ///  "type": "object",
 ///  "required": [
 ///    "ranking",
-///    "seed"
+///    "ratingAfter",
+///    "ratingDelta",
+///    "seed",
+///    "tierAfter",
+///    "tierBefore"
 ///  ],
 ///  "properties": {
 ///    "ranking": {
@@ -3591,6 +3633,21 @@ impl ::std::convert::TryFrom<::std::string::String> for GameEventKind {
 ///        "additionalProperties": false
 ///      }
 ///    },
+///    "ratingAfter": {
+///      "description": "结算后个人总分；房间局为 null",
+///      "type": [
+///        "integer",
+///        "null"
+///      ],
+///      "minimum": 0.0
+///    },
+///    "ratingDelta": {
+///      "description": "本局实际入账积分变化；房间局为 null",
+///      "type": [
+///        "integer",
+///        "null"
+///      ]
+///    },
 ///    "seed": {
 ///      "description": "会战模式对局结束后公开的种子",
 ///      "type": "string"
@@ -3598,6 +3655,20 @@ impl ::std::convert::TryFrom<::std::string::String> for GameEventKind {
 ///    "selfStats": {
 ///      "description": "接收者本人的本局统计；只填接收者所在座位",
 ///      "$ref": "#/$defs/SelfStats"
+///    },
+///    "tierAfter": {
+///      "description": "结算后段位 id；房间局为 null",
+///      "type": [
+///        "string",
+///        "null"
+///      ]
+///    },
+///    "tierBefore": {
+///      "description": "结算前段位 id；房间局为 null",
+///      "type": [
+///        "string",
+///        "null"
+///      ]
 ///    }
 ///  },
 ///  "additionalProperties": false
@@ -3608,6 +3679,12 @@ impl ::std::convert::TryFrom<::std::string::String> for GameEventKind {
 #[serde(deny_unknown_fields)]
 pub struct GameOver {
     pub ranking: ::std::vec::Vec<GameOverRankingItem>,
+    ///结算后个人总分；房间局为 null
+    #[serde(rename = "ratingAfter")]
+    pub rating_after: ::std::option::Option<u64>,
+    ///本局实际入账积分变化；房间局为 null
+    #[serde(rename = "ratingDelta")]
+    pub rating_delta: ::std::option::Option<i64>,
     ///会战模式对局结束后公开的种子
     pub seed: ::std::string::String,
     ///接收者本人的本局统计；只填接收者所在座位
@@ -3617,6 +3694,12 @@ pub struct GameOver {
         skip_serializing_if = "::std::option::Option::is_none"
     )]
     pub self_stats: ::std::option::Option<SelfStats>,
+    ///结算后段位 id；房间局为 null
+    #[serde(rename = "tierAfter")]
+    pub tier_after: ::std::option::Option<::std::string::String>,
+    ///结算前段位 id；房间局为 null
+    #[serde(rename = "tierBefore")]
+    pub tier_before: ::std::option::Option<::std::string::String>,
 }
 impl ::std::convert::From<&GameOver> for GameOver {
     fn from(value: &GameOver) -> Self {
@@ -4468,6 +4551,30 @@ impl ::std::convert::From<&InviteToRoom> for InviteToRoom {
         value.clone()
     }
 }
+///`JoinQueue`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct JoinQueue {}
+impl ::std::convert::From<&JoinQueue> for JoinQueue {
+    fn from(value: &JoinQueue) -> Self {
+        value.clone()
+    }
+}
+impl ::std::default::Default for JoinQueue {
+    fn default() -> Self {
+        Self {}
+    }
+}
 ///`JoinRoom`
 ///
 /// <details><summary>JSON schema</summary>
@@ -4531,6 +4638,150 @@ impl ::std::convert::From<&KickMember> for KickMember {
         value.clone()
     }
 }
+///`Leaderboard`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "entries"
+///  ],
+///  "properties": {
+///    "entries": {
+///      "type": "array",
+///      "items": {
+///        "type": "object",
+///        "required": [
+///          "displayName",
+///          "playerId",
+///          "rank",
+///          "rating",
+///          "tier"
+///        ],
+///        "properties": {
+///          "displayName": {
+///            "type": "string"
+///          },
+///          "playerId": {
+///            "description": "内部不透明标识，用于跳转个人主页",
+///            "type": "string"
+///          },
+///          "rank": {
+///            "type": "integer",
+///            "maximum": 100.0,
+///            "minimum": 1.0
+///          },
+///          "rating": {
+///            "type": "integer",
+///            "minimum": 0.0
+///          },
+///          "tier": {
+///            "description": "段位 id",
+///            "type": "string"
+///          }
+///        },
+///        "additionalProperties": false
+///      }
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct Leaderboard {
+    pub entries: ::std::vec::Vec<LeaderboardEntriesItem>,
+}
+impl ::std::convert::From<&Leaderboard> for Leaderboard {
+    fn from(value: &Leaderboard) -> Self {
+        value.clone()
+    }
+}
+///`LeaderboardEntriesItem`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "displayName",
+///    "playerId",
+///    "rank",
+///    "rating",
+///    "tier"
+///  ],
+///  "properties": {
+///    "displayName": {
+///      "type": "string"
+///    },
+///    "playerId": {
+///      "description": "内部不透明标识，用于跳转个人主页",
+///      "type": "string"
+///    },
+///    "rank": {
+///      "type": "integer",
+///      "maximum": 100.0,
+///      "minimum": 1.0
+///    },
+///    "rating": {
+///      "type": "integer",
+///      "minimum": 0.0
+///    },
+///    "tier": {
+///      "description": "段位 id",
+///      "type": "string"
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct LeaderboardEntriesItem {
+    #[serde(rename = "displayName")]
+    pub display_name: ::std::string::String,
+    ///内部不透明标识，用于跳转个人主页
+    #[serde(rename = "playerId")]
+    pub player_id: ::std::string::String,
+    pub rank: ::std::num::NonZeroU64,
+    pub rating: u64,
+    ///段位 id
+    pub tier: ::std::string::String,
+}
+impl ::std::convert::From<&LeaderboardEntriesItem> for LeaderboardEntriesItem {
+    fn from(value: &LeaderboardEntriesItem) -> Self {
+        value.clone()
+    }
+}
+///`LeaveQueue`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct LeaveQueue {}
+impl ::std::convert::From<&LeaveQueue> for LeaveQueue {
+    fn from(value: &LeaveQueue) -> Self {
+        value.clone()
+    }
+}
+impl ::std::default::Default for LeaveQueue {
+    fn default() -> Self {
+        Self {}
+    }
+}
 ///`LeaveRoom`
 ///
 /// <details><summary>JSON schema</summary>
@@ -4553,6 +4804,45 @@ impl ::std::convert::From<&LeaveRoom> for LeaveRoom {
 impl ::std::default::Default for LeaveRoom {
     fn default() -> Self {
         Self {}
+    }
+}
+///`MatchFound`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "roomId",
+///    "seat"
+///  ],
+///  "properties": {
+///    "roomId": {
+///      "type": "string"
+///    },
+///    "seat": {
+///      "description": "服务端分配的座位号（0 起）",
+///      "type": "integer",
+///      "maximum": 7.0,
+///      "minimum": 0.0
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct MatchFound {
+    #[serde(rename = "roomId")]
+    pub room_id: ::std::string::String,
+    ///服务端分配的座位号（0 起）
+    pub seat: i64,
+}
+impl ::std::convert::From<&MatchFound> for MatchFound {
+    fn from(value: &MatchFound) -> Self {
+        value.clone()
     }
 }
 ///单项属性的分层构成；在可达的下发状态下 initial + permanent + turn + aura - damage = current
@@ -5238,6 +5528,170 @@ impl ::std::convert::From<&PhoneCodeSent> for PhoneCodeSent {
         value.clone()
     }
 }
+///`PlayerProfile`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "displayName",
+///    "highestTier",
+///    "playerId",
+///    "rating",
+///    "recent",
+///    "recentVisible",
+///    "tier",
+///    "top4Ratio"
+///  ],
+///  "properties": {
+///    "displayName": {
+///      "type": "string"
+///    },
+///    "highestTier": {
+///      "description": "历史最高段位 id",
+///      "type": "string"
+///    },
+///    "playerId": {
+///      "description": "内部不透明标识，不向玩家展示",
+///      "type": "string"
+///    },
+///    "rating": {
+///      "type": "integer",
+///      "minimum": 0.0
+///    },
+///    "recent": {
+///      "type": "array",
+///      "items": {
+///        "type": "object",
+///        "required": [
+///          "finishedAt",
+///          "placement",
+///          "ratingAfter",
+///          "ratingDelta"
+///        ],
+///        "properties": {
+///          "finishedAt": {
+///            "type": "string",
+///            "format": "date-time"
+///          },
+///          "placement": {
+///            "type": "integer",
+///            "maximum": 8.0,
+///            "minimum": 1.0
+///          },
+///          "ratingAfter": {
+///            "type": "integer",
+///            "minimum": 0.0
+///          },
+///          "ratingDelta": {
+///            "description": "实际入账积分变化",
+///            "type": "integer"
+///          }
+///        },
+///        "additionalProperties": false
+///      },
+///      "maxItems": 10
+///    },
+///    "recentVisible": {
+///      "description": "最近 10 局是否对请求者可见；仅本人与好友为 true",
+///      "type": "boolean"
+///    },
+///    "tier": {
+///      "description": "当前段位 id",
+///      "type": "string"
+///    },
+///    "top4Ratio": {
+///      "description": "最近 10 局中名次前 4 的比例；不可见或无记录时为 0",
+///      "type": "number",
+///      "maximum": 1.0,
+///      "minimum": 0.0
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct PlayerProfile {
+    #[serde(rename = "displayName")]
+    pub display_name: ::std::string::String,
+    ///历史最高段位 id
+    #[serde(rename = "highestTier")]
+    pub highest_tier: ::std::string::String,
+    ///内部不透明标识，不向玩家展示
+    #[serde(rename = "playerId")]
+    pub player_id: ::std::string::String,
+    pub rating: u64,
+    pub recent: ::std::vec::Vec<PlayerProfileRecentItem>,
+    ///最近 10 局是否对请求者可见；仅本人与好友为 true
+    #[serde(rename = "recentVisible")]
+    pub recent_visible: bool,
+    ///当前段位 id
+    pub tier: ::std::string::String,
+    #[serde(rename = "top4Ratio")]
+    pub top4_ratio: f64,
+}
+impl ::std::convert::From<&PlayerProfile> for PlayerProfile {
+    fn from(value: &PlayerProfile) -> Self {
+        value.clone()
+    }
+}
+///`PlayerProfileRecentItem`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "finishedAt",
+///    "placement",
+///    "ratingAfter",
+///    "ratingDelta"
+///  ],
+///  "properties": {
+///    "finishedAt": {
+///      "type": "string",
+///      "format": "date-time"
+///    },
+///    "placement": {
+///      "type": "integer",
+///      "maximum": 8.0,
+///      "minimum": 1.0
+///    },
+///    "ratingAfter": {
+///      "type": "integer",
+///      "minimum": 0.0
+///    },
+///    "ratingDelta": {
+///      "description": "实际入账积分变化",
+///      "type": "integer"
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct PlayerProfileRecentItem {
+    #[serde(rename = "finishedAt")]
+    pub finished_at: ::chrono::DateTime<::chrono::offset::Utc>,
+    pub placement: ::std::num::NonZeroU64,
+    #[serde(rename = "ratingAfter")]
+    pub rating_after: u64,
+    ///实际入账积分变化
+    #[serde(rename = "ratingDelta")]
+    pub rating_delta: i64,
+}
+impl ::std::convert::From<&PlayerProfileRecentItem> for PlayerProfileRecentItem {
+    fn from(value: &PlayerProfileRecentItem) -> Self {
+        value.clone()
+    }
+}
 ///`PlayerSummary`
 ///
 /// <details><summary>JSON schema</summary>
@@ -5707,6 +6161,61 @@ impl ::std::convert::From<&PlayerViewSelf> for PlayerViewSelf {
         value.clone()
     }
 }
+///`QueueState`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "ratingWindow",
+///    "waitingMs",
+///    "waitingPlayers"
+///  ],
+///  "properties": {
+///    "ratingWindow": {
+///      "description": "当前匹配积分半径；null 表示不限积分",
+///      "type": [
+///        "integer",
+///        "null"
+///      ],
+///      "minimum": 0.0
+///    },
+///    "waitingMs": {
+///      "description": "本人已等待时长（毫秒）",
+///      "type": "integer",
+///      "minimum": 0.0
+///    },
+///    "waitingPlayers": {
+///      "description": "当前队列里的玩家数，客户端显示为「已凑 X/8」",
+///      "type": "integer",
+///      "maximum": 8.0,
+///      "minimum": 0.0
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct QueueState {
+    ///当前匹配积分半径；null 表示不限积分
+    #[serde(rename = "ratingWindow")]
+    pub rating_window: ::std::option::Option<u64>,
+    ///本人已等待时长（毫秒）
+    #[serde(rename = "waitingMs")]
+    pub waiting_ms: u64,
+    ///当前队列里的玩家数，客户端显示为「已凑 X/8」
+    #[serde(rename = "waitingPlayers")]
+    pub waiting_players: i64,
+}
+impl ::std::convert::From<&QueueState> for QueueState {
+    fn from(value: &QueueState) -> Self {
+        value.clone()
+    }
+}
 ///`Ready`
 ///
 /// <details><summary>JSON schema</summary>
@@ -5830,6 +6339,30 @@ impl ::std::default::Default for RequestAccount {
         Self {}
     }
 }
+///`RequestLeaderboard`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct RequestLeaderboard {}
+impl ::std::convert::From<&RequestLeaderboard> for RequestLeaderboard {
+    fn from(value: &RequestLeaderboard) -> Self {
+        value.clone()
+    }
+}
+impl ::std::default::Default for RequestLeaderboard {
+    fn default() -> Self {
+        Self {}
+    }
+}
 ///`RequestPhoneCode`
 ///
 /// <details><summary>JSON schema</summary>
@@ -5859,6 +6392,46 @@ pub struct RequestPhoneCode {
 impl ::std::convert::From<&RequestPhoneCode> for RequestPhoneCode {
     fn from(value: &RequestPhoneCode) -> Self {
         value.clone()
+    }
+}
+///`RequestProfile`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "properties": {
+///    "playerId": {
+///      "description": "要查看的玩家；缺省为本人",
+///      "type": "string"
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct RequestProfile {
+    ///要查看的玩家；缺省为本人
+    #[serde(
+        rename = "playerId",
+        default,
+        skip_serializing_if = "::std::option::Option::is_none"
+    )]
+    pub player_id: ::std::option::Option<::std::string::String>,
+}
+impl ::std::convert::From<&RequestProfile> for RequestProfile {
+    fn from(value: &RequestProfile) -> Self {
+        value.clone()
+    }
+}
+impl ::std::default::Default for RequestProfile {
+    fn default() -> Self {
+        Self {
+            player_id: Default::default(),
+        }
     }
 }
 ///`RequestSnapshot`

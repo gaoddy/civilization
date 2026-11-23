@@ -1,12 +1,14 @@
 class_name LobbyActions
 extends PanelContainer
-## 大厅开局操作：创建房间、房间码输入与加入入口。
+## 大厅开局操作：自动匹配、创建房间、房间码输入与加入入口。
 ##
 ## 只发出按钮信号并暴露输入框；请求与状态文案由页面处理。
 
+signal match_pressed
 signal create_pressed
 signal join_pressed
 
+var match_button: Button
 var code_input: LineEdit
 
 
@@ -19,10 +21,22 @@ func _init() -> void:
     actions.add_theme_constant_override("separation", UITheme.space("space-lg"))
     add_child(actions)
 
-    var create := UIControls.styled_button(tr("ui.lobby.create_room"), "primary", 50)
+    # 匹配与建房并排，保持操作区高度不变；匹配是主入口。
+    var start_row := HBoxContainer.new()
+    start_row.add_theme_constant_override("separation", UITheme.space("space-md"))
+    actions.add_child(start_row)
+
+    match_button = UIControls.styled_button(tr("ui.lobby.match"), "primary", 50)
+    match_button.name = "MatchButton"
+    match_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    match_button.pressed.connect(func(): match_pressed.emit())
+    start_row.add_child(match_button)
+
+    var create := UIControls.styled_button(tr("ui.lobby.create_room"), "default", 50)
     create.name = "CreateRoomButton"
+    create.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     create.pressed.connect(func(): create_pressed.emit())
-    actions.add_child(create)
+    start_row.add_child(create)
 
     actions.add_child(UIControls.label(tr("ui.lobby.join_section"), UITheme.font_size("font-title"), false))
     var join_row := HBoxContainer.new()

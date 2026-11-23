@@ -20,6 +20,34 @@ networkPolicy:
 
 config:
   listenAddr: 0.0.0.0:8080
+  # 天梯运行参数；注入为 RANKED_CONFIG JSON。段位区间可在上线后调整，
+  # 调整后按当前积分实时重算。字段名与 room-service 的 RankedConfig 一致。
+  rankedConfig:
+    k: 200
+    initialWindow: 150
+    relaxedWindow: 300
+    wideWindow: 500
+    relaxStepMs: 30000
+    unlimitedAfterMs: 90000
+    recentOpponentRelaxMs: 60000
+    masterRankLimit: 500
+    tiers:
+      - id: apprentice
+        minRating: 0
+      - id: bronze
+        minRating: 900
+      - id: silver
+        minRating: 1100
+      - id: gold
+        minRating: 1250
+      - id: platinum
+        minRating: 1400
+      - id: diamond
+        minRating: 1550
+      - id: master
+        minRating: 1700
+      - id: grandmaster
+        minRating: 1900
 
 service:
   port: 8080

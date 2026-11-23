@@ -24,6 +24,14 @@ signal room_invite_received
 signal achievement_unlocked(api_name: String)
 ## Steam 邀请不能处理：`already_in_room`；页面据此提示，不改房间状态。
 signal steam_invite_rejected(reason: String)
+## 匹配队列状态变化：入队、人数刷新或取消；`queue_state` 只在排队时有意义。
+signal queue_changed
+## 自动匹配成局；参数为分配的座位号，房间 id 已写入 `room_id`。
+signal match_found(seat: int)
+## 全服排行榜已更新；排行榜页据此重排。
+signal leaderboard_changed
+## 个人主页已更新；个人主页据此重排。
+signal profile_changed
 
 var player_id := ""
 var player_code := ""
@@ -43,6 +51,27 @@ var unlocked_achievements: Dictionary = {}
 var room_id := ""
 var room_code := ""
 var room_players: Array = []
+
+## 本次结算的实际积分变化与段位前后；房间局四项为 null/空串。
+var rating_delta = null
+var rating_after = null
+var tier_before := ""
+var tier_after := ""
+## 最近一次查询的全服排行榜条目。
+var leaderboard: Array = []
+## 最近一次查询的个人主页；未查询时为空字典。
+var profile: Dictionary = {}
+## 个人主页目标玩家与返回页面，由入口页写入。
+var profile_target := ""
+var profile_return_page := ""
+
+## 最近一条 `QueueState`；未排队时为空字典。
+var queue_state: Dictionary = {}
+var queueing := false
+## 收到 `QueueState` 的本地毫秒时刻；两次下发之间由本地时钟累计等待时长。
+var queue_state_at_msec := 0
+## `MatchFound` 分配的座位号；未匹配时为 -1。
+var match_seat := -1
 
 var phase := ""
 var turn := 1
@@ -126,6 +155,17 @@ func handle(type: String, payload: Dictionary) -> void:
             room_players = payload.get("players", [])
             phase = str(payload.get("phase", Protocol.PHASE_LOBBY))
             room_changed.emit()
+        Protocol.MSG_QUEUE_STATE:
+            queue_state = payload
+            queueing = true
+            queue_state_at_msec = Time.get_ticks_msec()
+            queue_changed.emit()
+        Protocol.MSG_MATCH_FOUND:
+            # 匹配房不下发大厅 `RoomUpdate`；这里先写入房间 id，断线重连才能找回该局。
+            match_seat = int(payload.get("seat", -1))
+            room_id = str(payload.get("roomId", room_id))
+            _clear_queue()
+            match_found.emit(match_seat)
         Protocol.MSG_GAME_STARTED:
             _apply_view(payload.get("view", {}))
             game_started.emit()
@@ -153,8 +193,19 @@ func handle(type: String, payload: Dictionary) -> void:
             ranking = payload.get("ranking", [])
             game_seed = str(payload.get("seed", ""))
             self_stats = payload.get("selfStats", {})
+            # 房间局四项为 null；客户端只搬运，不在本地算分。
+            rating_delta = payload.get("ratingDelta")
+            rating_after = payload.get("ratingAfter")
+            tier_before = str(payload.get("tierBefore", "") if payload.get("tierBefore") != null else "")
+            tier_after = str(payload.get("tierAfter", "") if payload.get("tierAfter") != null else "")
             phase = Protocol.PHASE_GAME_OVER
             game_over.emit()
+        Protocol.MSG_LEADERBOARD:
+            leaderboard = payload.get("entries", [])
+            leaderboard_changed.emit()
+        Protocol.MSG_PLAYER_PROFILE:
+            profile = payload
+            profile_changed.emit()
         Protocol.MSG_ROOM_CLOSED:
             # `reset_room` 会清空关闭原因，先暂存再在清空后写回，页面才能区分提示文案。
             var reason := str(payload.get("reason", ""))
@@ -164,6 +215,9 @@ func handle(type: String, payload: Dictionary) -> void:
             room_closed.emit()
         Protocol.MSG_ERROR:
             last_error = payload
+            # 已在房间时服务端拒绝入队；本地排队态已无意义，直接收起浮层。
+            if str(payload.get("code", "")) == Protocol.ERROR_QUEUE_IN_ROOM:
+                _clear_queue()
             error_received.emit()
         _:
             pass
@@ -203,12 +257,18 @@ func reset_room() -> void:
     ranking = []
     game_seed = ""
     self_stats = {}
+    rating_delta = null
+    rating_after = null
+    tier_before = ""
+    tier_after = ""
     room_closed_reason = ""
     last_error = {}
     last_combat = {}
     last_combat_turn = -1
     timer_seconds = -1
     room_invite = {}
+    match_seat = -1
+    _clear_queue()
     if is_instance_valid(Platform):
         Platform.leave_lobby()
 
@@ -221,6 +281,10 @@ func clear_game_view() -> void:
     view = {}
     ranking = []
     self_stats = {}
+    rating_delta = null
+    rating_after = null
+    tier_before = ""
+    tier_after = ""
     last_combat = {}
     last_combat_turn = -1
     timer_seconds = -1
@@ -274,6 +338,10 @@ func reset_session() -> void:
     token = ""
     display_name = ""
     account = {}
+    leaderboard = []
+    profile = {}
+    profile_target = ""
+    profile_return_page = ""
     phone_code_expires_at = ""
     unlocked_achievements = {}
     pending_steam_invite = ""
@@ -323,6 +391,36 @@ func request_account() -> void:
     Net.send(Protocol.MSG_REQUEST_ACCOUNT, {})
 
 
+## 请求全服排行榜；结果经 `MSG_LEADERBOARD` 写入 `leaderboard`。
+func request_leaderboard() -> void:
+    Net.send(Protocol.MSG_REQUEST_LEADERBOARD, {})
+
+
+## 当前账号的段位 id（服务端下发；未登录或缺失时为空串）。
+func my_tier() -> String:
+    return str(account.get("tier", ""))
+
+
+## 当前账号积分；服务端未下发时为 0。
+func my_rating() -> int:
+    var value = account.get("rating", 0)
+    return 0 if value == null else int(value)
+
+
+## 打开个人主页：记录目标玩家与返回页面，由页面负责导航。
+func open_profile(target_player_id: String, return_page: String) -> void:
+    profile_target = target_player_id
+    profile_return_page = return_page
+
+
+## 请求个人主页；`target_player_id` 为空时请求本人。
+func request_profile(target_player_id := "") -> void:
+    var payload := {}
+    if target_player_id != "":
+        payload["playerId"] = target_player_id
+    Net.send(Protocol.MSG_REQUEST_PROFILE, payload)
+
+
 func request_phone_code(phone: String) -> void:
     Net.send(Protocol.MSG_REQUEST_PHONE_CODE, {"phone": phone.strip_edges()})
 
@@ -342,6 +440,50 @@ func redeem_room_invite(token: String) -> void:
     if token.strip_edges() == "":
         return
     Net.send(Protocol.MSG_REDEEM_ROOM_INVITE, {"token": token})
+
+
+## 进入自动匹配队列；本地先进入排队态，人数与窗口以服务端 `QueueState` 为准。
+func join_queue() -> void:
+    if queueing:
+        return
+    queueing = true
+    queue_state = {}
+    queue_state_at_msec = Time.get_ticks_msec()
+    queue_changed.emit()
+    Net.send(Protocol.MSG_JOIN_QUEUE, {})
+
+
+## 取消匹配：本地立即收起浮层；服务端取消不计败，也不扣分。
+func leave_queue() -> void:
+    var was_queueing := queueing
+    _clear_queue()
+    if was_queueing:
+        Net.send(Protocol.MSG_LEAVE_QUEUE, {})
+
+
+## 断线或回大厅时丢弃本地排队态；不发送取消，服务端按断线清理。
+func abandon_queue() -> void:
+    _clear_queue()
+
+
+## 已等待秒数：以最近一条 `QueueState` 的 `waitingMs` 为基准，本地时钟补足间隔。
+func queue_wait_seconds() -> float:
+    if not queueing:
+        return 0.0
+    var served := float(int(queue_state.get("waitingMs", 0))) / 1000.0
+    if queue_state_at_msec <= 0:
+        return served
+    var drift := maxi(0, Time.get_ticks_msec() - queue_state_at_msec)
+    return served + float(drift) / 1000.0
+
+
+func _clear_queue() -> void:
+    var changed := queueing or not queue_state.is_empty()
+    queueing = false
+    queue_state = {}
+    queue_state_at_msec = 0
+    if changed:
+        queue_changed.emit()
 
 
 func _unlock_achievement(item: Dictionary) -> void:

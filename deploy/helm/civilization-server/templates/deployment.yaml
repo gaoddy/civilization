@@ -46,6 +46,11 @@ spec:
                 configMapKeyRef:
                   name: civilization-server-config
                   key: listen-addr
+            - name: RANKED_CONFIG
+              valueFrom:
+                configMapKeyRef:
+                  name: civilization-server-config
+                  key: ranked-config
           envFrom:
             - secretRef:
                 name: {{ required "existingSecretName is required" .Values.existingSecretName }}

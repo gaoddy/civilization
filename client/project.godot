@@ -14,6 +14,8 @@ config/name="Civilization"
 run/main_scene="res://pages/login/login.tscn"
 config/features=PackedStringArray("4.7", "Forward Plus")
 config/icon="res://icon.png"
+; Android 返回键默认退出应用；返回动作统一交给 SystemBack 路由，无返回动作时保持应用。
+config/quit_on_go_back=false
 
 [autoload]
 
@@ -25,6 +27,7 @@ Net="*res://autoload/ws_client.gd"
 Sfx="*res://autoload/sfx.gd"
 Platform="*res://autoload/platform.gd"
 LocalServer="*res://autoload/local_server.gd"
+SystemBack="*res://autoload/system_back.gd"
 
 [display]
 
@@ -32,6 +35,7 @@ window/size/viewport_width=1280
 window/size/viewport_height=720
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
+; 4 = SCREEN_SENSOR_LANDSCAPE：iOS 与 Android 都锁定左右横屏，不提供竖屏布局。
 window/handheld/orientation=4
 
 [editor]
@@ -42,6 +46,12 @@ import/use_multiple_threads=true
 [gui]
 
 theme/custom_font="res://assets/fonts/NotoSansSC-Regular-subset.ttf"
+
+[input_devices]
+
+; Android 原生触摸由系统送入；桌面模拟触控档位由 ScreenProfile 在运行时打开触摸事件模拟。
+pointing/emulate_mouse_from_touch=true
+pointing/emulate_touch_from_mouse=false
 
 [internationalization]
 

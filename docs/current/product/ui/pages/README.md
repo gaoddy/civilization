@@ -8,5 +8,7 @@
 | 对局 | `client/pages/game/game.tscn` | [game.md](game.md) |
 | 结算 | `client/pages/result/result.tscn` | [result.md](result.md) |
 | 卡牌图鉴 | `client/pages/gallery/gallery.tscn` | [gallery.md](gallery.md) |
+| 排行榜 | `client/pages/leaderboard/leaderboard.tscn` | [leaderboard.md](leaderboard.md) |
+| 个人主页 | `client/pages/profile/profile.tscn` | [profile.md](profile.md) |
 
 登录与大厅尚未单独成文。

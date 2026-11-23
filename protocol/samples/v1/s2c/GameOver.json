@@ -11,6 +11,10 @@
         "place": 1
       }
     ],
-    "seed": "a1b2c3d4"
+    "seed": "a1b2c3d4",
+    "ratingDelta": null,
+    "ratingAfter": null,
+    "tierBefore": null,
+    "tierAfter": null
   }
 }

@@ -6,7 +6,7 @@
 use std::str::FromStr;
 use std::time::Duration;
 
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, NaiveDate, Utc};
 use sqlx::postgres::{PgConnectOptions, PgPool, PgPoolOptions};
 use sqlx::{Executor, FromRow};
 use uuid::Uuid;
@@ -88,6 +88,52 @@ pub struct StoredInvite {
     pub room_id: String,
     pub room_code: String,
     pub expires_at: DateTime<Utc>,
+}
+
+/// 天梯积分行。
+#[derive(Debug, Clone, FromRow)]
+pub struct StoredRating {
+    pub account_id: String,
+    pub rating: i32,
+    pub highest_rating: i32,
+    pub updated_at: DateTime<Utc>,
+}
+
+/// 一条个人最近天梯战绩。
+#[derive(Debug, Clone, FromRow)]
+pub struct StoredRankedResult {
+    pub placement: i16,
+    pub rating_before: i32,
+    pub rating_delta: i32,
+    pub rating_after: i32,
+    pub finished_at: DateTime<Utc>,
+}
+
+/// 排行榜候选行；`updated_at` 为空表示该账号还没有积分记录（按默认 1000）。
+#[derive(Debug, Clone, FromRow)]
+pub struct StoredLeaderboardRow {
+    pub account_id: String,
+    pub rating: i32,
+    pub updated_at: Option<DateTime<Utc>>,
+}
+
+/// 宗师快照中的一行。
+#[derive(Debug, Clone, FromRow)]
+pub struct StoredMasterRank {
+    pub account_id: String,
+    pub rank: i32,
+}
+
+/// 待写入的一条天梯结算。
+#[derive(Debug, Clone)]
+pub struct NewRankedResult<'a> {
+    pub account_id: &'a str,
+    pub placement: i16,
+    pub rating_before: i32,
+    pub rating_delta: i32,
+    pub rating_after: i32,
+    /// 结算后的历史最高积分；首次扣分时仍保留初始 1000。
+    pub highest_rating: i32,
 }
 
 /// 待写入的房间邀请。
@@ -703,6 +749,196 @@ impl Db {
             .execute(&self.pool)
             .await?;
         Ok(())
+    }
+
+    /// 载入全部已有天梯积分。
+    ///
+    /// # Errors
+    ///
+    /// 查询失败时返回错误。
+    pub async fn load_ratings(&self) -> DbResult<Vec<StoredRating>> {
+        sqlx::query_as::<_, StoredRating>(
+            "SELECT account_id, rating, highest_rating, updated_at FROM account_rating",
+        )
+        .fetch_all(&self.pool)
+        .await
+    }
+
+    /// 全服榜：所有账号按 `rating DESC, updated_at ASC, account_id ASC` 排序。
+    ///
+    /// 未结算账号按默认 1000 参与排序；`updated_at` 为空视为最后达到该分数，
+    /// 因此排在已有同分记录之后。
+    ///
+    /// # Errors
+    ///
+    /// 查询失败时返回错误。
+    pub async fn load_leaderboard(&self, limit: i64) -> DbResult<Vec<StoredLeaderboardRow>> {
+        sqlx::query_as::<_, StoredLeaderboardRow>(
+            "SELECT a.account_id,
+                    COALESCE(r.rating, 1000)::INTEGER AS rating,
+                    r.updated_at
+             FROM account a
+             LEFT JOIN account_rating r ON r.account_id = a.account_id
+             ORDER BY rating DESC, r.updated_at ASC NULLS LAST, a.account_id ASC
+             LIMIT $1",
+        )
+        .bind(limit)
+        .fetch_all(&self.pool)
+        .await
+    }
+
+    /// 某个账号最近的若干局天梯战绩，按结束时间倒序。
+    ///
+    /// # Errors
+    ///
+    /// 查询失败时返回错误。
+    pub async fn load_recent_results(
+        &self,
+        account_id: &str,
+        limit: i64,
+    ) -> DbResult<Vec<StoredRankedResult>> {
+        sqlx::query_as::<_, StoredRankedResult>(
+            "SELECT rr.placement, rr.rating_before, rr.rating_delta, rr.rating_after,
+                    rm.finished_at
+             FROM ranked_result rr
+             JOIN ranked_match rm ON rm.match_id = rr.match_id
+             WHERE rr.account_id = $1
+             ORDER BY rm.finished_at DESC, rm.match_id DESC
+             LIMIT $2",
+        )
+        .bind(account_id)
+        .bind(limit)
+        .fetch_all(&self.pool)
+        .await
+    }
+
+    /// 最近一天宗师快照的日期。
+    ///
+    /// # Errors
+    ///
+    /// 查询失败时返回错误。
+    pub async fn latest_master_day(&self) -> DbResult<Option<NaiveDate>> {
+        sqlx::query_scalar::<_, NaiveDate>(
+            "SELECT snapshot_day FROM master_snapshot
+             ORDER BY snapshot_day DESC LIMIT 1",
+        )
+        .fetch_optional(&self.pool)
+        .await
+    }
+
+    /// 指定日期的宗师快照。
+    ///
+    /// # Errors
+    ///
+    /// 查询失败时返回错误。
+    pub async fn load_master_snapshot(&self, day: NaiveDate) -> DbResult<Vec<StoredMasterRank>> {
+        sqlx::query_as::<_, StoredMasterRank>(
+            "SELECT account_id, rank FROM master_snapshot
+             WHERE snapshot_day = $1 ORDER BY rank",
+        )
+        .bind(day)
+        .fetch_all(&self.pool)
+        .await
+    }
+
+    /// 历史上进入过宗师快照的账号；用于计算历史最高段位。
+    ///
+    /// # Errors
+    ///
+    /// 查询失败时返回错误。
+    pub async fn load_master_account_ids(&self) -> DbResult<Vec<String>> {
+        sqlx::query_scalar::<_, String>(
+            "SELECT DISTINCT account_id FROM master_snapshot ORDER BY account_id",
+        )
+        .fetch_all(&self.pool)
+        .await
+    }
+
+    /// 写入某日宗师快照；同一天已有记录时不覆盖。
+    ///
+    /// # Errors
+    ///
+    /// 事务或写入失败时返回错误。
+    pub async fn save_master_snapshot(
+        &self,
+        day: NaiveDate,
+        rows: &[(String, u32)],
+    ) -> DbResult<()> {
+        let mut tx = self.pool.begin().await?;
+        for (account_id, rank) in rows {
+            sqlx::query(
+                "INSERT INTO master_snapshot (snapshot_day, account_id, rank)
+                 VALUES ($1, $2, $3) ON CONFLICT DO NOTHING",
+            )
+            .bind(day)
+            .bind(account_id)
+            .bind(i32::try_from(*rank).unwrap_or(i32::MAX))
+            .execute(&mut *tx)
+            .await?;
+        }
+        tx.commit().await
+    }
+
+    /// 单事务写入一局天梯：对局、8 条结果与账号积分更新。
+    ///
+    /// 积分更新只在值真正变化时刷新 `updated_at`，保持「同分先到先得」的语义。
+    ///
+    /// # Errors
+    ///
+    /// 事务或写入失败时返回错误。
+    pub async fn settle_ranked_match(
+        &self,
+        match_id: &str,
+        room_id: &str,
+        seed: &str,
+        finished_at: DateTime<Utc>,
+        results: &[NewRankedResult<'_>],
+    ) -> DbResult<()> {
+        let mut tx = self.pool.begin().await?;
+        sqlx::query(
+            "INSERT INTO ranked_match (match_id, room_id, finished_at, seed)
+             VALUES ($1, $2, $3, $4)",
+        )
+        .bind(match_id)
+        .bind(room_id)
+        .bind(finished_at)
+        .bind(seed)
+        .execute(&mut *tx)
+        .await?;
+        for row in results {
+            sqlx::query(
+                "INSERT INTO account_rating (account_id, rating, highest_rating, updated_at)
+                 VALUES ($1, $2, $3, $4)
+                 ON CONFLICT (account_id) DO UPDATE SET
+                     rating = EXCLUDED.rating,
+                     highest_rating = GREATEST(account_rating.highest_rating, EXCLUDED.highest_rating),
+                     updated_at = CASE
+                         WHEN account_rating.rating = EXCLUDED.rating
+                         THEN account_rating.updated_at
+                         ELSE EXCLUDED.updated_at
+                     END",
+            )
+            .bind(row.account_id)
+            .bind(row.rating_after)
+            .bind(row.highest_rating)
+            .bind(finished_at)
+            .execute(&mut *tx)
+            .await?;
+            sqlx::query(
+                "INSERT INTO ranked_result
+                     (match_id, account_id, placement, rating_before, rating_delta, rating_after)
+                 VALUES ($1, $2, $3, $4, $5, $6)",
+            )
+            .bind(match_id)
+            .bind(row.account_id)
+            .bind(row.placement)
+            .bind(row.rating_before)
+            .bind(row.rating_delta)
+            .bind(row.rating_after)
+            .execute(&mut *tx)
+            .await?;
+        }
+        tx.commit().await
     }
 }
 

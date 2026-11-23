@@ -18,3 +18,10 @@ func _ready() -> void:
 
 func _on_closed() -> void:
     UINavigation.navigate(self, UINavigation.PAGE_LOBBY)
+
+
+## Android 系统返回：图鉴的筛选面板、详情抽屉由 SystemBack 先收起；
+## 没有打开的子浮层时执行与页面返回按钮相同的动作，回大厅。
+func system_back() -> bool:
+    _on_closed()
+    return true

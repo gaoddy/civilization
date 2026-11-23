@@ -18,9 +18,10 @@ pub use generated::*;
 pub mod client {
     pub use crate::{
         AuthRequest, BindPhone, CombatPlayed, CreateRoom, CreateRoomInvite, DissolveRoom,
-        FriendRemove, FriendRequest, FriendRespond, IntentMessage, InviteToRoom, JoinRoom,
-        KickMember, LeaveRoom, Ready, Reconnect, RedeemRoomInvite, RequestAccount,
-        RequestPhoneCode, RequestSnapshot, RespondInvite, SelectHeroCard,
+        FriendRemove, FriendRequest, FriendRespond, IntentMessage, InviteToRoom, JoinQueue,
+        JoinRoom, KickMember, LeaveQueue, LeaveRoom, Ready, Reconnect, RedeemRoomInvite,
+        RequestAccount, RequestLeaderboard, RequestPhoneCode, RequestProfile, RequestSnapshot,
+        RespondInvite, SelectHeroCard,
     };
 }
 
@@ -30,9 +31,10 @@ pub mod server {
         AccountView, AchievementState, AchievementUnlocked, AuthResult, CombatResult, ErrorMessage,
         FriendInvite, FriendInviteResult, FriendRequestItem, FriendUpdate, FriendUpdateFriendsItem,
         FriendUpdateFriendsItemStatus, FriendUpdateOutgoingItem, FriendUpdateRecentItem,
-        FriendUpdateRecentItemRelation, GameOver, GameStarted, InviteAccepted, PhaseChanged,
-        PhoneCodeSent, RoomClosed, RoomInviteCode, RoomUpdate, SelfStats, Snapshot, StateUpdate,
-        TimerWarning,
+        FriendUpdateRecentItemRelation, GameOver, GameStarted, InviteAccepted, Leaderboard,
+        LeaderboardEntriesItem, MatchFound, PhaseChanged, PhoneCodeSent, PlayerProfile,
+        PlayerProfileRecentItem, QueueState, RoomClosed, RoomInviteCode, RoomUpdate, SelfStats,
+        Snapshot, StateUpdate, TimerWarning,
     };
 }
 
@@ -72,6 +74,8 @@ pub enum ClientMessage {
     CreateRoom(CreateRoom),
     JoinRoom(JoinRoom),
     LeaveRoom(LeaveRoom),
+    JoinQueue(JoinQueue),
+    LeaveQueue(LeaveQueue),
     KickMember(KickMember),
     DissolveRoom(DissolveRoom),
     Ready(Ready),
@@ -90,6 +94,8 @@ pub enum ClientMessage {
     BindPhone(BindPhone),
     CreateRoomInvite(CreateRoomInvite),
     RedeemRoomInvite(RedeemRoomInvite),
+    RequestLeaderboard(RequestLeaderboard),
+    RequestProfile(RequestProfile),
 }
 
 /// 下行信封判别结果。只做 `type` → payload 的分派，不含任何业务规则。
@@ -98,6 +104,8 @@ pub enum ServerMessage {
     AuthResult(AuthResult),
     RoomUpdate(RoomUpdate),
     RoomClosed(RoomClosed),
+    QueueState(QueueState),
+    MatchFound(MatchFound),
     GameStarted(GameStarted),
     Snapshot(Snapshot),
     StateUpdate(StateUpdate),
@@ -115,13 +123,17 @@ pub enum ServerMessage {
     RoomInviteCode(RoomInviteCode),
     AchievementState(AchievementState),
     AchievementUnlocked(AchievementUnlocked),
+    Leaderboard(Leaderboard),
+    PlayerProfile(PlayerProfile),
 }
 
 /// 已知 s2c 消息类型名，与 `messages.json#/directions/s2c` 一致。
-const SERVER_MESSAGE_TYPES: [&str; 20] = [
+const SERVER_MESSAGE_TYPES: [&str; 24] = [
     "AuthResult",
     "RoomUpdate",
     "RoomClosed",
+    "QueueState",
+    "MatchFound",
     "GameStarted",
     "Snapshot",
     "StateUpdate",
@@ -139,6 +151,8 @@ const SERVER_MESSAGE_TYPES: [&str; 20] = [
     "RoomInviteCode",
     "AchievementState",
     "AchievementUnlocked",
+    "Leaderboard",
+    "PlayerProfile",
 ];
 
 /// 从 payload 值反序列化；失败统一为 `BAD_PAYLOAD`。
@@ -156,6 +170,8 @@ impl ClientEnvelope {
             "CreateRoom" => parse_payload(payload()).map(ClientMessage::CreateRoom),
             "JoinRoom" => parse_payload(payload()).map(ClientMessage::JoinRoom),
             "LeaveRoom" => parse_payload(payload()).map(ClientMessage::LeaveRoom),
+            "JoinQueue" => parse_payload(payload()).map(ClientMessage::JoinQueue),
+            "LeaveQueue" => parse_payload(payload()).map(ClientMessage::LeaveQueue),
             "KickMember" => parse_payload(payload()).map(ClientMessage::KickMember),
             "DissolveRoom" => parse_payload(payload()).map(ClientMessage::DissolveRoom),
             "Ready" => parse_payload(payload()).map(ClientMessage::Ready),
@@ -174,6 +190,8 @@ impl ClientEnvelope {
             "BindPhone" => parse_payload(payload()).map(ClientMessage::BindPhone),
             "CreateRoomInvite" => parse_payload(payload()).map(ClientMessage::CreateRoomInvite),
             "RedeemRoomInvite" => parse_payload(payload()).map(ClientMessage::RedeemRoomInvite),
+            "RequestLeaderboard" => parse_payload(payload()).map(ClientMessage::RequestLeaderboard),
+            "RequestProfile" => parse_payload(payload()).map(ClientMessage::RequestProfile),
             _ => Err(ProtocolError("UNKNOWN_TYPE")),
         }
     }
@@ -235,6 +253,8 @@ impl ServerEnvelope {
             "AuthResult" => parse_payload(payload()).map(ServerMessage::AuthResult),
             "RoomUpdate" => parse_payload(payload()).map(ServerMessage::RoomUpdate),
             "RoomClosed" => parse_payload(payload()).map(ServerMessage::RoomClosed),
+            "QueueState" => parse_payload(payload()).map(ServerMessage::QueueState),
+            "MatchFound" => parse_payload(payload()).map(ServerMessage::MatchFound),
             "GameStarted" => parse_payload(payload()).map(ServerMessage::GameStarted),
             "Snapshot" => parse_payload(payload()).map(ServerMessage::Snapshot),
             "StateUpdate" => parse_payload(payload()).map(ServerMessage::StateUpdate),
@@ -254,6 +274,8 @@ impl ServerEnvelope {
             "AchievementUnlocked" => {
                 parse_payload(payload()).map(ServerMessage::AchievementUnlocked)
             }
+            "Leaderboard" => parse_payload(payload()).map(ServerMessage::Leaderboard),
+            "PlayerProfile" => parse_payload(payload()).map(ServerMessage::PlayerProfile),
             _ => Err(ProtocolError("UNKNOWN_TYPE")),
         }
     }

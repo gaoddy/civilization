@@ -11,6 +11,13 @@ static func enum_text(group: String, id: String) -> String:
     return id if text == key else text
 
 
+## 段位 id 的展示名；缺键回退为 id。
+static func tier_text(id: String) -> String:
+    var key := "ui.tier." + id
+    var text := TranslationServer.translate(key)
+    return id if text == key else text
+
+
 ## 按完整文本 id 取文案；缺键返回空串，避免内部 id 泄露到界面。
 static func translated_or_empty(key: String) -> String:
     var text := TranslationServer.translate(key)

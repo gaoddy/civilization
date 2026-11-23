@@ -12,6 +12,10 @@ const DEVICE_TABLET := "tablet"
 const DEVICE_DESKTOP := "desktop"
 ## 桌面端模拟设备档位的环境变量：phone / tablet / desktop，其余值按未指定处理。
 const ENV_DEVICE := "CIVILIZATION_DEVICE"
+## Android 平板最短边阈值（dp）：600dp 是系统的大屏分界。
+const ANDROID_TABLET_MIN_SHORT_EDGE_DP := 600.0
+## 长宽比低于该值按平板处理：4:3、16:10 与展开态折叠屏。
+const ANDROID_TABLET_MAX_ASPECT := 1.5
 
 var _device := ""
 var _forced := ""
@@ -37,7 +41,7 @@ func is_touch() -> bool:
     return device_kind() != DEVICE_DESKTOP
 
 
-## 是否运行在真机触控平台：桌面与无头环境为假，iOS 等原生触控端为真。
+## 是否运行在真机触控平台：桌面与无头环境为假，iOS、Android 等原生触控端为真。
 ## 与 [method set_device_for_test] 对应，测试可覆盖判定并随后恢复自动。
 func is_native_touch() -> bool:
     if _native_touch_forced != null:
@@ -225,15 +229,19 @@ func _apply_touch_emulation() -> void:
 
 ## 是否运行在真机触控平台：桌面模拟档位没有系统屏幕安全区与虚拟键盘。
 func _is_native_touch_platform() -> bool:
-    return DisplayServer.get_name() == "iOS"
+    var platform := DisplayServer.get_name()
+    return platform == "iOS" or platform == "Android"
 
 
 func _detect_device() -> String:
     var override := parse_device(OS.get_environment(ENV_DEVICE))
     if override != "":
         return override
-    if DisplayServer.get_name() != "iOS":
+    var platform := DisplayServer.get_name()
+    if platform != "iOS" and platform != "Android":
         return DEVICE_DESKTOP
+    if platform == "Android":
+        return android_device_kind(DisplayServer.screen_get_size(), _android_density())
     var model := OS.get_model_name()
     if model.begins_with("iPad"):
         return DEVICE_TABLET
@@ -244,3 +252,28 @@ func _detect_device() -> String:
     if screen.y > 0 and float(screen.x) / float(screen.y) >= 1.25:
         return DEVICE_TABLET
     return DEVICE_PHONE
+
+
+## Android 设备档位：短边不小于 600dp，或长宽比低于 1.5 时归平板，其余归手机。
+## 屏幕尺寸取物理像素，密度取 DisplayServer 缩放；未知密度按 1 处理。
+static func android_device_kind(screen: Vector2i, density: float) -> String:
+    if screen.x <= 0 or screen.y <= 0:
+        return DEVICE_PHONE
+    var shortest := float(mini(screen.x, screen.y))
+    var longest := float(maxi(screen.x, screen.y))
+    var scale := density if density > 0.0 else 1.0
+    if shortest / scale >= ANDROID_TABLET_MIN_SHORT_EDGE_DP:
+        return DEVICE_TABLET
+    if longest / shortest < ANDROID_TABLET_MAX_ASPECT:
+        return DEVICE_TABLET
+    return DEVICE_PHONE
+
+
+## Android 屏幕密度：同时取 DisplayServer 的缩放比与 dpi / 160，较大的作为密度。
+## 部分设备的缩放比不可用时 dpi 兜底，避免把高分辨率手机误判为平板。
+func _android_density() -> float:
+    var from_scale := DisplayServer.screen_get_scale()
+    var dpi := DisplayServer.screen_get_dpi()
+    var from_dpi := float(dpi) / 160.0 if dpi > 0 else 0.0
+    var density := maxf(from_scale, from_dpi)
+    return density if density > 0.0 else 1.0
