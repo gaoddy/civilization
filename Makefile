@@ -20,7 +20,7 @@ FONT_SOURCE ?= output/fonts/NotoSansSC[wght].ttf
 # 独立步骤的并行度：留空按 CPU 数（上限 8），JOBS=1 退回串行。
 JOBS ?=
 
-.PHONY: test lint audit data data-check docs-render assets assets-covers sfx font-subset balance-check protocol protocol-check protocol-rs protocol-rs-check m0-check m0-determinism m0-batch m0-report m1-check client-godot-check client-import client-run client-run-on-iphone client-run-on-ipad client-run-on-desktop client-check client-smoke asset-compress asset-compress-check ui-wireframe ui-preview ui-preview-check client-export-templates client-export client-export-local client-export-steam client-notarize steam-upload client-export-ios client-run-ios m1b-build m1b-e2e dev-bots db-up db-down db-reset db-test deploy-render deploy-lint deploy-check-env deploy-image deploy-load deploy-preflight deploy-apply deploy-rollout deploy-status deploy-smoke deploy
+.PHONY: test lint audit data data-check docs-render assets assets-covers sfx font-subset balance-check protocol protocol-check protocol-rs protocol-rs-check m0-check m0-determinism m0-batch m0-report m1-check client-godot-check client-import client-run client-run-on-iphone client-run-on-ipad client-run-on-desktop client-check client-smoke asset-compress asset-compress-check ui-wireframe ui-preview ui-preview-check client-export-templates client-export client-export-local client-export-steam client-notarize steam-upload client-export-ios client-run-ios client-export-android client-export-android-aab m1b-build m1b-e2e dev-bots db-up db-down db-reset db-test deploy-render deploy-lint deploy-check-env deploy-image deploy-load deploy-preflight deploy-apply deploy-rollout deploy-status deploy-smoke deploy
 
 test:
 	$(PYTHON) scripts/run_parallel.py $(if $(JOBS),--jobs $(JOBS),) \
@@ -461,6 +461,35 @@ IOS_LAUNCH ?= 1
 
 client-run-ios: client-export-ios
 	IOS_DEVICE="$(IOS_DEVICE)" IOS_LAUNCH="$(IOS_LAUNCH)" bash scripts/ios_run.sh
+
+# Android 签名参数只从环境变量读取：keystore 与口令不入库，也不写进命令行。
+ANDROID_KEYSTORE_PATH ?=
+ANDROID_KEYSTORE_USER ?=
+ANDROID_KEYSTORE_PASSWORD ?=
+ANDROID_OUTPUT ?= output/android
+export ANDROID_KEYSTORE_PATH ANDROID_KEYSTORE_USER ANDROID_KEYSTORE_PASSWORD
+
+# Android 侧载 APK：arm64、横屏、包名 com.civilization.banner，release keystore 签名。
+# 缺少任一 ANDROID_KEYSTORE_* 或 keystore 文件时直接失败，不产出未签名包。
+client-export-android: client-export-templates client-import
+	@[ -f "$(GODOT_TEMPLATE_DIR)/android_release.apk" ] || { echo "缺少 Android 导出模板：$(GODOT_TEMPLATE_DIR)/android_release.apk" >&2; exit 1; }
+	@[ -n "$$ANDROID_KEYSTORE_PATH" ] || { echo "需要 ANDROID_KEYSTORE_PATH（release keystore 路径）" >&2; exit 1; }
+	@[ -n "$$ANDROID_KEYSTORE_USER" ] || { echo "需要 ANDROID_KEYSTORE_USER（keystore alias）" >&2; exit 1; }
+	@[ -n "$$ANDROID_KEYSTORE_PASSWORD" ] || { echo "需要 ANDROID_KEYSTORE_PASSWORD（keystore 口令）" >&2; exit 1; }
+	@[ -f "$$ANDROID_KEYSTORE_PATH" ] || { echo "Android keystore 不存在：$$ANDROID_KEYSTORE_PATH" >&2; exit 1; }
+	GODOT="$(GODOT)" GODOT_TEMPLATE_DIR="$(GODOT_TEMPLATE_DIR)" ANDROID_OUTPUT="$(ANDROID_OUTPUT)" \
+	  bash scripts/android_export.sh apk
+
+# Android 商店 AAB：与 APK 同一 keystore 与 arm64 预设，走 Gradle 构建。
+# 首次导出会在 client/android/build 安装构建模板，导出后由脚本清理。
+client-export-android-aab: client-export-templates client-import
+	@[ -f "$(GODOT_TEMPLATE_DIR)/android_source.zip" ] || { echo "缺少 Android 构建模板：$(GODOT_TEMPLATE_DIR)/android_source.zip" >&2; exit 1; }
+	@[ -n "$$ANDROID_KEYSTORE_PATH" ] || { echo "需要 ANDROID_KEYSTORE_PATH（release keystore 路径）" >&2; exit 1; }
+	@[ -n "$$ANDROID_KEYSTORE_USER" ] || { echo "需要 ANDROID_KEYSTORE_USER（keystore alias）" >&2; exit 1; }
+	@[ -n "$$ANDROID_KEYSTORE_PASSWORD" ] || { echo "需要 ANDROID_KEYSTORE_PASSWORD（keystore 口令）" >&2; exit 1; }
+	@[ -f "$$ANDROID_KEYSTORE_PATH" ] || { echo "Android keystore 不存在：$$ANDROID_KEYSTORE_PATH" >&2; exit 1; }
+	GODOT="$(GODOT)" GODOT_TEMPLATE_DIR="$(GODOT_TEMPLATE_DIR)" ANDROID_OUTPUT="$(ANDROID_OUTPUT)" \
+	  bash scripts/android_export.sh aab
 
 # 1 个 Godot 客户端 + 7 个机器人的无头端到端。
 m1b-build:

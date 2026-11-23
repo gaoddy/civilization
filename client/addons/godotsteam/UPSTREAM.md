@@ -7,5 +7,5 @@
 - 兼容下限：Godot 4.4（`godotsteam.gdextension` 的 `compatibility_minimum`）
 
 仓库只保留 macOS 渠道所需的二进制（`osx/`），Linux / Windows / Android 平台文件随
-`sdl`/`ios` 等版本再补；`godotsteam.gdextension` 保留上游全平台声明，未落盘的平台
-不参与本项目导出。
+`sdl`/`ios` 等版本再补；`godotsteam.gdextension` 只声明已落盘的 macOS 平台，避免
+导出其他平台时打入 0 字节库。补入新平台二进制时同步新增对应声明。

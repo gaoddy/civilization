@@ -220,3 +220,9 @@ func _on_retry_pressed() -> void:
 
 func _on_back_pressed() -> void:
     UINavigation.navigate(self, UINavigation.PAGE_LOBBY)
+
+
+## Android 系统返回：执行与页面常驻返回按钮相同的动作。
+func system_back() -> bool:
+    _on_back_pressed()
+    return true

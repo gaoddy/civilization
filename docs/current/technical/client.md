@@ -1,8 +1,8 @@
 # Godot 客户端
 
-> 状态：已实现（v0.1 M1b + 首版剩余四项：赛后回顾、房间生命周期、首局引导、macOS 与 iOS 导出）
+> 状态：已实现（v0.1 M1b + 首版剩余四项：赛后回顾、房间生命周期、首局引导、macOS 与 iOS 导出；v0.2 起加入 Android 导出与系统返回路由）
 > 代码：`client/`
-> 验收：`make client-check`、`make client-smoke`、`make m1b-e2e`、`make client-export`、`make client-export-ios`
+> 验收：`make client-check`、`make client-smoke`、`make m1b-e2e`、`make client-export`、`make client-export-ios`、`make client-export-android`、`make client-export-android-aab`
 
 本文记录 v0.1 已实现的 Godot 客户端现状：工程结构、全局状态与网络层、六个场景、生成物与运行方式；不描述服务端房间服务（见[房间服务与联网](room-service/README.md)）与产品规则（见[规则引擎与模拟器](rule-engine-and-simulator.md)）。
 
@@ -10,9 +10,9 @@
 
 ```
 client/
-  project.godot              # 主场景 login.tscn；autoload：ScreenProfile、WindowSizer、GameStore、CardDB、Net、Sfx、Platform、LocalServer
-  export_presets.cfg         # macOS 预设（Universal、未签名）、macOS 本地调试预设（embedded_server）与 iOS 预设（开发签名）
-  icon.png                   # 应用图标 1024×1024；iOS 导出按尺寸缩放生成
+  project.godot              # 主场景 login.tscn；autoload：ScreenProfile、WindowSizer、GameStore、CardDB、Net、Sfx、Platform、LocalServer、SystemBack
+  export_presets.cfg         # macOS 预设（Universal、未签名）、macOS 本地调试预设（embedded_server）、iOS 预设（开发签名）与 Android APK / AAB 预设（release 签名）
+  icon.png                   # 应用图标 1024×1024；iOS 与 Android 导出按尺寸缩放生成
   .gitignore                 # 忽略 .godot/ 与 *.uid
   autoload/
     screen_profile.gd        # 设备类型、逻辑基准、内容框比例、pt→画布换算、安全区与键盘边距
@@ -22,6 +22,7 @@ client/
     card_db.gd               # 只读卡牌/技能展示表与科学分类树；展示文本按文本 id 从文本表取
     sfx.gd                   # 对局音效播放池、场景/卡牌资源路径与默认音效回落（autoload Sfx）
     local_server.gd          # 单机调试包：启动内嵌 room-service 与 sim、读取房间码并交给登录/大厅自动流程（autoload LocalServer）
+    system_back.gd           # Android 系统返回键与返回手势路由：先收可关闭浮层，再交给页面 system_back()（autoload SystemBack）
   text/
     zh_CN.csv                # 唯一的运行时中文文本表（生成物 + 人工 key）
   assets/
@@ -275,6 +276,8 @@ client/
 | `make ui-preview` | 真实窗口装载指定页面/场景并注入夹具，`FOCUS` 高亮子节点；不截图，窗口保持打开；见 §5 |
 | `make ui-preview-check` | 与 `ui-preview` 参数相同但自动退出，按 `VIEW_PREVIEW_OK` / `VIEW_PREVIEW_FAIL` 判定；只用于本机 GUI 冒烟 |
 | `make client-export-ios` | 导出 Xcode 工程并用 `xcodebuild` 自动签名，打包 `output/ios/Civilization-ios.ipa`；见 §9 |
+| `make client-export-android` | 导出 arm64 APK 到 `output/android/Civilization.apk`；签名参数从 `ANDROID_KEYSTORE_*` 环境变量读取，缺失时失败；见 §9 |
+| `make client-export-android-aab` | 导出 arm64 AAB 到 `output/android/Civilization.aab`；同一 keystore 签名，走 Gradle 构建；见 §9 |
 | `make m1b-e2e` | 启动服务端、Godot 无头客户端与 7 个 `sim bot`，要求输出 `M1B_E2E_OK` |
 | `make dev-bots` | 启动服务端（监听 `0.0.0.0`，手机可直连）与 7 个机器人并打印房间码，一局结束后自动准备下一局，供开发者用客户端作为第 8 人反复联调 |
 
@@ -411,12 +414,12 @@ make ui-preview SETUP=res://tests/previews/game_rail.gd     # 无 .tscn 的组�
 - 发行链路（`macOS`、`Steam`、`iOS` 预设与 `make client-export` / `client-export-steam` / `client-export-ios`）不带 `embedded_server` 特性，也不复制 sidecar；冒烟与直接 `make client-run` 不设置 `CIVILIZATION_LOCAL_SERVER`，`LocalServer` 不启动任何进程。
 - 当前只完成构建级与静态校验（调试产物导出成功、sidecar 可执行、`make client-export` 产物不含 sidecar）；GUI 端到端（自动登录、自动入房、完成一局、退出后进程回收）尚未在真实产物中验收，由主 agent 在 8080 空闲时执行。
 
-## 9. iOS 移动端
+## 9. 移动端（iOS 与 Android）
 
 ### 设备与布局
 
 - `ScreenProfile`（autoload）在启动时按设备设置 `content_scale_size`：iPhone 为 960×540，iPad 与桌面为 1280×720；`expand` 下按基准等比缩放后逻辑视口铺满整个窗口，宽度与高度都随窗口比例扩展。`content_frame(viewport, base)` 给出内容框：固定 16:9 的 contain 区域（受限一侧贴满，另一侧居中留背景）；`launch_window_size(usable, base)` 给出桌面启动窗口尺寸（可用区域 90% 收成 16:9），窗口拖动后不再介入。`project.godot` 的 `display/window/handheld/orientation=4`（`SCREEN_SENSOR_LANDSCAPE`）锁定左右横屏。
-- 设备判定：iOS 上按 `OS.get_model_name()` 前缀区分 iPad 与 iPhone；机型名不可用时按屏幕长宽比兜底。非 iOS 与无头环境一律按桌面处理。
+- 设备判定：iOS 上按 `OS.get_model_name()` 前缀区分 iPad 与 iPhone，机型名不可用时按屏幕比例兜底；Android 上按屏幕短边（不小于 600dp）与长宽比（低于 1.5）区分平板与手机，密度取 `DisplayServer.screen_get_scale()` 与 `screen_get_dpi() / 160` 中较大的值。其它平台与无头环境一律按桌面处理。
 - 换算公式是纯函数：`canvas_scale`、`canvas_hit_min`、`canvas_from_pixels`、`canvas_insets`。`DisplayServer.get_display_safe_area()` 与 `virtual_keyboard_get_height()` 返回像素，按内容矩形换算为画布单位；内容矩形即 `content_frame` 给出的 16:9 居中框，落在背景带内的边距记零。键盘高度由 `keyboard_from_pixels` 先与底部背景带抵消，只有越过内容框底边的部分才换算为让位高度。
 - `UILayout.safe_area(page, page_texture)` 在页面 `_ready()` 第一句调用，把页面内容移入 `ContentFrame → ContentRoot → PageBody → SafeAreaMargin`；调用后新增的子节点按创建顺序自动移入安全区：`ContentFrame` 是 16:9 居中框，`ContentRoot` 以设计基准尺寸布局、按内容框高度缩放；`PageBody` 与设计画布同尺寸，`PageSurface` 是它承载的页面背景（`page_texture` 非空时按容器尺寸拉伸，否则为 `panel_style("page")` 语义面板）；`SafeAreaMargin` 内桌面四边为零，触控端取安全区四边，底部取安全区与键盘高度的较大值。整屏软件背景（`PageBackground`）留在包裹层外并置底，铺满视口，安全区只约束内容控件；图鉴页自带整屏背景时关闭 `CardGallery` 的组件背景。键盘边距只在页面内 `LineEdit` 获得焦点期间逐帧读取。`UILayout.safe_layer(page)` 供对局内图鉴覆盖层等动态全屏节点挂载。覆盖层（详情、瞄准）随 `ContentRoot` 整体缩放，输入坐标先经画布与全局变换换算到内容框局部，再按层缩放换算矩形尺寸。
 - `UITheme.hit_primary()` / `hit_small()` 把 44pt / 32pt 换算为画布单位；`UIControls.button` 与 `UIControls.styled_button` 在触控端按此抬升最小高度，桌面端保留原值；`UIControls.line_edit` 桌面高 34，触控端同样按 `hit_primary()` 抬升。
@@ -430,7 +433,7 @@ make ui-preview SETUP=res://tests/previews/game_rail.gd     # 无 .tscn 的组�
 - `HandSlot` 在触摸释放、拖拽结束与重建卡片时显式复位缩放、`z_index` 与右侧槽位的 `mouse_filter`，弥补触控端没有 `mouse_exited` 的问题。
 - 招募河道倒计时的悬停翻转在触控端只认 `InputEventScreenTouch`，桌面只认鼠标事件：真机上一次触摸会同时产生触摸与模拟鼠标按下，两个分支都放行会发出两条 `EndRecruit`，后一条在阶段推进后收到 `INVALID_STAGE`。触控平台判定统一用 `ScreenProfile.is_touch()`；`is_simulated_touch()` 只描述桌面模拟档位，不能用来区分真机。
 - 冒烟用 `ScreenProfile.set_device_for_test` 覆盖设备档位、`set_native_touch_for_test` 覆盖真机触控判定，从而在桌面构造真机触控分支。
-- 单击、拖拽继续依赖 Godot 的 `emulate_mouse_from_touch`；`Esc` 返回在触控端由常驻返回按钮替代。
+- 单击、拖拽继续依赖 Godot 的 `emulate_mouse_from_touch`；iOS 的 `Esc` 返回由常驻返回按钮替代，Android 另由 `SystemBack` 处理系统返回键与返回手势。
 
 ### 联调地址
 
@@ -453,6 +456,17 @@ make ui-preview SETUP=res://tests/previews/game_rail.gd     # 无 .tscn 的组�
 - 构建产物在 `output/ios/build/Build/Products/Release-iphoneos/`；`output/` 不提交。
 - `make client-run-ios` 默认取 `devicectl` 中第一台已连接（`connected`）的 iPhone，并打印所选设备名与 UDID；`IOS_DEVICE=<设备名|UDID>` 指定其他设备，`IOS_LAUNCH=0` 只安装不启动（设备锁屏或未解锁时启动失败，安装不受影响）。
 - 安装要求设备已在 Xcode 中信任并开启开发者模式；没有已连接的 iPhone 时目标直接失败并列出当前设备。
+
+### Android 端
+
+- 工程设置：`project.godot` 的 `display/window/handheld/orientation=4`（`SCREEN_SENSOR_LANDSCAPE`）锁定左右横屏；`application/config/quit_on_go_back=false` 关闭引擎默认的「返回即退出」；`input_devices/pointing/emulate_mouse_from_touch=true` 保留触摸到鼠标的 GUI 映射，`emulate_touch_from_mouse=false`，桌面模拟触控档位仍由 `ScreenProfile` 在运行时开启。渲染继续使用 `renderer/rendering_method.mobile="gl_compatibility"` 与 ASTC。
+- 设备档位：`ScreenProfile._detect_device()` 在 Android 上按屏幕短边（不小于 600dp）与长宽比（低于 1.5 归平板）判定；安全区、软键盘高度与命中尺寸沿用 iOS 的 `DisplayServer` 调用，`window_sizer.gd` 在真机触控端不调整窗口尺寸。
+- 系统返回键与手势：autoload `SystemBack` 监听 `NOTIFICATION_WM_GO_BACK_REQUEST`，顺序为可关闭浮层（`FriendsPanel`、`GalleryFilterPanel`、`GalleryDetailLayer`）→ 当前场景 `system_back()` → 忽略。账号页执行常驻返回按钮动作，图鉴页回大厅，对局页收起图鉴覆盖层；大厅、房间、结算、登录与对局其它状态没有返回动作，返回键忽略且不退出应用。邀请弹窗、匹配排队浮层、发现 / 进化选择与状态模态有待处理业务状态，不随返回键关闭。
+- 导出预设：`Android`（APK，`gradle_build/export_format=0`，沿用导出模板的 SDK 版本）与 `Android AAB`（`export_format=1`，Gradle 构建，`minSdk 24`、`targetSdk 35`）。两者包名 `com.civilization.banner`、应用名 `Civilization`、arm64-v8a、`package/signed=true`、`screen/immersive_mode=true`、`screen/edge_to_edge=true`。
+- 签名：`make client-export-android` / `client-export-android-aab` 只从 `ANDROID_KEYSTORE_PATH`、`ANDROID_KEYSTORE_USER`、`ANDROID_KEYSTORE_PASSWORD` 读取，缺失时目标失败，不产出未签名包。`scripts/android_export.sh` 在导出期间把参数临时写入预设，退出时恢复备份；AAB 首次导出临时安装 Gradle 构建模板并在结束后删除 `client/android/`。口令不进入仓库或命令行。
+- 导出前置条件：Godot 编辑器设置 `export/android/java_sdk_path` 指向 JDK 17+，并配置 `export/android/android_sdk_path`；APK 需要 `android_release.apk` 模板，AAB 另需 `android_source.zip`。`make client-export-android*` 不修改编辑器设置，缺失时由 Godot 报错。
+- 已知问题：`client/addons/godotsteam/godotsteam.gdextension` 声明了 Android / Linux / Windows 库，但仓库只保留 macOS 二进制；Android 产物内会出现 0 字节的 `libgodotsteam*.so` 与 `libsteam_api.so`，导出日志报无法打开对应文件。产物仍可生成，Android 端运行时的扩展加载行为未验证。
+- 验证记录（2026-11-23）：`make client-check` 退出码 0（目标内包含 `client-import`）；`make client-export-android` 与 `make client-export-android-aab` 在隔离 HOME（JBR 21 临时编辑设置）与临时测试 keystore 下成功产出 APK / AAB，`apksigner verify` 与 `jarsigner -verify` 通过。Android 手机与平板真机、系统返回手势与软键盘手测未验证（本机无已连接 Android 设备）。
 
 ## 10. 美术素材层
 
