@@ -163,7 +163,7 @@ client/
 ## 2. 全局状态与网络层
 
 - `GameStore`：保存 `playerId`、`playerCode`、`token`、`roomId`、`roomCode`、房间成员、`PlayerView`、`lastSeq`、排名、种子、本人赛后统计 `self_stats`、`RoomClosed` 原因 `room_closed_reason`，以及社交视图 `friends` / `incoming_requests` / `outgoing_requests` / `recent_players` / `pending_invites`。`handle(type, payload)` 只做字段搬运，发出 `auth_changed`、`room_changed`、`view_changed`、`events_received`、`game_started`、`game_over`、`room_closed`、`error_received`、`social_changed`、`invite_received`、`invite_result_received` 信号；每封 `StateUpdate` 的 `events` 在视图写入后原样转发一次，`Snapshot` 重连补发不转发；`FriendUpdate` 整段替换社交列表，`FriendInvite` 按 `inviteId` 去重后入队，`InviteAccepted` 移除邀请并自动补发 `JoinRoom{roomCode}`。`GameOver` 写入 `ranking`、`game_seed` 与 `selfStats`；`RoomClosed` 先暂存 `reason`，`reset_room()` 后写回 `room_closed_reason`、补发 `LeaveRoom` 并发出 `room_closed`。`reset_room()` 清空房间与对局状态，`clear_game_view()` 只清本局视图（保留房间与社交），`reset_social()` 清空社交，`reset_session()` 两者都清并清空身份与令牌。
-- `Net`：持有一个 `WebSocketPeer`，`_process` 中轮询；连接建立后先认证，断线每 3 秒自动重连。重连时以令牌发 `AuthRequest`，若仍在房间再发 `Reconnect{roomId, lastSeq}`，由服务端回全量 `Snapshot`。连接前用 `prefer_ipv4_url` 把 URL 主机名解析成 IPv4：`WebSocketPeer` 只尝试解析结果的第一条地址，双栈主机名常先拿到 IPv6。
+- `Net`：持有一个 `WebSocketPeer`，`_process` 中轮询；连接建立后先认证，断线每 3 秒自动重连。重连时以令牌发 `AuthRequest`，若仍在房间再发 `Reconnect{roomId, lastSeq}`，由服务端回全量 `Snapshot`。连接前用 `prefer_ipv4_url` 把 `ws://` URL 主机名解析成 IPv4（`wss://` 保留域名交给 TLS 证书校验）：`WebSocketPeer` 只尝试解析结果的第一条地址，双栈主机名常先拿到 IPv6。
 - 下行信封只校验 `v == 1` 与 `type`，`payload` 原样交给 `GameStore`；未知类型忽略。上行信封为 `{v, id, type, ts, payload}`，`id` 由时间戳与计数器生成。
 - `CardDB`：启动时读取 `client/generated/{cards,heroes,skills,taxonomy}.json`。卡名、技能文本与时代名不放在生成数据里，而是按文本 id 从 `client/text/zh_CN.csv` 取：`display_name` 取 `card.<id>.name`，`hero_introduction` 取 `card.<id>.introduction`，`display_text` 取 `skill.<id>.text`，`era_name` 取 `enum.era.<id>`。不参与任何规则判定。
 - `CardDB` 的玩法与分类接口：
@@ -325,7 +325,7 @@ make client-run-on-desktop                         # CLIENT_DEVICE=desktop
 
 命令打印两行 `ROOM_CODE=<6 位>` 与提示后等待，开发者在客户端大厅输入该房间码、选英雄并准备，8 人齐自动开局。一局结束后服务端不重启，7 个机器人自动建下一局并打印新的 `ROOM_CODE`（房间码按服务端计数器递增）；在结算页点「确定」回大厅、输入新房间码即可继续。每局的机器人意图种子自动 +1（`DEV_INTENT_SEED` 指定第 1 局的起始值，缺省 0），重开时机器人决策不会一成不变。`Ctrl-C` 一次退出全部进程并释放端口；`DEV_ROUNDS=<正整数>` 限定局数，缺省一直循环。端口被占用时立即失败，用 `make dev-bots DEV_PORT=8081` 换端口。需要自定义机器人名字或英雄时改用下面的手动方式。
 
-`make dev-bots` 把服务端监听在 `0.0.0.0:8080`，手机与开发机同一局域网时可直接连接：移动端登录页默认地址为 `ws://<开发机 Bonjour 主机名>.local:8080/ws`（当前 `cooter.local`），桌面端仍为 `ws://127.0.0.1:8080/ws`。客户端连接前把主机名解析成 IPv4 再连（`Net.prefer_ipv4_url`）：`WebSocketPeer` 只尝试解析结果的第一条地址，双栈主机名会先拿到 IPv6，而服务端只监听 IPv4。
+`make dev-bots` 把服务端监听在 `0.0.0.0:8080`，手机与开发机同一局域网时可直接连接：移动端登录页默认地址为 `ws://<开发机 Bonjour 主机名>.local:8080/ws`（当前 `cooter.local`），桌面端仍为 `ws://127.0.0.1:8080/ws`。客户端连接前对 `ws://` 地址把主机名解析成 IPv4 再连（`Net.prefer_ipv4_url`）：`WebSocketPeer` 只尝试解析结果的第一条地址，双栈主机名会先拿到 IPv6，而服务端只监听 IPv4；`wss://` 保留域名，避免换成 IP 后证书校验失败。
 
 手动方式：
 
@@ -403,7 +403,7 @@ make ui-preview SETUP=res://tests/previews/game_rail.gd     # 无 .tscn 的组�
 - 两个目标只在 macOS 上可用，非 Darwin 主机直接报错退出；本机引擎版本与固定版本不符时同样退出非 0。
 - Universal 导出要求 `project.godot` 启用 `rendering/textures/vram_compression/import_etc2_astc` 与 `import_s3tc_bptc`，缺失时 Godot 会拒绝导出。
 - 产物未做正式签名与公证：`codesign/codesign=0` 禁用导出时的重签，但可执行文件仍保留 Godot 模板内置的 ad-hoc 签名。首次打开需右键「打开」，或在「系统设置 → 隐私与安全性」中放行；经 zip 下载后解压的副本同样会被 Gatekeeper 拦截。
-- 导出物内置服务器地址由构建环境决定：release 导出按 `ENV`/`env` 写入地址（`local` 为空配置，`dev` 为 `wss://civilization.satori.host/ws`，`prod` 取 `CLIENT_PROD_SERVER_URL`）；编辑器运行与 `client-export-local` 同样为空配置，回落到桌面 `ws://127.0.0.1:8080/ws`、移动端 `ws://cooter.local:8080/ws`。登录页不提供服务器输入，运行时始终使用构建配置或平台默认值。连接前主机名先解析为 IPv4，避免双栈主机名拿到 IPv6。
+- 导出物内置服务器地址由构建环境决定：release 导出按 `ENV`/`env` 写入地址（`local` 为空配置，`dev` 为 `wss://civilization.satori.host/ws`，`prod` 取 `CLIENT_PROD_SERVER_URL`）；编辑器运行与 `client-export-local` 同样为空配置，回落到桌面 `ws://127.0.0.1:8080/ws`、移动端 `ws://cooter.local:8080/ws`。登录页不提供服务器输入，运行时始终使用构建配置或平台默认值。连接前 `ws://` 地址的主机名先解析为 IPv4，避免双栈主机名拿到 IPv6；`wss://` 保留域名以满足证书校验。
 
 ### 单机调试包
 
@@ -442,7 +442,7 @@ make ui-preview SETUP=res://tests/previews/game_rail.gd     # 无 .tscn 的组�
 
 ### 联调地址
 
-- 空配置时移动端默认 `ws://cooter.local:8080/ws`（`Net.MOBILE_URL`）：`cooter` 取开发机 `scutil --get LocalHostName`，换机器时改该常量并重新导出；iOS 通过 Bonjour 解析 `.local`，开发机 IP 变化不影响。连接前 `Net.prefer_ipv4_url` 用 `IP.resolve_hostname(host, IP.TYPE_IPV4)` 把主机名换成 IPv4：`WebSocketPeer` 只尝试解析结果的第一条地址，双栈主机名会先拿到 IPv6，而服务端只监听 IPv4，直接连主机名会失败；无法解析时保留原地址交给连接层报错。
+- 空配置时移动端默认 `ws://cooter.local:8080/ws`（`Net.MOBILE_URL`）：`cooter` 取开发机 `scutil --get LocalHostName`，换机器时改该常量并重新导出；iOS 通过 Bonjour 解析 `.local`，开发机 IP 变化不影响。连接前 `Net.prefer_ipv4_url` 对 `ws://` 用 `IP.resolve_hostname(host, IP.TYPE_IPV4)` 把主机名换成 IPv4：`WebSocketPeer` 只尝试解析结果的第一条地址，双栈主机名会先拿到 IPv6，而服务端只监听 IPv4，直接连主机名会失败；无法解析时保留原地址交给连接层报错。`wss://` 不做替换，保留域名交给 TLS 证书校验。
 - 桌面端默认 `ws://127.0.0.1:8080/ws`（`Net.DESKTOP_URL`）。`Net.default_url_for(mobile)` 是纯函数，冒烟直接断言两端取值；登录页不提供服务器输入，`connect_to("")` 回落到当前平台默认值。
 - 服务端默认只监听 `127.0.0.1:8080`；真机联调必须用 `make dev-bots`（监听 `0.0.0.0`）或手动 `cargo run -p room-service -- --listen 0.0.0.0:8080`。首次连接会触发 iOS 本地网络权限弹窗，描述文案已写入导出预设的 `NSLocalNetworkUsageDescription`。
 

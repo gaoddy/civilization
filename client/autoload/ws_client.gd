@@ -50,14 +50,18 @@ static func default_url_for(mobile: bool, steam := false) -> String:
     return MOBILE_URL if mobile else DESKTOP_URL
 
 
-## 连接前把 URL 里的主机名换成解析出的 IPv4。
+## 连接前把 `ws://` URL 里的主机名换成解析出的 IPv4。
 ##
 ## `WebSocketPeer` 只取解析结果的第一条地址，双栈主机名（如 `cooter.local`）常先拿到
 ## IPv6，而服务端只监听 IPv4，直接连接会失败。主机已是 IP 字面量、解析失败或拿到
 ## 非 IPv4 时原样返回，交给连接层报错。
+##
+## `wss://` 不做替换：平台入口证书只签域名，换成 IP 后 TLS 按 IP 校验会握手失败。
 static func prefer_ipv4_url(url: String, resolver = null) -> String:
     var sep := url.find("://")
     if sep < 0:
+        return url
+    if url.substr(0, sep).to_lower() != "ws":
         return url
     var rest := url.substr(sep + 3)
     var slash := rest.find("/")

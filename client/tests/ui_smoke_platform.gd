@@ -31,7 +31,11 @@ func _check_default_url() -> void:
 ## 主机名先解析成 IPv4 再连接：双栈解析返回的第一条常是 IPv6，服务端只监听 IPv4。
 func _check_prefer_ipv4_url() -> void:
     var resolve := func(host: String) -> String:
-        return "192.168.31.3" if host == "cooter.local" else ""
+        if host == "cooter.local":
+            return "192.168.31.3"
+        if host == "civilization.satori.host":
+            return "198.51.100.7"
+        return ""
     _check(
         Net.prefer_ipv4_url("ws://cooter.local:8080/ws", resolve)
         == "ws://192.168.31.3:8080/ws",
@@ -54,6 +58,11 @@ func _check_prefer_ipv4_url() -> void:
     _check(
         Net.prefer_ipv4_url("ws://[::1]:8080/ws", resolve) == "ws://[::1]:8080/ws",
         "IPv6 字面量原样保留",
+    )
+    _check(
+        Net.prefer_ipv4_url("wss://civilization.satori.host/ws", resolve)
+        == "wss://civilization.satori.host/ws",
+        "TLS 地址保留主机名交给证书校验",
     )
 
 
