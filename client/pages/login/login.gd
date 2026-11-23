@@ -5,7 +5,6 @@ extends Control
 
 var _status: Label
 var _login_button: Button
-var _server: LineEdit
 var _phone: LineEdit
 var _code: LineEdit
 var _name: LineEdit
@@ -58,7 +57,6 @@ func _build_dev(box: VBoxContainer) -> void:
     box.add_child(UIControls.label(tr("ui.login.subtitle"), UITheme.font_size("font-body")))
     box.add_child(HSeparator.new())
 
-    _server = _add_field(box, tr("ui.login.server"), Net.default_url())
     _phone = _add_field(box, tr("ui.login.phone"), "13900000000")
     _code = _add_field(box, tr("ui.login.code"), "123456")
     _name = _add_field(box, tr("ui.login.display_name"), tr("ui.login.default_display_name"))
@@ -101,11 +99,11 @@ func _add_field(parent: VBoxContainer, title: String, value: String) -> LineEdit
 
 func _on_login_pressed() -> void:
     _login_button.disabled = true
-    _status.text = tr("ui.login.connecting") % _server.text
+    _status.text = tr("ui.login.connecting") % Net.default_url()
     if Net.is_open():
         _on_connected()
     else:
-        Net.connect_to(_server.text.strip_edges())
+        Net.connect_to(Net.default_url())
 
 
 ## 调试包：本地服务就绪后用预填的开发账号自动提交登录。

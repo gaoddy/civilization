@@ -20,7 +20,7 @@ FONT_SOURCE ?= output/fonts/NotoSansSC[wght].ttf
 # 独立步骤的并行度：留空按 CPU 数（上限 8），JOBS=1 退回串行。
 JOBS ?=
 
-.PHONY: test lint audit data data-check docs-render assets assets-covers sfx font-subset balance-check protocol protocol-check protocol-rs protocol-rs-check m0-check m0-determinism m0-batch m0-report m1-check client-godot-check client-import client-run client-run-on-iphone client-run-on-ipad client-run-on-desktop client-check client-smoke asset-compress asset-compress-check ui-wireframe ui-preview ui-preview-check client-export-templates client-export client-export-local client-export-steam client-notarize steam-upload client-export-ios client-run-ios m1b-build m1b-e2e dev-bots db-up db-down db-reset db-test deploy-render deploy-lint deploy-check-env deploy-image deploy-load deploy-preflight deploy-apply deploy-rollout deploy-status deploy-smoke deploy
+.PHONY: test lint audit data data-check docs-render assets assets-covers sfx font-subset balance-check protocol protocol-check protocol-rs protocol-rs-check m0-check m0-determinism m0-batch m0-report m1-check client-godot-check client-import client-run client-run-on-iphone client-run-on-ipad client-run-on-desktop client-check client-smoke client-env-check asset-compress asset-compress-check ui-wireframe ui-preview ui-preview-check client-export-templates client-export client-export-local client-export-steam client-notarize steam-upload client-export-ios client-run-ios m1b-build m1b-e2e dev-bots db-up db-down db-reset db-test deploy-render deploy-lint deploy-check-env deploy-image deploy-load deploy-preflight deploy-apply deploy-rollout deploy-status deploy-smoke deploy
 
 test:
 	$(PYTHON) scripts/run_parallel.py $(if $(JOBS),--jobs $(JOBS),) \
@@ -336,13 +336,33 @@ client-export-templates: client-godot-check
 	  echo "导出模板已安装：$(GODOT_TEMPLATE_DIR)"; \
 	fi
 
+# 客户端导出环境：开发构建默认连 dev 公网入口，正式构建读取正式地址。
+# 正式地址当前为空，配置后才能导出 ENV=prod；未配置时直接失败，避免把开发包当正式包。
+CLIENT_DEV_SERVER_URL ?= wss://civilization.satori.host/ws
+CLIENT_PROD_SERVER_URL ?=
+# iOS 真机开发运行仍默认连开发机局域网，可用 CLIENT_DEV_SERVER_URL 覆盖。
+IOS_DEV_SERVER_URL ?= ws://cooter.local:8080/ws
+CLIENT_SERVER_URL = $(if $(filter prod,$(ENV)),$(CLIENT_PROD_SERVER_URL),$(CLIENT_DEV_SERVER_URL))
+
+client-env-check:
+	@$(if $(filter dev prod,$(ENV)),,$(error 客户端构建 ENV 只能是 dev 或 prod，收到：$(ENV)))
+	@$(if $(filter prod,$(ENV)),$(if $(strip $(CLIENT_PROD_SERVER_URL)),,$(error ENV=prod 需要 CLIENT_PROD_SERVER_URL=wss://...，当前为空)),)
+
 # 未签名 Universal .app 与 zip 产物。Gatekeeper 放行方式见 docs/current/technical/client.md。
-client-export: client-export-templates client-import
+client-export: client-env-check client-export-templates client-import
 	@[ "$$(uname -s)" = "Darwin" ] || { echo "client-export 仅支持 macOS（当前 $$(uname -s)）" >&2; exit 1; }
-	@mkdir -p output/desktop
-	rm -rf output/desktop/Civilization.app output/desktop/Civilization-macos.zip
-	"$(GODOT)" --headless --path client --export-release "macOS" "$(CURDIR)/output/desktop/Civilization.app"
-	test -x output/desktop/Civilization.app/Contents/MacOS/Civilization
+	@set -e; \
+	backup=$$(mktemp); \
+	cp client/generated/build_config.gd "$$backup"; \
+	trap 'cp "$$backup" client/generated/build_config.gd; rm -f "$$backup"' EXIT; \
+	SERVER_URL="$(CLIENT_SERVER_URL)" STEAM_APP_ID="" $(PYTHON) scripts/gen_build_config.py $(if $(filter prod,$(ENV)),--require-server,); \
+	mkdir -p output/desktop; \
+	rm -rf output/desktop/Civilization.app output/desktop/Civilization-macos.zip; \
+	"$(GODOT)" --headless --path client --export-release "macOS" "$(CURDIR)/output/desktop/Civilization.app"; \
+	cp "$$backup" client/generated/build_config.gd; \
+	rm -f "$$backup"; \
+	trap - EXIT; \
+	test -x output/desktop/Civilization.app/Contents/MacOS/Civilization; \
 	ditto -c -k --sequesterRsrc --keepParent output/desktop/Civilization.app output/desktop/Civilization-macos.zip
 
 # 本地调试包：启用 embedded_server 特性，内嵌 room-service 与 sim，只用于本机自测。
@@ -435,30 +455,40 @@ steam-upload:
 
 # iOS 真机开发签名包：先导出 Xcode 工程，再由 xcodebuild 自动签名并打包 .ipa。
 # 需要 Xcode 已登录 Apple 团队 Q62EFJPV3C，且目标真机已登记；否则 xcodebuild 失败。
-client-export-ios: client-export-templates client-import
+client-export-ios: client-env-check client-export-templates client-import
 	@[ "$$(uname -s)" = "Darwin" ] || { echo "client-export-ios 仅支持 macOS（当前 $$(uname -s)）" >&2; exit 1; }
 	@[ -f "$(GODOT_TEMPLATE_DIR)/ios.zip" ] || { echo "缺少 iOS 导出模板：$(GODOT_TEMPLATE_DIR)/ios.zip" >&2; exit 1; }
-	@mkdir -p output/ios
+	@set -e; \
+	backup=$$(mktemp); \
+	cp client/generated/build_config.gd "$$backup"; \
+	trap 'cp "$$backup" client/generated/build_config.gd; rm -f "$$backup"' EXIT; \
+	SERVER_URL="$(CLIENT_SERVER_URL)" STEAM_APP_ID="" $(PYTHON) scripts/gen_build_config.py $(if $(filter prod,$(ENV)),--require-server,); \
+	mkdir -p output/ios; \
 	rm -rf output/ios/Civilization output/ios/Civilization.xcodeproj output/ios/Civilization.xcframework \
 	  output/ios/MoltenVK.xcframework output/ios/libgodot_camera.*.xcframework \
-	  output/ios/Civilization.pck output/ios/Payload output/ios/Civilization-ios.ipa
-	"$(GODOT)" --headless --path client --export-release "iOS" "$(CURDIR)/output/ios/Civilization.xcodeproj"
-	test -d output/ios/Civilization.xcodeproj
+	  output/ios/Civilization.pck output/ios/Payload output/ios/Civilization-ios.ipa; \
+	"$(GODOT)" --headless --path client --export-release "iOS" "$(CURDIR)/output/ios/Civilization.xcodeproj"; \
+	cp "$$backup" client/generated/build_config.gd; \
+	rm -f "$$backup"; \
+	trap - EXIT; \
+	test -d output/ios/Civilization.xcodeproj; \
 	xcodebuild -project output/ios/Civilization.xcodeproj -scheme Civilization -configuration Release \
 	  -sdk iphoneos -destination 'generic/platform=iOS' -allowProvisioningUpdates \
-	  -derivedDataPath output/ios/build build
-	test -d output/ios/build/Build/Products/Release-iphoneos/Civilization.app
-	mkdir -p output/ios/Payload
-	ditto output/ios/build/Build/Products/Release-iphoneos/Civilization.app output/ios/Payload/Civilization.app
-	ditto -c -k --sequesterRsrc --keepParent output/ios/Payload output/ios/Civilization-ios.ipa
-	test -f output/ios/Civilization-ios.ipa
-	@echo "iOS 产物：output/ios/Civilization-ios.ipa"
+	  -derivedDataPath output/ios/build build; \
+	test -d output/ios/build/Build/Products/Release-iphoneos/Civilization.app; \
+	mkdir -p output/ios/Payload; \
+	ditto output/ios/build/Build/Products/Release-iphoneos/Civilization.app output/ios/Payload/Civilization.app; \
+	ditto -c -k --sequesterRsrc --keepParent output/ios/Payload output/ios/Civilization-ios.ipa; \
+	test -f output/ios/Civilization-ios.ipa; \
+	echo "iOS 产物：output/ios/Civilization-ios.ipa"
 
 # iOS 真机开发运行：导出并签名后安装到 iPhone 并启动。
 # 默认取第一台已连接的 iPhone；IOS_DEVICE 用设备名或 UDID 指定，IOS_LAUNCH=0 只安装。
 IOS_DEVICE ?=
 IOS_LAUNCH ?= 1
 
+# 真机联调仍默认连开发机局域网；显式传 CLIENT_DEV_SERVER_URL 可覆盖。
+client-run-ios: CLIENT_DEV_SERVER_URL = $(IOS_DEV_SERVER_URL)
 client-run-ios: client-export-ios
 	IOS_DEVICE="$(IOS_DEVICE)" IOS_LAUNCH="$(IOS_LAUNCH)" bash scripts/ios_run.sh
 

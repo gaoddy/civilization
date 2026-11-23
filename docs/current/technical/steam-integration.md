@@ -19,7 +19,7 @@
 | `client/pages/account/` | 账号页与手机号绑定 |
 | `client/pages/lobby/lobby_bottom_bar.gd` | Steam 渠道的大厅「账号」入口 |
 | `client/pages/room/room_action_bar.gd` | Steam 渠道的「邀请 Steam 好友」入口 |
-| `client/generated/build_config.gd` | 由 `scripts/gen_build_config.py` 生成；开发构建为空配置 |
+| `client/generated/build_config.gd` | 由 `scripts/gen_build_config.py` 生成；编辑器与本地调试为空配置，release 导出写入构建环境地址 |
 
 - 渠道由导出预设的 `custom_features="steam"` 决定（`OS.has_feature("steam")`）；GDExtension 通过 `Engine.has_singleton("Steam")` 动态获取，不注册 autoload。
 - 票据：`getAuthTicketForWebApi("civilization")` 后等待信号，10 秒超时；登录整体 12 秒超时。票据无效或 Steam 不可用只重试，不切换手机号。

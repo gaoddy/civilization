@@ -2,7 +2,7 @@
 
 > 状态：已实现（v0.1 M1b + 首版剩余四项：赛后回顾、房间生命周期、首局引导、macOS 与 iOS 导出）
 > 代码：`client/`
-> 验收：`make client-check`、`make client-smoke`、`make m1b-e2e`、`make client-export`、`make client-export-ios`
+> 验收：`make client-check`、`make client-smoke`、`make client-env-check`、`make m1b-e2e`、`make client-export`、`make client-export-ios`
 
 本文记录 v0.1 已实现的 Godot 客户端现状：工程结构、全局状态与网络层、六个场景、生成物与运行方式；不描述服务端房间服务（见[房间服务与联网](room-service/README.md)）与产品规则（见[规则引擎与模拟器](rule-engine-and-simulator.md)）。
 
@@ -180,7 +180,7 @@ client/
 
 | 场景 | 职责 |
 | --- | --- |
-| 登录 | 输入服务器地址、手机号、固定验证码 `123456` 与显示名；认证成功后进入大厅 |
+| 登录 | 输入手机号、固定验证码 `123456` 与显示名；服务器地址由构建配置决定，页面不提供输入；认证成功后进入大厅 |
 | 大厅 | 展示本人 6 位玩家编号；创建房间或凭房间码加入；左下角「好友」入口打开好友浮层（按编号添加、处理申请、删除好友、从最近队友回加），右下角进入卡牌图鉴；有待处理邀请时弹出邀请浮层，接受后自动入房；收到 `RoomUpdate` 后进入房间 |
 | 房间 | 展示成员确认状态、悬停候选卡看左右外侧详情、选择英雄并一键确认（选中用外扩边框，再次点击保持选中）；列出在线好友供一键邀请（对局中/离线置灰）；开局完全由服务端决定（全员准备后自动开始）；房主且等待区时每名成员行带 `Kick_<playerId>`，底部 `DissolveButton`，收到 `RoomClosed` 后按原因提示并回大厅 |
 | 对局 | 酒馆战棋式布局：右上角浮层工具组为 `GalleryButton`、`HintButton`、`LeaveGameButton`，页面不再有顶部状态条，等待、断线/重连、错误与未发出统一用居中状态模态（`StatusModal`）显示；左栏 8 行座位（按服务端 `rank` 升序，头像、名次角标、血量条，悬停详情含身份与对战记录）；中央舞台自上而下为招募组合或战斗组合、英雄行与贴底手牌。招募组合 438 高：商店操作行 84（升时代图标—84×84 售货员—刷新/冻结图标）、商店 6 槽、河道（金币在左、回合数居中、倒计时在右）、按容量棋盘；战斗组合 438 高：对手英雄行 84（84×84 英雄卡 + 84 宽身份列）、对手随从行、河道上下各 6（金币在左、回合与结果居中、「战斗中」在右）、我方随从行。英雄行 84 高：84×84 英雄卡、24 高被动技能标记行与全部主动技能图标（主动技能按视图顺序横排），淘汰后显示「已淘汰 · 观战中」；金币已移入河道，英雄行不再显示。手牌行 146 高贴底，允许被压缩且卡底可越过页面底部。十三种意图对应操作，冻结按钮按 `affordances.canUnfreeze` 发送 `FreezeShop` 或 `UnfreezeShop`；`pendingChoices` 弹层只保留发现与进化，以一排卡面或选项块呈现，点击即发 `ChooseDiscover`；战吼目标待选与需要目标的英雄技能改为瞄准层（从技能按钮或入场随从拉出弧线，松手命中候选生效，落空或 `Esc` 取消/放弃）；`GameAimLayer` 同时为需要目标的效果牌拖拽绘制同一套视觉 |
@@ -270,11 +270,12 @@ client/
 | `make client-run-on-ipad` | 等价于 `make client-run WIDTH=2360 HEIGHT=1640 CLIENT_DEVICE=tablet LOCAL_SERVER=1`，按 iPad Air 11 横屏物理分辨率开窗并进入平板档位，同时带上本地服务端与机器人 |
 | `make client-run-on-desktop` | 等价于 `make client-run CLIENT_DEVICE=desktop LOCAL_SERVER=1`，窗口按屏幕可用区自动收拢，同时带上本地服务端与机器人 |
 | `make client-check` | 协议/数据/文本表漂移 + 客户端边界断言 + 国际化断言 + 工程导入 |
+| `make client-env-check` | 校验客户端导出的 `ENV` 只能是 `dev` 或 `prod`；`ENV=prod` 时 `CLIENT_PROD_SERVER_URL` 必填，未配置直接失败 |
 | `make client-smoke` | 用 glob 逐个运行 `ui_smoke*.tscn` 冒烟场景，要求各自输出 `UI_SMOKE_OK` 且无 `SCRIPT ERROR`；任一场景断言失败时不输出 `UI_SMOKE_OK`，目标以非 0 退出；`SMOKE=<名称>` 只跑 `ui_smoke_<名称>.tscn` |
 | `make client-export-local` | 依赖 `client-export-templates`、`client-import` 与 `m1b-build`；导出调试用 `output/desktop-local/Civilization.app`，并把 debug 的 `room-service`、`sim` 复制进 `Contents/MacOS/`；仅 macOS、仅本机调试，见 §8 |
 | `make ui-preview` | 真实窗口装载指定页面/场景并注入夹具，`FOCUS` 高亮子节点；不截图，窗口保持打开；见 §5 |
 | `make ui-preview-check` | 与 `ui-preview` 参数相同但自动退出，按 `VIEW_PREVIEW_OK` / `VIEW_PREVIEW_FAIL` 判定；只用于本机 GUI 冒烟 |
-| `make client-export-ios` | 导出 Xcode 工程并用 `xcodebuild` 自动签名，打包 `output/ios/Civilization-ios.ipa`；见 §9 |
+| `make client-export-ios` | 按 `ENV` 写入服务器地址后导出 Xcode 工程，并用 `xcodebuild` 自动签名，打包 `output/ios/Civilization-ios.ipa`；见 §9 |
 | `make m1b-e2e` | 启动服务端、Godot 无头客户端与 7 个 `sim bot`，要求输出 `M1B_E2E_OK` |
 | `make dev-bots` | 启动服务端（监听 `0.0.0.0`，手机可直连）与 7 个机器人并打印房间码，一局结束后自动准备下一局，供开发者用客户端作为第 8 人反复联调 |
 
@@ -390,12 +391,15 @@ make ui-preview SETUP=res://tests/previews/game_rail.gd     # 无 .tscn 的组�
 | 命令 | 内容 |
 | --- | --- |
 | `make client-export-templates` | 按 `Makefile` 固定的 `4.7.2` 检查 `$HOME/Library/Application Support/Godot/export_templates/4.7.2.stable/`；缺失时下载并解压官方 `Godot_v4.7.2-stable_export_templates.tpz`，只安装其中的 `templates/` |
-| `make client-export` | 依赖 `client-export-templates` 与 `client-import`；清空旧产物后导出 `output/desktop/Civilization.app`，校验 `Contents/MacOS/Civilization` 可执行，再用 `ditto` 打包 `output/desktop/Civilization-macos.zip` |
+| `make client-env-check` | 校验 `ENV` 只能是 `dev` 或 `prod`；`ENV=prod` 时 `CLIENT_PROD_SERVER_URL` 必填，未配置直接失败 |
+| `make client-export` | 依赖 `client-env-check`、`client-export-templates` 与 `client-import`；按 `ENV` 临时写入服务器地址后清空旧产物、导出 `output/desktop/Civilization.app`，校验 `Contents/MacOS/Civilization` 可执行，再用 `ditto` 打包 `output/desktop/Civilization-macos.zip` |
+
+- 服务器地址按 `ENV` 选择：`ENV=dev`（默认）写入 `CLIENT_DEV_SERVER_URL`，默认 `wss://civilization.satori.host/ws`；`ENV=prod` 写入 `CLIENT_PROD_SERVER_URL`，当前为空，配置前导出直接失败。导出过程用 `trap` 恢复仓库内的空配置，失败也不会留下脏文件。
 
 - 两个目标只在 macOS 上可用，非 Darwin 主机直接报错退出；本机引擎版本与固定版本不符时同样退出非 0。
 - Universal 导出要求 `project.godot` 启用 `rendering/textures/vram_compression/import_etc2_astc` 与 `import_s3tc_bptc`，缺失时 Godot 会拒绝导出。
 - 产物未做正式签名与公证：`codesign/codesign=0` 禁用导出时的重签，但可执行文件仍保留 Godot 模板内置的 ad-hoc 签名。首次打开需右键「打开」，或在「系统设置 → 隐私与安全性」中放行；经 zip 下载后解压的副本同样会被 Gatekeeper 拦截。
-- 导出物内置默认服务器地址：桌面 `ws://127.0.0.1:8080/ws`，移动端 `ws://cooter.local:8080/ws`；登录页「服务器」字段仍可手改。连接前主机名先解析为 IPv4，避免双栈主机名拿到 IPv6。
+- 导出物内置服务器地址由构建环境决定：release 导出按 `ENV` 写入非空地址（`dev` 为 `wss://civilization.satori.host/ws`，`prod` 取 `CLIENT_PROD_SERVER_URL`）；编辑器运行与 `client-export-local` 仍为空配置，回落到桌面 `ws://127.0.0.1:8080/ws`、移动端 `ws://cooter.local:8080/ws`。登录页不提供服务器输入，运行时始终使用构建配置或平台默认值。连接前主机名先解析为 IPv4，避免双栈主机名拿到 IPv6。
 
 ### 单机调试包
 
@@ -434,8 +438,8 @@ make ui-preview SETUP=res://tests/previews/game_rail.gd     # 无 .tscn 的组�
 
 ### 联调地址
 
-- 移动端登录页默认 `ws://cooter.local:8080/ws`（`Net.MOBILE_URL`）：`cooter` 取开发机 `scutil --get LocalHostName`，换机器时改该常量并重新导出；iOS 通过 Bonjour 解析 `.local`，开发机 IP 变化不影响。连接前 `Net.prefer_ipv4_url` 用 `IP.resolve_hostname(host, IP.TYPE_IPV4)` 把主机名换成 IPv4：`WebSocketPeer` 只尝试解析结果的第一条地址，双栈主机名会先拿到 IPv6，而服务端只监听 IPv4，直接连主机名会失败；无法解析时保留原地址交给连接层报错。
-- 桌面端默认 `ws://127.0.0.1:8080/ws`（`Net.DESKTOP_URL`）。`Net.default_url_for(mobile)` 是纯函数，冒烟直接断言两端取值；登录页字段始终可手改，`connect_to("")` 回落到当前平台默认值。
+- 空配置时移动端默认 `ws://cooter.local:8080/ws`（`Net.MOBILE_URL`）：`cooter` 取开发机 `scutil --get LocalHostName`，换机器时改该常量并重新导出；iOS 通过 Bonjour 解析 `.local`，开发机 IP 变化不影响。连接前 `Net.prefer_ipv4_url` 用 `IP.resolve_hostname(host, IP.TYPE_IPV4)` 把主机名换成 IPv4：`WebSocketPeer` 只尝试解析结果的第一条地址，双栈主机名会先拿到 IPv6，而服务端只监听 IPv4，直接连主机名会失败；无法解析时保留原地址交给连接层报错。
+- 桌面端默认 `ws://127.0.0.1:8080/ws`（`Net.DESKTOP_URL`）。`Net.default_url_for(mobile)` 是纯函数，冒烟直接断言两端取值；登录页不提供服务器输入，`connect_to("")` 回落到当前平台默认值。
 - 服务端默认只监听 `127.0.0.1:8080`；真机联调必须用 `make dev-bots`（监听 `0.0.0.0`）或手动 `cargo run -p room-service -- --listen 0.0.0.0:8080`。首次连接会触发 iOS 本地网络权限弹窗，描述文案已写入导出预设的 `NSLocalNetworkUsageDescription`。
 
 ### iOS 导出

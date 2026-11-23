@@ -72,15 +72,19 @@ prod 首次新增 hostname 时，platform 侧还需要同步 satori nginx 转发
 
 ## 5. 客户端
 
-大厅服务端地址填：
+服务端地址由客户端构建配置决定，登录页不再提供服务器输入。
+
+- 开发构建（`make client-export ENV=dev`、`make client-export-ios ENV=dev`，`ENV` 默认即 dev）内置 dev 公网入口：
 
 ```text
 wss://civilization.satori.host/ws
 ```
 
+- 正式构建用 `ENV=prod`，地址取 `CLIENT_PROD_SERVER_URL`；该值当前为空，配置前导出会直接失败，避免把开发地址带进正式包。
+
 公网域名由 satori 宿主 nginx 终止 TLS 后反代到 dev Gateway，证书为公共 CA 签发，客户端不需要 hosts 或 `network/allow_insecure_tls`。
 
-局域网直连或排障时仍可用 `wss://civilization.dev.platform.internal/ws`：把该域名指向 Gateway 节点（dev 为 `192.168.31.5`），并打开客户端项目设置 `network/allow_insecure_tls`（`client/project.godot`，默认 `false`）。生产构建不得打开。
+局域网直连或排障时用构建参数覆盖开发地址，例如 `make client-export ENV=dev CLIENT_DEV_SERVER_URL=wss://civilization.dev.platform.internal/ws`：把该域名指向 Gateway 节点（dev 为 `192.168.31.5`），并打开客户端项目设置 `network/allow_insecure_tls`（`client/project.godot`，默认 `false`）。生产构建不得打开。
 
 ## 6. 运行约束
 

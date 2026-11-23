@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 """生成客户端构建配置 `client/generated/build_config.gd`。
 
-开发构建不写任何环境变量，生成空配置，客户端回落到本机调试地址；发布构建由
-`make client-export-steam` 传入 `SERVER_URL` 与 `STEAM_APP_ID`，缺任一值或地址不是
-`wss://` 时直接失败，不产出客户端。
+三档用法：
+
+- 编辑器运行与本地调试包不传参数，生成空配置，客户端回落到本机调试地址；
+- `make client-export ENV=prod` / `client-export-ios ENV=prod` 传 `--require-server`，
+  `SERVER_URL` 必须是 `wss://` 地址，缺值直接失败；
+- `make client-export-steam` 传 `--require`，在地址之外还要求 `STEAM_APP_ID`。
 """
 
 from __future__ import annotations
@@ -43,7 +46,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--require",
         action="store_true",
-        help="发布构建：SERVER_URL 与 STEAM_APP_ID 必须提供，且地址必须是 wss://",
+        help="Steam 发布构建：SERVER_URL 与 STEAM_APP_ID 必须提供，且地址必须是 wss://",
+    )
+    parser.add_argument(
+        "--require-server",
+        action="store_true",
+        help="正式构建：SERVER_URL 必须提供且是 wss://，不要求 STEAM_APP_ID",
     )
     parser.add_argument("--output", type=pathlib.Path, default=DEFAULT_OUTPUT)
     args = parser.parse_args(argv)
@@ -52,13 +60,13 @@ def main(argv: list[str] | None = None) -> int:
     raw_app_id = os.environ.get("STEAM_APP_ID", "").strip()
 
     try:
-        if args.require:
+        if args.require or args.require_server:
             if not server_url:
-                raise ValueError("发布构建需要 SERVER_URL")
+                raise ValueError("正式构建需要 SERVER_URL")
             if not server_url.startswith("wss://"):
                 raise ValueError(f"SERVER_URL 必须是 wss:// 地址：{server_url}")
-            if not raw_app_id:
-                raise ValueError("发布构建需要 STEAM_APP_ID")
+        if args.require and not raw_app_id:
+            raise ValueError("Steam 构建需要 STEAM_APP_ID")
         steam_app_id = _parse_app_id(raw_app_id) if raw_app_id else 0
     except ValueError as error:
         print(f"gen_build_config: {error}", file=sys.stderr)
@@ -66,7 +74,11 @@ def main(argv: list[str] | None = None) -> int:
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(render(server_url, steam_app_id), encoding="utf-8")
-    print(f"已生成 {args.output.relative_to(ROOT)}")
+    try:
+        shown = args.output.relative_to(ROOT)
+    except ValueError:
+        shown = args.output
+    print(f"已生成 {shown}")
     return 0
 
 

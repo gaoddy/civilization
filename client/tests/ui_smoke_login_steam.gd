@@ -151,7 +151,7 @@ func _check_dev_login_unchanged() -> void:
     if instance == null:
         return
     await get_tree().process_frame
-    _expect(instance.find_children("*", "LineEdit", true, false).size() == 4, "开发登录保留四个输入框")
+    _expect(instance.find_children("*", "LineEdit", true, false).size() == 3, "开发登录保留手机号、验证码与显示名三个输入框")
     _expect(instance.find_child("LoginButton", true, false) != null, "开发登录保留登录按钮")
     _expect(instance.find_child("RetryButton", true, false) == null, "开发登录没有 Steam 重试按钮")
     instance.queue_free()
