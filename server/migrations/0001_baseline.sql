@@ -72,3 +72,11 @@ CREATE TABLE room_invite (
 
 CREATE INDEX room_invite_to_idx ON room_invite (to_account_id);
 CREATE INDEX room_invite_expiry_idx ON room_invite (expires_at);
+
+-- 账号级成就解锁：只记录每个账号第一次达成，用于认证时下发与 Steam 侧只同步一次。
+CREATE TABLE account_achievement (
+    account_id TEXT NOT NULL REFERENCES account (account_id) ON DELETE CASCADE,
+    achievement_id TEXT NOT NULL CHECK (achievement_id <> ''),
+    unlocked_at TIMESTAMPTZ(3) NOT NULL,
+    PRIMARY KEY (account_id, achievement_id)
+);

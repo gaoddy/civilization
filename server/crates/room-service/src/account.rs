@@ -43,6 +43,8 @@ pub struct AccountStore {
     /// 已创建的账号数，只用于生成 `玩家N`；内存模式下不因清理而回退。
     ordinal: u64,
     next_code: u64,
+    /// 账号级成就解锁：每个账号第一次达成的成就 id。
+    achievements: BTreeMap<String, BTreeSet<String>>,
 }
 
 impl AccountStore {
@@ -56,6 +58,7 @@ impl AccountStore {
             codes: BTreeSet::new(),
             ordinal: 0,
             next_code: PLAYER_CODE_START,
+            achievements: BTreeMap::new(),
         }
     }
 
@@ -70,11 +73,22 @@ impl AccountStore {
             .await
             .map_err(|err| format!("载入账号失败: {err}"))?;
         let mut store = Self {
-            db: Some(db),
+            db: Some(db.clone()),
             ..Self::default()
         };
         for row in rows {
             store.cache_from_row(row);
+        }
+        let achievements = db
+            .load_achievements()
+            .await
+            .map_err(|err| format!("载入账号成就失败: {err}"))?;
+        for row in achievements {
+            store
+                .achievements
+                .entry(row.account_id)
+                .or_default()
+                .insert(row.achievement_id);
         }
         Ok(store)
     }
@@ -136,6 +150,52 @@ impl AccountStore {
     /// 账号页面视图：绑定状态与掩码手机号，不暴露原始身份。
     pub fn view(&self, player_id: &str) -> Option<AccountView> {
         self.by_id.get(player_id).map(account_view)
+    }
+
+    /// 账号已解锁的成就 id，按 id 升序。
+    pub fn unlocked_achievements(&self, player_id: &str) -> Vec<String> {
+        self.achievements
+            .get(player_id)
+            .map(|ids| ids.iter().cloned().collect())
+            .unwrap_or_default()
+    }
+
+    /// 记录账号首次解锁一个成就；本账号已解锁时返回 `false`。
+    ///
+    /// 内存模式下只写缓存；数据库模式下先落库再更新缓存。落库失败时不更新缓存，
+    /// 由调用方决定是否继续下发。
+    ///
+    /// # Errors
+    ///
+    /// 账号不存在或数据库写入失败时返回 `INTERNAL_ERROR`。
+    pub async fn unlock_achievement(
+        &mut self,
+        player_id: &str,
+        achievement_id: &str,
+        now_ms: u64,
+    ) -> Result<bool, ErrorMessage> {
+        if !self.by_id.contains_key(player_id) {
+            return Err(error_message("INTERNAL_ERROR", "账号不存在", false));
+        }
+        if self
+            .achievements
+            .get(player_id)
+            .is_some_and(|ids| ids.contains(achievement_id))
+        {
+            return Ok(false);
+        }
+        let inserted = match self.db.clone() {
+            Some(db) => db
+                .insert_achievement(player_id, achievement_id, ms_to_utc(now_ms))
+                .await
+                .map_err(|err| storage_error(&err))?,
+            None => true,
+        };
+        self.achievements
+            .entry(player_id.to_string())
+            .or_default()
+            .insert(achievement_id.to_string());
+        Ok(inserted)
     }
 
     /// 给 Steam 账号绑定手机号。
@@ -295,7 +355,39 @@ fn phone_already_bound_error() -> ErrorMessage {
 
 #[cfg(test)]
 mod tests {
-    use super::{mask_phone, normalize_display_name};
+    use super::{AccountStore, mask_phone, normalize_display_name};
+
+    #[tokio::test]
+    async fn achievement_unlock_is_account_level_and_idempotent() {
+        let mut store = AccountStore::new();
+        let account = store
+            .login("13800000001", None, 0)
+            .await
+            .expect("内存账号应创建成功");
+        assert!(store.unlocked_achievements(&account.player_id).is_empty());
+        assert!(
+            store
+                .unlock_achievement(&account.player_id, "genetics", 1)
+                .await
+                .expect("首次解锁应成功")
+        );
+        assert!(
+            !store
+                .unlock_achievement(&account.player_id, "genetics", 2)
+                .await
+                .expect("重复解锁应返回 false")
+        );
+        assert_eq!(
+            store.unlocked_achievements(&account.player_id),
+            vec!["genetics".to_string()]
+        );
+        assert!(
+            store
+                .unlock_achievement("p_missing", "genetics", 3)
+                .await
+                .is_err()
+        );
+    }
 
     #[test]
     fn mask_phone_keeps_prefix_and_suffix() {

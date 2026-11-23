@@ -80,6 +80,7 @@ impl Engine {
                 recruit_done: false,
                 froze_this_turn: false,
                 seven_voyages: None,
+                achievements: Default::default(),
             })
             .collect();
 
@@ -212,12 +213,15 @@ impl Engine {
             .filter(|player| !player.eliminated)
             .map(|player| player.seat)
             .collect();
-        for seat in seats {
+        for &seat in &seats {
             self.apply_breed(state, seat);
             self.apply_contagion(state, seat);
             events.extend(self.fire_turn_start(state, seat));
         }
         self.recompute_auras(state);
+        for &seat in &seats {
+            self.check_keyword_achievements(state, seat);
+        }
 
         // 回合开始效果全部结算后，才发金币并刷新商店。
         // 七下西洋在航程结束后的这个时点一次性到账，与当回合正常金币相加；
@@ -227,6 +231,11 @@ impl Engine {
                 continue;
             }
             player.gold = gold;
+            let bonus = player.achievements.next_turn_gold_bonus;
+            if bonus > 0 {
+                player.gold = player.gold.saturating_add(bonus);
+                player.achievements.next_turn_gold_bonus = 0;
+            }
             if let Some(voyage) = player.seven_voyages.take() {
                 if voyage.remaining == 0 {
                     let pending = u8::try_from(voyage.pending).unwrap_or(u8::MAX);
@@ -255,6 +264,7 @@ impl Engine {
     ) -> Result<Outcome, Reject> {
         let outcome = recruit::apply(self, state, seat, intent)?;
         self.recompute_auras_for(state, seat);
+        self.check_keyword_achievements(state, seat);
         Ok(outcome)
     }
 

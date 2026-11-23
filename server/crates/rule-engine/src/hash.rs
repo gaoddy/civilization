@@ -348,6 +348,29 @@ fn hash_player(hasher: &mut Hasher, player: &PlayerState) {
         }
         None => hasher.u8(0),
     }
+
+    hash_achievements(hasher, &player.achievements);
+}
+
+/// 成就进度参与状态哈希：解锁集合、成长计数与两个奖励状态。
+fn hash_achievements(hasher: &mut Hasher, progress: &crate::state::AchievementProgress) {
+    hasher.len(progress.unlocked.len());
+    for achievement in &progress.unlocked {
+        hasher.str(achievement.id());
+    }
+    hasher.u8(progress.growth_events);
+    hasher.len(progress.grown_subtypes.len());
+    for subtype in &progress.grown_subtypes {
+        hasher.str(subtype);
+    }
+    hasher.u8(progress.next_turn_gold_bonus);
+    match progress.machine_discount_turn {
+        Some(turn) => {
+            hasher.u8(1);
+            hasher.u8(turn);
+        }
+        None => hasher.u8(0),
+    }
 }
 
 fn hash_minions(hasher: &mut Hasher, minions: &[MinionInstance]) {

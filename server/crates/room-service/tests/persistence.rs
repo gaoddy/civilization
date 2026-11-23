@@ -87,6 +87,49 @@ async fn account_identity_survives_restart() {
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn achievement_unlock_survives_restart() {
+    let Some(store) = test_db().await else {
+        skip("achievement_unlock_survives_restart");
+        return;
+    };
+
+    let mut accounts = AccountStore::load(store.db.clone())
+        .await
+        .expect("账号应能载入");
+    let account = accounts
+        .login("13800000003", Some("成就"), NOW)
+        .await
+        .expect("首次登录应成功");
+    assert!(
+        accounts
+            .unlocked_achievements(&account.player_id)
+            .is_empty()
+    );
+    assert!(
+        accounts
+            .unlock_achievement(&account.player_id, "genetics", NOW)
+            .await
+            .expect("首次解锁应成功")
+    );
+    assert!(
+        !accounts
+            .unlock_achievement(&account.player_id, "genetics", NOW)
+            .await
+            .expect("重复解锁应返回 false")
+    );
+
+    let reloaded = AccountStore::load(store.db.clone())
+        .await
+        .expect("重启后账号与成就应能载入");
+    assert_eq!(
+        reloaded.unlocked_achievements(&account.player_id),
+        vec!["genetics".to_string()]
+    );
+
+    store.cleanup().await;
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn steam_identity_survives_restart() {
     let Some(store) = test_db().await else {
         skip("steam_identity_survives_restart");

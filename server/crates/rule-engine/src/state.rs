@@ -5,6 +5,7 @@
 
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
+use crate::achievements::Achievement;
 use crate::data::{Catalog, Era, Playstyle, SkillId};
 use crate::effects::Duration;
 use crate::rng::RngStreams;
@@ -448,6 +449,24 @@ pub struct SevenVoyagesState {
     pub total: u8,
 }
 
+/// 本局成就进度。
+///
+/// 每个成就本局最多触发一次；不同成就之间不设每局总数上限。
+/// 状态参与 `state_hash`，同一操作序列重放结果一致。
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct AchievementProgress {
+    /// 本局已触发的成就。
+    pub unlocked: BTreeSet<Achievement>,
+    /// 招募阶段累计成长结算次数（生物进化）。
+    pub growth_events: u8,
+    /// 获得过成长的随从 `subtype`（有教无类）。
+    pub grown_subtypes: BTreeSet<String>,
+    /// 下一次回合开始时额外发放的金币（人类一小步）。
+    pub next_turn_gold_bonus: u8,
+    /// 机械随从费用减免生效的回合号（机器轰鸣）。
+    pub machine_discount_turn: Option<u8>,
+}
+
 /// 单个玩家的状态。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PlayerState {
@@ -472,6 +491,8 @@ pub struct PlayerState {
     pub froze_this_turn: bool,
     /// 进行中的七下西洋航程；没有航程时为 `None`。
     pub seven_voyages: Option<SevenVoyagesState>,
+    /// 本局成就进度。
+    pub achievements: AchievementProgress,
 }
 
 /// 等待玩家做出的选择。

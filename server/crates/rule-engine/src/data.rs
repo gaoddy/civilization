@@ -346,6 +346,11 @@ pub fn hero_in_pool(hero: &HeroCard, enabled: &BTreeSet<Playstyle>) -> bool {
     in_pool(&hero.categories, enabled)
 }
 
+/// 卡牌是否属于指定玩法（只看卡面 `play:` 分类，不看本局启用集合）。
+pub fn card_has_playstyle(card: &Card, playstyle: Playstyle) -> bool {
+    play_categories(&card.categories).any(|id| id == playstyle.id())
+}
+
 fn in_pool(categories: &[Category], enabled: &BTreeSet<Playstyle>) -> bool {
     play_categories(categories)
         .filter_map(Playstyle::from_id)

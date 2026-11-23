@@ -78,6 +78,12 @@ impl AchievementCatalog {
         Ok(Self { by_id })
     }
 
+    /// 用仓库内嵌的生成数据建立映射；数据非法属于打包错误，直接 panic。
+    #[must_use]
+    pub fn embedded() -> Self {
+        Self::from_json(ACHIEVEMENTS_JSON).expect("内嵌成就数据应合法")
+    }
+
     /// 查询成就对应的 Steamworks API 名。
     pub fn steam_api_name(&self, achievement_id: &str) -> Option<&str> {
         self.by_id.get(achievement_id).map(String::as_str)

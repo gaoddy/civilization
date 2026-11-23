@@ -86,8 +86,16 @@ fn playstyles() -> [Playstyle; 5] {
 fn task_with(catalog: Catalog) -> (GameTask, FixedClock) {
     let clock = FixedClock::new(1_000_000);
     let clock_arc: Arc<dyn room_service::clock::Clock> = Arc::new(clock.clone());
-    let task = GameTask::new(catalog, SEED, playstyles(), heroes(), players(), clock_arc)
-        .expect("开局应当成功");
+    let task = GameTask::new(
+        catalog,
+        SEED,
+        playstyles(),
+        heroes(),
+        players(),
+        clock_arc,
+        Arc::new(room_service::AchievementCatalog::embedded()),
+    )
+    .expect("开局应当成功");
     (task, clock)
 }
 
@@ -1518,8 +1526,16 @@ fn task_with_seed_and_hp(seed: u64, initial_hp: i32) -> (GameTask, FixedClock) {
     catalog.config.initial_hp = initial_hp;
     let clock = FixedClock::new(1_000_000);
     let clock_arc: Arc<dyn Clock> = Arc::new(clock.clone());
-    let task = GameTask::new(catalog, seed, playstyles(), heroes(), players(), clock_arc)
-        .expect("开局应当成功");
+    let task = GameTask::new(
+        catalog,
+        seed,
+        playstyles(),
+        heroes(),
+        players(),
+        clock_arc,
+        Arc::new(room_service::AchievementCatalog::embedded()),
+    )
+    .expect("开局应当成功");
     (task, clock)
 }
 

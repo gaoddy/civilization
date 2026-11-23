@@ -97,6 +97,7 @@ fn task() -> (GameTask, FixedClock) {
         heroes(),
         players(),
         clock_arc,
+        Arc::new(room_service::AchievementCatalog::embedded()),
     )
     .expect("开局应当成功");
     (task, clock)

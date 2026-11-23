@@ -72,6 +72,13 @@ pub struct StoredRecent {
     pub last_played_at: DateTime<Utc>,
 }
 
+/// 账号级成就解锁行。
+#[derive(Debug, Clone, FromRow)]
+pub struct StoredAchievement {
+    pub account_id: String,
+    pub achievement_id: String,
+}
+
 /// 房间邀请行。
 #[derive(Debug, Clone, FromRow)]
 pub struct StoredInvite {
@@ -218,6 +225,43 @@ impl Db {
         )
         .fetch_all(&self.pool)
         .await
+    }
+
+    /// 载入全部账号级成就解锁。
+    ///
+    /// # Errors
+    ///
+    /// 查询失败时返回错误。
+    pub async fn load_achievements(&self) -> DbResult<Vec<StoredAchievement>> {
+        sqlx::query_as::<_, StoredAchievement>(
+            "SELECT account_id, achievement_id FROM account_achievement
+             ORDER BY account_id, achievement_id",
+        )
+        .fetch_all(&self.pool)
+        .await
+    }
+
+    /// 记录账号首次解锁；已存在时返回 `false`。
+    ///
+    /// # Errors
+    ///
+    /// 写入失败时返回错误。
+    pub async fn insert_achievement(
+        &self,
+        account_id: &str,
+        achievement_id: &str,
+        at: DateTime<Utc>,
+    ) -> DbResult<bool> {
+        let result = sqlx::query(
+            "INSERT INTO account_achievement (account_id, achievement_id, unlocked_at)
+             VALUES ($1, $2, $3) ON CONFLICT DO NOTHING",
+        )
+        .bind(account_id)
+        .bind(achievement_id)
+        .bind(at)
+        .execute(&self.pool)
+        .await?;
+        Ok(result.rows_affected() > 0)
     }
 
     /// 按手机号查账号。
