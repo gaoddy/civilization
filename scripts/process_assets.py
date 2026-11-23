@@ -25,13 +25,20 @@ Usage:
       --manifest client/assets/asset_manifest.json
 
 The --map json is a dict {card_id: source_portrait_filename}.
+
+Parallelism: --jobs N (default: CPU count, capped at 8) processes images in
+subprocesses. Manifest entries, stdout order and output bytes are identical
+to a serial run; --jobs 1 forces serial processing.
 """
 from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
+from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
+from typing import Callable, Iterator, TypeVar
 
 try:
     from PIL import Image
@@ -118,31 +125,85 @@ def derive_face_cover(im: Image.Image) -> Image.Image:
     return im.resize(CARD_SIZE, Image.LANCZOS)
 
 
-def process_covers(covers: Path, faces: Path, assets: dict) -> list[str]:
-    """Process <card_id>/*.png covers and merge card_face into the manifest."""
-    errors: list[str] = []
-    for card_dir in sorted(p for p in covers.iterdir() if p.is_dir()):
-        images = sorted(card_dir.glob("*.png"), key=lambda p: p.stat().st_mtime)
-        if not images:
-            continue
-        src = images[-1]
-        im = Image.open(src)
+T = TypeVar("T")
+R = TypeVar("R")
+
+
+def default_jobs() -> int:
+    return max(1, min(os.cpu_count() or 1, 8))
+
+
+def iter_results(func: Callable[[T], R], tasks: list[T], jobs: int) -> Iterator[R]:
+    """按任务顺序产出结果；jobs > 1 时用子进程并行处理。
+
+    子进程只接收路径并把清单条目返回父进程，图片对象不跨进程传递；
+    产出顺序固定，清单与日志因此与串行执行一致。
+    """
+    if jobs <= 1 or len(tasks) <= 1:
+        for task in tasks:
+            yield func(task)
+        return
+    with ProcessPoolExecutor(max_workers=min(jobs, len(tasks))) as pool:
+        yield from pool.map(func, tasks)
+
+
+def process_portrait(
+    task: tuple[str, str, str, str, str]
+) -> tuple[str, dict | None, str]:
+    """去水印并派生一个立绘的头像与卡面，返回 (card_id, 清单条目, 日志行)。"""
+    card_id, src, portraits, avatars, faces = task
+    src_path = Path(src)
+    if not src_path.exists():
+        return card_id, None, f"MISSING {src_path}"
+    im = Image.open(src_path)
+    try:
+        clean = dewatermark(im)
+    finally:
+        im.close()
+    clean.save(Path(portraits) / f"ch_{card_id}_full.png")
+    derive_avatar(clean).save(Path(avatars) / f"ch_{card_id}_ava.png")
+    derive_face_cover(clean).save(Path(faces) / f"card_{card_id}_face.png")
+    return (
+        card_id,
+        {
+            "portrait": f"res://assets/characters/portraits/ch_{card_id}_full.png",
+            "avatar": f"res://assets/characters/avatars/ch_{card_id}_ava.png",
+            "card_face": f"res://assets/cards/faces/card_{card_id}_face.png",
+            "display": {
+                "portrait": "200x280",
+                "avatar": "22/30/38",
+                "card_face": "112x146",
+            },
+        },
+        f"processed {card_id}",
+    )
+
+
+def process_cover(task: tuple[str, str, str]) -> tuple[str, str, str, str]:
+    """处理一张效果牌封面，返回 (card_id, 卡面路径, 日志行, 错误)。"""
+    card_id, src, faces = task
+    src_path = Path(src)
+    im = Image.open(src_path)
+    try:
         if im.size != COVER_SIZE:
-            errors.append(
-                f"{card_dir.name}: 封面尺寸应为 {COVER_SIZE[0]}x{COVER_SIZE[1]}，"
-                f"实际 {im.size[0]}x{im.size[1]}（{src.name}）"
+            return (
+                card_id,
+                "",
+                "",
+                f"{card_id}: 封面尺寸应为 {COVER_SIZE[0]}x{COVER_SIZE[1]}，"
+                f"实际 {im.size[0]}x{im.size[1]}（{src_path.name}）",
             )
-            continue
-        clean = dewatermark(
-            im, COVER_WM_BOX, COVER_SAMPLE_Y, COVER_FEATHER
-        )
-        out = faces / f"card_{card_dir.name}_face.png"
-        clean.resize(CARD_SIZE, Image.LANCZOS).save(out)
-        entry = assets.setdefault(card_dir.name, {})
-        entry["card_face"] = f"res://assets/cards/faces/{out.name}"
-        entry.setdefault("display", {})["card_face"] = "112x146"
-        print(f"cover {card_dir.name} <- {src.name}")
-    return errors
+        clean = dewatermark(im, COVER_WM_BOX, COVER_SAMPLE_Y, COVER_FEATHER)
+    finally:
+        im.close()
+    out = Path(faces) / f"card_{card_id}_face.png"
+    clean.resize(CARD_SIZE, Image.LANCZOS).save(out)
+    return (
+        card_id,
+        f"res://assets/cards/faces/{out.name}",
+        f"cover {card_id} <- {src_path.name}",
+        "",
+    )
 
 
 def main() -> None:
@@ -153,12 +214,20 @@ def main() -> None:
     ap.add_argument("--covers")
     ap.add_argument("--faces", required=True)
     ap.add_argument("--manifest", required=True)
+    ap.add_argument(
+        "--jobs",
+        type=int,
+        default=default_jobs(),
+        help=f"并行处理的子进程数，默认 {default_jobs()}（CPU 数，上限 8）",
+    )
     args = ap.parse_args()
 
     if not args.map and not args.covers:
         ap.error("需要 --map 或 --covers")
     if args.map and not (args.portraits and args.avatars):
         ap.error("--map 需要 --portraits 与 --avatars")
+    if args.jobs < 1:
+        ap.error("--jobs 必须是正整数")
 
     faces = Path(args.faces)
     faces.mkdir(parents=True, exist_ok=True)
@@ -176,31 +245,35 @@ def main() -> None:
         portraits = Path(args.portraits)
         avatars = Path(args.avatars)
         avatars.mkdir(parents=True, exist_ok=True)
-        for card_id, src in mapping.items():
-            src_path = portraits / src
-            if not src_path.exists():
-                print(f"MISSING {src_path}")
-                continue
-            im = Image.open(src_path)
-            clean = dewatermark(im)
-            clean.save(portraits / f"ch_{card_id}_full.png")
-            derive_avatar(clean).save(avatars / f"ch_{card_id}_ava.png")
-            derive_face_cover(clean).save(faces / f"card_{card_id}_face.png")
-            assets[card_id] = {
-                "portrait": f"res://assets/characters/portraits/ch_{card_id}_full.png",
-                "avatar": f"res://assets/characters/avatars/ch_{card_id}_ava.png",
-                "card_face": f"res://assets/cards/faces/card_{card_id}_face.png",
-                "display": {
-                    "portrait": "200x280",
-                    "avatar": "22/30/38",
-                    "card_face": "112x146",
-                },
-            }
-            print(f"processed {card_id}")
+        tasks = [
+            (card_id, str(portraits / src), str(portraits), str(avatars), str(faces))
+            for card_id, src in mapping.items()
+        ]
+        for card_id, entry, line in iter_results(process_portrait, tasks, args.jobs):
+            print(line)
+            if entry is not None:
+                assets[card_id] = entry
 
     errors: list[str] = []
     if args.covers:
-        errors = process_covers(Path(args.covers), faces, assets)
+        covers = Path(args.covers)
+        tasks = []
+        for card_dir in sorted(p for p in covers.iterdir() if p.is_dir()):
+            images = sorted(card_dir.glob("*.png"), key=lambda p: p.stat().st_mtime)
+            if not images:
+                continue
+            tasks.append((card_dir.name, str(images[-1]), str(faces)))
+        for card_id, face, line, error in iter_results(
+            process_cover, tasks, args.jobs
+        ):
+            if line:
+                print(line)
+            if error:
+                errors.append(error)
+            if face:
+                entry = assets.setdefault(card_id, {})
+                entry["card_face"] = face
+                entry.setdefault("display", {})["card_face"] = "112x146"
 
     manifest = {"version": 1, "assets": assets}
     manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2))
