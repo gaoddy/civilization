@@ -16,7 +16,7 @@
 | 问题 | 影响范围 | 待确认 | 来源 |
 | --- | --- | --- | --- |
 | 国际手机号绑定需要真实短信通道，覆盖地区、费用与供应商未定 | 账号绑定 | 上线前接入短信服务 | [发行渠道与账号](../../current/product/accounts-and-distribution.md) |
-| Steam 国际版客户端连接的服务端域名、TLS 证书与部署环境未定 | 发行与服务端 | 上线前确定并完成 prod 首次发布 | [发行渠道与账号](../../current/product/accounts-and-distribution.md) |
+| prod 对外域名是否复用 `civilization.satori.host`，以及 prod 首次发布与 TLS 证书 | 发行与服务端 | 上线前确定并完成 prod 首次发布 | [发行渠道与账号](../../current/product/accounts-and-distribution.md) |
 | Steamworks 后台 App ID、6 个成就的 API 名与图标、depot 与商店页配置未建 | 发行与成就同步 | 发布前配置 | [发行渠道与账号](../../current/product/accounts-and-distribution.md) |
 | Apple Developer ID、公证账号与 macOS 签名证书未准备 | 发行 | 发布前准备 | [发行渠道与账号](../../current/product/accounts-and-distribution.md) |
 
