@@ -6,10 +6,8 @@
 
 | 问题 | 影响范围 | 待确认 | 来源 |
 | --- | --- | --- | --- |
-| 天梯 K=200 与段位区间是否让高分段过快收敛、段位分布失衡 | 天梯 | 上线前用模拟对局校准 | [天梯与匹配](product/systems/ranked-and-matchmaking.md) |
+| 天梯 K=200 与段位区间是否让高分段过快收敛、段位分布失衡 | 天梯 | 上线后用模拟对局校准，并通过段位配置调整 | [天梯与匹配](product/systems/ranked-and-matchmaking.md) |
 | 匹配放宽 ±150/±300/±500 在 8 人局是否导致等待过长或对局强弱悬殊 | 天梯 | 内测数据校准 | [天梯与匹配](product/systems/ranked-and-matchmaking.md) |
-| 积分最低为 0 与「每局总和为 0」冲突：低分玩家扣分截断到 0 时，是否由其他玩家补足或允许总和为正 | 天梯 | 上线前确定计分口径 | [天梯与匹配](product/systems/ranked-and-matchmaking.md) |
-| 定级赛 2 倍计分与「每局总和为 0」冲突：定级玩家双倍、对手单倍时总和不再为 0，是否接受该偏差 | 天梯 | 上线前确定计分口径 | [天梯与匹配](product/systems/ranked-and-matchmaking.md) |
 
 ## 发行与账号
 
