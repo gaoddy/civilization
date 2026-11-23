@@ -19,6 +19,7 @@
 | --- | --- | --- |
 | v0.1 | 已完成 | [v0.1](versions/v0.1/README.md) |
 | v0.2 | 规划中 | [v0.2](versions/v0.2/README.md) |
+| v0.3 | 规划中 | [v0.3](versions/v0.3/README.md) |
 
 版本状态与后续版本的内容增量见[版本总览](versions/README.md)。
 

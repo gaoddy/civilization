@@ -4,7 +4,7 @@
 
 | 文档 | 内容 |
 | --- | --- |
-| [天梯与匹配](systems/ranked-and-matchmaking.md) | 自动匹配、动态积分、段位、好友小队与排行榜 |
+| [天梯与匹配](systems/ranked-and-matchmaking.md) | 自动匹配、动态积分、段位、全服榜与个人主页 |
 | [成就](systems/achievements.md) | 6 个局内成就的接入、启用方式与设计原则 |
 | [成就索引](content/achievements/README.md) | 6 个成就实体文档 |
 

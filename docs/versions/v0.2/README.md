@@ -6,27 +6,23 @@
 
 ## 主题
 
-在 v0.1 的桌面端房间制对局之上完成移动端适配与首版上线，并加入成就、自动匹配与天梯、场景、赛季、商业化与大决战。
+在 v0.1 的桌面端房间制对局之上完成移动端适配、服务端上线与首版上线，并加入成就、自动匹配与天梯。
 
 ## 相对 v0.1 的增量
 
 | 内容 | 范围 |
 | --- | --- |
 | 移动端适配 | 移动端横竖屏布局与两端验收；与桌面端共用同一份客户端工程与协议 |
+| 服务端上线 | prod 环境部署、域名与 TLS、数据库迁移与健康检查；沿用 `make deploy` 发布通道 |
 | 发行渠道与账号 | macOS Steam 国际版构建、Steam 自动登录、手机号绑定、Steam 成就同步与 Steam 好友邀请；契约与适配已实现，见[当前发行渠道与账号](../../current/product/accounts-and-distribution.md) |
 | 成就 | 6 个局内成就接入运行时 |
 | 自动匹配 | 8 人按积分匹配，等待时间逐级放宽；房间局仍不计分 |
-| 天梯 | 会战自动匹配局计分，动态积分差、8 段位、全服榜与好友榜 |
-| 好友 | 新增好友榜与 2–4 人好友小队匹配 |
-| 场景 | 8 个战场从扩展层转为默认开启 |
-| 赛季 | 赛季周期、积分软重置与卡牌轮换 |
-| 商业化 | 外观与英雄卡选择位；不卖战力 |
-| 大决战 | 10 卡位模式从配置开关转为可玩模式 |
+| 天梯 | 会战自动匹配局计分，动态积分差、8 段位与全服榜；房间局仍不计分 |
 
 ## 文档导航
 
 - 产品增量：[product/README.md](product/README.md)
-- 技术增量：[客户端技术基线](technical/architecture/client-stack.md)、[Steam 接入技术现状](../../current/technical/steam-integration.md)
+- 技术增量：[客户端技术基线](technical/architecture/client-stack.md)、[Steam 接入技术现状](../../current/technical/steam-integration.md)、[服务端部署与接入](../../current/technical/deployment/README.md)
 - Steam 上线操作：[Steam 上线操作清单](technical/steam-onboarding.md)
 - 未确认事项：[open-questions.md](open-questions.md)
 - 跨版本路线：[版本路线与风险](../../version-roadmap.md)
