@@ -1,6 +1,6 @@
 # 部署与接入
 
-> 状态：清单与发布入口已实现；集群首次发布尚未执行（见文末「待执行」）。
+> 状态：清单与发布入口已实现；dev 集群首次发布已执行（2026-11-23），prod 尚未执行（见文末「发布记录与待执行」）。
 > 关联：[服务端技术基线](../architecture/server-stack.md)、[房间服务与联网](../room-service/README.md)。
 
 本文记录 `room-service` 接入 platform 共享 Kubernetes 环境的现状：环境、镜像、配置、发布命令、客户端连接方式与排障。
@@ -59,6 +59,8 @@ make deploy ENV=dev SERVER=<ssh-target>
 
 单独步骤：`deploy-render`、`deploy-preflight`、`deploy-apply`、`deploy-rollout`、`deploy-status`、`deploy-smoke`。
 
+dev 节点没有 `*.platform.internal` 的 DNS，也不信任 dev 自签证书，`make deploy-smoke` 在 dev 会停在 curl 解析或证书校验；用 `curl --resolve civilization.dev.platform.internal:443:192.168.31.5 -k` 验证，见 §5。
+
 `ENV` 只接受 `dev` 或 `prod`，写成其他值会直接报错，不会回落到 dev 的 namespace 与域名。`deploy-render` 的 stdout 只有清单，可直接管道给 `kubectl apply -f -`。
 
 prod 首次新增 hostname 时，platform 侧还需要同步 satori nginx 转发：`make sync-satori-prod-nginx SERVER=<ssh-target>`。
@@ -93,10 +95,8 @@ dev 的 Gateway 证书不是公共 CA 签发，且 `*.platform.internal` 不在�
 | 客户端 TLS 报错 | hosts 与 `network/allow_insecure_tls` | 按第 5 节配置；生产不要打开 |
 | 迁移失败 | 数据库是否可达、角色是否有 DDL 权限 | 查看 Pod 日志中的 `执行数据库迁移失败`；必要时先手工确认库与角色 |
 
-## 8. 待执行
+## 8. 发布记录与待执行
 
-本仓库已交付清单与离线校验，以下动作需要目标集群与授权：
-
-- platform：`ensure-project-namespace`、`ensure-project-database`、`validate-project ONLINE=1`。
-- Civilization：`make deploy ENV=dev SERVER=<ssh-target>`；prod 另需 nginx 同步。
-- 部署后验证：`/readyz` 通过、WebSocket 经 Gateway 可连接、空闲长连接表现。
+- 2026-11-23 dev 首次发布：platform 登记、namespace 与数据库创建、`make deploy ENV=dev` 完成；Pod 1/1 Running，`/healthz`、`/readyz` 返回 200，`/ws` 握手返回 101。提交 `41955f7a`。
+- prod 待执行：platform 三项目标、`make deploy ENV=prod` 与 satori nginx 同步；prod 连接地址、TLS 与首次发布尚未验证。
+- 空闲长连接表现尚未观察。
