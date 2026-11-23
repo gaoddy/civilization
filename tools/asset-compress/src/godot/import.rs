@@ -6,8 +6,10 @@
 //! - 自造唯一 uid → 原样接受，0 变更。
 //! - 与其他资源冲突 → Godot 重编并保留冲突值，不报错。
 //!
-//! 因此 writer 必须写入稳定且唯一的 uid：已有 `.import` 时原样复用，否则由
-//! `new_uid(seed)` 生成并持久化。
+//! 因此 writer 必须写入稳定且唯一的 uid：已有 `.import` 时原样复用，否则生成
+//! 并持久化。生成走 `crate::uid::UidBook::allocate`，它先扫描项目内全部
+//! `.import` 的 uid、撞上已占用值时确定性加盐重算；`new_uid` 只负责由 seed
+//! 派生单个候选值。
 
 const UID_ALPHABET: &[u8; 16] = b"abcdefghijklmnop";
 
