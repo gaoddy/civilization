@@ -96,7 +96,9 @@ func _ready() -> void:
 # ── 构建 ──────────────────────────────────────────────────────────────────
 
 func _build() -> void:
-	add_child(UIControls.background())
+	# 对局页背景按分区构图：桌面/iPad 与 iPhone 各一张，坐标对齐真实控件矩形。
+	var bg_path := "res://assets/ui/bg/bg_game_phone.png" if ScreenProfile.device_kind() == ScreenProfile.DEVICE_PHONE else "res://assets/ui/bg/bg_game_desktop.png"
+	add_child(UIControls.background(bg_path))
 
 	# iPhone 基准 960×540：页边距、页面间距与舞台间距整体收紧，结构与桌面一致。
 	var compact := ScreenProfile.device_kind() == ScreenProfile.DEVICE_PHONE

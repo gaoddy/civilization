@@ -46,9 +46,9 @@ static func panel() -> PanelContainer:
     return PanelContainer.new()
 
 
-## 页面背景：整屏拉伸的纯质感深底；纹理缺失时退回纯色，不留空白页。
-static func background() -> Control:
-    var path := "res://assets/ui/bg/bg_main.png"
+## 页面背景：整屏拉伸的深底纹理；纹理缺失时退回纯色，不留空白页。
+## 默认用共用底图；对局页按设备档位传专用分区背景，其余页面不传参、行为不变。
+static func background(path := "res://assets/ui/bg/bg_main.png") -> Control:
     if ResourceLoader.exists(path):
         var texture := ResourceLoader.load(path) as Texture2D
         if texture != null:
