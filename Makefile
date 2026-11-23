@@ -9,11 +9,15 @@ ASSET_MAP ?= client/assets/characters/portraits/asset_map.json
 ASSET_COVERS ?= output/effect-covers/generated
 FONT_SOURCE ?= output/fonts/NotoSansSC[wght].ttf
 
+# 独立步骤的并行度：留空按 CPU 数（上限 8），JOBS=1 退回串行。
+JOBS ?=
+
 .PHONY: test lint audit data data-check docs-render assets assets-covers sfx font-subset balance-check protocol protocol-check protocol-rs protocol-rs-check m0-check m0-determinism m0-batch m0-report m1-check client-godot-check client-import client-run client-run-on-iphone client-run-on-ipad client-run-on-desktop client-check client-smoke ui-wireframe ui-preview ui-preview-check client-export-templates client-export client-export-local client-export-steam client-notarize steam-upload client-export-ios client-run-ios m1b-build m1b-e2e dev-bots db-up db-down db-reset db-test deploy-render deploy-lint deploy-check-env deploy-image deploy-load deploy-preflight deploy-apply deploy-rollout deploy-status deploy-smoke deploy
 
 test:
-	$(PYTHON) -m unittest discover -s tests -v
-	cd server && cargo test --workspace
+	$(PYTHON) scripts/run_parallel.py $(if $(JOBS),--jobs $(JOBS),) \
+		"$(PYTHON) -m unittest discover -s tests -v" \
+		"cd server && cargo test --workspace"
 
 db-up:
 	docker compose up -d --wait db
@@ -36,19 +40,21 @@ audit:
 	$(PYTHON) scripts/audit_effects.py
 
 data:
-	$(PYTHON) scripts/gen_card_data.py
-	$(PYTHON) scripts/gen_client_data.py
-	$(PYTHON) scripts/gen_achievement_data.py
-	$(PYTHON) scripts/gen_text.py
+	$(PYTHON) scripts/run_parallel.py $(if $(JOBS),--jobs $(JOBS),) \
+		"$(PYTHON) scripts/gen_card_data.py" \
+		"$(PYTHON) scripts/gen_client_data.py" \
+		"$(PYTHON) scripts/gen_achievement_data.py" \
+		"$(PYTHON) scripts/gen_text.py"
 
 data-check:
-	$(PYTHON) scripts/validate_docs.py
-	$(PYTHON) scripts/gen_card_data.py --check
-	$(PYTHON) scripts/gen_client_data.py --check
-	$(PYTHON) scripts/gen_achievement_data.py --check
-	$(PYTHON) scripts/audit_effects.py
-	$(PYTHON) scripts/gen_text.py --check
-	$(PYTHON) scripts/render_docs.py --check
+	$(PYTHON) scripts/run_parallel.py $(if $(JOBS),--jobs $(JOBS),) \
+		"$(PYTHON) scripts/validate_docs.py" \
+		"$(PYTHON) scripts/gen_card_data.py --check" \
+		"$(PYTHON) scripts/gen_client_data.py --check" \
+		"$(PYTHON) scripts/gen_achievement_data.py --check" \
+		"$(PYTHON) scripts/audit_effects.py" \
+		"$(PYTHON) scripts/gen_text.py --check" \
+		"$(PYTHON) scripts/render_docs.py --check"
 
 # 重写技能实例与卡牌的派生小节（效果正文、属性派生行、技能索引文本列）。
 docs-render:
@@ -61,14 +67,16 @@ assets:
 		--portraits client/assets/characters/portraits \
 		--avatars client/assets/characters/avatars \
 		--faces client/assets/cards/faces \
-		--manifest client/assets/asset_manifest.json
+		--manifest client/assets/asset_manifest.json \
+		$(if $(JOBS),--jobs $(JOBS),)
 
 # 效果牌封面后处理：对 <card_id>/*.png 去水印，缩放到 448×584 写入客户端卡面。
 assets-covers:
 	@[ -d "$(ASSET_COVERS)" ] || { echo "assets-covers 需要封面目录 $(ASSET_COVERS)（<card_id>/*.png）" >&2; exit 1; }
 	$(PYTHON) scripts/process_assets.py --covers "$(ASSET_COVERS)" \
 		--faces client/assets/cards/faces \
-		--manifest client/assets/asset_manifest.json
+		--manifest client/assets/asset_manifest.json \
+		$(if $(JOBS),--jobs $(JOBS),)
 
 # 默认占位音效：合成波形写入 client/assets/audio/，逐卡覆盖不在此生成。
 sfx:
@@ -84,13 +92,15 @@ balance-check:
 	$(PYTHON) scripts/balance_report.py --check
 
 protocol:
-	$(PYTHON) scripts/gen_protocol_gdscript.py
-	$(PYTHON) scripts/gen_protocol_docs.py
+	$(PYTHON) scripts/run_parallel.py $(if $(JOBS),--jobs $(JOBS),) \
+		"$(PYTHON) scripts/gen_protocol_gdscript.py" \
+		"$(PYTHON) scripts/gen_protocol_docs.py"
 
 protocol-check:
-	$(PYTHON) scripts/validate_protocol.py
-	$(PYTHON) scripts/gen_protocol_gdscript.py --check
-	$(PYTHON) scripts/gen_protocol_docs.py --check
+	$(PYTHON) scripts/run_parallel.py $(if $(JOBS),--jobs $(JOBS),) \
+		"$(PYTHON) scripts/validate_protocol.py" \
+		"$(PYTHON) scripts/gen_protocol_gdscript.py --check" \
+		"$(PYTHON) scripts/gen_protocol_docs.py --check"
 
 protocol-rs:
 	cd server && cargo run -q -p protocol-gen
@@ -99,20 +109,22 @@ protocol-rs-check:
 	cd server && cargo run -q -p protocol-gen -- --check
 
 m0-check:
-	$(MAKE) data-check
-	$(MAKE) test
-	$(MAKE) lint
-	$(MAKE) m0-determinism
+	$(PYTHON) scripts/run_parallel.py $(if $(JOBS),--jobs $(JOBS),) \
+		"$(MAKE) --no-print-directory data-check" \
+		"$(MAKE) --no-print-directory test" \
+		"$(MAKE) --no-print-directory lint" \
+		"$(MAKE) --no-print-directory m0-determinism"
 
 # M1a 收尾验收入口。e2e 由 `make test` 的 `cargo test --workspace` 覆盖，
 # 不在此单独再跑：那会用真实 WebSocket 起 8 个 bot 跑两次。
 m1-check:
-	$(MAKE) protocol-rs-check
-	$(MAKE) protocol-check
-	$(MAKE) data-check
-	$(MAKE) test
-	$(MAKE) lint
-	$(MAKE) m0-determinism
+	$(PYTHON) scripts/run_parallel.py $(if $(JOBS),--jobs $(JOBS),) \
+		"$(MAKE) --no-print-directory protocol-rs-check" \
+		"$(MAKE) --no-print-directory protocol-check" \
+		"$(MAKE) --no-print-directory data-check" \
+		"$(MAKE) --no-print-directory test" \
+		"$(MAKE) --no-print-directory lint" \
+		"$(MAKE) --no-print-directory m0-determinism"
 
 # 本机引擎必须与固定的补丁版本一致，避免用错版本导入或导出。
 client-godot-check:
@@ -167,12 +179,13 @@ client-check:
 	    $(PYTHON) -m unittest "$$m" -v || exit 1; \
 	  done; \
 	else \
-	  $(MAKE) protocol-check && \
-	  $(MAKE) data-check && \
-	  $(PYTHON) -m unittest tests.test_client_boundary -v && \
-	  $(PYTHON) -m unittest tests.test_client_style -v && \
-	  $(PYTHON) -m unittest tests.test_i18n -v && \
-	  $(MAKE) client-import; \
+	  $(PYTHON) scripts/run_parallel.py $(if $(JOBS),--jobs $(JOBS),) \
+	    "$(MAKE) --no-print-directory protocol-check" \
+	    "$(MAKE) --no-print-directory data-check" \
+	    "$(PYTHON) -m unittest tests.test_client_boundary -v" \
+	    "$(PYTHON) -m unittest tests.test_client_style -v" \
+	    "$(PYTHON) -m unittest tests.test_i18n -v" && \
+	  $(MAKE) --no-print-directory client-import; \
 	fi
 
 # 冒烟场景筛选：SMOKE=场景名（逗号或空格分隔，省略 ui_smoke_ 前缀）只跑对应场景，

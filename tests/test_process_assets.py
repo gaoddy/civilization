@@ -17,41 +17,46 @@ ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts" / "process_assets.py"
 
 
-def run_assets(root: Path) -> subprocess.CompletedProcess:
-    return subprocess.run(
-        [
-            sys.executable,
-            str(SCRIPT),
-            "--map",
-            str(root / "asset_map.json"),
-            "--portraits",
-            str(root / "portraits"),
-            "--avatars",
-            str(root / "avatars"),
-            "--faces",
-            str(root / "faces"),
-            "--manifest",
-            str(root / "asset_manifest.json"),
-        ],
-        capture_output=True,
-        text=True,
-    )
+def run_assets(root: Path, jobs: int | None = None) -> subprocess.CompletedProcess:
+    args = [
+        sys.executable,
+        str(SCRIPT),
+        "--map",
+        str(root / "asset_map.json"),
+        "--portraits",
+        str(root / "portraits"),
+        "--avatars",
+        str(root / "avatars"),
+        "--faces",
+        str(root / "faces"),
+        "--manifest",
+        str(root / "asset_manifest.json"),
+    ]
+    if jobs is not None:
+        args.extend(["--jobs", str(jobs)])
+    return subprocess.run(args, capture_output=True, text=True)
 
 
-def run_covers(root: Path) -> subprocess.CompletedProcess:
-    return subprocess.run(
-        [
-            sys.executable,
-            str(SCRIPT),
-            "--covers",
-            str(root / "covers"),
-            "--faces",
-            str(root / "faces"),
-            "--manifest",
-            str(root / "asset_manifest.json"),
-        ],
-        capture_output=True,
-        text=True,
+def run_covers(root: Path, jobs: int | None = None) -> subprocess.CompletedProcess:
+    args = [
+        sys.executable,
+        str(SCRIPT),
+        "--covers",
+        str(root / "covers"),
+        "--faces",
+        str(root / "faces"),
+        "--manifest",
+        str(root / "asset_manifest.json"),
+    ]
+    if jobs is not None:
+        args.extend(["--jobs", str(jobs)])
+    return subprocess.run(args, capture_output=True, text=True)
+
+
+def output_without_manifest_path(stdout: str) -> str:
+    """去掉 manifest 绝对路径行，便于比较两次运行的其余日志。"""
+    return "\n".join(
+        line for line in stdout.splitlines() if not line.startswith("wrote ")
     )
 
 
@@ -240,6 +245,86 @@ class CoverPipelineTest(unittest.TestCase):
             self.root / "faces" / "card_aolinpike-jidian_face.png"
         )
         self.assertLess(max(face.getpixel((224, 292))[:3]), 60)
+
+
+@unittest.skipUnless(HAS_PILLOW, "需要 Pillow（scripts/process_assets.py 的运行时依赖）")
+class ParallelProcessingTest(unittest.TestCase):
+    def _cover_tree(self, base: Path, name: str) -> Path:
+        root = base / name
+        for part in ("covers", "faces"):
+            (root / part).mkdir(parents=True)
+        for index, color in enumerate(((10, 12, 20), (30, 0, 0), (0, 30, 0))):
+            make_cover(root, f"card-{index}", color=color)
+        return root
+
+    def _portrait_tree(self, base: Path, name: str) -> Path:
+        root = base / name
+        for part in ("portraits", "avatars", "faces"):
+            (root / part).mkdir(parents=True)
+        mapping = {}
+        for index, size in enumerate(((300, 450), (320, 480), (280, 420))):
+            source = f"src_{index}.png"
+            Image.new("RGB", size, (10, 12, 20)).save(root / "portraits" / source)
+            mapping[f"card-{index}"] = source
+        (root / "asset_map.json").write_text(json.dumps(mapping))
+        return root
+
+    def test_parallel_covers_match_serial(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            serial_root = self._cover_tree(base, "serial")
+            parallel_root = self._cover_tree(base, "parallel")
+
+            serial = run_covers(serial_root, jobs=1)
+            parallel = run_covers(parallel_root, jobs=4)
+
+            self.assertEqual(serial.returncode, 0, serial.stderr)
+            self.assertEqual(parallel.returncode, 0, parallel.stderr)
+            self.assertEqual(
+                (serial_root / "asset_manifest.json").read_text(),
+                (parallel_root / "asset_manifest.json").read_text(),
+            )
+            for face in sorted((serial_root / "faces").glob("*.png")):
+                self.assertEqual(
+                    face.read_bytes(),
+                    (parallel_root / "faces" / face.name).read_bytes(),
+                    face.name,
+                )
+            self.assertEqual(
+                output_without_manifest_path(serial.stdout),
+                output_without_manifest_path(parallel.stdout),
+            )
+
+    def test_parallel_portraits_match_serial(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            serial_root = self._portrait_tree(base, "serial")
+            parallel_root = self._portrait_tree(base, "parallel")
+
+            serial = run_assets(serial_root, jobs=1)
+            parallel = run_assets(parallel_root, jobs=3)
+
+            self.assertEqual(serial.returncode, 0, serial.stderr)
+            self.assertEqual(parallel.returncode, 0, parallel.stderr)
+            self.assertEqual(
+                (serial_root / "asset_manifest.json").read_text(),
+                (parallel_root / "asset_manifest.json").read_text(),
+            )
+            for pattern in (
+                "portraits/ch_*_full.png",
+                "avatars/ch_*_ava.png",
+                "faces/card_*_face.png",
+            ):
+                for output in sorted(serial_root.glob(pattern)):
+                    self.assertEqual(
+                        output.read_bytes(),
+                        (parallel_root / output.relative_to(serial_root)).read_bytes(),
+                        str(output),
+                    )
+            self.assertEqual(
+                output_without_manifest_path(serial.stdout),
+                output_without_manifest_path(parallel.stdout),
+            )
 
 
 class AssetMapTest(unittest.TestCase):

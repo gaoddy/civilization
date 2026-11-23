@@ -34,6 +34,11 @@ window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 window/handheld/orientation=4
 
+[editor]
+
+; 引擎默认即为 true；显式固定，避免导入改回串行。PNG 走 ResourceImporterTexture，支持线程池导入。
+import/use_multiple_threads=true
+
 [gui]
 
 theme/custom_font="res://assets/fonts/NotoSansSC-Regular-subset.ttf"

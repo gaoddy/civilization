@@ -264,7 +264,7 @@ client/
 | `make assets-covers` | 对 `ASSET_COVERS`（默认 `output/effect-covers/generated`）下 `<card_id>/*.png` 去水印，缩放到 448×584 写入 `client/assets/cards/faces/`，只登记 `card_face` 与 `display.card_face`；需安装 Pillow，见 §10 |
 | `make sfx` | 生成 9 个默认合成占位音效到 `client/assets/audio/`；逐卡覆盖见 §11 |
 | `make font-subset` | 由文本表 + ASCII + GB2312 生成内置中文字体子集 `client/assets/fonts/NotoSansSC-Regular-subset.ttf`；见 §6 |
-| `make client-import` | `godot --headless --path client --import`，检查工程可导入 |
+| `make client-import` | `godot --headless --path client --import`，检查工程可导入；`client/project.godot` 显式打开 `editor/import/use_multiple_threads`，PNG 纹理导入走线程池 |
 | `make client-run` | 先导入再启动桌面客户端；新增或改名 `class_name` 脚本后必须走这个入口，否则沿用旧全局类缓存。同时传 `WIDTH=<宽> HEIGHT=<高>` 时按指定像素开窗；传 `CLIENT_DEVICE` 取 `phone`、`tablet` 或 `desktop` 时以该设备档位运行，用于在桌面模拟移动端。传 `LOCAL_SERVER=1` 时内嵌启动本机服务端与 7 个机器人并自动登录入房，见 §5 |
 | `make client-run-on-iphone` | 等价于 `make client-run WIDTH=2622 HEIGHT=1206 CLIENT_DEVICE=phone LOCAL_SERVER=1`，按 iPhone 17 Pro 横屏物理分辨率开窗并进入手机档位，同时带上本地服务端与机器人 |
 | `make client-run-on-ipad` | 等价于 `make client-run WIDTH=2360 HEIGHT=1640 CLIENT_DEVICE=tablet LOCAL_SERVER=1`，按 iPad Air 11 横屏物理分辨率开窗并进入平板档位，同时带上本地服务端与机器人 |
@@ -279,6 +279,8 @@ client/
 | `make dev-bots` | 启动服务端（监听 `0.0.0.0`，手机可直连）与 7 个机器人并打印房间码，一局结束后自动准备下一局，供开发者用客户端作为第 8 人反复联调 |
 
 Godot 可执行文件通过 `GODOT` 变量覆盖，默认自动探测 `godot` 或 `/Applications/Godot.app/Contents/MacOS/Godot`。引擎补丁版本固定为 `4.7.2`（`Makefile` 的 `GODOT_VERSION`）；`make client-import` 及所有依赖它的客户端目标会先校验本机引擎，版本不符直接失败。
+
+`make data`、`make data-check`、`make protocol`、`make protocol-check`、`make test`、`make client-check` 与 `make m0-check`、`make m1-check` 中互不依赖的步骤由 `scripts/run_parallel.py` 并行执行：默认并行度取 CPU 数（上限 8），`JOBS=<n>` 可覆盖，`JOBS=1` 退回串行。任一命令失败时其余命令仍执行完毕，目标以非 0 退出并汇总失败命令与退出码；单条命令输出超过 12,000 字符时保留末尾。
 
 ## 5. 运行方式
 
@@ -456,9 +458,9 @@ make ui-preview SETUP=res://tests/previews/game_rail.gd     # 无 .tscn 的组�
 - 加载：`CardDB` 启动时读取清单到 `art`，提供 `has_art(id)` 与 `art_path(id, kind)`；清单缺失或条目缺字段时返回空串，不报错。
 - 卡面展示位：图鉴网格与详情、房间候选卡一律取 `card_face`，同一个 id 在英雄视图与随从视图显示同一张图；展示框宽高比固定 112:146，只给宽度时高度由 `UITheme.card_face_height(width)` 计算。头像位（对局英雄卡封面、座位头像、对手头像、`Avatar.create()`）仍取 `avatar`，不参与卡面比例；方形头像位统一由 `AvatarFrame` 按 `radius-md` 裁切，封面与描边由框提供；对局英雄卡封面按 `STRETCH_KEEP_ASPECT_COVERED` 铺满，超出的上下部分由头像框圆角裁掉；对局英雄详情与房间悬停详情不显示图片。
 - 回退：`UIArt.texture()` / `UIArt.layer()` 统一取图与铺层，纹理加载失败与无资源返回空；`CardFaceBase.create_face()` 用带卡面圆角的 Panel 绘制玩法色封面，有卡面纹理时叠 `CoverArt`（向内收 3px，方形四角落在圆角内）并隐藏首字水印，否则保留纯色封面与首字；房间候选卡叠 `card_face`；对局英雄卡封面、座位头像与对手英雄卡用 `avatar`，`Avatar.create()` / `GamePortrait` / `GameHeroCard` 有头像纹理时叠 `AvatarFrameArt`（裁切层索引 0）并隐藏首字；图鉴详情用 `card_face`，对局英雄详情与房间悬停详情不显示图片。各类无图时回退玩法色块与首字（英雄卡封面回退玩法色与首字，图鉴详情省略图片）。页面背景缺图或加载失败时 `UIControls.background()` 回退 `color-bg` 纯色。
-- 生成：`make assets` 调用 `scripts/process_assets.py`，按 `ASSET_MAP`（`client/assets/characters/portraits/asset_map.json`，随仓库提交，内容为 `card_id → characters/portraits/ 下的立绘文件名`）处理源立绘，并更新清单中对应条目；清单内不在映射中的条目（如直接生成的随从封面）原样保留。映射文件缺失时目标直接失败。效果牌封面走 `make assets-covers`：取每个 `<card_id>/` 下最新的 PNG，去水印后缩放到 448×584，清单只写入 `card_face` 与 `display.card_face`，保留条目已有的 `portrait` / `avatar`。运行前需安装 Pillow（`python3 -m pip install pillow`）。封面生成风格、prompt 模板、主题符号映射与去水印约束见 [卡片封面美术生成](card-cover-art.md)。
+- 生成：`make assets` 调用 `scripts/process_assets.py`，按 `ASSET_MAP`（`client/assets/characters/portraits/asset_map.json`，随仓库提交，内容为 `card_id → characters/portraits/ 下的立绘文件名`）处理源立绘，并更新清单中对应条目；清单内不在映射中的条目（如直接生成的随从封面）原样保留。映射文件缺失时目标直接失败。效果牌封面走 `make assets-covers`：取每个 `<card_id>/` 下最新的 PNG，去水印后缩放到 448×584，清单只写入 `card_face` 与 `display.card_face`，保留条目已有的 `portrait` / `avatar`。逐张处理按 `--jobs`（默认 CPU 数、上限 8）分给子进程并行执行，清单条目与日志顺序仍按串行顺序产出，`--jobs 1` 退回串行。运行前需安装 Pillow（`python3 -m pip install pillow`）。封面生成风格、prompt 模板、主题符号映射与去水印约束见 [卡片封面美术生成](card-cover-art.md)。
 - 批次：英雄与已生成的随从、效果牌封面随仓库提交，统一按卡面 112:146 展示；尚无封面的卡牌继续走程序化绘制，由玩法色与首字回退。
-- 导入：图片 `.import` 由 Godot 生成并被 `client/.gitignore` 忽略；`client/project.godot` 的 `[importer_defaults]` 为 `texture` 统一设置 `compress/mode=2`（VRAM 压缩）与 `compress/high_quality=true`，桌面走 BPTC、iOS 走 ASTC。448×584 卡面单张冷加载由约 6ms 降到约 0.2ms，图鉴一批 27 张的解码停顿从约 160ms 降到个位毫秒数。改图后运行 `make client-import`；调整导入默认值后需先删除对应的 `.png.import` 或 `client/.godot`，否则已有 `.import` 里的旧参数仍生效。
+- 导入：图片 `.import` 由 Godot 生成并被 `client/.gitignore` 忽略；`client/project.godot` 的 `[importer_defaults]` 为 `texture` 统一设置 `compress/mode=2`（VRAM 压缩）与 `compress/high_quality=true`，桌面走 BPTC、iOS 走 ASTC；`[editor]` 的 `import/use_multiple_threads=true` 显式固定线程池导入（引擎默认即为 true，PNG 由 `ResourceImporterTexture` 处理并支持线程导入）。448×584 卡面单张冷加载由约 6ms 降到约 0.2ms，图鉴一批 27 张的解码停顿从约 160ms 降到个位毫秒数。改图后运行 `make client-import`；调整导入默认值后需先删除对应的 `.png.import` 或 `client/.godot`，否则已有 `.import` 里的旧参数仍生效。
 
 ## 11. 音效层
 
