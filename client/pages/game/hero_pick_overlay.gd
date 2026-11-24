@@ -133,7 +133,9 @@ func _build() -> void:
 	_timeout.visible = false
 	column.add_child(_timeout)
 
-	_confirm = UIControls.styled_button(tr("ui.game.hero_pick.confirm"), "primary", 30)
+	_confirm = UIControls.styled_button(
+		tr("ui.game.hero_pick.confirm"), "primary", UITheme.stage_metric("action-button-height")
+	)
 	_confirm.name = "HeroPickConfirm"
 	_confirm.disabled = true
 	_confirm.pressed.connect(_on_confirm_pressed)

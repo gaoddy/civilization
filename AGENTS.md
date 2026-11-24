@@ -65,6 +65,16 @@
 - 数据库：`make db-up`、`make db-test`、`make db-reset`。
 - 慢命令阈值：`120s`；预计超过该时长的命令放后台执行，读末尾输出与退出状态。
 
+### 本地产物目录 output/
+
+- `output/` 是纯缓存目录：任何内容都可随时整体删除，不保证下次还在。真源（素材源、发布记录、实验结论）一律不放这里。
+- 固定路径只由 `make` 目标写入，不手改：`ios/`、`desktop/`、`desktop-local/`、`steam/`、`android/`、`wireframes/`、`logs/<分支>/`、`loadtest-*.json`、`sim-batch.json`。
+- 日志统一写 `output/logs/<当前分支>/`（分支名中的 `/` 换成 `-`；detached HEAD 用短提交号，取不到时回落 `local`）：`ui_smoke_<场景>.log`、`ui_preview.log`、`sim-report.log`、`loadtest-server.log`，以及 `client-e2e/`、`dev-bots/` 子目录；切分支后日志互不覆盖。
+- 一次性探针、截图与临时数据统一放 `output/scratch/<日期>-<主题>/`；任务结束前要么迁到真源位置，要么删除。
+- 效果牌封面源按需临时放到 `output/effect-covers/generated/`（`ASSET_COVERS` 默认值），`make assets-covers` 处理完即可删除。
+- `make font-subset` 自动把源字体下载到 `output/fonts/`，并在缺少 fontTools 时创建 `output/fonttools-venv/`；两者都是缓存，删掉后重跑目标即可恢复。
+- 服务端发布记录写到 `docs/current/technical/deployment/releases/<日期>-<env>-<提交>.md`，不写进 `output/`。
+
 ### 文档
 
 - `docs/` 骨架：`current/` 写已实现状态，`versions/<版本>/` 写未实现或规划中的版本，`docs/plan/` 放实施计划（本地忽略、不提交）。

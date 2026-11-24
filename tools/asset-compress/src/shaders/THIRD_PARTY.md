@@ -2,7 +2,7 @@
 
 ## `bc7-standard.wgsl`
 
-本仓库阶段 0 原型 `output/gpu-texture-phase0/bc7/bc7_mode1.wgsl` 的移植与整理，
+本仓库阶段 0 原型 `tools/asset-compress/docs/phase0/bc7_mode1.wgsl` 的移植与整理，
 版权归本项目所有，按 MIT 发布。
 
 其中的 BC7（BPTC）位布局、分区表（PART2）与锚点表（ANCH1）来自 Microsoft

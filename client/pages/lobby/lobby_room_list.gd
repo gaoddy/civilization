@@ -105,13 +105,12 @@ func _clear_invite_box() -> void:
     _status = null
 
 
-## 邀请行按钮同高：固定按令牌取值，手机档位不再二次触控抬升。
+## 邀请行按钮同高：高度取自令牌，三端按视觉高度固定。
 func _invite_button(text: String, node_name: String, style: String) -> Button:
     var button := UIControls.styled_button(
         text, style, UITheme.stage_metric("lobby-room-invite-height")
     )
     button.name = node_name
-    button.custom_minimum_size.y = UITheme.stage_metric("lobby-room-invite-height")
     return button
 
 
@@ -208,10 +207,11 @@ func _fill_player_row(row: PanelContainer, player: Dictionary, self_id: String, 
     line.add_child(dot)
 
     if host and not self_row:
-        var kick := UIControls.styled_button(tr("ui.room.kick"), "micro")
+        var kick := UIControls.styled_button(
+            tr("ui.room.kick"), "micro", UITheme.stage_metric("lobby-room-kick-height")
+        )
         kick.name = "RoomKick_%s" % player_id
-        # 座位行高度固定，移除入口按令牌固定高度，不按触控命中抬升撑高整行。
-        kick.custom_minimum_size.y = UITheme.stage_metric("lobby-room-kick-height")
+        # 座位行高度固定，移除入口按令牌取视觉高度，不撑高整行。
         kick.size_flags_vertical = Control.SIZE_SHRINK_CENTER
         kick.pressed.connect(func() -> void: kick_requested.emit(player_id))
         line.add_child(kick)

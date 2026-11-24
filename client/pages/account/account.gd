@@ -100,7 +100,9 @@ func _build() -> void:
     _send_code_button.pressed.connect(_on_send_code_pressed)
     _form.add_child(_send_code_button)
 
-    _bind_button = UIControls.styled_button(tr("ui.account.bind"), "primary", 36)
+    _bind_button = UIControls.styled_button(
+        tr("ui.account.bind"), "primary", UITheme.stage_metric("action-button-height")
+    )
     _bind_button.name = "BindButton"
     _bind_button.pressed.connect(_on_bind_pressed)
     _form.add_child(_bind_button)

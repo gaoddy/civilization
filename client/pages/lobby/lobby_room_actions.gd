@@ -51,7 +51,4 @@ func _action_button(text: String, variant: String, node_name: String) -> Button:
         text, variant, UITheme.stage_metric("lobby-room-action-height")
     )
     button.name = node_name
-    # 创建房间的操作区高度按设计令牌固定：触控抬升会把两枚按钮撑到 120+，
-    # 手机安全区内没有余量；该令牌已是手机档位的命中尺寸。
-    button.custom_minimum_size.y = UITheme.stage_metric("lobby-room-action-height")
     return button

@@ -49,7 +49,9 @@ func set_kick_handler(handler: Callable, visible: bool) -> void:
         return
     if _kick != null:
         return
-    _kick = UIControls.styled_button(tr("ui.room.kick"), "micro")
+    _kick = UIControls.styled_button(
+        tr("ui.room.kick"), "micro", UITheme.stage_metric("action-button-height")
+    )
     _kick.name = "Kick_%s" % player_id
     _kick.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
     _kick.pressed.connect(_on_kick_pressed)

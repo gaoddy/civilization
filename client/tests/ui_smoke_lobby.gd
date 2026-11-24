@@ -394,6 +394,22 @@ func _check_room_phone_height() -> void:
                 entry != null and entry.custom_minimum_size.y >= 44,
                 "手机邀请入口应达到次要命中尺寸：%s" % node_name
             )
+        # 操作按钮按令牌固定视觉高度，触控端不再二次抬升到命中高度。
+        var action_buttons := {
+            "MatchButton": "lobby-primary-action-height",
+            "CreateRoomButton": "lobby-secondary-action-height",
+            "ReconnectButton": "action-button-height",
+            "NoticeConfirmButton": "action-button-height",
+        }
+        for node_name in action_buttons:
+            var entry := lobby.find_child(node_name, true, false) as Button
+            var expected := UITheme.stage_metric(action_buttons[node_name])
+            _expect(
+                entry != null and int(entry.custom_minimum_size.y) == expected,
+                "手机操作按钮应按令牌固定高度：%s 期望 %d，实际 %s" % [
+                    node_name, expected, -1 if entry == null else int(entry.custom_minimum_size.y)
+                ]
+            )
         if actions != null:
             var page := lobby as Control
             var scale: float = page.size.x / float(ScreenProfile.base_canvas().x)

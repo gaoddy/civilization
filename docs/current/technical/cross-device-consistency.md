@@ -11,7 +11,7 @@
 - **自动紧凑适配**：iPhone 自动使用 `-compact` 视觉令牌变体
 - **比例容差**：非 16:9 设备（iPhone 19.5:9、iPad 4:3）内容框居中、背景填充
 - **安全区透明**：刘海、灵动岛与 Home 指示条不影响内容框布局
-- **触控命中自动换算**：44pt / 32pt 按设备缩放换算为画布单位
+- **视觉高度与命中分离**：按钮高度参数是视觉高度，显式传值三端一致；省略时落到 `action-button-height` 令牌，不再按触控命中抬升
 
 ## 四层保证机制
 
@@ -135,17 +135,17 @@ static func stage_metric(name: String) -> int:
 
 `client/ui/controls.gd` 提供统一控件构造，自动应用视觉令牌和触控适配。
 
-#### 触控命中自动换算
+#### 视觉高度与触控命中分离
 
-所有按钮在触控设备上自动应用 44pt 最小命中尺寸（`client/ui/controls.gd`）：
+`styled_button` 的高度参数是**视觉高度**：显式传入即三端一致，不再按触控命中抬升；省略时落到 `action-button-height` 令牌，同样不按命中抬升（`client/ui/controls.gd`）：
 
 ```gdscript
-static func button(text: String) -> Button:
-    var height := 34
-    if ScreenProfile.is_touch():
-        height = UITheme.hit_primary()  # 44pt 换算为画布单位
+static func styled_button(text: String, variant := "default", design_height := -1) -> Button:
+    var height := design_height if design_height >= 0 else UITheme.stage_metric("action-button-height")
     node.custom_minimum_size = Vector2(0, height)
 ```
+
+操作按钮用 `UITheme.stage_metric("action-button-height")`（桌面 30、手机 44）或大厅专用令牌传入视觉高度；不再由工厂把设计高度二次放大约 60 画布单位。`client-check` 中的 `tests/test_client_style.py::test_styled_buttons_pass_visual_height` 禁止省略高度的 `styled_button` 调用，漏传参数直接判定失败。
 
 #### 命中尺寸换算公式
 
@@ -177,6 +177,7 @@ static func canvas_hit_min(pt: float, px_per_pt: float, base: Vector2i, window_s
 - **所有标签**：通过 `UIControls.label()` 创建，自动应用字体令牌
 - **所有输入框**：通过 `UIControls.line_edit()` 创建，自动应用高度与边距
 - **工厂默认值**：`UIControls.label()` 省略字号时落到 `font-body` 令牌，`UIControls.margin()` 省略数值时落到 `space-lg` 令牌
+- **按钮高度**：显式高度是视觉高度，三端一致；省略高度时落到 `action-button-height` 令牌（桌面 30、手机 44），静态门禁禁止省略高度的调用
 
 ### 4. 页面统一入口
 
@@ -218,6 +219,8 @@ func _ready() -> void:
 - **设备基准**：桌面 / iPhone（960×540）/ iPad（1280×720）三档基准正确（`ui_smoke_platform`）
 - **命中换算**：44pt→60/41、32pt→44/30 按设备换算正确（`ui_smoke_platform`）
 - **输入框工厂**：桌面高 34、触控端不低于主操作命中高度（`ui_smoke_layout`）
+- **按钮高度门禁**：`styled_button` 调用必须显式传视觉高度，省略高度的调用判定失败（`test_client_style`）
+- **按钮高度行为**：显式高度不被抬升，省略高度落到 `action-button-height`（`ui_smoke_layout`）
 - **小屏布局**：960×540 下六个页面关键节点不越界
 - **内容框居中**：1280×800（16:10）与 1280×960（4:3）下内容框 contain 居中
 - **非 16:9 覆盖层**：超宽视口下瞄准层源矩形落在内容框局部坐标
@@ -331,7 +334,7 @@ static func keyboard_from_pixels(pixels: float, base: Vector2i, window_size: Vec
 | `client/autoload/window_sizer.gd` | 桌面端启动窗口按基准比例收拢居中 |
 | `client/ui/layout.gd` | 创建布局结构（ContentFrame + ContentRoot + PageBody/PageSurface + SafeAreaMargin） |
 | `client/ui/theme.gd` | 三层视觉令牌与设备自动切换 |
-| `client/ui/controls.gd` | 统一控件工厂与触控命中自动换算 |
+| `client/ui/controls.gd` | 统一控件工厂与视觉高度 / 命中分离 |
 | `client/tests/ui_smoke_layout.gd` | 跨设备一致性自动化验收 |
 
 ## 开发约束
@@ -356,7 +359,7 @@ static func keyboard_from_pixels(pixels: float, base: Vector2i, window_size: Vec
 1. **所有按钮**：通过 `UIControls.button()` / `UIControls.styled_button()` 创建，不直接 `new()`
 2. **所有标签**：通过 `UIControls.label()` 创建
 3. **所有输入框**：通过 `UIControls.line_edit()` 创建
-4. **触控命中**：控件工厂已自动换算，不需要手动调整高度
+4. **按钮高度**：`styled_button` 必须显式传入视觉高度令牌，省略时落到 `action-button-height` 且由 `client-check` 静态门禁拦截
 
 ### 验收规则
 

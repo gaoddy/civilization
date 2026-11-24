@@ -8,7 +8,8 @@ set -euo pipefail
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 PORT=${DEV_PORT:-8080}
 URL="ws://127.0.0.1:${PORT}/ws"
-LOG_DIR="$ROOT/output/dev-bots"
+LOG_BRANCH=$(git -C "$ROOT" symbolic-ref --short -q HEAD 2>/dev/null || git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo local)
+LOG_DIR="$ROOT/output/logs/${LOG_BRANCH//\//-}/dev-bots"
 SERVER_LOG="$LOG_DIR/server.log"
 SERVER_BIN=${DEV_SERVER_BIN:-"$ROOT/server/target/debug/room-service"}
 SIM_BIN=${DEV_SIM_BIN:-"$ROOT/server/target/debug/sim"}

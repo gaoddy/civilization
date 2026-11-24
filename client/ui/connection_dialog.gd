@@ -35,7 +35,9 @@ func _init() -> void:
     _hint.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
     root.add_child(_hint)
 
-    _button = UIControls.styled_button(tr("ui.lobby.reconnect"), "primary")
+    _button = UIControls.styled_button(
+        tr("ui.lobby.reconnect"), "primary", UITheme.stage_metric("action-button-height")
+    )
     _button.name = "ReconnectButton"
     _button.pressed.connect(func() -> void: reconnect_requested.emit())
     root.add_child(_button)

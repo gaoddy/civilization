@@ -151,6 +151,7 @@ func _connect_signals() -> void:
     GameStore.steam_invite_rejected.connect(_on_steam_invite_rejected)
     GameStore.hero_pick_started.connect(_on_hero_pick_started)
     GameStore.game_started.connect(_on_game_started)
+    GameStore.game_resumed.connect(_on_game_resumed)
     Net.disconnected.connect(_on_disconnected)
     Net.connected.connect(_on_connected)
 
@@ -404,6 +405,11 @@ func _on_hero_pick_started() -> void:
 
 
 func _on_game_started() -> void:
+    _navigate_to_game()
+
+
+## 新登录接管：快照在场景就绪前到达时，登录页可能已先切到大厅，这里补导航。
+func _on_game_resumed() -> void:
     _navigate_to_game()
 
 

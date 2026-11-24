@@ -1,7 +1,7 @@
 //! 新 uid 的跨资源去重：生成前扫描项目内全部 `.import`。
 //!
 //! uid 冲突不会报错，只会让 Godot 重编该资源并留下歧义引用
-//! （见 `output/gpu-texture-phase0/UID_VERIFICATION.md` 约束 3）。
+//! （见 `tools/asset-compress/docs/phase0/UID_VERIFICATION.md` 约束 3）。
 
 use asset_compress::encode::CpuEncoder;
 use asset_compress::godot::{import, md5};

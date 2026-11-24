@@ -151,6 +151,9 @@ const SEMANTIC_OPACITY := {
 const SCENARIO := {
 	"rail-width": 88,
 	"pill-button-height": 26,
+	# 操作按钮视觉高度：桌面 30、手机 44；由控件工厂按传值固定，不按触控命中抬升。
+	"action-button-height": 30,
+	"action-button-height-compact": 44,
 	"toolbar-button-height": 26,
 	"status-dialog-width": 360,
 	"river-height": 44,

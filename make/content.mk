@@ -7,8 +7,10 @@ ASSET_COMPRESS_BACKEND ?= auto
 ASSET_MAP ?= client/assets/characters/portraits/asset_map.json
 ASSET_COVERS ?= output/effect-covers/generated
 FONT_SOURCE ?= output/fonts/NotoSansSC[wght].ttf
+FONT_SOURCE_URL ?= https://github.com/google/fonts/raw/main/ofl/notosanssc/NotoSansSC%5Bwght%5D.ttf
+FONT_TOOLS_VENV ?= output/fonttools-venv
 
-.PHONY: audit data data-check docs-render assets assets-covers sfx font-subset balance-check \
+.PHONY: audit data data-check docs-render assets assets-covers sfx font-source font-subset balance-check \
 	protocol protocol-check protocol-rs protocol-rs-check asset-compress asset-compress-check
 
 audit:
@@ -57,10 +59,27 @@ assets-covers:
 sfx:
 	$(PYTHON) scripts/gen_sfx.py
 
-# 内置中文字体子集：字符集取文本表 + ASCII + GB2312，需先装 fontTools（见脚本说明）。
-font-subset:
-	@[ -f "$(FONT_SOURCE)" ] || { echo "font-subset 需要源字体 $(FONT_SOURCE)（Google Fonts 的 Noto Sans SC 变量字体）" >&2; exit 1; }
-	$(PYTHON) scripts/subset_font.py --csv client/text/zh_CN.csv \
+# 源字体（Google Fonts 的 Noto Sans SC 变量字体，OFL）：缺失时下载到 output/ 缓存。
+font-source:
+	@mkdir -p "$(dir $(FONT_SOURCE))"
+	@[ -f "$(FONT_SOURCE)" ] || { \
+		echo "下载源字体：$(FONT_SOURCE_URL)"; \
+		curl -fL --retry 3 -o "$(FONT_SOURCE)" "$(FONT_SOURCE_URL)"; \
+	}
+
+# 内置中文字体子集：字符集取文本表 + ASCII + GB2312；fontTools 缺失时自动建 output/fonttools-venv。
+font-subset: font-source
+	@if "$(PYTHON)" -c 'import fontTools' >/dev/null 2>&1; then \
+		py="$(PYTHON)"; \
+	else \
+		py="$(FONT_TOOLS_VENV)/bin/python"; \
+		if ! "$$py" -c 'import fontTools' >/dev/null 2>&1; then \
+			echo "准备 fontTools 环境：$(FONT_TOOLS_VENV)"; \
+			"$(PYTHON)" -m venv "$(FONT_TOOLS_VENV)" && \
+				"$(FONT_TOOLS_VENV)/bin/pip" install -q --upgrade pip fonttools || exit 1; \
+		fi; \
+	fi; \
+	"$$py" scripts/subset_font.py --csv client/text/zh_CN.csv \
 		--source "$(FONT_SOURCE)" --output client/assets/fonts/NotoSansSC-Regular-subset.ttf
 
 balance-check:

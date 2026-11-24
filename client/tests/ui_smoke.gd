@@ -98,6 +98,7 @@ func _ready() -> void:
     await _check_navigation_guard()
     await _check_error_route()
     await _check_reset_session()
+    await _check_session_replaced()
     await _check_error_text()
     await _check_result()
     await _check_confirm_navigation()
@@ -1142,10 +1143,12 @@ func _check_game_layout() -> void:
         shop_text.contains(TranslationServer.translate("enum.playstyle.reptile")),
         "商店卡应显示玩法：%s" % shop_text,
     )
-    var aristotle_health := CardText.stat_text(CardDB.card("aristotle").get("health"))
+    # 生命值取自内容数据：卡牌数值重排后不再回调测试里的硬编码。
+    var shop_card: Dictionary = CardDB.card("aristotle")
+    _expect(not shop_card.is_empty(), "内容数据缺少 aristotle")
     _expect(
-        shop_text.contains(aristotle_health),
-        "商店卡应显示原始生命值 %s：%s" % [aristotle_health, shop_text],
+        shop_text.contains(str(int(shop_card.get("health", 0)))),
+        "商店卡应显示原始生命值：%s" % shop_text,
     )
     _expect(instance.find_child("HeroCard", true, false) != null, "英雄行应显示我的英雄卡")
     instance.queue_free()
@@ -4287,6 +4290,41 @@ func _check_error_route() -> void:
     _expect(instance._error_route("ROOM_NOT_FOUND") == "lobby", "ROOM_NOT_FOUND 应回大厅")
     _expect(instance._error_route("NOT_ENOUGH_GOLD") == "", "规则错误不应切场景")
     _expect(instance._error_route("TOKEN_EXPIRED") == "login", "令牌过期应回登录")
+    _expect(instance._error_route("SESSION_REPLACED") == "login", "顶号应回登录页")
+
+
+## 顶号：清空令牌与房间、发 `login_required`，登录页展示提示且不自动登录。
+func _check_session_replaced() -> void:
+    GameStore.player_id = "p0"
+    GameStore.token = "t0"
+    GameStore.room_id = "r0"
+    GameStore.room_code = "ABC123"
+    var notified := [false]
+    var handler := func() -> void: notified[0] = true
+    GameStore.login_required.connect(handler)
+    GameStore.apply_session_replaced()
+    GameStore.login_required.disconnect(handler)
+
+    _expect(GameStore.session_replaced, "顶号后应标记 session_replaced")
+    _expect(GameStore.token == "", "顶号应清空令牌")
+    _expect(GameStore.room_id == "" and GameStore.room_code == "", "顶号应清空房间")
+    _expect(notified[0], "顶号应发出 login_required")
+
+    # 登录页在顶号状态停留：显示提示，不发起自动登录。
+    var instance := await _check_scene("res://pages/login/login.tscn", true)
+    if instance != null:
+        var status: Label = instance.find_child("StatusLabel", true, false)
+        _expect(status != null, "登录页缺少状态行")
+        if status != null:
+            _expect(
+                status.text.contains(UIWording.error_text("SESSION_REPLACED")),
+                "登录页应显示顶号提示",
+            )
+        var button: Button = instance.find_child("LoginButton", true, false)
+        _expect(button == null or not button.disabled, "顶号后不应自动进入登录流程")
+
+    GameStore.session_replaced = false
+    GameStore.last_error = {}
 
 
 func _check_reset_session() -> void:

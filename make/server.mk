@@ -39,9 +39,9 @@ SIM_GAMES ?= 1000
 SIM_BATCH_LOG ?= ../output/sim-batch.json
 
 sim-report:
-	@mkdir -p ../output
+	@mkdir -p $(OUTPUT_LOG_DIR)
 	cd server && cargo run -q --release -p sim -- check --log $(SIM_BATCH_LOG) --expect-games $(SIM_GAMES)
-	cd server && cargo run -q --release -p sim -- report --log $(SIM_BATCH_LOG) 2>&1 | tee ../output/sim-report.log
+	cd server && cargo run -q --release -p sim -- report --log $(SIM_BATCH_LOG) 2>&1 | tee ../$(OUTPUT_LOG_DIR)/sim-report.log
 
 # 1 个 Godot 客户端 + 7 个机器人的无头端到端。
 server-build:
@@ -67,20 +67,23 @@ load-build:
 	cd server && cargo build --release -p room-service -p sim
 
 loadtest: load-build
-	@mkdir -p output
+	@mkdir -p output $(OUTPUT_LOG_DIR)
 	$(LOAD_SIM_BIN) load --serve-room-service $(LOAD_SERVER_BIN) \
 		--scenario steady --rooms $(LOAD_ROOMS) --duration-ms $(LOAD_DURATION_MS) \
+		--server-log $(OUTPUT_LOG_DIR)/loadtest-server.log \
 		--out output/loadtest-steady.json
 
 loadtest-ramp: load-build
-	@mkdir -p output
+	@mkdir -p output $(OUTPUT_LOG_DIR)
 	$(LOAD_SIM_BIN) load --serve-room-service $(LOAD_SERVER_BIN) \
 		--scenario ramp --rooms $(LOAD_ROOMS) --rooms-max $(LOAD_ROOMS_MAX) \
 		--step $(LOAD_STEP) --step-ms $(LOAD_STEP_MS) \
+		--server-log $(OUTPUT_LOG_DIR)/loadtest-server.log \
 		--out output/loadtest-ramp.json
 
 loadtest-smoke: load-build
-	@mkdir -p output
+	@mkdir -p output $(OUTPUT_LOG_DIR)
 	$(LOAD_SIM_BIN) load --serve-room-service $(LOAD_SERVER_BIN) \
 		--scenario steady --rooms 2 --duration-ms 5000 \
+		--server-log $(OUTPUT_LOG_DIR)/loadtest-server.log \
 		--out output/loadtest-smoke.json
