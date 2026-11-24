@@ -227,9 +227,17 @@ async fn duplicate_queue_join_is_rejected() {
     client.send("JoinQueue", json!({})).await;
     let _ = wait_queue_state(&mut client).await;
     client.send("JoinQueue", json!({})).await;
-    match client.recv().await.expect("应收到错误") {
-        ServerMessage::Error(error) => assert_eq!(error.code, ErrorCode::QueueAlready),
-        other => panic!("重复入队应返回 QUEUE_ALREADY，实际 {other:?}"),
+    // 首次入队时匹配驱动会立即 tick 并按人数变化补发 QueueState，与错误回执的先后
+    // 顺序不确定；等待错误时跳过队列状态推送。
+    loop {
+        match client.recv().await.expect("应收到错误") {
+            ServerMessage::Error(error) => {
+                assert_eq!(error.code, ErrorCode::QueueAlready);
+                break;
+            }
+            ServerMessage::QueueState(_) => {}
+            other => panic!("重复入队应返回 QUEUE_ALREADY，实际 {other:?}"),
+        }
     }
 }
 
