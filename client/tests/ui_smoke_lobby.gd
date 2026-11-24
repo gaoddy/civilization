@@ -391,6 +391,13 @@ func _check_room_phone_height() -> void:
         await get_tree().process_frame
         var actions := lobby.find_child("LobbyRoomActions", true, false) as Control
         _expect(actions != null, "手机创建模式应有房间操作")
+        for node_name in ["RoomInviteButton", "CopyCodeButton"]:
+            var entry := lobby.find_child(node_name, true, false) as Button
+            # 手机档位次要操作命中尺寸为 44 画布单位；无头环境的 hit_small 不换算，直接断言令牌值。
+            _expect(
+                entry != null and entry.custom_minimum_size.y >= 44,
+                "手机房间码与邀请入口应达到次要命中尺寸：%s" % node_name
+            )
         if actions != null:
             var page := lobby as Control
             var scale: float = page.size.x / float(ScreenProfile.base_canvas().x)
