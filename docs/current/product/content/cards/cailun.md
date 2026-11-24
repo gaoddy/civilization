@@ -9,7 +9,7 @@ level: 2
 era: feudal
 attack: 0
 health: 8
-skills: [battlecry-friendly-growth-once]
+skills: [trigger-friendly-single-plus-0-plus-2]
 ---
 
 # 蔡伦
@@ -27,13 +27,13 @@ skills: [battlecry-friendly-growth-once]
 | 时代 | 封建 |
 | 攻击力 | 0 |
 | 生命值 | 8 |
-| 关键词 | 战吼 |
-| 技能 | battlecry-friendly-growth-once |
+| 关键词 | 无 |
+| 技能 | trigger-friendly-single-plus-0-plus-2 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果
 
-战吼：使一个友方随从获得一次成长
+使一个友方随从获得 +0/+2
 
 ## 出处
 

@@ -9,7 +9,7 @@ level: 4
 era: future
 attack: 4
 health: 9
-skills: [keyword-reborn, shout]
+skills: [keyword-reborn, trigger-mammal-all-growth-once]
 ---
 
 # 克隆羊多莉
@@ -28,13 +28,13 @@ skills: [keyword-reborn, shout]
 | 攻击力 | 4 |
 | 生命值 | 9 |
 | 关键词 | 复生 |
-| 技能 | keyword-reborn；shout |
+| 技能 | keyword-reborn；trigger-mammal-all-growth-once |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 偶蹄目 › 牛科 |
 | 关联分类 | 捕食：植物界 |
 
 ## 效果
 
-复生：以 1 点生命复活一次；使一个友方随从获得一次成长
+复生：以 1 点生命复活一次；使你的哺乳纲随从获得一次成长
 
 ## 出处
 

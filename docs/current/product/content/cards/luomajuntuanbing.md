@@ -9,7 +9,7 @@ level: 3
 era: feudal
 attack: 3
 health: 4
-skills: [keyword-taunt, shout]
+skills: [keyword-taunt, trigger-friendly-growth-twice]
 ---
 
 # 罗马军团兵
@@ -28,12 +28,12 @@ skills: [keyword-taunt, shout]
 | 攻击力 | 3 |
 | 生命值 | 4 |
 | 关键词 | 嘲讽 |
-| 技能 | keyword-taunt；shout |
+| 技能 | keyword-taunt；trigger-friendly-growth-twice |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果
 
-嘲讽；使一个友方随从获得一次成长
+嘲讽；使一个友方随从获得两次成长
 
 ## 出处
 

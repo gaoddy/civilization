@@ -9,7 +9,7 @@ level: 2
 era: primitive
 attack: 2
 health: 4
-skills: [battlecry-friendly-growth-once]
+skills: [trigger-friendly-plus-2-attack]
 ---
 
 # 萨满
@@ -27,13 +27,13 @@ skills: [battlecry-friendly-growth-once]
 | 时代 | 原始 |
 | 攻击力 | 2 |
 | 生命值 | 4 |
-| 关键词 | 战吼 |
-| 技能 | battlecry-friendly-growth-once |
+| 关键词 | 无 |
+| 技能 | trigger-friendly-plus-2-attack |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果
 
-战吼：使一个友方随从获得一次成长
+使一个友方随从获得 +2 攻击力
 
 ## 出处
 

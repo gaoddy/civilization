@@ -9,7 +9,7 @@ level: 2
 era: feudal
 attack: 3
 health: 3
-skills: [battlecry-other-friendly-humans-plus-1-attack]
+skills: [battlecry-random-enemy-damage-1]
 ---
 
 # 弩手
@@ -28,12 +28,12 @@ skills: [battlecry-other-friendly-humans-plus-1-attack]
 | 攻击力 | 3 |
 | 生命值 | 3 |
 | 关键词 | 战吼 |
-| 技能 | battlecry-other-friendly-humans-plus-1-attack |
+| 技能 | battlecry-random-enemy-damage-1 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果
 
-战吼：使你的其他人科随从获得 +1 攻击力
+战吼：对随机一个敌方随从造成 1 点伤害
 
 ## 出处
 

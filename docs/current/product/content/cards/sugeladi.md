@@ -9,7 +9,7 @@ level: 2
 era: classical
 attack: 0
 health: 7
-skills: [battlecry-friendly-growth-once]
+skills: [battlecry-friendly-plus-1-health]
 ---
 
 # 苏格拉底
@@ -28,12 +28,12 @@ skills: [battlecry-friendly-growth-once]
 | 攻击力 | 0 |
 | 生命值 | 7 |
 | 关键词 | 战吼 |
-| 技能 | battlecry-friendly-growth-once |
+| 技能 | battlecry-friendly-plus-1-health |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果
 
-战吼：使一个友方随从获得一次成长
+战吼：使一个友方随从获得 +1 生命值
 
 ## 出处
 

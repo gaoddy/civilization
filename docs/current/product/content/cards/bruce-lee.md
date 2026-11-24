@@ -9,7 +9,7 @@ level: 4
 era: modern
 attack: 6
 health: 7
-skills: [keyword-windfury, shout]
+skills: [keyword-windfury, trigger-friendly-growth-thrice]
 ---
 
 # 李小龙
@@ -28,12 +28,12 @@ skills: [keyword-windfury, shout]
 | 攻击力 | 6 |
 | 生命值 | 7 |
 | 关键词 | 连击 |
-| 技能 | keyword-windfury；shout |
+| 技能 | keyword-windfury；trigger-friendly-growth-thrice |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果
 
-连击：每回合可攻击两次；使一个友方随从获得一次成长
+连击：每回合可攻击两次；使一个友方随从获得三次成长
 
 ## 出处
 

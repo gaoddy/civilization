@@ -861,7 +861,7 @@
     "level": 4,
     "skills": [
       "keyword-windfury",
-      "shout"
+      "trigger-friendly-growth-thrice"
     ],
     "subtype": "martial-artist",
     "taxon": "hominidae"
@@ -950,7 +950,7 @@
     "in_shop_pool": true,
     "level": 2,
     "skills": [
-      "battlecry-friendly-growth-once"
+      "trigger-friendly-single-plus-0-plus-2"
     ],
     "subtype": "invention",
     "taxon": "hominidae"
@@ -1680,7 +1680,7 @@
     "level": 4,
     "skills": [
       "keyword-reborn",
-      "shout"
+      "trigger-mammal-all-growth-once"
     ],
     "subtype": "clone",
     "taxon": "bovidae"
@@ -2928,7 +2928,7 @@
     "level": 5,
     "skills": [
       "battlecry-other-friendly-humans-plus-1-attack",
-      "shout"
+      "trigger-all-friendly-growth-once"
     ],
     "subtype": "worker",
     "taxon": "hominidae"
@@ -3748,7 +3748,7 @@
     "level": 7,
     "skills": [
       "keyword-evolve",
-      "shout"
+      "human-growth-twice"
     ],
     "subtype": "modification",
     "taxon": "hominidae"
@@ -4287,7 +4287,7 @@
     "in_shop_pool": true,
     "level": 3,
     "skills": [
-      "battlecry-friendly-growth-once"
+      "battlecry-random-enemy-damage-1"
     ],
     "subtype": "chemistry",
     "taxon": "hominidae"
@@ -4308,7 +4308,7 @@
     "in_shop_pool": true,
     "level": 3,
     "skills": [
-      "battlecry-friendly-growth-once"
+      "battlecry-all-biology-growth-once"
     ],
     "subtype": "philosophy",
     "taxon": "hominidae"
@@ -4530,7 +4530,7 @@
     "level": 3,
     "skills": [
       "keyword-taunt",
-      "shout"
+      "trigger-friendly-growth-twice"
     ],
     "subtype": "unit",
     "taxon": "hominidae"
@@ -5302,7 +5302,7 @@
     "in_shop_pool": true,
     "level": 5,
     "skills": [
-      "battlecry-friendly-growth-twice"
+      "battlecry-all-friendly-plus-0-plus-1"
     ],
     "subtype": "physics",
     "taxon": "hominidae"
@@ -5460,7 +5460,7 @@
     "in_shop_pool": true,
     "level": 2,
     "skills": [
-      "battlecry-other-friendly-humans-plus-1-attack"
+      "battlecry-random-enemy-damage-1"
     ],
     "subtype": "unit",
     "taxon": "hominidae"
@@ -6221,7 +6221,7 @@
     "in_shop_pool": true,
     "level": 4,
     "skills": [
-      "shout"
+      "sonnet"
     ],
     "subtype": "literature",
     "taxon": "hominidae"
@@ -6510,7 +6510,7 @@
     "in_shop_pool": true,
     "level": 2,
     "skills": [
-      "battlecry-friendly-growth-once"
+      "trigger-friendly-plus-2-attack"
     ],
     "subtype": "primitive",
     "taxon": "hominidae"
@@ -7493,7 +7493,7 @@
     "in_shop_pool": true,
     "level": 2,
     "skills": [
-      "battlecry-friendly-growth-once"
+      "battlecry-friendly-plus-1-health"
     ],
     "subtype": "philosophy",
     "taxon": "hominidae"
@@ -7620,7 +7620,7 @@
     "level": 6,
     "skills": [
       "keyword-divine-shield",
-      "shout"
+      "trigger-friendly-growth-twice"
     ],
     "subtype": "colonist",
     "taxon": "hominidae"
@@ -9221,7 +9221,7 @@
     "in_shop_pool": true,
     "level": 3,
     "skills": [
-      "battlecry-friendly-growth-once"
+      "battlecry-friendly-plus-0-plus-1"
     ],
     "subtype": "astronomy",
     "taxon": "hominidae"
@@ -9242,7 +9242,7 @@
     "in_shop_pool": true,
     "level": 4,
     "skills": [
-      "battlecry-all-friendly-plus-0-plus-1"
+      "trigger-friendly-single-plus-0-plus-2"
     ],
     "subtype": "medicine",
     "taxon": "hominidae"
