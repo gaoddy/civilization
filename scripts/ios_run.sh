@@ -39,24 +39,36 @@ with open(sys.argv[1], encoding="utf-8") as handle:
 
 device_type = sys.argv[2]
 
+# devicectl 的 State 列把可局域网访问的已配对设备显示为 available (paired)，
+# JSON 里对应 state=disconnected + pairingState=paired；只有 state=unavailable
+# 才不可用。优先选已建立连接的设备，其次选已配对可唤醒的设备。
+candidates = []
+
 for device in devices:
     properties = device.get("properties") or {}
     hardware = properties.get("hardware") or device.get("hardwareProperties") or {}
     connection = properties.get("connection") or device.get("connectionProperties") or {}
     if hardware.get("deviceType") != device_type:
         continue
-    if (connection.get("state") or connection.get("tunnelState")) != "connected":
+    state = connection.get("state") or connection.get("tunnelState") or ""
+    if state == "unavailable":
+        continue
+    if connection.get("pairingState") not in (None, "paired"):
         continue
     udid = hardware.get("udid") or device.get("identifier")
     if not udid:
         continue
     name = (device.get("deviceProperties") or {}).get("name") or hardware.get("marketingName") or udid
+    candidates.append((0 if state == "connected" else 1, udid, name))
+
+if candidates:
+    candidates.sort(key=lambda item: item[0])
+    _, udid, name = candidates[0]
     print("%s\t%s" % (udid, name))
-    break
 PY
 )
   if [ -z "$SELECTED" ]; then
-    echo "没有已连接的 ${DEVICE_TYPE_NAME}：先接线并在 Xcode → Window → Devices and Simulators 中信任设备，" >&2
+    echo "没有可用的 ${DEVICE_TYPE_NAME}：先接线并在 Xcode → Window → Devices and Simulators 中信任设备，" >&2
     echo "或用 IOS_DEVICE=<设备名|UDID> 指定。当前设备：" >&2
     xcrun devicectl list devices >&2
     exit 1
