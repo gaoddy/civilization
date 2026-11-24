@@ -53,7 +53,7 @@ use protocol::{ClientEnvelope, ClientMessage, ServerEnvelope};
 use rule_engine::state::Phase;
 use serde::Serialize;
 use serde_json::Value;
-use tokio::sync::mpsc;
+use tokio::sync::{mpsc, oneshot};
 use tokio::time::{self, MissedTickBehavior};
 
 use crate::AppState;
@@ -79,6 +79,8 @@ const RANKED_ATTACH_GRACE_MS: u64 = 3_000;
 
 /// 连接关闭时留给写端冲刷已入队消息的时长。
 const FLUSH_TIMEOUT: Duration = Duration::from_millis(200);
+/// 顶号接管前探测座位是否仍有效的最长等待；超时按无效处理，新客户端进大厅。
+const SEAT_PROBE_TIMEOUT: Duration = Duration::from_millis(500);
 
 /// 会话级下行序号下限；连接 task 与房间 task 共享。
 #[derive(Clone, Default)]
@@ -164,6 +166,8 @@ pub enum ControlMessage {
         /// 服务端分配的座位号（0 起）。
         seat: u8,
     },
+    /// 同一账号在别处登录：下发 `SESSION_REPLACED` 后关闭本连接。
+    SessionReplaced,
 }
 
 /// 在线连接登记项。
@@ -182,9 +186,9 @@ pub struct ConnectionRegistry {
 }
 
 impl ConnectionRegistry {
-    /// 登记或替换玩家的当前连接。
-    pub fn insert(&mut self, player_id: String, entry: ConnectionEntry) {
-        self.entries.insert(player_id, entry);
+    /// 登记或替换玩家的当前连接，返回被替换的旧连接。
+    pub fn insert(&mut self, player_id: String, entry: ConnectionEntry) -> Option<ConnectionEntry> {
+        self.entries.insert(player_id, entry)
     }
 
     /// 仅当代次一致时摘除连接；旧连接迟到关闭不会影响新连接。
@@ -243,6 +247,11 @@ pub enum RoomMessage {
     },
     /// 连接断开；只有代次与当前登记一致时才生效。
     Detach { player_id: String, generation: u64 },
+    /// 顶号接管前探测座位是否仍有效：对局中要求未弃权，大厅阶段要求仍有座位。
+    IsSeatActive {
+        player_id: String,
+        reply: oneshot::Sender<bool>,
+    },
     /// 大厅离开房间；同样受代次保护。
     Leave { player_id: String, generation: u64 },
     /// 一条已映射好的房间命令。
@@ -370,6 +379,19 @@ async fn handle_socket(state: AppState, socket: WebSocket) {
                         });
                         room = Some((room_id, handle.tx, generation));
                         notify_presence(&state, &authorized.player_id).await;
+                    }
+                    ControlMessage::SessionReplaced => {
+                        // 令牌已在签发新会话时失效；提示旧端后退出，收尾逻辑照常
+                        // 刷出已入队消息并关闭写端。
+                        send_error(
+                            &out_tx,
+                            &mut direct,
+                            &floor,
+                            "SESSION_REPLACED",
+                            "账号已在其他设备登录",
+                            false,
+                        );
+                        break;
                     }
                 }
             }
@@ -508,6 +530,9 @@ async fn handle_socket(state: AppState, socket: WebSocket) {
                         }
                     }
                 };
+                // 令牌续登不是新登录：同一客户端重连不踢旧连接、不轮换令牌。
+                let is_new_login =
+                    !matches!(&request, protocol::client::AuthRequest::Variant1 { .. });
                 let result = state.sessions.lock().await.authenticate_with(
                     &request,
                     state.clock.as_ref(),
@@ -520,7 +545,7 @@ async fn handle_socket(state: AppState, socket: WebSocket) {
                             &authorized.player_code,
                             &authorized.display_name,
                         );
-                        state.connections.lock().await.insert(
+                        let replaced = state.connections.lock().await.insert(
                             authorized.player_id.clone(),
                             ConnectionEntry {
                                 generation: conn_id,
@@ -568,6 +593,25 @@ async fn handle_socket(state: AppState, socket: WebSocket) {
                             "AchievementState",
                             &AchievementState { unlocked },
                         );
+                        // 新登录先把连接挂回账号当前房间，再踢旧连接：接管消息与
+                        // 旧连接的 `Detach` 都进同一房间队列，代次先更新，迟到的
+                        // `Detach` 会被忽略。
+                        if is_new_login
+                            && let Some(taken_over) =
+                                takeover_room(&state, &authorized.player_id, &out_tx, &floor).await
+                        {
+                            room = Some(taken_over);
+                        }
+                        // 同一连接内重新认证不踢自己；旧连接已无法消费控制消息时
+                        // 令牌已失效，由心跳超时关闭，不回滚新登录。
+                        if is_new_login
+                            && let Some(previous) = replaced
+                            && previous.generation != conn_id
+                        {
+                            let _ = previous
+                                .control
+                                .try_send(ControlMessage::SessionReplaced);
+                        }
                         // 本人与好友都需要看到最新的在线状态与社交视图。
                         notify_presence(&state, &authorized.player_id).await;
                     }
@@ -1583,6 +1627,48 @@ async fn handle_socket(state: AppState, socket: WebSocket) {
     let _ = tokio::time::timeout(FLUSH_TIMEOUT, writer).await;
 }
 
+/// 新登录接管账号当前房间：座位仍有效时按重连路径绑定新连接。
+///
+/// 返回连接后续使用的房间上下文；账号不在房间、座位已弃权或探测超时都返回 `None`，
+/// 新客户端按正常流程进大厅。
+async fn takeover_room(
+    state: &AppState,
+    player_id: &str,
+    out_tx: &mpsc::Sender<ServerEnvelope>,
+    floor: &SeqFloor,
+) -> Option<(String, mpsc::UnboundedSender<RoomMessage>, u64)> {
+    let room_id = {
+        let rooms = state.rooms.lock().await;
+        rooms
+            .room_of_player(player_id)
+            .map(|(room, _)| room.id.clone())
+    }?;
+    let handle = state.hub.lock().await.get(&room_id)?;
+    let (reply, active) = oneshot::channel();
+    handle
+        .tx
+        .send(RoomMessage::IsSeatActive {
+            player_id: player_id.to_string(),
+            reply,
+        })
+        .ok()?;
+    if !matches!(
+        time::timeout(SEAT_PROBE_TIMEOUT, active).await,
+        Ok(Ok(true))
+    ) {
+        return None;
+    }
+    let generation = next_generation();
+    let _ = handle.tx.send(RoomMessage::Reconnect {
+        player_id: player_id.to_string(),
+        last_seq: 0,
+        out: out_tx.clone(),
+        floor: floor.clone(),
+        generation,
+    });
+    Some((room_id, handle.tx, generation))
+}
+
 /// 把已加入注册表的玩家接到房间 task；失败时回滚刚占的座位。
 async fn attach_joined_room(
     state: &AppState,
@@ -2200,6 +2286,9 @@ impl RoomTask {
                 player_id,
                 generation,
             } => self.detach(player_id, generation).await,
+            RoomMessage::IsSeatActive { player_id, reply } => {
+                let _ = reply.send(self.seat_active(&player_id).await);
+            }
             RoomMessage::Leave {
                 player_id,
                 generation,
@@ -2212,6 +2301,21 @@ impl RoomTask {
             } => self.push_to(&player_id, kind, &payload),
             RoomMessage::Ignore => {}
         }
+    }
+
+    /// 顶号接管前座位是否仍有效：对局中要求座位存在且未弃权，大厅阶段要求
+    /// 注册表中仍有该座位。
+    async fn seat_active(&self, player_id: &str) -> bool {
+        if let Some(game) = self.game.as_ref() {
+            return game
+                .seat_of(player_id)
+                .is_some_and(|_| !game.is_departed(player_id));
+        }
+        let rooms = self.state.rooms.lock().await;
+        rooms
+            .room(&self.room_id)
+            .and_then(|room| room.seat_of(player_id))
+            .is_some()
     }
 
     /// 向房间内某个座位下发非房间消息；玩家已断开时丢弃。
