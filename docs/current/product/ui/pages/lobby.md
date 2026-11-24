@@ -29,7 +29,7 @@
       │        ├─ LobbyPlayerCard：头像缩写 + 名字 + 玩家长编号
       │        ├─ LobbyMiddle：占满剩余高度
       │        │  ├─ LobbyRankCard：段位与积分（默认模式）
-      │        │  ├─ LobbyQueueCard：等待时长、排队人数与积分窗口（排队中替换段位卡）
+      │        │  ├─ LobbyQueueCard：等待时长与排队人数（排队中替换段位卡）
       │        │  └─ LobbyRoomList：8 行座位列表（创建房间模式替换上面两张）
       │        ├─ LobbyQuickActions：开始匹配（主按钮）· 创建房间 / 加入房间
       │        └─ LobbyRoomActions：房主 开始 / 解散；宾客 准备 / 离开（仅创建房间模式）
@@ -53,7 +53,7 @@
 ### 3.2 匹配模式
 
 - 点「开始匹配」发送入队；排队中主按钮变为「取消匹配」，创建与加入禁用。
-- 中部段位卡换成排队卡：等待时长按分:秒刷新（每 0.5 秒），并显示「已凑齐 N/8」与「匹配范围 ±N 分」；窗口不限时显示「匹配范围不限积分」。
+- 中部段位卡换成排队卡：等待时长按分:秒刷新（每 0.5 秒），并显示「已凑齐 N/8」；不展示积分匹配范围。
 - 匹配成功后排队卡停表显示成功文案，页面随后切到对局页。
 - 断线时自动退队并收起排队态；重连后不自动重新排队。
 
@@ -128,7 +128,7 @@
 | 显示名与玩家长编号 | `GameStore.display_name`、`GameStore.player_code` |
 | 段位与积分 | `GameStore.my_tier()`、`GameStore.my_rating()`；账号视图变化时刷新 |
 | 在线好友数 | `GameStore.friends[]` 中 `status == "online"` 的条数 |
-| 排队状态、人数、窗口与等待时长 | `GameStore.queueing`、`GameStore.queue_state`、`GameStore.queue_wait_seconds()` |
+| 排队状态、人数与等待时长 | `GameStore.queueing`、`GameStore.queue_state`、`GameStore.queue_wait_seconds()` |
 | 房间成员、座位与准备状态 | `GameStore.room_players[]` 的 `seat`、`playerId`、`displayName`、`ready`、`isHost` |
 | 房主身份与本人准备 | `GameStore.am_host()`、`GameStore.my_ready()` |
 | 机器人补位开关 | `GameStore.room_bot_fill` |

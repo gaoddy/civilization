@@ -1,6 +1,6 @@
 class_name LobbyQueueCard
 extends PanelContainer
-## 右栏中部排队卡：等待时长、已凑人数与积分窗口；取消入口在快捷操作里。
+## 右栏中部排队卡：等待时长与已凑人数；取消入口在快捷操作里。
 ##
 ## 自己订阅 `GameStore.queue_changed`，每 0.5 秒按本地时钟刷新时长；
 ## 匹配成功后停表并显示成功文案，由大厅负责随后切页。
@@ -10,7 +10,6 @@ const REFRESH_SECONDS := 0.5
 var _timer: Timer
 var _clock: Label
 var _count: Label
-var _window: Label
 var _hint: Label
 var _matched := false
 
@@ -35,12 +34,6 @@ func _init() -> void:
     _count = UIControls.pill_label("", "accent")
     _count.name = "QueueCount"
     count_row.add_child(_count)
-
-    _window = UIControls.label("", UITheme.font_size("font-body-sm"), false)
-    _window.name = "QueueWindow"
-    _window.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    _window.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
-    box.add_child(_window)
 
     _hint = UIControls.label(tr("ui.lobby.queue_hint"), UITheme.font_size("font-body-sm"))
     _hint.name = "QueueHint"
@@ -85,12 +78,6 @@ func _refresh() -> void:
         _timer.start()
     _clock.text = _clock_text(GameStore.queue_wait_seconds())
     _count.text = tr("ui.queue.players") % int(GameStore.queue_state.get("waitingPlayers", 0))
-    var window = GameStore.queue_state.get("ratingWindow", null)
-    _window.text = (
-        tr("ui.queue.window_unlimited")
-        if window == null
-        else tr("ui.queue.window") % int(window)
-    )
 
 
 ## 等待时长按分:秒展示；超过一小时仍用分累计。

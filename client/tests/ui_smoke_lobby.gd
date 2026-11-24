@@ -141,6 +141,11 @@ func _check_match_toggle(lobby: Node) -> void:
     _expect(rank_card != null and not rank_card.visible, "排队中段位卡应让位")
     _expect(create_button != null and create_button.disabled, "排队中不能创建房间")
     _expect(join_button != null and join_button.disabled, "排队中不能加入房间")
+    _expect(
+        queue_card != null and not _node_text(queue_card).contains("匹配范围"),
+        "排队卡不应显示匹配范围"
+    )
+    _expect(lobby.find_child("QueueWindow", true, false) == null, "排队卡不应有积分窗口节点")
 
     match_button.pressed.emit()
     await get_tree().process_frame
