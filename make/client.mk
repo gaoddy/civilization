@@ -12,6 +12,8 @@ GODOT_TEMPLATE_DIR := $(HOME)/Library/Application Support/Godot/export_templates
 # 导入压缩策略，默认 0（headless + CPU 压缩）：auto=有图形会话时非无头导入（Betsy 优先用 GPU，失败回落 CPU）；
 # 1=强制非无头。headless 下引擎不允许创建 RenderingDevice，GPU 压缩不可用。
 CLIENT_IMPORT_GPU ?= 0
+# 新 worktree 首次 client-import 时自动从主检出播种导入缓存；0 关闭以验证冷导入。
+CLIENT_CACHE_COPY ?= 1
 
 # 客户端产物统一落在 output/client/：直接产物文件名带平台与 <git 短号>[-dirty]-<环境>，
 # 中间产物进 build/<平台>/<构建号>/，戳记进 stamps/。同号同环境且源码指纹一致时复用，不重复导出。
@@ -46,6 +48,7 @@ client-godot-check:
 # CLIENT_IMPORT_GPU=1 手动切非无头（改用 S3TC/HDR 纹理后才有 GPU 加速）；
 # auto 按图形会话自动判断，CI 与无 GUI 环境回落到 headless。
 client-import: client-godot-check
+	@if [ "$(CLIENT_CACHE_COPY)" = "0" ]; then echo "client-import：CLIENT_CACHE_COPY=0，跳过导入缓存播种"; else $(PYTHON) scripts/client_cache_copy.py --quiet; fi
 	@mode="$(CLIENT_IMPORT_GPU)"; \
 	case "$$mode" in \
 	  auto|1|0) ;; \
@@ -71,22 +74,12 @@ client-import: client-godot-check
 	  $(GODOT) --headless --path client --import; \
 	fi
 
-# 新 worktree 的 Godot 导入缓存不跨目录共享，冷导入会重编全部 BC7 纹理。
-# 从主检出复制已导入的 .godot/imported 与 *.import 旁车，随后 make client-import
-# 只补翻译、类缓存等增量产物。缓存按源图 md5 校验，worktree 分支改过的资源仍会重导。
+# 新 worktree 的 Godot 导入缓存不跨目录共享，冷导入会重编全部 BC7/ASTC 纹理。
+# client-import 首次在 worktree 中运行时已自动播种（见 scripts/client_cache_copy.py），
+# 本目标保留为显式入口，并要求主检出必须已有缓存：缺缓存直接失败。
+# 缓存按源图 md5 校验，worktree 分支改过的资源仍会重导。
 client-cache-copy:
-	@set -eu; \
-	main="$$(dirname "$$(git rev-parse --path-format=absolute --git-common-dir)")"; \
-	here="$$(pwd -P)"; \
-	if [ "$$here" = "$$main" ]; then echo "client-cache-copy：当前是主检出，无需复制缓存"; exit 0; fi; \
-	[ -d "$$main/client/.godot/imported" ] || { echo "client-cache-copy：主检出缺少导入缓存，请先执行：cd $$main && make client-import" >&2; exit 1; }; \
-	( cd "$$main/client" && find .godot/imported -type f -print0 && \
-	  find . -name '*.import' -not -path './.godot/*' -print0 ) | \
-	while IFS= read -r -d '' f; do \
-	  mkdir -p "client/$$(dirname "$$f")"; \
-	  cp -p "$$main/client/$$f" "client/$$f"; \
-	done; \
-	echo "client-cache-copy：已从 $$main 复制导入缓存"
+	$(PYTHON) scripts/client_cache_copy.py --strict
 
 # 单元测试筛选：TESTS=模块名（逗号或空格分隔）只跑对应 unittest，
 # 如 make client-check TESTS=test_i18n；指定时跳过 protocol-check、data-check 与 client-import。
