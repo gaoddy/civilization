@@ -185,7 +185,7 @@ impl Taxonomy {
 ## 4. 卡牌数据生成
 
 - 唯一数据源：`docs/current/product/content/` 下的卡牌、技能实体文档与 `taxonomy.md`；`scripts/gen_card_data.py` 复用 `validate_docs.py` 的 front matter 与分类树解析。
-- 分类树与玩法清单由 `taxonomy.md` §1 / §2 解析为 `taxonomy.json`（`{nodes, playstyles}`）；客户端生成物 `client/generated/taxonomy.json` 同源。展示名不进 JSON，由文本表 `enum.taxon.<id>` 与 `enum.playstyle.<id>` 提供。
+- 分类树与玩法清单由 `taxonomy.md` §1 / §2 解析为 `taxonomy.json`（`{nodes, playstyles}`）；客户端下发内容 `server/data/v0.1/client-content.json` 同源，由 `scripts/gen_client_data.py` 从同一份生成结果组装并附加展示费用 `display_cost`。展示名不进 JSON，由文本表 `enum.taxon.<id>` 与 `enum.playstyle.<id>` 提供。
 - 生成数据只含规则与标识，不含展示文本：`cards.json`、`skills.json` 没有 `name`、`text` 字段。卡牌 `card_type` / `categories` / `taxon` / `era` / `subtype`、`in_shop_pool`，技能与效果中的 `keyword`、DSL 筛选与枚举（`playstyle`、`taxon`、`play`、`prey`、`host`、`type`、`keyword`、进化选项等）一律为英文 id（如 `minion`、`mammal`、`felidae`、`industrial`、`ignore_taunt`）。展示文本由 `scripts/gen_text.py` 汇总到 `client/text/zh_CN.csv`，按 `card.<id>.name`、`skill.<id>.text` 等文本 id 取用；非池卡同样使用 `card.<id>.name`。
 - 经济与对局配置由生成器从产品数值文档口径抄录到 `config.json`（初始生命、棋盘/手牌/商店槽位、回合上限、伤害上下限、升时代费用、星级牌份数、商店概率、金币曲线）。
 - 输出确定性 JSON（UTF-8、两空格缩进、键排序、末尾换行）；生成物随源提交。

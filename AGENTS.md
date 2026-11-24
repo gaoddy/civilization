@@ -39,7 +39,7 @@
 - 客户端：`client/`，Godot 4.7.2 + GDScript，入口场景 `client/pages/login/login.tscn`。
 - 客户端引擎补丁版本固定 `4.7.2`（`make/client.mk` 的 `GODOT_VERSION`）；`make client-import` 与导出目标先校验本机引擎，版本不符直接失败。
 - 规则引擎：`server/crates/rule-engine`，纯库，不依赖网络、数据库、时钟或文件 I/O；所有对局结算只在这里。
-- 卡牌数据：唯一数据源在 `docs/current/product/content/`，生成到 `server/data/v0.1/` 与客户端生成物；生成物随源提交。
+- 卡牌数据：唯一数据源在 `docs/current/product/content/`，生成到 `server/data/v0.1/`；其中 `client-content.json` 是客户端下发的展示内容（`GET /content`），客户端包内不内置卡牌数据；生成物随源提交。
 - 协议契约：唯一来源 `protocol/schema/v1/`；生成物 `protocol/generated/protocol.rs`、`protocol/generated/protocol.gd` 与 `client/generated/protocol.gd` 随源提交。
 - 数据库迁移：`server/migrations/`，启动时由 `sqlx::migrate!` 执行。
 - 纹理压缩工具：`tools/asset-compress/`，独立 Rust crate（不属于 `server/` workspace），把 `client/assets/**/*.png` 编码成 Godot 可识别的 BPTC/ASTC 产物与 `.import`/`.md5`；入口 `tools/asset-compress/src/main.rs`。
