@@ -43,7 +43,7 @@
 - 协议契约：唯一来源 `protocol/schema/v1/`；生成物 `protocol/generated/protocol.rs`、`protocol/generated/protocol.gd` 与 `client/generated/protocol.gd` 随源提交。
 - 数据库迁移：`server/migrations/`，启动时由 `sqlx::migrate!` 执行。
 - 纹理压缩工具：`tools/asset-compress/`，独立 Rust crate（不属于 `server/` workspace），把 `client/assets/**/*.png` 编码成 Godot 可识别的 BPTC/ASTC 产物与 `.import`/`.md5`；入口 `tools/asset-compress/src/main.rs`。
-- 部署：`deploy/helm/` 与 `server/Dockerfile`，入口为 `make deploy-*`。
+- 部署：`deploy/helm/` 与 `server/Dockerfile`，入口为 `make deploy-*`；另有 `make deploy-dev` / `deploy-prod` 整包别名与 `deploy-<步骤>-<环境>` 单步别名。
 
 ### 命令与验证
 
