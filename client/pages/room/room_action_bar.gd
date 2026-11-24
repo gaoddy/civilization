@@ -30,7 +30,9 @@ func _init() -> void:
 
     _left = _group("LeftActions")
     add_child(_left)
-    ready_button = UIControls.styled_button(tr("ui.room.ready"), "primary", 30)
+    ready_button = UIControls.styled_button(
+        tr("ui.room.ready"), "primary", UITheme.stage_metric("action-button-height")
+    )
     ready_button.name = "ReadyButton"
     ready_button.pressed.connect(func() -> void: ready_pressed.emit())
     _left.add_child(ready_button)
@@ -42,7 +44,9 @@ func _init() -> void:
         steam_invite.pressed.connect(func() -> void: steam_invite_pressed.emit())
         _left.add_child(steam_invite)
 
-    leave = UIControls.styled_button(tr("ui.room.leave"), "ghost", 30)
+    leave = UIControls.styled_button(
+        tr("ui.room.leave"), "ghost", UITheme.stage_metric("action-button-height")
+    )
     leave.name = "LeaveButton"
     leave.pressed.connect(func() -> void: leave_pressed.emit())
     _left.add_child(leave)
@@ -62,12 +66,16 @@ func _init() -> void:
     bot_fill.pressed.connect(func() -> void: bot_fill_pressed.emit())
     _right.add_child(bot_fill)
 
-    start = UIControls.styled_button(tr("ui.room.start"), "primary", 30)
+    start = UIControls.styled_button(
+        tr("ui.room.start"), "primary", UITheme.stage_metric("action-button-height")
+    )
     start.name = "StartButton"
     start.pressed.connect(func() -> void: start_pressed.emit())
     _right.add_child(start)
 
-    dissolve = UIControls.styled_button(tr("ui.room.dissolve"), "ghost", 30)
+    dissolve = UIControls.styled_button(
+        tr("ui.room.dissolve"), "ghost", UITheme.stage_metric("action-button-height")
+    )
     dissolve.name = "DissolveButton"
     dissolve.pressed.connect(func() -> void: dissolve_pressed.emit())
     _right.add_child(dissolve)
@@ -118,7 +126,9 @@ func _group(node_name: String) -> HBoxContainer:
 
 ## 补位开关使用金色描边：共享层没有 gold 变体，这里按令牌组合。
 func _gold_button() -> Button:
-    var node := UIControls.styled_button("", "default", 30)
+    var node := UIControls.styled_button(
+        "", "default", UITheme.stage_metric("action-button-height")
+    )
     var accent := UITheme.color("color-accent")
     for state in ["normal", "hover", "pressed", "focus", "disabled"]:
         var style := UITheme.button_style("default", state)

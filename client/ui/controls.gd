@@ -124,14 +124,19 @@ static func _pill_text_color(variant: String) -> Color:
 
 
 ## 统一按钮外观。variant：default / primary / danger / ghost / slot / micro。
-## 触控端按命中尺寸抬升最小高度，micro 使用较小档；桌面端保留原值。
-static func styled_button(text: String, variant := "default", min_height := 30) -> Button:
+## `design_height` 是视觉高度：传入即三端一致，不再按触控命中抬升；
+## 省略（-1）时桌面取 30，触控端按变体取命中下限。
+static func styled_button(text: String, variant := "default", design_height := -1) -> Button:
     var node := Button.new()
     node.text = text
-    var height := min_height
-    if ScreenProfile.is_touch():
-        var target := UITheme.hit_small() if variant == "micro" else UITheme.hit_primary()
-        height = maxi(min_height, target)
+    var height := design_height
+    if height < 0:
+        if not ScreenProfile.is_touch():
+            height = 30
+        elif variant == "micro":
+            height = UITheme.hit_small()
+        else:
+            height = UITheme.hit_primary()
     node.custom_minimum_size = Vector2(0, height)
     apply_button_style(node, variant)
     return node

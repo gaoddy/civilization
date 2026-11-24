@@ -133,12 +133,12 @@ func _build() -> void:
     actions.alignment = BoxContainer.ALIGNMENT_END
     actions.add_theme_constant_override("separation", UITheme.space("space-sm"))
     inner.add_child(actions)
-    _skip = UIControls.styled_button("", "micro", 30)
+    _skip = UIControls.styled_button("", "micro", UITheme.stage_metric("action-button-height"))
     _skip.name = "GuideSkip"
     _skip.add_theme_font_size_override("font_size", UITheme.font_size("font-body-sm"))
     _skip.pressed.connect(_on_skip_pressed)
     actions.add_child(_skip)
-    _next = UIControls.styled_button("", "primary", 30)
+    _next = UIControls.styled_button("", "primary", UITheme.stage_metric("action-button-height"))
     _next.name = "GuideNext"
     _next.add_theme_font_size_override("font_size", UITheme.font_size("font-body-sm"))
     _next.pressed.connect(_on_next_pressed)

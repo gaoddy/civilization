@@ -47,7 +47,9 @@ func _build_status() -> void:
     _status_label.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
     status.add_child(_status_label)
 
-    _retry = UIControls.styled_button(tr("ui.content.retry"), "primary", 30)
+    _retry = UIControls.styled_button(
+        tr("ui.content.retry"), "primary", UITheme.stage_metric("action-button-height")
+    )
     _retry.name = "GalleryContentRetry"
     _retry.pressed.connect(CardDB.fetch)
     status.add_child(_retry)
