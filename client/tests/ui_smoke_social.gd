@@ -144,6 +144,51 @@ func _check_lobby_social() -> void:
         "最近队友应可回加"
     )
 
+    # 添加好友与状态行固定在抽屉底部，不进入滚动区。
+    var scroll := instance.find_child("FriendsScroll", true, false)
+    var add_row := instance.find_child("FriendsAddRow", true, false)
+    var friends_status := instance.find_child("FriendsStatus", true, false)
+    _expect(add_row != null and not scroll.is_ancestor_of(add_row), "添加好友应固定在抽屉底部")
+    _expect(
+        add_row != null and add_row.get_global_rect().position.y >= scroll.get_global_rect().end.y,
+        "添加好友应位于列表下方"
+    )
+    _expect(
+        add_row != null and add_row.get_global_rect().end.y <= panel.content.get_global_rect().end.y + 1.0,
+        "添加好友应贴抽屉底部"
+    )
+    _expect(
+        friends_status != null and friends_status.get_parent() == add_row.get_parent(),
+        "好友状态行应与添加好友同在底部固定区"
+    )
+
+    # 有申请时显示申请区标题；清空后整块申请区隐藏，不留占位提示。
+    var incoming_title := instance.find_child("IncomingSectionTitle", true, false)
+    _expect(incoming_title != null and incoming_title.visible, "有待处理申请时应显示申请区标题")
+    GameStore.incoming_requests = []
+    GameStore.social_changed.emit()
+    await get_tree().process_frame
+    _expect(incoming_title != null and not incoming_title.visible, "没有好友申请时申请区标题应隐藏")
+    _expect(
+        instance.find_child("Accept_p_request", true, false) == null,
+        "没有好友申请时不应残留申请行"
+    )
+    _expect(
+        not _node_text(instance).contains("没有待处理的好友申请"),
+        "没有好友申请时不应显示占位提示"
+    )
+    GameStore.incoming_requests = [
+        {
+            "displayName": "申请人",
+            "playerCode": "100004",
+            "playerId": "p_request",
+            "status": "pending",
+        }
+    ]
+    GameStore.social_changed.emit()
+    await get_tree().process_frame
+    _expect(incoming_title != null and incoming_title.visible, "重新收到申请时应恢复申请区标题")
+
     var popup = instance.find_child("InvitePopup", true, false)
     _expect(popup != null and popup.visible, "有待处理邀请时应显示邀请弹窗")
     _expect(
