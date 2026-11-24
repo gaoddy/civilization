@@ -11,8 +11,11 @@ var _hall: LobbyHallImage
 var _player: LobbyPlayerCard
 var _rank: LobbyRankCard
 var _queue_card: LobbyQueueCard
+var _room_list: LobbyRoomList
+var _room_actions: LobbyRoomActions
 var _quick: LobbyQuickActions
 var _left_actions: LobbyLeftActions
+var _leave_confirm: ConfirmationDialog
 var _friends: FriendsPanel
 var _invite_popup: InvitePopup
 var _join_dialog: LobbyJoinDialog
@@ -34,7 +37,7 @@ func _ready() -> void:
     _render_identity()
     _render_rank()
     _render_friends()
-    _render_actions()
+    _apply_mode()
     if not _connected:
         _connection.show_disconnected()
     _show_room_closed_reason()
@@ -79,8 +82,17 @@ func _build() -> void:
     _queue_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
     _middle.add_child(_queue_card)
 
+    _room_list = LobbyRoomList.new()
+    _room_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    _room_list.visible = false
+    _middle.add_child(_room_list)
+
     _quick = LobbyQuickActions.new()
     _right.add_child(_quick)
+
+    _room_actions = LobbyRoomActions.new()
+    _room_actions.visible = false
+    _right.add_child(_room_actions)
 
     _friends = FriendsPanel.new()
     _friends.closed.connect(_close_friends)
@@ -101,6 +113,16 @@ func _build() -> void:
     _invite_popup = InvitePopup.new()
     add_child(_invite_popup)
 
+    # 离开确认挂在页面容器而不是安全区：不参与大厅排版。
+    _leave_confirm = ConfirmationDialog.new()
+    _leave_confirm.name = "LobbyLeaveConfirm"
+    _leave_confirm.title = tr("ui.room.leave")
+    _leave_confirm.dialog_text = tr("ui.room.leave_confirm")
+    _leave_confirm.ok_button_text = tr("ui.room.leave_confirm_action")
+    _leave_confirm.cancel_button_text = tr("ui.lobby.close")
+    _leave_confirm.confirmed.connect(_confirm_leave)
+    UILayout.safe_area(self).get_parent().add_child(_leave_confirm)
+
 
 func _column(node_name: String, ratio: int) -> VBoxContainer:
     var column := VBoxContainer.new()
@@ -118,13 +140,20 @@ func _connect_signals() -> void:
     _left_actions.friends_pressed.connect(_on_friends_pressed)
     _left_actions.gallery_pressed.connect(_on_gallery_pressed)
     _left_actions.leaderboard_pressed.connect(_on_leaderboard_pressed)
+    _room_list.invite_pressed.connect(_on_room_invite_pressed)
+    _room_list.kick_requested.connect(_on_kick_pressed)
+    _room_actions.ready_toggled.connect(_on_ready_toggled)
+    _room_actions.start_pressed.connect(_on_start_pressed)
+    _room_actions.dissolve_pressed.connect(_on_dissolve_pressed)
+    _room_actions.leave_pressed.connect(_on_leave_pressed)
 
     GameStore.room_changed.connect(_on_room_changed)
+    GameStore.room_closed.connect(_on_room_closed)
     GameStore.error_received.connect(_on_error)
     GameStore.auth_changed.connect(_on_auth_changed)
     GameStore.account_changed.connect(_render_rank)
     GameStore.social_changed.connect(_render_friends)
-    GameStore.queue_changed.connect(_render_actions)
+    GameStore.queue_changed.connect(_apply_mode)
     GameStore.match_found.connect(_on_match_found)
     GameStore.hero_pick_started.connect(_on_hero_pick_started)
     GameStore.game_started.connect(_on_game_started)
@@ -159,18 +188,56 @@ func _render_friends() -> void:
     _left_actions.set_online_friends(online)
 
 
-func _render_actions() -> void:
-    var queueing: bool = GameStore.queueing
+## 默认模式与创建模式的互斥显示：创建模式只留座位列表与房间操作。
+func _apply_mode() -> void:
+    var room_mode := _host_room_mode()
+    _room_list.visible = room_mode
+    _room_actions.visible = room_mode
+    _quick.visible = not room_mode
+    var queueing: bool = GameStore.queueing and not room_mode
+    _queue_card.visible = queueing
+    _rank.visible = not room_mode and not queueing
+    if room_mode:
+        _render_room()
+        return
     _quick.set_state(
         {
-            "queueing": queueing,
+            "queueing": GameStore.queueing,
             "connected": _connected,
             "creating": _creating,
             "joining": _joining,
         }
     )
-    _queue_card.visible = queueing
-    _rank.visible = not queueing
+
+
+func _render_room() -> void:
+    var players: Array = GameStore.room_players
+    var is_host: bool = GameStore.am_host()
+    _room_list.render(
+        players, GameStore.player_id, is_host, GameStore.room_bot_fill, players.size()
+    )
+    var ready_count := 0
+    for player in players:
+        if bool(player.get("ready", false)):
+            ready_count += 1
+    var start_reason := ""
+    if not _connected:
+        start_reason = tr("ui.room.not_connected")
+    elif ready_count < players.size():
+        start_reason = tr("ui.room.start_waiting_ready")
+    elif not GameStore.room_bot_fill and players.size() < LobbyRoomList.SEAT_COUNT:
+        start_reason = tr("ui.room.start_need_players") % (LobbyRoomList.SEAT_COUNT - players.size())
+    _room_actions.set_state(
+        {
+            "ready": GameStore.my_ready(),
+            "is_host": is_host,
+            "connected": _connected,
+            "can_start": start_reason == "",
+            "start_reason": start_reason,
+            "human_count": players.size(),
+            "bot_fill": GameStore.room_bot_fill,
+        }
+    )
 
 
 func _on_match_toggled(was_queueing: bool) -> void:
@@ -180,7 +247,7 @@ func _on_match_toggled(was_queueing: bool) -> void:
         if not _connected:
             return
         GameStore.join_queue()
-    _render_actions()
+    _apply_mode()
 
 
 func _on_match_found(_seat: int) -> void:
@@ -191,7 +258,7 @@ func _on_create_pressed() -> void:
     if not _connected:
         return
     _creating = true
-    _render_actions()
+    _apply_mode()
     Net.send(Protocol.MSG_CREATE_ROOM, {})
 
 
@@ -204,7 +271,7 @@ func _on_join_pressed() -> void:
 func _on_join_requested(code: String) -> void:
     _joining = true
     _join_dialog.set_joining(true)
-    _render_actions()
+    _apply_mode()
     Net.send(Protocol.MSG_JOIN_ROOM, {"code": code})
 
 
@@ -228,13 +295,13 @@ func _on_disconnected() -> void:
     _connected = false
     GameStore.abandon_queue()
     _connection.show_disconnected()
-    _render_actions()
+    _apply_mode()
 
 
 func _on_connected() -> void:
     _connected = true
     _connection.hide_dialog()
-    _render_actions()
+    _apply_mode()
 
 
 func _on_reconnect_requested() -> void:
@@ -243,11 +310,53 @@ func _on_reconnect_requested() -> void:
 
 
 func _on_room_changed() -> void:
-    if _host_room_mode():
-        return
     _creating = false
     _joining = false
+    if GameStore.room_players.is_empty():
+        _apply_mode()
+        return
+    if _host_room_mode():
+        _apply_mode()
+        return
     UINavigation.navigate(self, UINavigation.PAGE_ROOM)
+
+
+## 被移出或房间解散：房间状态已清空，回到默认模式并弹出原因。
+func _on_room_closed() -> void:
+    _creating = false
+    _joining = false
+    _apply_mode()
+    _show_room_closed_reason()
+
+
+func _on_ready_toggled() -> void:
+    Net.send(Protocol.MSG_READY, {"ready": not GameStore.my_ready()})
+
+
+func _on_start_pressed() -> void:
+    GameStore.request_start()
+
+
+func _on_dissolve_pressed() -> void:
+    Net.send(Protocol.MSG_DISSOLVE_ROOM, {})
+
+
+func _on_leave_pressed() -> void:
+    _leave_confirm.popup_centered()
+
+
+func _confirm_leave() -> void:
+    Net.send(Protocol.MSG_LEAVE_ROOM, {})
+    GameStore.reset_room()
+    _apply_mode()
+
+
+func _on_kick_pressed(player_id: String) -> void:
+    Net.send(Protocol.MSG_KICK_MEMBER, {"targetPlayerId": player_id})
+
+
+func _on_room_invite_pressed() -> void:
+    _friends.open_invite()
 
 
 ## 自动匹配局没有房间等待页：`HeroPickStarted` 先到，由大厅直接进入对局页的选英雄阶段；
@@ -277,14 +386,16 @@ func _on_error() -> void:
         _joining = false
         _join_dialog.set_joining(false)
         _join_dialog.show_error(code)
-        _render_actions()
+        _apply_mode()
         return
     if UINavigation.error_route(code) == UINavigation.ROUTE_LOGIN:
         GameStore.reset_session()
         UINavigation.navigate(self, UINavigation.PAGE_LOGIN)
         return
     _creating = false
-    _render_actions()
+    if UINavigation.error_route(code) == UINavigation.ROUTE_LOBBY:
+        GameStore.reset_room()
+    _apply_mode()
     _notice.show_notice(tr("ui.lobby.notice_title"), UIWording.error_text(code))
 
 

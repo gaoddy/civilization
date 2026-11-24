@@ -35,6 +35,10 @@ func _ready() -> void:
         await _check_error(lobby)
         lobby.queue_free()
         await get_tree().process_frame
+
+    await _check_room_mode()
+    await _check_room_phone_height()
+    ScreenProfile.set_device_for_test("")
     Net.socket = null
     _finish()
 
@@ -177,6 +181,116 @@ func _check_error(lobby: Node) -> void:
     GameStore.error_received.emit()
     await get_tree().process_frame
     _expect(notice != null and notice.visible, "服务端错误应弹出提示")
+
+
+func _check_room_mode() -> void:
+    _seed_room(3, false)
+    var lobby := await _check_scene("res://pages/lobby/lobby.tscn", false)
+    if lobby == null:
+        return
+
+    var room_list := lobby.find_child("LobbyRoomList", true, false) as Control
+    var rank := lobby.find_child("LobbyRankCard", true, false) as Control
+    var quick := lobby.find_child("LobbyQuickActions", true, false) as Control
+    _expect(room_list != null and room_list.visible, "房主应进入创建模式座位列表")
+    _expect(rank != null and not rank.visible, "创建模式应隐藏段位卡")
+    _expect(quick != null and not quick.visible, "创建模式应隐藏快捷操作")
+
+    for seat in 8:
+        _expect(lobby.find_child("RoomRow%d" % seat, true, false) != null, "座位列表应有第 %d 行" % seat)
+    _expect(_room_name_count(lobby) == 3, "3 名玩家应占 3 行座位")
+    _expect(lobby.find_child("RoomReady_p0", true, false) != null, "房主行应有准备圆点")
+    _expect(lobby.find_child("RoomInviteButton", true, false) != null, "有空位时应显示邀请入口")
+
+    var text := _node_text(lobby)
+    for word in ["玩家列表", "已准备", "未准备"]:
+        _expect(not text.contains(word), "座位列表不应出现「%s」文字" % word)
+
+    _expect(lobby.find_child("ReadyButton", true, false) == null, "房主不应有准备按钮")
+    _expect(lobby.find_child("StartButton", true, false) != null, "房主应有开始按钮")
+    _expect(lobby.find_child("DissolveButton", true, false) != null, "房主应有解散按钮")
+    var start := lobby.find_child("StartButton", true, false) as Button
+    _expect(start != null and start.disabled, "有成员未准备时开始应禁用")
+    _expect(
+        start != null and start.tooltip_text == tr("ui.room.start_waiting_ready"),
+        "开始禁用原因应提示等待准备"
+    )
+
+    # 邀请入口打开好友抽屉的邀请模式。
+    var invite := lobby.find_child("RoomInviteButton", true, false) as Button
+    if invite != null:
+        invite.pressed.emit()
+        await get_tree().process_frame
+        var panel := lobby.find_child("FriendsPanel", true, false) as Control
+        _expect(panel != null and panel.visible, "邀请入口应打开好友面板")
+        _expect(lobby.find_child("Invite_p_online", true, false) != null, "邀请模式应给在线好友邀请按钮")
+        if panel != null:
+            panel.close()
+
+    _seed_room(8, true)
+    GameStore.room_changed.emit()
+    await get_tree().process_frame
+    _expect(lobby.find_child("RoomInviteButton", true, false) == null, "满员时不应有邀请入口")
+
+    _seed_room(3, true)
+    GameStore.room_changed.emit()
+    await get_tree().process_frame
+    _expect(lobby.find_child("RoomInviteButton", true, false) != null, "空位恢复后邀请入口应回来")
+    start = lobby.find_child("StartButton", true, false) as Button
+    _expect(
+        start != null and start.tooltip_text == tr("ui.room.start_need_players") % 5,
+        "补位关闭且不足 8 人时应提示还差人数"
+    )
+
+    _expect(lobby._host_room_mode(), "房主且房间非空应判定为创建模式")
+    GameStore.player_id = "p1"
+    _expect(not lobby._host_room_mode(), "宾客不应判定为创建模式")
+    GameStore.player_id = "p0"
+    GameStore.room_players = []
+    _expect(not lobby._host_room_mode(), "空房间不应判定为创建模式")
+
+    lobby.queue_free()
+    await get_tree().process_frame
+
+
+func _check_room_phone_height() -> void:
+    ScreenProfile.set_device_for_test(ScreenProfile.DEVICE_PHONE)
+    _seed_room(3, false)
+    var lobby := await _check_scene("res://pages/lobby/lobby.tscn", false)
+    if lobby == null:
+        return
+    var right := lobby.find_child("LobbyRight", true, false) as Control
+    _expect(
+        right != null and right.size.y <= 508.0 + 1.0,
+        "手机创建模式右栏不应超出 508，实际 %s" % (str(right.size.y) if right != null else "-")
+    )
+    lobby.queue_free()
+    await get_tree().process_frame
+
+
+func _seed_room(count: int, all_ready: bool) -> void:
+    GameStore.player_id = "p0"
+    GameStore.phase = Protocol.PHASE_LOBBY
+    GameStore.room_bot_fill = false
+    var players := []
+    for seat in count:
+        players.append(
+            {
+                "playerId": "p%d" % seat,
+                "displayName": "玩家%d" % seat,
+                "seat": seat,
+                "ready": all_ready or seat == 0,
+                "isHost": seat == 0,
+            }
+        )
+    GameStore.room_players = players
+
+
+func _room_name_count(lobby: Node) -> int:
+    var count := 0
+    for child in lobby.find_children("RoomName_*", "Label", true, false):
+        count += 1
+    return count
 
 
 func _sent_count(socket: RecordingSocket, message_type: String) -> int:
