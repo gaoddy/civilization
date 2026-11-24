@@ -78,6 +78,8 @@ protocol/
 ## 5. 大厅流程与房间生命周期
 
 - 认证：手机号 + 开发验证码 `123456` 或令牌续登；手机号经 `AccountStore` 解析为持久化账号（`playerId`、6 位玩家编号、展示名），同一手机号重新登录恢复同一账号；`playerId`/`token` 为服务端生成的不可预测串，不暴露手机号。认证结果同时下发 6 位数字 `playerCode`，好友申请按编号定位玩家。会话有效期 24 小时（`SESSION_TTL_MS`），过期在下次访问或 `purge_expired` 时清除，M1 不跑后台清理任务；会话仍是进程内状态，不落盘。
+- 单客户端登录：同一账号只保留最新一次登录签发的令牌，`SessionStore::issue` 写入新会话前先删除旧令牌；旧令牌此后再认证返回 `TOKEN_EXPIRED`。令牌续登（`AuthRequest` 的 token 分支）不经过签发，不轮换令牌，也不算新登录。
+- 顶号与接管：新登录认证成功后先按 `RoomRegistry::room_of_player` 找回账号当前房间，经 `RoomMessage::IsSeatActive` 探测座位（对局中要求未弃权，大厅要求仍有座位，500ms 超时按无效），有效则发 `RoomMessage::Reconnect` 复用重连路径接管，再把连接的本地房间上下文指向该房间；随后向被替换的旧连接 `try_send(ControlMessage::SessionReplaced)`，旧连接下发 `SESSION_REPLACED` 后关闭。令牌续登不向旧连接发顶号通知，只替换登记。接管消息先于旧连接的 `Detach` 进入房间队列，房间内代次先更新，迟到的 `Detach` 被忽略；已弃权的座位不接管，新客户端进大厅。
 - 建房：创建者坐 0 号座位并成为房主；房间码为 6 位大写字母数字，字母表排除易混字符 `0O1I`，首个房间码 `222222`。对局种子由房间码经 FNV-1a 64 位派生（`seed_for_code`）。
 - 房间玩法：建房时用房间码种子调用 `rule_engine::playstyles::draw(seed_for_code(code))`，抽取 5 个玩法存入 `RoomState.playstyles`；大厅期间与断线重连保持不变。对局结束即销毁房间，不再重抽。玩法必须早于英雄候选确定，因此抽取时点在房间创建，而不是 `Engine::new`。
 - 入房：坐最小空位；同一玩家重复加入同一房间幂等。非 `Lobby` 阶段成员集合冻结，加入/准备/离开返回 `INVALID_STAGE`；`StartGame` 只在 `Lobby` 有效。
@@ -108,7 +110,7 @@ protocol/
 - 删除：`FriendRemove{friendId}` 双向解除；非好友回 `NOT_FRIENDS`。
 - 最近对局：对局开始时按参战座位记录，每名玩家保留最近 20 名同局玩家，同一人只保留最近一次，最新的在前。
 - 在线状态：`online`（已认证且连接在）、`inGame`（座位处于 `Recruit`/`Combat`）、`offline`。好友列表按 online → inGame → offline、展示名首字符、`playerId` 排序。
-- 连接登记：认证成功后把连接登记进 `ConnectionRegistry`（`playerId` → 控制通道 + 代次），断开时按代次移除；`is_online` 与房间注册表共同决定好友状态。
+- 连接登记：认证成功后把连接登记进 `ConnectionRegistry`（`playerId` → 控制通道 + 代次），断开时按代次移除；`is_online` 与房间注册表共同决定好友状态。`insert` 返回被替换的旧连接：新登录据此向旧连接发 `SessionReplaced`，同一连接内重新认证不踢自己。
 - 推送路由：房间内玩家的社交消息投递到房间 task（`RoomMessage::Push`），由房间单写者写回该座位，序号与对局消息共用同一条通道；房间外走连接的控制通道（`ControlMessage`）。锁顺序固定为 connections → rooms → social，避免死锁。
 - 邀请：`InviteToRoom{friendId}` 只在本人处于 `Lobby` 阶段房间、房间未满、对方在线且不在任何房间时成功，否则回 `NOT_IN_ROOM` / `INVALID_STAGE` / `ROOM_FULL` / `FRIEND_OFFLINE` / `FRIEND_BUSY`；邀请 60 秒过期。
 - 接受：被邀请方收 `FriendInvite{inviteId, fromPlayerId, fromDisplayName, fromPlayerCode, roomCode, expiresAt}`；`RespondInvite{inviteId, accept}` 后服务端重新校验房间仍在大厅且未满，通过则给被邀请方 `InviteAccepted{inviteId, roomCode}`、给邀请方 `FriendInviteResult{inviteId, accepted, reason}`。客户端收到 `InviteAccepted` 后自行发普通 `JoinRoom{code}` 入房，房间 task 不跨任务挂载连接。
