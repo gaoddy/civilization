@@ -1,68 +1,49 @@
 class_name LobbyRoomActions
 extends VBoxContainer
-## 创建房间模式底部操作：房主只有开始与解散，宾客只有准备与离开。
+## 创建房间模式底部操作：房主只有开始与解散。
 ##
-## 房主默认已准备由服务端保证，这里不给房主准备按钮，也不发送 `Ready`。
+## 房主默认已准备由服务端保证，这里不给房主准备按钮，也不发送 `Ready`；
+## 宾客加入房间后进入房间等待页，不在大厅出现操作区。
 
-signal ready_toggled
 signal start_pressed
 signal dissolve_pressed
-signal leave_pressed
 
-var ready_button: Button
 var start_button: Button
 var dissolve_button: Button
-var leave_button: Button
 
-var _built_host := -1
+var _start_hint: Label
 
 
 func _init() -> void:
     name = "LobbyRoomActions"
     add_theme_constant_override("separation", UITheme.space("space-sm"))
 
+    _start_hint = UIControls.label("", UITheme.font_size("font-caption"))
+    _start_hint.name = "RoomStartHint"
+    _start_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    _start_hint.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
+    _start_hint.visible = false
+    add_child(_start_hint)
 
-## state: {ready, is_host, connected, can_start, start_reason, human_count, bot_fill}
+    start_button = _action_button(tr("ui.room.start"), "primary", "StartButton")
+    start_button.pressed.connect(func() -> void: start_pressed.emit())
+    add_child(start_button)
+
+    dissolve_button = _action_button(tr("ui.room.dissolve"), "ghost", "DissolveButton")
+    dissolve_button.pressed.connect(func() -> void: dissolve_pressed.emit())
+    add_child(dissolve_button)
+
+
+## state: {connected, can_start, start_reason}
 func set_state(state: Dictionary) -> void:
-    var is_host := bool(state.get("is_host", false))
     var connected := bool(state.get("connected", true))
-    if _built_host != int(is_host):
-        _rebuild(is_host)
-    if is_host:
-        var can_start := bool(state.get("can_start", false))
-        start_button.disabled = not connected or not can_start
-        var reason := str(state.get("start_reason", ""))
-        start_button.tooltip_text = reason if start_button.disabled else ""
-        dissolve_button.disabled = not connected
-        return
-    ready_button.text = tr("ui.room.unready") if bool(state.get("ready", false)) else tr("ui.room.ready")
-    ready_button.disabled = not connected
-    leave_button.disabled = not connected
-
-
-func _rebuild(is_host: bool) -> void:
-    for child in get_children():
-        remove_child(child)
-        child.free()
-    ready_button = null
-    start_button = null
-    dissolve_button = null
-    leave_button = null
-    _built_host = int(is_host)
-    if is_host:
-        start_button = _action_button(tr("ui.room.start"), "primary", "StartButton")
-        start_button.pressed.connect(func() -> void: start_pressed.emit())
-        add_child(start_button)
-        dissolve_button = _action_button(tr("ui.room.dissolve"), "ghost", "DissolveButton")
-        dissolve_button.pressed.connect(func() -> void: dissolve_pressed.emit())
-        add_child(dissolve_button)
-        return
-    ready_button = _action_button(tr("ui.room.ready"), "primary", "ReadyButton")
-    ready_button.pressed.connect(func() -> void: ready_toggled.emit())
-    add_child(ready_button)
-    leave_button = _action_button(tr("ui.room.leave"), "ghost", "LeaveButton")
-    leave_button.pressed.connect(func() -> void: leave_pressed.emit())
-    add_child(leave_button)
+    var can_start := bool(state.get("can_start", false))
+    start_button.disabled = not connected or not can_start
+    var reason := str(state.get("start_reason", ""))
+    start_button.tooltip_text = reason if start_button.disabled else ""
+    _start_hint.text = reason if start_button.disabled else ""
+    _start_hint.visible = _start_hint.text != ""
+    dissolve_button.disabled = not connected
 
 
 func _action_button(text: String, variant: String, node_name: String) -> Button:
@@ -70,4 +51,7 @@ func _action_button(text: String, variant: String, node_name: String) -> Button:
         text, variant, UITheme.stage_metric("lobby-room-action-height")
     )
     button.name = node_name
+    # 创建房间的操作区高度按设计令牌固定：触控抬升会把两枚按钮撑到 120+，
+    # 手机安全区内没有余量；该令牌已是手机档位的命中尺寸。
+    button.custom_minimum_size.y = UITheme.stage_metric("lobby-room-action-height")
     return button

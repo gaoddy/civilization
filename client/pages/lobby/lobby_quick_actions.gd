@@ -53,9 +53,10 @@ func set_state(state: Dictionary) -> void:
     var connected := bool(state.get("connected", true))
     var creating := bool(state.get("creating", false))
     var joining := bool(state.get("joining", false))
+    var matched := bool(state.get("matched", false))
     match_button.text = (
         tr("ui.lobby.cancel_match") if queueing else tr("ui.lobby.start_match")
     )
-    match_button.disabled = not connected
+    match_button.disabled = not connected or creating or joining or matched
     create_button.disabled = not connected or queueing or creating
     join_button.disabled = not connected or queueing or joining

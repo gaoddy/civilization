@@ -15,7 +15,6 @@ var _room_list: LobbyRoomList
 var _room_actions: LobbyRoomActions
 var _quick: LobbyQuickActions
 var _left_actions: LobbyLeftActions
-var _leave_confirm: ConfirmationDialog
 var _friends: FriendsPanel
 var _invite_popup: InvitePopup
 var _join_dialog: LobbyJoinDialog
@@ -25,6 +24,8 @@ var _connection: ConnectionDialog
 var _connected := false
 var _creating := false
 var _joining := false
+## 匹配成功到进入对局之间保留排队卡，显示成功文案。
+var _matched := false
 ## 已经发出过一次离开大厅的导航；避免选英雄与开局两个信号重复切场景。
 var _leaving := false
 
@@ -50,7 +51,9 @@ func _build() -> void:
     var margin := MarginContainer.new()
     margin.set_anchors_preset(Control.PRESET_FULL_RECT)
     for side in ["left", "right", "top", "bottom"]:
-        margin.add_theme_constant_override("margin_" + side, UITheme.space("space-2xl"))
+        margin.add_theme_constant_override(
+            "margin_" + side, UITheme.stage_metric("lobby-page-margin")
+        )
     add_child(margin)
 
     var columns := HBoxContainer.new()
@@ -100,6 +103,7 @@ func _build() -> void:
 
     _join_dialog = LobbyJoinDialog.new()
     _join_dialog.join_requested.connect(_on_join_requested)
+    _join_dialog.closed.connect(_on_join_dialog_closed)
     add_child(_join_dialog)
 
     _notice = LobbyNoticeDialog.new()
@@ -113,15 +117,6 @@ func _build() -> void:
     _invite_popup = InvitePopup.new()
     add_child(_invite_popup)
 
-    # 离开确认挂在页面容器而不是安全区：不参与大厅排版。
-    _leave_confirm = ConfirmationDialog.new()
-    _leave_confirm.name = "LobbyLeaveConfirm"
-    _leave_confirm.title = tr("ui.room.leave")
-    _leave_confirm.dialog_text = tr("ui.room.leave_confirm")
-    _leave_confirm.ok_button_text = tr("ui.room.leave_confirm_action")
-    _leave_confirm.cancel_button_text = tr("ui.lobby.close")
-    _leave_confirm.confirmed.connect(_confirm_leave)
-    UILayout.safe_area(self).get_parent().add_child(_leave_confirm)
 
 
 func _column(node_name: String, ratio: int) -> VBoxContainer:
@@ -143,10 +138,8 @@ func _connect_signals() -> void:
     _left_actions.leaderboard_pressed.connect(_on_leaderboard_pressed)
     _room_list.invite_pressed.connect(_on_room_invite_pressed)
     _room_list.kick_requested.connect(_on_kick_pressed)
-    _room_actions.ready_toggled.connect(_on_ready_toggled)
     _room_actions.start_pressed.connect(_on_start_pressed)
     _room_actions.dissolve_pressed.connect(_on_dissolve_pressed)
-    _room_actions.leave_pressed.connect(_on_leave_pressed)
 
     GameStore.room_changed.connect(_on_room_changed)
     GameStore.room_closed.connect(_on_room_closed)
@@ -195,7 +188,7 @@ func _apply_mode() -> void:
     _room_list.visible = room_mode
     _room_actions.visible = room_mode
     _quick.visible = not room_mode
-    var queueing: bool = GameStore.queueing and not room_mode
+    var queueing: bool = (GameStore.queueing or _matched) and not room_mode
     _queue_card.visible = queueing
     _rank.visible = not room_mode and not queueing
     if room_mode:
@@ -207,6 +200,7 @@ func _apply_mode() -> void:
             "connected": _connected,
             "creating": _creating,
             "joining": _joining,
+            "matched": _matched,
         }
     )
 
@@ -230,13 +224,9 @@ func _render_room() -> void:
         start_reason = tr("ui.room.start_need_players") % (LobbyRoomList.SEAT_COUNT - players.size())
     _room_actions.set_state(
         {
-            "ready": GameStore.my_ready(),
-            "is_host": is_host,
             "connected": _connected,
             "can_start": start_reason == "",
             "start_reason": start_reason,
-            "human_count": players.size(),
-            "bot_fill": GameStore.room_bot_fill,
         }
     )
 
@@ -252,7 +242,9 @@ func _on_match_toggled(was_queueing: bool) -> void:
 
 
 func _on_match_found(_seat: int) -> void:
+    _matched = true
     _queue_card.set_matched()
+    _apply_mode()
 
 
 func _on_create_pressed() -> void:
@@ -274,6 +266,13 @@ func _on_join_requested(code: String) -> void:
     _join_dialog.set_joining(true)
     _apply_mode()
     Net.send(Protocol.MSG_JOIN_ROOM, {"code": code})
+
+
+## 关闭加入弹窗即放弃这次在途加入：服务端失败或晚到成功都不再阻塞入口。
+func _on_join_dialog_closed() -> void:
+    _joining = false
+    _join_dialog.set_joining(false)
+    _apply_mode()
 
 
 func _on_friends_pressed() -> void:
@@ -298,6 +297,11 @@ func _on_leaderboard_pressed() -> void:
 
 func _on_disconnected() -> void:
     _connected = false
+    _matched = false
+    _creating = false
+    _joining = false
+    _join_dialog.set_joining(false)
+    _join_dialog.close_layer()
     GameStore.abandon_queue()
     _connection.show_disconnected()
     _apply_mode()
@@ -317,6 +321,7 @@ func _on_reconnect_requested() -> void:
 func _on_room_changed() -> void:
     _creating = false
     _joining = false
+    _matched = false
     if GameStore.room_players.is_empty():
         _apply_mode()
         return
@@ -330,12 +335,9 @@ func _on_room_changed() -> void:
 func _on_room_closed() -> void:
     _creating = false
     _joining = false
+    _matched = false
     _apply_mode()
     _show_room_closed_reason()
-
-
-func _on_ready_toggled() -> void:
-    Net.send(Protocol.MSG_READY, {"ready": not GameStore.my_ready()})
 
 
 func _on_start_pressed() -> void:
@@ -344,16 +346,6 @@ func _on_start_pressed() -> void:
 
 func _on_dissolve_pressed() -> void:
     Net.send(Protocol.MSG_DISSOLVE_ROOM, {})
-
-
-func _on_leave_pressed() -> void:
-    _leave_confirm.popup_centered()
-
-
-func _confirm_leave() -> void:
-    Net.send(Protocol.MSG_LEAVE_ROOM, {})
-    GameStore.reset_room()
-    _apply_mode()
 
 
 func _on_kick_pressed(player_id: String) -> void:
@@ -387,15 +379,19 @@ func _on_auth_changed() -> void:
 
 func _on_error() -> void:
     var code := str(GameStore.last_error.get("code", ""))
+    # 认证类错误优先于加入弹窗：会话已失效时留在弹窗里没有意义。
+    if UINavigation.error_route(code) == UINavigation.ROUTE_LOGIN:
+        _join_dialog.close_layer()
+        _joining = false
+        _creating = false
+        GameStore.reset_session()
+        UINavigation.navigate(self, UINavigation.PAGE_LOGIN)
+        return
     if _join_dialog.visible:
         _joining = false
         _join_dialog.set_joining(false)
         _join_dialog.show_error(code)
         _apply_mode()
-        return
-    if UINavigation.error_route(code) == UINavigation.ROUTE_LOGIN:
-        GameStore.reset_session()
-        UINavigation.navigate(self, UINavigation.PAGE_LOGIN)
         return
     _creating = false
     if UINavigation.error_route(code) == UINavigation.ROUTE_LOBBY:

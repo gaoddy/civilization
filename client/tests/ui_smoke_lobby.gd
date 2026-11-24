@@ -32,8 +32,11 @@ func _ready() -> void:
         await _check_hall_texture(lobby)
         await _check_match_toggle(lobby)
         await _check_join_dialog(lobby, socket)
+        await _check_creating_blocks_match(lobby)
         await _check_disconnect(lobby)
         await _check_error(lobby)
+        await _check_match_found(lobby)
+        await _check_auth_error(lobby)
         lobby.queue_free()
         await get_tree().process_frame
 
@@ -183,6 +186,52 @@ func _check_join_dialog(lobby: Node, socket: RecordingSocket) -> void:
         cancel.pressed.emit()
         await get_tree().process_frame
     _expect(not dialog.visible, "取消应关闭加入弹窗")
+    _expect(not join_button.disabled, "取消加入后加入按钮应恢复")
+
+
+func _check_creating_blocks_match(lobby: Node) -> void:
+    var match_button := lobby.find_child("MatchButton", true, false) as Button
+    lobby.set("_creating", true)
+    lobby.call("_apply_mode")
+    await get_tree().process_frame
+    _expect(match_button != null and match_button.disabled, "创建房间在途不应能开始匹配")
+    lobby.set("_creating", false)
+    lobby.call("_apply_mode")
+    await get_tree().process_frame
+
+
+func _check_match_found(lobby: Node) -> void:
+    var card := lobby.find_child("LobbyQueueCard", true, false) as Control
+    GameStore.queueing = true
+    GameStore.queue_changed.emit()
+    await get_tree().process_frame
+    _expect(card != null and card.visible, "排队中应显示排队卡")
+    GameStore.queueing = false
+    GameStore.queue_changed.emit()
+    GameStore.match_found.emit(0)
+    await get_tree().process_frame
+    var timer := lobby.find_child("QueueTimer", true, false) as Label
+    _expect(card != null and card.visible, "匹配成功后排队卡应保持可见")
+    _expect(
+        timer != null and timer.text == tr("ui.lobby.match_found"),
+        "匹配成功后应显示成功文案"
+    )
+
+
+## 认证类错误优先于加入弹窗：即使弹窗开着也要清会话；离树后导航被丢弃，便于断言。
+func _check_auth_error(lobby: Node) -> void:
+    var join_button := lobby.find_child("JoinRoomButton", true, false) as Button
+    if join_button != null:
+        join_button.pressed.emit()
+        await get_tree().process_frame
+    GameStore.player_id = "p_me"
+    GameStore.last_error = {"code": "AUTH_FAILED"}
+    var parent := lobby.get_parent()
+    if parent != null:
+        parent.remove_child(lobby)
+    GameStore.error_received.emit()
+    await get_tree().process_frame
+    _expect(GameStore.player_id == "", "认证错误应清空会话回登录")
 
 
 func _check_disconnect(lobby: Node) -> void:
@@ -210,6 +259,7 @@ func _check_error(lobby: Node) -> void:
 
 
 func _check_room_mode() -> void:
+    _seed()
     _seed_room(3, false)
     var lobby := await _check_scene("res://pages/lobby/lobby.tscn", false)
     if lobby == null:
@@ -241,6 +291,12 @@ func _check_room_mode() -> void:
         start != null and start.tooltip_text == tr("ui.room.start_waiting_ready"),
         "开始禁用原因应提示等待准备"
     )
+    var hint := lobby.find_child("RoomStartHint", true, false) as Label
+    _expect(hint != null and hint.visible, "开始禁用时应显示可见原因行")
+    _expect(
+        hint != null and hint.text == tr("ui.room.start_waiting_ready"),
+        "原因行文案应与 tooltip 一致"
+    )
 
     # 邀请入口打开好友抽屉的邀请模式。
     var invite := lobby.find_child("RoomInviteButton", true, false) as Button
@@ -257,6 +313,7 @@ func _check_room_mode() -> void:
     GameStore.room_changed.emit()
     await get_tree().process_frame
     _expect(lobby.find_child("RoomInviteButton", true, false) == null, "满员时不应有邀请入口")
+    _expect(not (hint != null and hint.visible), "开始可用时不应显示原因行")
 
     _seed_room(3, true)
     GameStore.room_changed.emit()
@@ -281,15 +338,26 @@ func _check_room_mode() -> void:
 
 func _check_room_phone_height() -> void:
     ScreenProfile.set_device_for_test(ScreenProfile.DEVICE_PHONE)
+    _seed()
     _seed_room(3, false)
     var lobby := await _check_scene("res://pages/lobby/lobby.tscn", false)
     if lobby == null:
         return
-    var right := lobby.find_child("LobbyRight", true, false) as Control
-    _expect(
-        right != null and right.size.y <= 508.0 + 1.0,
-        "手机创建模式右栏不应超出 508，实际 %s" % (str(right.size.y) if right != null else "-")
-    )
+    var area := lobby.find_child("SafeAreaMargin", true, false) as Control
+    _expect(area != null, "大厅应有安全区包裹")
+    if area != null:
+        area.call("apply_for_test", Vector4i(0, 0, 0, 29), 0)
+        await get_tree().process_frame
+        var actions := lobby.find_child("LobbyRoomActions", true, false) as Control
+        _expect(actions != null, "手机创建模式应有房间操作")
+        if actions != null:
+            var page := lobby as Control
+            var scale: float = page.size.x / float(ScreenProfile.base_canvas().x)
+            var bottom: float = actions.get_global_rect().end.y / scale
+            _expect(
+                bottom <= ScreenProfile.base_canvas().y - 29.0 + 1.0,
+                "手机安全区内房间操作不应被裁切，底部 %s" % bottom
+            )
     lobby.queue_free()
     await get_tree().process_frame
 

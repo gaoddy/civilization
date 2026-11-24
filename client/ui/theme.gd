@@ -255,6 +255,8 @@ const SCENARIO := {
 	"lobby-room-invite-height-compact": 34,
 	"lobby-room-action-height": 40,
 	"lobby-room-action-height-compact": 44,
+	"lobby-page-margin": 24,
+	"lobby-page-margin-compact": 14,
 	# 技能瞄准：弧线、流动光点、候选角标与命中描边。小数令牌经 `factor` 读取。
 	"aim-arc-width": 2.5,
 	"aim-dash": 10.0,

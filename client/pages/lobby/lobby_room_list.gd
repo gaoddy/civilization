@@ -26,9 +26,17 @@ func _init() -> void:
 
     _rows = VBoxContainer.new()
     _rows.name = "RoomRows"
+    _rows.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     _rows.size_flags_vertical = Control.SIZE_EXPAND_FILL
     _rows.add_theme_constant_override("separation", UITheme.space("space-2xs"))
-    _box.add_child(_rows)
+    # 座位行放进滚动区：安全区或更小屏幕上列表让出高度，底部邀请入口与房间操作始终可见。
+    var scroll := ScrollContainer.new()
+    scroll.name = "RoomScroll"
+    scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+    scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+    scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    scroll.add_child(_rows)
+    _box.add_child(scroll)
 
     _fill_hint = UIControls.label("", UITheme.font_size("font-caption"), false)
     _fill_hint.name = "RoomFillHint"
