@@ -340,7 +340,7 @@ func _check_touch() -> void:
     input.free()
 
     # 操作按钮显式传高度时是视觉高度，三端一致，不再按触控命中抬升；
-    # 省略高度的按钮才取命中下限。
+    # 省略高度时也落到操作按钮令牌，避免漏传参数被撑大。
     var action_height := UITheme.stage_metric("action-button-height")
     _check(action_height == 44, "手机档位操作按钮高度应为 44，实际 %d" % action_height)
     var fixed_button := UIControls.styled_button("", "primary", action_height)
@@ -348,8 +348,8 @@ func _check_touch() -> void:
         "显式高度的按钮不应再按触控命中抬升，实际 %d" % int(fixed_button.custom_minimum_size.y))
     fixed_button.free()
     var auto_button := UIControls.styled_button("", "primary")
-    _check(int(auto_button.custom_minimum_size.y) >= UITheme.hit_primary(),
-        "省略高度的按钮仍应取触控命中高度，实际 %d" % int(auto_button.custom_minimum_size.y))
+    _check(int(auto_button.custom_minimum_size.y) == action_height,
+        "省略高度的按钮应落到操作按钮令牌，实际 %d" % int(auto_button.custom_minimum_size.y))
     auto_button.free()
 
     var page := Control.new()

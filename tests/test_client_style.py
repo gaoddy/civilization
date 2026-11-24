@@ -64,6 +64,37 @@ def first_statement(lines):
     return ""
 
 
+STYLED_BUTTON_CALL = "UIControls.styled_button("
+
+
+def styled_button_arg_count(text, start):
+    """数 `styled_button(` 之后第一层括号内的参数个数；括号不闭合时返回 None。"""
+    depth = 1
+    args = 1
+    quote = ""
+    index = start
+    while index < len(text):
+        char = text[index]
+        if quote:
+            if char == "\\":
+                index += 2
+                continue
+            if char == quote:
+                quote = ""
+        elif char in ('"', "'"):
+            quote = char
+        elif char in "([{":
+            depth += 1
+        elif char in ")]}":
+            depth -= 1
+            if depth == 0:
+                return args
+        elif char == "," and depth == 1:
+            args += 1
+        index += 1
+    return None
+
+
 class ClientStyleTest(unittest.TestCase):
     def test_pages_call_safe_area_first(self):
         offenders = []
@@ -123,6 +154,23 @@ class ClientStyleTest(unittest.TestCase):
                 if SPACING_LITERAL.search(line):
                     offenders.append(f"{relative}:{number}: {line.strip()}")
         self.assertEqual(offenders, [], "间距必须使用 space-* 令牌：\n" + "\n".join(offenders))
+
+    def test_styled_buttons_pass_visual_height(self):
+        offenders = []
+        for path, relative in client_sources():
+            if relative == "ui/controls.gd":
+                continue
+            text = path.read_text(encoding="utf-8")
+            for match in re.finditer(re.escape(STYLED_BUTTON_CALL), text):
+                args = styled_button_arg_count(text, match.end())
+                if args is None or args < 3:
+                    line = text.count("\n", 0, match.start()) + 1
+                    offenders.append(f"{relative}:{line}")
+        self.assertEqual(
+            offenders,
+            [],
+            "UIControls.styled_button 必须显式传入视觉高度（第三参数）：\n" + "\n".join(offenders),
+        )
 
 
 if __name__ == "__main__":
