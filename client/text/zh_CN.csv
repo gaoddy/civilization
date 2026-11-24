@@ -1537,6 +1537,8 @@ ui.gallery.skills,技能
 ui.gallery.stats,%s / %s
 ui.gallery.stats_labeled,攻 %s / 血 %s
 ui.gallery.toc_all,全部
+ui.game.aim.skill,选择技能目标
+ui.game.aim.target,选择目标
 ui.game.bot_name,机器人 %d
 ui.game.card.freeze_glyph,冻
 ui.game.card.stealth_glyph,潜

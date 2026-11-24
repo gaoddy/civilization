@@ -25,6 +25,7 @@ static func build(minion: Dictionary) -> Control:
     var card_id := str(minion.get("cardId", ""))
     var entry := CardDB.card(card_id)
     var face_node := CardFaceBase.create_face(card_id, false)
+    face_node.set_meta("golden", bool(minion.get("golden", false)))
     CardFaceBase.add_info(
         face_node,
         card_id,

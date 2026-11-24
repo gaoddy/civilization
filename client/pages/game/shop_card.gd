@@ -9,8 +9,11 @@ extends PanelContainer
 ## {epoch, shopSlot, cardId, buyable}
 var payload: Dictionary = {}
 
-## 由页面按阶段、视图新鲜度、连接、待选与 `buyable` 汇总；`false` 时拖拽不开始。
-var drag_allowed := false
+var drag_allowed := false:
+    set(value):
+        drag_allowed = value
+        # 引导流光只给当前可拖的卡：卡面材质跟着拖拽状态亮起或熄灭。
+        FrameMaterial.set_guide(self, value)
 
 
 func _ready() -> void:

@@ -13,6 +13,7 @@ const TIER_ORDER := [
 func _ready() -> void:
     UILayout.safe_area(self)
     _build()
+    FrameMaterial.dress_page(self)
 
 
 func _build() -> void:

@@ -22,6 +22,8 @@ static var _line_height_cache: Dictionary = {}
 static func create_face(card_id: String, show_desc: bool, hero := false) -> Control:
     var face_node := Control.new()
     face_node.name = "CardFace"
+    # 卡面记下自己的卡与三连标记：框体材质按它取时代色与金框，不需要逐处传参。
+    face_node.set_meta("card_id", card_id)
     face_node.mouse_filter = Control.MOUSE_FILTER_IGNORE
     face_node.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     face_node.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -268,8 +270,17 @@ static func add_info(
 static func add_frame(face_node: Control, card_id: String, hero := false) -> void:
     if hero:
         return
-    var level := int(CardDB.card(card_id).get("level", 1))
-    face_node.add_child(CardFrame.create(level))
+    var entry := CardDB.card(card_id)
+    var level := int(entry.get("level", 1))
+    face_node.add_child(CardFrame.create(
+        level, str(entry.get("era", "")), bool(face_node.get_meta("golden", false))
+    ))
+    # 框体材质叠在卡面最外层：按时代取合金色，三连换成足金；卡内信息条等子面板
+    # 由 `_collect` 跳过，保证一张卡只有一圈边框。
+    FrameMaterial.apply(face_node, FrameMaterial.Style.BEVEL, {
+        "tint": FrameMaterial.tint_for_era(str(entry.get("era", ""))),
+        "golden": bool(face_node.get_meta("golden", false)),
+    })
 
 
 ## 冻结表现：整卡半透明蒙层 + 固定角度与间距的冰晶细线 + 右下角「冻」字。
@@ -396,14 +407,9 @@ static func _line_height(font_size: int, host: Node) -> int:
 
 
 ## 窄卡角标：比胶囊更紧凑，避免两角标在 112 宽的商店卡上相撞。
-static func _corner_badge(text: String, variant: String) -> Label:
-    var badge := UIControls.pill_label(text, variant, "font-caption")
-    var style := UITheme.pill_style(variant)
-    style.content_margin_left = UITheme.space("space-xs")
-    style.content_margin_right = UITheme.space("space-xs")
-    badge.add_theme_stylebox_override("normal", style)
-    badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    return badge
+static func _corner_badge(text: String, variant: String) -> Control:
+    # 角标统一走 CornerBadge：深底 + 铜边 + 顶部高光，和卡框同一套厚度语言。
+    return CornerBadge.create(text, variant)
 
 
 static func _badge_height() -> int:

@@ -11,8 +11,11 @@ extends PanelContainer
 ## `targets` 为服务端下发的合法目标 `{zone, id}`，只有需要目标的效果牌非空。
 var payload: Dictionary = {}
 
-## 由页面按阶段、视图新鲜度、连接、待选与 `playable` 汇总；`false` 时拖拽不开始。
-var drag_allowed := false
+var drag_allowed := false:
+    set(value):
+        drag_allowed = value
+        # 引导流光只给当前可拖的卡：卡面材质跟着拖拽状态亮起或熄灭。
+        FrameMaterial.set_guide(self, value)
 
 ## 拖拽真正开始时同步发出，供手牌槽在复制预览之前复位悬停缩放。
 signal drag_started

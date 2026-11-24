@@ -58,15 +58,28 @@ func _draw() -> void:
 		_draw_circle()
 
 
+## 攻击：带厚度的铜环 + 深井，数字落在井底，比原来的三层圆更有实物感。
 func _draw_circle() -> void:
 	var center := size * 0.5
 	var radius := minf(size.x, size.y) * 0.5
-	draw_circle(center, radius * 0.96, UITheme.color("color-bg"))
-	draw_circle(center, radius * 0.88, UITheme.color("color-accent-strong"))
-	draw_circle(center, radius * 0.64, UITheme.color("color-accent"))
+	# 投影：让徽章从卡面上浮起来。
+	draw_circle(center + Vector2(0.0, radius * 0.10), radius * 0.98, UITheme.alpha("color-black", 0.55))
+	# 铜环外圈
+	draw_circle(center, radius * 0.94, UITheme.color("color-plate-ring"))
+	# 环上受光：左上到右上一段亮弧。
 	draw_arc(
-		center, radius * 0.88, 0.0, TAU, 48, UITheme.color("color-bg"), 1.0, true
+		center,
+		radius * 0.90,
+		PI * 1.08,
+		PI * 1.92,
+		28,
+		UITheme.color("color-accent"),
+		maxf(1.0, radius * 0.18),
+		true,
 	)
+	# 内井
+	draw_circle(center, radius * 0.74, UITheme.color("color-plate-well"))
+	draw_arc(center, radius * 0.74, 0.0, TAU, 32, UITheme.fade(UITheme.color("color-accent"), 0.55), 1.0, true)
 
 
 func _draw_drop() -> void:
@@ -78,12 +91,21 @@ func _draw_drop() -> void:
 	var left := Vector2(w * 0.14, h * 0.62)
 	var right := Vector2(w * 0.86, h * 0.62)
 	# 先画略大一圈的暗红剪影，再压上正红，形成贴边的收边。
-	var silhouette := UITheme.color("color-danger").darkened(0.45)
+	# 血滴：深红外缘当厚度，内面正红，左上一小块高光。
+	var rim := UITheme.color("color-danger-deep")
 	var body := UITheme.color("color-danger")
-	draw_circle(center, radius * 1.12, silhouette)
+	draw_circle(center + Vector2(0.0, radius * 0.10), radius * 1.16, UITheme.alpha("color-black", 0.45))
+	draw_circle(center, radius * 1.14, rim)
 	draw_colored_polygon(
-		PackedVector2Array([tip + Vector2(0, -h * 0.03), left + Vector2(-w * 0.03, 0), right + Vector2(w * 0.03, 0)]),
-		silhouette,
+		PackedVector2Array([
+			tip + Vector2(0, -h * 0.04), left + Vector2(-w * 0.05, 0), right + Vector2(w * 0.05, 0),
+		]),
+		rim,
 	)
 	draw_circle(center, radius, body)
 	draw_colored_polygon(PackedVector2Array([tip, left, right]), body)
+	draw_circle(
+		center + Vector2(-radius * 0.34, -radius * 0.30),
+		radius * 0.24,
+		UITheme.fade(UITheme.color("color-danger").lightened(0.4), 0.55),
+	)
