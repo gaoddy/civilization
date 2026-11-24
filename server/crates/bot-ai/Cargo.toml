@@ -1,0 +1,10 @@
+[package]
+name = "bot-ai"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+name = "bot_ai"
+
+[dependencies]
+rule-engine = { path = "../rule-engine" }

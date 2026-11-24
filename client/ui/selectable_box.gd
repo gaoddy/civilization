@@ -4,7 +4,7 @@ extends PanelContainer
 ##
 ## 选中值由调用方设置；本组件不读取业务状态，也不发送业务意图，只在框内点击时发出
 ## `activated`。描边有两种表达：`INLINE` 直接替换面板描边，`OUTER` 在框外扩出一圈，
-## 与房间候选卡、图鉴卡面单元的现有表现一致。
+## 与 `HeroPickCard`（选英雄覆盖层候选卡）、图鉴卡面单元的现有表现一致。
 
 ## 左键在框内按下并在阈值内松开时发出；触屏拖拽等超阈位移不算点击。
 signal activated
@@ -87,7 +87,7 @@ func _build_frame() -> void:
 	frame_style.bg_color = UITheme.color("color-transparent")
 	frame_style.border_color = UITheme.color("color-accent")
 	frame_style.set_border_width_all(SELECTED_BORDER_WIDTH)
-	# 选中框圆角跟随底板：底板是直角（如房间候选卡）时选中框也保持直角，
+	# 选中框圆角跟随底板：底板是直角（如 `HeroPickCard`）时选中框也保持直角，
 	# 避免圆弧弯进内容区后被铺满的卡面遮住四角。
 	frame_style.corner_radius_top_left = _base_style.corner_radius_top_left
 	frame_style.corner_radius_top_right = _base_style.corner_radius_top_right

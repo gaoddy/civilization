@@ -35,6 +35,8 @@ fn client_variant(message: &ClientMessage) -> &'static str {
         ClientMessage::JoinQueue(_) => "JoinQueue",
         ClientMessage::LeaveQueue(_) => "LeaveQueue",
         ClientMessage::Ready(_) => "Ready",
+        ClientMessage::StartGame(_) => "StartGame",
+        ClientMessage::SetBotFill(_) => "SetBotFill",
         ClientMessage::SelectHeroCard(_) => "SelectHeroCard",
         ClientMessage::Intent(_) => "Intent",
         ClientMessage::CombatPlayed(_) => "CombatPlayed",
@@ -81,6 +83,7 @@ fn server_variant(message: &ServerMessage) -> &'static str {
         ServerMessage::AchievementUnlocked(_) => "AchievementUnlocked",
         ServerMessage::QueueState(_) => "QueueState",
         ServerMessage::MatchFound(_) => "MatchFound",
+        ServerMessage::HeroPickStarted(_) => "HeroPickStarted",
         ServerMessage::Leaderboard(_) => "Leaderboard",
         ServerMessage::PlayerProfile(_) => "PlayerProfile",
     }

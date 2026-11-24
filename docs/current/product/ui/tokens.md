@@ -52,7 +52,7 @@
 | `font-display` | 22 | 战斗结果横幅、弹层标题 |
 | `font-hero` | 28 | 结算页标题 |
 | `font-display-lg` | 30 | 登录页主标题 |
-| `font-watermark` | 72 | 房间候选卡的水印首字 |
+| `font-watermark` | 72 | 选英雄覆盖层候选卡无卡面时的水印首字 |
 
 ## 4. 间距与圆角
 
@@ -95,8 +95,8 @@
 | `avatar-rail` | 44 | 左栏座位行边长兜底值，左栏尺寸未解算时使用；实际边长取栏内宽与人均可用高度的较小值，头像边长再减两侧描边 4，手机兜底 40 |
 | `seat-row-gap` | 4 | 座位行间距；手机 2 |
 | `portrait-size` | 64 | `CombatIntro` 等仍使用 `GamePortrait` 的头像块边长；售货员与对手英雄改用 `hero-card-size` |
-| `hero-detail-width` | 160 | 选英雄页悬停详情与房间候选卡宽度，手机 120；高度由 `UITheme.card_face_height` 按卡面比例计算 |
-| `room-hero-detail-width` | 280 | 选英雄页悬停详情卡宽度；手机 200 |
+| `hero-detail-width` | 160 | 对局页选英雄覆盖层的候选卡与悬停详情宽度，手机 120；高度由 `UITheme.card_face_height` 按卡面比例计算 |
+| `room-hero-detail-width` | 280 | 旧房间英雄详情宽度；当前实现不使用，保留令牌，手机 200 |
 | `seat-hp-bar-height` | 6 | 座位行与战斗对手身份块的血量条高度 |
 | `seat-detail-hp-bar-height` | 16 | 座位详情里叠「当前/上限」数字的生命条高度，圆角取高度一半 |
 | `rank-badge-size` | 18 | 座位行名次圆形角标直径，圆角取直径一半；圆心收在头像内左上 |
@@ -150,8 +150,8 @@ iPhone 以 960×540 为宽度基准（高度随窗口扩展），对局页通过
 | `pill-button-height-compact` | 24 | iPhone 胶囊按钮高度 |
 | `status-dialog-width-compact` | 280 | iPhone 对局状态模态的提示面板宽度 |
 | `portrait-size-compact` | 48 | iPhone `CombatIntro` 等仍使用 `GamePortrait` 的头像块边长 |
-| `room-hero-detail-width-compact` | 200 | iPhone 选英雄页悬停详情卡宽度 |
-| `hero-detail-width-compact` | 120 | iPhone 选英雄页悬停详情与候选卡宽度；高度由 `card_face_height` 计算 |
+| `room-hero-detail-width-compact` | 200 | 旧房间英雄详情宽度；当前实现不使用，保留令牌 |
+| `hero-detail-width-compact` | 120 | iPhone 选英雄覆盖层候选卡与悬停详情宽度；高度由 `card_face_height` 计算 |
 | `detail-minion-width-compact` | 200 | iPhone 棋盘与战斗随从详情单列宽度 |
 | `detail-minion-width-dense-compact` | 200 | iPhone 双列档位与基础同宽，来源超过 8 行时实际保持单列 |
 
@@ -182,5 +182,5 @@ iPhone 以 960×540 为宽度基准（高度随窗口扩展），对局页通过
 - 例外：卡框的透明底（`Color(0,0,0,0)`）与底牌数字的白字黑描边（`Color.WHITE` / `Color.BLACK`）直接用 Godot 常量，不新增语义令牌。
 - 新增原子色令牌：`cyan-400`、`teal-400`、`olive-400`、`amber-400`、`orange-400`、`magenta-400`；`blue-400`、`green-400`、`purple-400`、`rose-400`、`red-400`、`slate-400`、`sand-400` 沿用。
 - 14 个键的颜色互不重复（`red-400` 与语义 `color-danger` 同值，但中立色不与任何玩法色重复）；卡牌不再使用 `neutral`，该键只作未知玩法的兜底色；未知玩法色彩回退 `snow-500`。
-- 取值入口：`UITheme.playstyle_color(id)` 返回玩法色；`playstyle_cover(id)` 返回压暗 0.62 的玩法色，作为卡面与房间英雄候选卡的封面底色。未知 id 回退 `snow-500`。
+- 取值入口：`UITheme.playstyle_color(id)` 返回玩法色；`playstyle_cover(id)` 返回压暗 0.62 的玩法色，作为卡面与 `HeroPickCard`（选英雄覆盖层候选卡）的封面底色。未知 id 回退 `snow-500`。
 - 玩法色用于卡面封面、英雄头像块描边与名字首字、英雄小卡描边，不改变布局与结构。

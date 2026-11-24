@@ -33,9 +33,9 @@
 - 卡牌图鉴与 `Gallery*` 组件由 `client/ui/` 承载，供大厅图鉴页与对局覆盖层共用；它们的卡牌数据仍来自 `CardDB`。
 - `FirstGameGuide` 由对局页实例化并挂载，只服务对局页；高亮层忽略鼠标，提示条自身接收点击。
 - `GameAimLayer` 由对局页实例化并挂载，承接技能与战吼的选目标手势；全屏但忽略鼠标，只有瞄准期间临时接管按下与抬起。
-- `DetailLayer` 统一承载商店、座位、售货员、英雄与随从详情；选英雄页的 `RoomHeroDetailLayer` 继承它，只覆盖内容与定位。座位详情由 `SeatDetailSection` 渲染身份、叠字的生命条与无标题对战记录，面板宽度按类别取 `seat-detail-width`（座位）或 `detail-panel-width`（其余）。
-- 长按判定由 `LongPressTracker`（`client/ui/long_press.gd`）承担，详情层与选英雄页共用同一套 450ms 阈值与 8 画布单位的位移取消距离。
-- 可选项框由 `SelectableBox`（`client/ui/selectable_box.gd`）承担内容承载、常态 / 悬停 / 选中三态描边与框内点击；`RoomHeroCard` 与 `GalleryCardTile` 继承它，分别使用外扩与内联两种选中描边。
+- `DetailLayer` 统一承载商店、座位、售货员、英雄与随从详情；对局页选英雄覆盖层的 `HeroPickDetailLayer` 继承它，只覆盖内容与定位。座位详情由 `SeatDetailSection` 渲染身份、叠字的生命条与无标题对战记录，面板宽度按类别取 `seat-detail-width`（座位）或 `detail-panel-width`（其余）。
+- 长按判定由 `LongPressTracker`（`client/ui/long_press.gd`）承担，详情层与选英雄覆盖层共用同一套 450ms 阈值与 8 画布单位的位移取消距离。
+- 可选项框由 `SelectableBox`（`client/ui/selectable_box.gd`）承担内容承载、常态 / 悬停 / 选中三态描边与框内点击；`HeroPickCard` 与 `GalleryCardTile` 继承它，分别使用外扩与内联两种选中描边。
 - 头像框由 `AvatarFrame`（`client/ui/avatar_frame.gd`）承担圆角头像裁切、头像之上的圆角描边与首字回退；`GameHeroCard` 继承它，业务内容（生命牌）挂在 `content()`；`Avatar` 与 `GamePortrait` 同样基于它，满宽贴底的名字条挂在 `clipped_content()`。
 - 弹出层外壳由 `PopupLayer`（`client/ui/popup_layer.gd`）承担遮罩、居中 / 锚点 / 四向贴边定位与点击遮罩关闭；`InvitePopup`、`FriendsPanel`、`GameChoiceOverlay`、`CombatIntro` 与图鉴筛选面板 `GalleryFilterPanel` 继承它，内容仍由各自构建。
 
@@ -46,4 +46,4 @@
 - `SkillList.build(parent, skill_ids)`：英雄技能列表，按 `skills` 顺序逐条展示技能名、触发类型、完整文本与主动技能费用/次数。
 - 座位行、商店、河道、英雄行、对手身份、手牌行、选择浮层与随从卡等页面私有结构位于 `client/pages/game/` 的 `game_*` 视图文件（如 `game_players_rail.gd`、`game_shop_view.gd`、`game_river.gd`、`game_hero_row.gd`、`game_opponent_view.gd`、`game_hand_row.gd`、`game_choice_overlay.gd`），不进入共享层。
 - 卡面按场景拆成独立组件：`shop_card_face.gd`、`hand_card_face.gd`、`board_card_face.gd`（棋盘与战斗只读共用）与 `gallery_card_face.gd`；共享绘制与文本在 `client/ui/card_face_base.gd`、`client/ui/card_text.gd`。
-- 房间候选英雄卡位于 `client/pages/room/room_hero_card.gd`（`RoomHeroCard`），悬停详情层位于 `client/pages/room/room_hero_detail_layer.gd`（`RoomHeroDetailLayer`）；成员行、候选列表、邀请行与底部操作区分别为 `room_player_row.gd`、`room_candidate_list.gd`、`room_invite_row.gd`、`room_action_bar.gd`。它们只服务房间页，不进入共享层。
+- 房间等待区由座位矩阵 `RoomSeatGrid`、座位格 `RoomSeatCell`、底部操作栏 `RoomActionBar` 与邀请行 `RoomInviteRow` 组成；对局页选英雄由覆盖层 `HeroPickOverlay`、候选行 `HeroPickList`、候选卡 `HeroPickCard` 与悬停详情层 `HeroPickDetailLayer` 组成。它们只服务各自页面，不进入共享层。

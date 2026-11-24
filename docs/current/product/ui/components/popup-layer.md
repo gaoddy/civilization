@@ -61,7 +61,7 @@ PopupLayer（Control，全屏，默认隐藏）
 
 - `FirstGameGuide`：四向挖空遮罩与底部提示条属于教练标记，不是通用遮罩。
 - 座位详情：没有遮罩，悬停时由详情层贴在座位行右侧，不在 `PopupLayer` 上挂载。
-- `DetailLayer` 与 `RoomHeroDetailLayer`：跟随指针、默认不拦截输入，定位规则与弹出层不同。
+- `DetailLayer` 与 `HeroPickDetailLayer`：跟随指针、默认不拦截输入，定位规则与弹出层不同。
 - 图鉴覆盖层与房间、结算页：属于整页切换，不是覆盖式弹层。
 
 ## 7. 验证

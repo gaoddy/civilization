@@ -9,14 +9,14 @@
     "code": "8F2A1B",
     "hostId": "p_00",
     "phase": "Lobby",
+    "botFill": true,
     "players": [
       {
         "playerId": "p_00",
         "displayName": "Ada",
         "ready": true,
         "isHost": true,
-        "heroCardId": null,
-        "heroCandidates": ["adam-smith", "darwin", "gauss", "lavoisier"]
+        "seat": 0
       }
     ]
   }

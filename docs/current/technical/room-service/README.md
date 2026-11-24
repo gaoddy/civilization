@@ -74,18 +74,19 @@ protocol/
 - 认证：手机号 + 开发验证码 `123456` 或令牌续登；手机号经 `AccountStore` 解析为持久化账号（`playerId`、6 位玩家编号、展示名），同一手机号重新登录恢复同一账号；`playerId`/`token` 为服务端生成的不可预测串，不暴露手机号。认证结果同时下发 6 位数字 `playerCode`，好友申请按编号定位玩家。会话有效期 24 小时（`SESSION_TTL_MS`），过期在下次访问或 `purge_expired` 时清除，M1 不跑后台清理任务；会话仍是进程内状态，不落盘。
 - 建房：创建者坐 0 号座位并成为房主；房间码为 6 位大写字母数字，字母表排除易混字符 `0O1I`，首个房间码 `222222`。对局种子由房间码经 FNV-1a 64 位派生（`seed_for_code`）。
 - 房间玩法：建房时用房间码种子调用 `rule_engine::playstyles::draw(seed_for_code(code))`，抽取 5 个玩法存入 `RoomState.playstyles`；大厅期间与断线重连保持不变。对局结束即销毁房间，不再重抽。玩法必须早于英雄候选确定，因此抽取时点在房间创建，而不是 `Engine::new`。
-- 入房：坐最小空位；同一玩家重复加入同一房间幂等。非 `Lobby` 阶段成员集合冻结，加入/准备/选英雄/离开都返回 `INVALID_STAGE`。
-- 英雄候选：建房与入房时按房间码派生的种子把全部英雄卡（`Catalog.heroes`）id 升序后做确定性 Fisher–Yates 洗牌，再按进房顺序每 4 张切给一名玩家（`CANDIDATE_COUNT`），因此同房间内各玩家候选互不重复；候选保存在 `PlayerSlot.hero_candidates`，重进与重连都不重抽。
+- 入房：坐最小空位；同一玩家重复加入同一房间幂等。非 `Lobby` 阶段成员集合冻结，加入/准备/离开返回 `INVALID_STAGE`；`StartGame` 只在 `Lobby` 有效。
+- 补位开关：`RoomUpdate.botFill` 随房间状态广播，默认开启；`SetBotFill` 仅房主、仅 `Lobby` 可改。机器人座位只在房主开始时按空位补入，名字固定为「机器人 N」。
+- 英雄候选：等待区创建与加入时不再预分配。房主开始时 `prepare_start` 按房间码派生的种子把全部英雄卡（`Catalog.heroes`）id 升序后做确定性 Fisher–Yates 洗牌，再按座位每 4 张切给一名座位（含机器人，`CANDIDATE_COUNT`），`commit_start` 写入 `RoomState.candidates`；同一房间内各座位候选互不重复。
 - 英雄候选过滤：候选只取 `hero_in_pool` 通过的英雄卡，按本局 5 个玩法过滤；英雄 `categories` 中任一条 `play:` 命中即通过，工具卡与普通英雄同一口径。过滤后一张英雄都没有时回退到全部英雄卡（产品兜底）。
 - 候选池不足：池大小 ≥ `SEAT_COUNT * CANDIDATE_COUNT`（32）时沿用分段、房间内互不重复；不足 32 时按 `(segment * 4 + i) % len` 取 `min(4, len)` 张，允许跨玩家重复；池小于 4 时每人取整个池并至少 1 张。
-- 选英雄校验：id 必须在英雄池 `Catalog.heroes` 中，且在本人候选内（否则 `NOT_CANDIDATE` → `INVALID_CHOICE`）；座位已 `ready` 时再选返回 `INVALID_STAGE`。
-- 候选下发：`RoomUpdate.players[].heroCandidates` 只在发给本人的那份里填充，其余座位为 `null`；广播按座位逐个序列化，不共用 payload。这是展示规则而非机密：选中的 `heroCardId` 仍对全体成员可见，候选分组也能由房间码确定性复算。
+- 选英雄校验：只在 `HeroPick` 阶段接受；id 必须在英雄池 `Catalog.heroes` 中，且在本人候选内（否则 `INVALID_CHOICE`）；已确认后再选返回 `INVALID_CHOICE`，非选英雄阶段返回 `INVALID_STAGE`；全员确认后立即启动第 1 回合。
+- 候选下发：`HeroPickStarted` 只向本人下发 `candidates`；各座位只公开 `playerId`、`seat`、`displayName`、`isBot` 与 `picked`，不公开他人候选或所选英雄；`playerId` 供客户端识别本人座位，匹配局重连没有 `RoomUpdate` 时这是唯一身份来源。
 - 候选池校验：`AppState::new` 要求英雄卡至少 1 张，且每张英雄卡的 `categories` 至少 1 条 `play:`、取值是合法玩法（不含 `neutral`），`prey:` / `host:` 节点必须在分类树中；不再要求 32 张。池不足时由跨玩家重复兜底，房间仍能开局。
 - 大厅断线：`Detach` 不再立即释放座位，而是标记离线并记录 `disconnected_at_ms`；房间 task 的 tick 调用 `tick_disconnects`，超过 `RECONNECT_GRACE_MS` 才按原规则释放座位。`Leave` 命令仍立即释放。座位已被释放后再 `Reconnect` 回 `NOT_IN_ROOM`，并摘除该座位的下行登记。
 - 离开：座位立即空出且不重排；房主离开时转给座位号最小的剩余玩家；**大厅最后一人离开即销毁房间**（注册表同时删 `by_code` 与 `rooms`）。
 - 移除：`KickMember{targetPlayerId}` 映射为 `RoomCommand::Kick`；仅房主、仅 `Lobby`、不能移除自己。成功后被移除者收到 `RoomClosed{reason:"kicked"}` 并移除发送端，座位空出且编号不重排；房间码与其余成员不变。错误码沿用 `NOT_HOST` / `INVALID_STAGE` / `NOT_IN_ROOM` / `INVALID_CHOICE`（移除自己映射为 `InvalidTarget`），不新增错误码。
 - 解散：`DissolveRoom{}` 映射为 `RoomCommand::Dissolve`；仅房主、仅 `Lobby`。成功后注册表同时删除 `rooms` 与 `by_code`，所有成员收到 `RoomClosed{reason:"dissolved"}`，房间码立即失效；房间 task 由 `retire_if_done` 回收。
-- 开局：8 个座位全部占用、全部准备且全部选好英雄后自动 `try_start`（最后一次 `Ready` 触发，不需要房主额外操作），把阶段推进到 `Recruit`，并在同一房间 task 内构造 `GameTask`。
+- 开局：房主发送 `StartGame` 后，`prepare_start` 校验房主、`Lobby` 阶段、至少 1 名真人且全部准备、补位开启或已有 8 名真人；`commit_start` 补入机器人并写入候选，房间 task 进入 `HeroPick` 阶段并逐座位下发 `HeroPickStarted`；选英雄完成后下发 `GameStarted` 进入 `Recruit`。
 - `GameTask::new` 接收房间已抽好的 5 个玩法，开局原样传给 `Engine::new(catalog, seed, playstyles)`；同一局内 `GameOver.seed` 不变，断线重连复用同一组玩法。
 - 对局结束即销毁：`RoomTask::deliver_excluding` 投递完 `GameOver` 后 `self.game.take()`、清空发送端并调用 `RoomRegistry::remove(room_id)`；房间码随之失效，`retire_if_done` 在下一轮发现注册表已无房间，摘除 `hub` 条目并结束 task。不保留等待区，也不重置给下一局。
 - 对局中主动退出：对局阶段收到 `LeaveRoom` 时 `RoomTask.leave` 转成 `RoomCommand::Forfeit`；规则引擎 `settle::forfeit` 把未淘汰座位置 `hp = 0`、`eliminated = true`，把座位插到 `ranking` 最前（最近出局在前），发出 `PlayerEliminated{place: 当时存活人数}`；只剩 1 名未淘汰者时立即补齐排名并进入 `GameOver`。已淘汰座位再次退出返回空事件。退出者发送端立即移除、停止接收该局消息，座位保留到本局结束，房间销毁时一并消失。
@@ -188,7 +189,7 @@ protocol/
 - `Combat` 阶段重连：快照之后追加补发该座位本场 `CombatResult`（报告保留到 `finish_combat` 为止），客户端据此按 `phaseDeadline` 续播。
 - 对局已结束：房间已在对局结束时销毁，旧 `roomId` 重连只回 `ROOM_NOT_FOUND`（房间 task 已退出）或 `NOT_IN_ROOM`（task 尚未回收），不补发 `GameOver`，也不恢复房间。结算页断线后直接回大厅。
 - 重连与 `RequestSnapshot` 共用全量快照路径；M1 **不重放历史**，`last_seq` 不参与判断，一律回全量快照，快照序号必然大于重连前最后一条。
-- 大厅断线：保留座位一个 `RECONNECT_GRACE_MS`（30 秒）宽限，超时由房间 tick 释放并广播 `RoomUpdate`；宽限内 `Reconnect` 回同一座位与同一组候选。本局玩法在房间创建时已确定，重连不重抽。
+- 大厅断线：保留座位一个 `RECONNECT_GRACE_MS`（30 秒）宽限，超时由房间 tick 释放并广播 `RoomUpdate`；宽限内 `Reconnect` 回同一座位与当前等待区状态。等待区不再预分配英雄候选，候选在房主开始对局时分配；本局玩法在房间创建时已确定，重连不重抽。
 - 连接代次：每次 `Attach`/`Reconnect` 带进程内唯一 `generation`；`Detach`/`Leave` 只在代次与当前登记一致时生效，避免新旧连接并存时旧连接迟到关闭误释放座位。
 - M1 不做托管：`PlayerSummary.managed` 恒为 `false`。
 
@@ -211,8 +212,8 @@ sim bot --connect ws://HOST:PORT/ws --name NAME --hero CARD_ID
 ```
 
 - `--connect`、`--name`、`--hero` 必填；`--room` 加入既有房间（与 `--create` 二选一，`--create` 时忽略 `--room`）；`--create` 建房并把房间码输出到 stdout 首行 `ROOM_CODE=<code>`；`--intent-seed` 默认 0，只用于在发现候选间做确定性选择。
-- `--hero` 只是偏好：机器人收到本人 `RoomUpdate` 后从 `heroCandidates` 里选，指定的英雄不在候选内时退到候选中第一张；下发的候选为空时报错退出。
-- 协议顺序固定：`AuthRequest` →（`CreateRoom` | `JoinRoom`）→ `SelectHeroCard` → `Ready` → 等 `GameStarted` → 循环按 brain 决策发送 `IntentMessage`，直到 `GameOver`。
+- `--hero` 只是偏好：机器人在本人 `HeroPickStarted` 的 `candidates` 里选，指定的英雄不在候选内时退到第一张；候选只在选英雄阶段下发，为空时报错退出。
+- 协议顺序固定：`AuthRequest` →（`CreateRoom` | `JoinRoom`）→ `Ready` →（房主在开始条件满足时发 `StartGame`）→ `HeroPickStarted` → `SelectHeroCard` → `GameStarted` → 循环按 brain 决策发送 `IntentMessage`，直到 `GameOver`。
 - 每个意图使用确定性递增的 `clientIntentId`（`{name}-{counter}`）；客户端只对「自身视角有新变化」的视图做一次决策，避免重播视图导致重复意图。
 - 收到 `NO_VALID_TARGET` 时按 `clientIntentId` 找回被拒意图并立即按同一视图重决策：定向出手沿服务端下发的候选（键为 `zone:id`）静默换下一个重发，遍历完仍无合法目标时把这张牌记入本回合阻塞集合并输出一行说明；`ChooseTarget` 把被拒候选记入阻塞集合并换下一个，全部候选都被拒时放弃该待选。整盘没有合法目标、本回合已放弃 3 张且可结束招募时直接 `EndRecruit`。候选本身来自服务端，正常情况下不会拒绝；出现拒绝按视图与结算偏差处理，不按错误上报。
 - `bot/brain.rs` **只读** `PlayerView`（含服务端算好的 `affordances`）与静态卡表，不链接引擎判定、不读时钟与环境变量、不使用浮点；优先级固定为：消费 `pendingChoices`（发现/进化发 `ChooseDiscover`，目标待选取 `candidates` 中第一个未被拒绝的 `TargetRef`）→ 被拒出手达 3 张且可结束时 `EndRecruit` → 打最小下标且未被拒绝的可打手牌 → 买最贵可买槽位 → 升时代 → 刷新 → `EndRecruit`。出牌时若手牌视图 `requiresTarget` 为真，从该牌的 `targetCandidates` 预填第一个未被拒绝的目标；被拒后沿候选列表换下一个，候选遍历完才记入阻塞集合本回合跳过该牌。候选为空时不填（效果落空）。

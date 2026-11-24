@@ -1,0 +1,27 @@
+{
+  "v": 1,
+  "id": "m_heropickstarted",
+  "type": "HeroPickStarted",
+  "ts": "2026-11-15T10:00:00Z",
+  "seq": 13,
+  "payload": {
+    "deadline": "2026-11-15T10:00:30Z",
+    "candidates": ["adam-smith", "darwin", "gauss", "lavoisier"],
+    "players": [
+      {
+        "playerId": "p_ada",
+        "seat": 0,
+        "displayName": "Ada",
+        "isBot": false,
+        "picked": false
+      },
+      {
+        "playerId": "bot:room_1:1",
+        "seat": 1,
+        "displayName": "Bot 1",
+        "isBot": true,
+        "picked": false
+      }
+    ]
+  }
+}

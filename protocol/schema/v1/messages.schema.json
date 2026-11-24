@@ -103,6 +103,19 @@
         "ready": { "type": "boolean" }
       }
     },
+    "StartGame": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {}
+    },
+    "SetBotFill": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled"],
+      "properties": {
+        "enabled": { "type": "boolean", "description": "是否在开始时用机器人补满空位" }
+      }
+    },
     "SelectHeroCard": {
       "type": "object",
       "additionalProperties": false,
@@ -197,29 +210,25 @@
     "RoomUpdate": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["roomId", "code", "hostId", "phase", "players"],
+      "required": ["roomId", "code", "hostId", "phase", "botFill", "players"],
       "properties": {
         "roomId": { "type": "string" },
         "code": { "type": "string", "description": "6 位房间码" },
         "hostId": { "type": "string" },
         "phase": { "$ref": "view.schema.json#/$defs/Phase" },
+        "botFill": { "type": "boolean", "description": "开始时空位是否用机器人补满" },
         "players": {
           "type": "array",
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["playerId", "displayName", "ready", "isHost", "heroCardId"],
+            "required": ["playerId", "displayName", "ready", "isHost", "seat"],
             "properties": {
               "playerId": { "type": "string" },
               "displayName": { "type": "string" },
               "ready": { "type": "boolean" },
               "isHost": { "type": "boolean" },
-              "heroCardId": { "type": ["string", "null"] },
-              "heroCandidates": {
-                "type": ["array", "null"],
-                "items": { "type": "string" },
-                "description": "本座位可选的英雄卡 id；只在发给本人的 RoomUpdate 中下发"
-              }
+              "seat": { "type": "integer", "minimum": 0, "maximum": 7 }
             }
           }
         }
@@ -263,6 +272,37 @@
       "properties": {
         "roomId": { "type": "string" },
         "seat": { "type": "integer", "minimum": 0, "maximum": 7, "description": "服务端分配的座位号（0 起）" }
+      }
+    },
+    "HeroPickStarted": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["deadline", "candidates", "players"],
+      "properties": {
+        "deadline": { "type": "string", "description": "选英雄截止时刻（RFC3339）" },
+        "candidates": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "收件人本座位可选的英雄卡 id；该消息按座位逐条下发"
+        },
+        "players": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["playerId", "seat", "displayName", "isBot", "picked"],
+            "properties": {
+              "playerId": {
+                "type": "string",
+                "description": "该座位玩家 id；客户端据此识别本人座位"
+              },
+              "seat": { "type": "integer", "minimum": 0, "maximum": 7 },
+              "displayName": { "type": "string" },
+              "isBot": { "type": "boolean" },
+              "picked": { "type": "boolean", "description": "该座位是否已确认英雄" }
+            }
+          }
+        }
       }
     },
     "GameStarted": {

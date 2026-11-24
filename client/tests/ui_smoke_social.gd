@@ -1,5 +1,5 @@
 extends "res://tests/smoke_case.gd"
-## 好友 UI 冒烟：大厅好友区、邀请弹窗与选英雄页的邀请入口。
+## 好友 UI 冒烟：大厅好友区、邀请弹窗与房间等待页的邀请入口。
 
 
 func _ready() -> void:
@@ -149,8 +149,9 @@ func _check_room_invites() -> void:
         {
             "displayName": "我",
             "playerId": "p_me",
+            "seat": 0,
             "ready": false,
-            "heroCandidates": ["adam-smith"],
+            "isHost": true,
         }
     ]
     var instance := await _check_scene("res://pages/room/room.tscn", false)
@@ -160,9 +161,9 @@ func _check_room_invites() -> void:
 
     var online = instance.find_child("Invite_p_online", true, false)
     var busy = instance.find_child("Invite_p_game", true, false)
-    _expect(online != null, "选英雄页应列出在线好友")
+    _expect(online != null, "房间等待页应列出在线好友")
     _expect(online != null and not online.disabled, "在线好友应可邀请")
-    _expect(busy != null, "选英雄页应列出对局中的好友")
+    _expect(busy != null, "房间等待页应列出对局中的好友")
     _expect(busy != null and busy.disabled, "对局中的好友应禁用邀请")
 
     GameStore.friends = []

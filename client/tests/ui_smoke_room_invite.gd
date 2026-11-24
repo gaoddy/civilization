@@ -36,8 +36,9 @@ func _seed_room() -> void:
         {
             "displayName": "我",
             "playerId": "p_me",
+            "seat": 0,
             "ready": false,
-            "heroCandidates": ["adam-smith"],
+            "isHost": true,
         }
     ]
 

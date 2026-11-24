@@ -21,7 +21,7 @@
 - `base_style` 由调用方按场景令牌构建；组件只在其副本上叠加描边，不改动调用方样式。
 - 内容区是普通 `Control`，不参与容器布局；调用方需要给内容设置锚点或明确尺寸。
 - 内容容器与选中框都忽略鼠标，点击落在框本身。
-- 组件不改动调用方的 `mouse_filter` 与鼠标指针形状：图鉴卡面单元使用 `PASS` + 手型，房间候选卡使用 `STOP` + 默认指针。
+- 组件不改动调用方的 `mouse_filter` 与鼠标指针形状：图鉴卡面单元使用 `PASS` + 手型，`HeroPickCard` 使用 `STOP` + 默认指针。
 
 ## 变体与状态
 
@@ -49,5 +49,5 @@
 ## 使用者
 
 - [图鉴卡面单元](gallery-card-tile.md)：`Outline.INLINE`。
-- [房间页](../pages/room.md) 的候选英雄卡：`Outline.OUTER`。
+- [对局页选英雄覆盖层](../pages/game.md) 的候选英雄卡 `HeroPickCard`：`Outline.OUTER`。
 - [对局页](../pages/game.md) 左栏座位行：`Outline.INLINE`，底板 2px 描边、`radius-md` 圆角、内容边距 2，头像铺满框内；只用悬停态，不调用 `set_selected`，座位行的 `activated` 不接行为，对战信息随悬停详情展示。
