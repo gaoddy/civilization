@@ -992,7 +992,7 @@ error.ROOM_FULL,房间已满
 error.ROOM_NOT_FOUND,房间不存在
 error.ROOM_NOT_READY,房间尚未满足开局条件
 error.SEQUENCE_STALE,消息序号过期
-error.SESSION_REPLACED,账号已在其他位置登录
+error.SESSION_REPLACED,账号已在其他设备登录
 error.SEVEN_VOYAGES_ACTIVE,已有进行中的航程
 error.SHOP_SLOT_EMPTY,商店槽位为空
 error.STEAM_AUTH_FAILED,Steam 登录失败

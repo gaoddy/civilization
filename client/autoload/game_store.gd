@@ -34,6 +34,10 @@ signal match_found(seat: int)
 signal leaderboard_changed
 ## 个人主页已更新；个人主页据此重排。
 signal profile_changed
+## 账号在别处登录、本端已被顶下线；登录页据此显示提示并停留，不自动重登。
+signal login_required
+## 接管进入进行中的对局：快照到达时本地还没有对局视图；页面据此进入对局页。
+signal game_resumed
 
 var player_id := ""
 var player_code := ""
@@ -53,6 +57,8 @@ var unlocked_achievements: Dictionary = {}
 var room_id := ""
 var room_code := ""
 var room_players: Array = []
+## 本端已被顶下线；保持到下次登录成功，登录页据此不自动重登。
+var session_replaced := false
 ## 开始时空位是否用机器人补满；以 `RoomUpdate` 下发的 `botFill` 为准。
 var room_bot_fill := false
 ## 最近一次 `HeroPickStarted` 的载荷；不在选英雄阶段时为空字典。
@@ -113,6 +119,7 @@ func handle(type: String, payload: Dictionary) -> void:
             player_id = str(payload.get("playerId", ""))
             player_code = str(payload.get("playerCode", ""))
             token = str(payload.get("token", ""))
+            session_replaced = false
             _flush_pending_steam_invite()
             auth_changed.emit()
         Protocol.MSG_ACCOUNT_VIEW:
@@ -186,8 +193,12 @@ func handle(type: String, payload: Dictionary) -> void:
             _emit_events(payload.get("events", []))
             view_changed.emit()
         Protocol.MSG_SNAPSHOT:
+            # 只有接管进入进行中对局时本地还没有视图；正常对局重连不触发。
+            var had_view := not view.is_empty()
             _apply_view(payload.get("view", {}))
             view_changed.emit()
+            if not had_view and not view.is_empty():
+                game_resumed.emit()
         Protocol.MSG_PHASE_CHANGED:
             phase = str(payload.get("phase", phase))
             turn = int(payload.get("turn", turn))
@@ -228,6 +239,11 @@ func handle(type: String, payload: Dictionary) -> void:
             room_closed.emit()
         Protocol.MSG_ERROR:
             last_error = payload
+            if str(payload.get("code", "")) == Protocol.ERROR_SESSION_REPLACED:
+                # 顶号统一在这里收口：不当作普通错误弹给当前页面，直接回登录页。
+                apply_session_replaced()
+                _route_login()
+                return
             # 已在房间时服务端拒绝入队；本地排队态已无意义，直接收起浮层。
             if str(payload.get("code", "")) == Protocol.ERROR_QUEUE_IN_ROOM:
                 _clear_queue()
@@ -248,6 +264,11 @@ func _apply_view(value) -> void:
         return
     var previous_phase := phase
     view = value
+    # `PlayerView` 必带 `roomId`：匹配房接管没有大厅 `RoomUpdate`，靠这里保留房间上下文，
+    # 断线重连才能找回同一局。
+    var view_room_id := str(view.get("roomId", ""))
+    if view_room_id != "":
+        room_id = view_room_id
     phase = str(view.get("phase", phase))
     turn = int(view.get("turn", turn))
     deadline = str(view.get("phaseDeadline", deadline))
@@ -256,6 +277,24 @@ func _apply_view(value) -> void:
     if previous_phase == Protocol.PHASE_COMBAT and phase != Protocol.PHASE_COMBAT:
         last_combat = {}
         last_combat_turn = -1
+
+
+## 本端被顶下线：清空会话与房间状态，标记顶号并通知登录页。
+##
+## 不负责导航，由调用方决定去向，便于冒烟单独验证状态变化。
+func apply_session_replaced() -> void:
+    session_replaced = true
+    reset_session()
+    last_error = {"code": Protocol.ERROR_SESSION_REPLACED}
+    login_required.emit()
+
+
+## 顶号后统一回登录页；已经在登录页时不重复切场景，由登录页自己刷新提示。
+func _route_login() -> void:
+    var scene := get_tree().current_scene
+    if scene != null and scene.scene_file_path == UINavigation.PAGE_LOGIN:
+        return
+    UINavigation.navigate(self, UINavigation.PAGE_LOGIN)
 
 
 func reset_room() -> void:
