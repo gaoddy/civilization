@@ -125,7 +125,7 @@ protocol/
 | `RECRUIT_STEP_SECONDS` | 15 | 每回合递增的招募秒数 |
 | `RECRUIT_CAP_SECONDS` | 120 | 招募时长上限（秒） |
 | `TIMER_WARNING_SECONDS` | 10 | 剩余秒数警告阈值（M1a 只暴露常量与 `seconds_left`） |
-| `RECONNECT_GRACE_MS` | 30000 | 对局内断线保留窗口（毫秒） |
+| `RECONNECT_GRACE_MS` | 30000 | 对局内断线保留窗口（毫秒）；到期标记离线，整桌都离线时收束对局 |
 | `SEAT_COUNT` | 8 | 固定座位数 |
 
 - 计时只走注入的 `Clock`，不读系统时间；房间 task 每 100 ms（`TICK_INTERVAL`）调用一次 `GameTask::tick`。
@@ -184,7 +184,7 @@ protocol/
 
 ## 10. 断线重连
 
-- 对局内断线：座位保留 30 秒（`RECONNECT_GRACE_MS`）。窗口内重连回一条全量 `Snapshot`；超过窗口只把座位标记为离线，不释放座位、不结束对局，也不向其他座位下发通知。
+- 对局内断线：座位保留 30 秒（`RECONNECT_GRACE_MS`）。窗口内重连回一条全量 `Snapshot`；超过窗口只把座位标记为离线，不释放座位、不结束对局（v0.1 不做托管，座位保留到对局结束），也不向其他座位下发通知。若整桌都过了窗口且无人重连，则按弃权结算逐个淘汰、存活降到 1 时进入 `GameOver` 并销毁房间：否则没人提交意图的对局只能靠阶段截止磨满 20 回合，期间 8 个账号一直占房，再建房只会得到 `ALREADY_IN_ROOM`。整桌收束不登记 `departed`；主动 `LeaveRoom` 才登记 `departed`，重连不再回房。
 - `Combat` 阶段重连：快照之后追加补发该座位本场 `CombatResult`（报告保留到 `finish_combat` 为止），客户端据此按 `phaseDeadline` 续播。
 - 对局已结束：房间已在对局结束时销毁，旧 `roomId` 重连只回 `ROOM_NOT_FOUND`（房间 task 已退出）或 `NOT_IN_ROOM`（task 尚未回收），不补发 `GameOver`，也不恢复房间。结算页断线后直接回大厅。
 - 重连与 `RequestSnapshot` 共用全量快照路径；M1 **不重放历史**，`last_seq` 不参与判断，一律回全量快照，快照序号必然大于重连前最后一条。

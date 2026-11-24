@@ -13,8 +13,10 @@
 //!   注册，连接层只借用投递，避免两份所有权在重连后指向不同连接。
 //! - 重连与快照请求共用全量 `Snapshot` 路径（M1 不重放历史），快照载荷在编码时由
 //!   当前座位视图生成，含未消费的 `pendingChoices`。
-//! - 断线保留窗口（[`RECONNECT_GRACE_MS`]）是服务端内部状态：超时只把座位标记为
-//!   离线，不释放座位、不结束对局，也不向任何座位下发通知；客户端靠重连快照恢复。
+//! - 断线保留窗口（[`RECONNECT_GRACE_MS`]）内重连恢复座位；窗口到期只把座位标记为
+//!   离线，不释放座位、不结束对局（v0.1 不做托管，座位保留到对局结束）。整桌都过了
+//!   窗口且无人重连时对局按弃权收束，避免没人提交意图的房间靠阶段截止磨满 20
+//!   回合、把房间与 8 个账号占住几十分钟。
 //! - 任何改变房间可见状态的操作都向全部 8 个座位推送 `View`：公开摘要（对手
 //!   `boardCount`、`recruited` 标记、阶段与回合）人人都能看到。事件仍按
 //!   [`for_seat`] 的规则过滤——本人收到自己的私有事件，其他人收到 `events` 为空的
@@ -95,7 +97,8 @@ fn combat_deadline(now_ms: u64, turn: u8, max_actions: usize) -> u64 {
 /// 剩余多少秒时下发计时警告（由连接层使用，M1a 只暴露常量与 [`GameTask::seconds_left`]）。
 pub const TIMER_WARNING_SECONDS: u64 = 10;
 
-/// 断线后座位的保留时长（毫秒）。超过该时长座位被标记离线，但不释放座位、不结束对局。
+/// 断线后座位的保留时长（毫秒）。超过该时长座位被标记离线，但不释放座位、不结束
+/// 对局；只有整桌都离线时才收束对局。
 pub const RECONNECT_GRACE_MS: u64 = 30_000;
 
 /// 单个座位本局的增量统计；由引擎事件累计，结束时与终局状态合成 `SelfStats`。
@@ -638,7 +641,8 @@ impl GameTask {
     /// 有座位未回报时兜底结算（[`GameTask::finish_combat`]），保证房间继续推进。
     ///
     /// 顺序为「先推进阶段，再处理断线宽限」：阶段推进是时间语义的一部分，必须与
-    /// 连接状态无关地按时发生；断线标记只影响可观测的在线状态，安排在推进之后，
+    /// 连接状态无关地按时发生；断线宽限安排在推进之后，单个座位到期只影响可观测的
+    /// 在线状态，整桌都离线时才收束对局（[`GameTask::end_abandoned_game`]），因此
     /// 不会改变原有阶段推进的调用次数与顺序。
     pub fn tick(&mut self) -> Vec<SeatUpdate> {
         let mut updates = self.tick_inner();
@@ -655,7 +659,7 @@ impl GameTask {
                 Phase::Lobby | Phase::Settle | Phase::GameOver => Vec::new(),
             };
         }
-        self.expire_disconnects();
+        updates.extend(self.expire_disconnects());
         updates
     }
 
@@ -719,12 +723,21 @@ impl GameTask {
     /// `departed` 中，直到回房重置才统一移除；本局内它的座位与名次仍保留在
     /// 其他人的视图与终局排名里。
     fn forfeit(&mut self, player_id: &str) -> Vec<SeatUpdate> {
-        let Some(seat) = self.seat_of.get(player_id).copied() else {
-            return Vec::new();
-        };
         // 离开必须登记，无论座位是否已淘汰或本局是否已终局：回房重置只按
         // `departed` 移除座位，漏记会让该座位（乃至房主身份）永久残留。
         self.departed.insert(player_id.to_string());
+        self.settle_forfeit(player_id)
+    }
+
+    /// 按规则引擎弃权结算一个座位，并把后续更新分发给其余座位。
+    ///
+    /// 主动离房（[`GameTask::forfeit`]）与整桌断线后的收束
+    /// （[`GameTask::end_abandoned_game`]）共用本方法；区别只在主动离房登记
+    /// `departed`（不再接收任何消息），整桌断线的收束不登记。
+    fn settle_forfeit(&mut self, player_id: &str) -> Vec<SeatUpdate> {
+        let Some(seat) = self.seat_of.get(player_id).copied() else {
+            return Vec::new();
+        };
         if self.state.phase == Phase::GameOver || self.state.players[usize::from(seat)].eliminated {
             return Vec::new();
         }
@@ -1469,12 +1482,15 @@ impl GameTask {
         Vec::new()
     }
 
-    /// 把超过 [`RECONNECT_GRACE_MS`] 的断线座位标记离线。
+    /// 把超过 [`RECONNECT_GRACE_MS`] 的断线座位标记离线；整桌都离线时收束对局。
     ///
-    /// 断线保留窗口是服务端内部状态，不产出任何下行更新：槽位与在线状态只供
-    /// 连接层查询，客户端重连时靠 [`RoomCommand::Reconnect`] 拿全量快照。
-    fn expire_disconnects(&mut self) {
+    /// 单个座位到期只标记离线：v0.1 不做托管，座位保留到对局结束。整桌都离线时
+    /// 没人再提交意图，对局只能靠阶段截止一路磨到第 20 回合收束（实测 2–37
+    /// 分钟），期间 8 个座位一直占着房间，这些账号再建房只会得到
+    /// `ALREADY_IN_ROOM`，因此改由 [`GameTask::end_abandoned_game`] 立即收束。
+    fn expire_disconnects(&mut self) -> Vec<SeatUpdate> {
         let now = self.clock.now_ms();
+        let mut any_expired = false;
         for seat in 0..SEAT_COUNT as Seat {
             let index = usize::from(seat);
             let Some(since) = self.disconnected_at_ms[index] else {
@@ -1485,7 +1501,39 @@ impl GameTask {
             }
             self.disconnected_at_ms[index] = None;
             self.connected[index] = false;
+            any_expired = true;
         }
+        if !any_expired {
+            return Vec::new();
+        }
+        self.end_abandoned_game()
+    }
+
+    /// 全部座位都不在线时结束对局，让房间随 `GameOver` 销毁。
+    ///
+    /// 只有在线座位数为 0 才收束：只要还有一人在线，就按产品规则把离线座位保留到
+    /// 对局结束。收束沿用规则引擎的弃权结算逐个淘汰，存活降到 1 时进入
+    /// `GameOver`；逐座位载荷由 [`GameTask::settle_forfeit`] 统一生成，玩家再建房
+    /// 不会再被 `ALREADY_IN_ROOM` 拦住。
+    fn end_abandoned_game(&mut self) -> Vec<SeatUpdate> {
+        if matches!(self.state.phase, Phase::Lobby | Phase::GameOver) {
+            return Vec::new();
+        }
+        if (0..SEAT_COUNT).any(|seat| self.connected[seat]) {
+            return Vec::new();
+        }
+        let alive: Vec<Seat> = (0..SEAT_COUNT as Seat)
+            .filter(|seat| !self.state.players[usize::from(*seat)].eliminated)
+            .collect();
+        let mut updates = Vec::new();
+        for seat in alive {
+            if self.state.phase == Phase::GameOver {
+                break;
+            }
+            let player_id = self.seats[usize::from(seat)].player_id.clone();
+            updates.extend(self.settle_forfeit(&player_id));
+        }
+        updates
     }
 
     /// 只针对已知玩家的错误；未知玩家退化为 `NOT_IN_ROOM`。
@@ -1652,8 +1700,9 @@ mod tests {
     use rule_engine::achievements::Achievement;
     use rule_engine::data::{Catalog, Playstyle};
     use rule_engine::state::{MinionInstance, Pairing, Phase, Seat};
+    use tokio::sync::mpsc;
 
-    use super::{RoomCommand, UpdateKind, combat_deadline, recruit_seconds};
+    use super::{RECONNECT_GRACE_MS, RoomCommand, UpdateKind, combat_deadline, recruit_seconds};
     use crate::clock::FixedClock;
     use crate::envelope::SeatChannel;
     use crate::game::GameTask;
@@ -1908,6 +1957,79 @@ mod tests {
 
         task.mark_combat_played("p1");
         assert_eq!(task.state.phase, Phase::Recruit);
+    }
+
+    /// 单人掉线到期只标记离线；v0.1 不做托管，座位保留到对局结束。
+    #[test]
+    fn expired_disconnect_keeps_seat() {
+        let clock = FixedClock::new(1_000_000);
+        let mut task = task_at(clock.clone());
+        task.mark_disconnect("p0");
+
+        clock.advance(RECONNECT_GRACE_MS);
+        task.tick();
+
+        assert!(!task.is_connected(0), "宽限期到期应把座位标记为离线");
+        assert!(
+            !task.state.players[0].eliminated,
+            "还有 7 个在线座位时不应淘汰掉线座位"
+        );
+        assert_ne!(
+            task.state.phase,
+            Phase::GameOver,
+            "还有在线座位时对局应继续"
+        );
+    }
+
+    /// 整桌断线时对局应立即收束，房间才能销毁；否则只能磨满 20 回合。
+    #[test]
+    fn all_disconnects_end_abandoned_game() {
+        let clock = FixedClock::new(1_000_000);
+        let mut task = task_at(clock.clone());
+        for seat in 0..8 {
+            task.mark_disconnect(&format!("p{seat}"));
+        }
+
+        clock.advance(RECONNECT_GRACE_MS);
+        let updates = task.tick();
+
+        assert_eq!(
+            task.state.phase,
+            Phase::GameOver,
+            "全部座位宽限期到期后应直接终局"
+        );
+        let game_over_updates = updates
+            .iter()
+            .filter(|update| matches!(update.kind, UpdateKind::GameOver(_)))
+            .count();
+        assert_eq!(
+            game_over_updates, 8,
+            "终局应为每个座位各下发一条 GameOver 更新"
+        );
+    }
+
+    /// 宽限期内重连的座位保持在线；只要还有一人在线，对局不因断线收束。
+    #[test]
+    fn reconnect_within_grace_keeps_seat() {
+        let clock = FixedClock::new(1_000_000);
+        let mut task = task_at(clock.clone());
+        for seat in 0..8 {
+            task.mark_disconnect(&format!("p{seat}"));
+        }
+
+        clock.advance(RECONNECT_GRACE_MS / 2);
+        let (out, _rx) = mpsc::channel(1);
+        assert!(task.bind_sender("p0", out), "重连应能重新绑定发送端");
+
+        clock.advance(RECONNECT_GRACE_MS);
+        task.tick();
+
+        assert!(task.is_connected(0), "宽限期内重连的座位应保持在线");
+        assert_ne!(
+            task.state.phase,
+            Phase::GameOver,
+            "还有一人在线时对局不应收束"
+        );
     }
 
     /// 8 个座位看到同一组本局玩法，且与引擎状态一致。
