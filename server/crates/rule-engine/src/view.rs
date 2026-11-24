@@ -16,8 +16,8 @@ use crate::effects::{EVOLVE_CHOICES, EffectCtx, Op, TargetRef, Trigger};
 use crate::engine::Engine;
 use crate::intent::RejectCode;
 use crate::recruit::{
-    check_buy, check_end_recruit, check_hero_power, check_play_card, check_reroll, check_sell,
-    check_upgrade,
+    check_buy, check_end_recruit, check_hero_power, check_minion_ability, check_play_card,
+    check_reroll, check_sell, check_upgrade,
 };
 use crate::settle;
 use crate::state::{
@@ -164,6 +164,18 @@ pub struct MinionStatsView {
     pub sources: Vec<StatSourceView>,
 }
 
+/// 棋盘随从的一个主动技能及其本回合可用性。
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct MinionAbilityView {
+    pub skill_id: String,
+    pub cost: u8,
+    pub uses_left: u8,
+    pub requires_target: bool,
+    pub target_candidates: Vec<TargetRef>,
+    pub can_use: bool,
+    pub disabled_reason: Option<RejectCode>,
+}
+
 /// 棋盘随从的公开视图。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BoardMinionView {
@@ -179,6 +191,8 @@ pub struct BoardMinionView {
     pub keywords: Vec<String>,
     /// 当前是否仍处于潜行：携带 `stealth` 关键词且尚未被打破。
     pub stealth: bool,
+    /// 该随从卡上的主动技能（`skill.cost.is_some()`），按卡牌 `skills` 顺序排列。
+    pub abilities: Vec<MinionAbilityView>,
 }
 
 /// 其他座位的公开摘要；不含任何私密数据。
@@ -506,16 +520,84 @@ pub fn view(engine: &Engine, state: &GameState, seat: Seat) -> Option<SeatView> 
     let board = folded_board
         .iter()
         .enumerate()
-        .map(|(index, minion)| BoardMinionView {
-            index: u8::try_from(index).unwrap_or(u8::MAX),
-            minion_id: minion.instance_id,
-            card_id: minion.card_id.clone(),
-            golden: minion.golden,
-            attack: combat::effective_attack(&engine.catalog, minion),
-            health: combat::effective_health(&engine.catalog, minion),
-            stats: stats_breakdown(&engine.catalog, minion),
-            keywords: combat::keyword_set(&engine.catalog, minion).names(),
-            stealth: combat::has_stealth(&engine.catalog, minion),
+        .map(|(index, minion)| {
+            let abilities = engine
+                .catalog
+                .cards
+                .get(&minion.card_id)
+                .map(|card| {
+                    card.skills
+                        .iter()
+                        .filter_map(|skill_id| {
+                            let skill = engine.catalog.skill(*skill_id);
+                            let cost = skill.cost?;
+                            let skill_id = skill.id.as_str();
+                            let limit = skill.uses_per_turn.unwrap_or(1);
+                            let used = player
+                                .minion_uses
+                                .get(&(minion.instance_id, skill_id.to_string()))
+                                .copied()
+                                .unwrap_or(0);
+                            let uses_left = limit.saturating_sub(used);
+                            let requires_target =
+                                engine.skill_requires_target(skill_id, Trigger::OnActivate);
+                            let target_candidates = if requires_target {
+                                let ctx = EffectCtx {
+                                    seat,
+                                    source: Some(minion.instance_id),
+                                    target: None,
+                                    event_target: None,
+                                    golden: minion.golden,
+                                    level_override: None,
+                                };
+                                let effects =
+                                    engine.skill_effects_of(skill_id, Trigger::OnActivate);
+                                engine.target_candidates(state, &effects, &ctx, false)
+                            } else {
+                                Vec::new()
+                            };
+                            let (can_use, disabled_reason) = match gate {
+                                Some(code) => (false, Some(code)),
+                                // 需要目标而候选为空：该技能没有合法落点，按不可使用处理。
+                                None if requires_target && target_candidates.is_empty() => {
+                                    (false, Some(RejectCode::NoValidTarget))
+                                }
+                                None => match check_minion_ability(
+                                    engine,
+                                    state,
+                                    seat,
+                                    minion.instance_id,
+                                    skill_id,
+                                ) {
+                                    Ok(()) => (true, None),
+                                    Err(reject) => (false, Some(reject.code)),
+                                },
+                            };
+                            Some(MinionAbilityView {
+                                skill_id: skill_id.to_string(),
+                                cost,
+                                uses_left,
+                                requires_target,
+                                target_candidates,
+                                can_use,
+                                disabled_reason,
+                            })
+                        })
+                        .collect()
+                })
+                .unwrap_or_default();
+            BoardMinionView {
+                index: u8::try_from(index).unwrap_or(u8::MAX),
+                minion_id: minion.instance_id,
+                card_id: minion.card_id.clone(),
+                golden: minion.golden,
+                attack: combat::effective_attack(&engine.catalog, minion),
+                health: combat::effective_health(&engine.catalog, minion),
+                stats: stats_breakdown(&engine.catalog, minion),
+                keywords: combat::keyword_set(&engine.catalog, minion).names(),
+                stealth: combat::has_stealth(&engine.catalog, minion),
+                abilities,
+            }
         })
         .collect();
 
