@@ -593,8 +593,7 @@ async fn run_residence(
             match done_rx.recv().await {
                 Some(result) => {
                     outstanding -= 1;
-                    let elapsed_ms =
-                        began.elapsed().as_millis().try_into().unwrap_or(u64::MAX);
+                    let elapsed_ms = began.elapsed().as_millis().try_into().unwrap_or(u64::MAX);
                     raw.record(result, elapsed_ms);
                     if raw.unreachable_reason(elapsed_ms).is_some() && !stopped {
                         for stop in &stops {
@@ -685,8 +684,10 @@ mod tests {
             "建房/WebSocket 读取: Connection reset without closing handshake"
         );
         assert_eq!(
-            failure_kind("WebSocket 读取失败: WebSocket protocol error: \
-                 Connection reset without closing handshake"),
+            failure_kind(
+                "WebSocket 读取失败: WebSocket protocol error: \
+                 Connection reset without closing handshake"
+            ),
             "WebSocket 读取: Connection reset without closing handshake"
         );
         assert_eq!(failure_kind("10000ms 内未全员开局"), "全员开局超时");
@@ -695,16 +696,21 @@ mod tests {
     #[test]
     fn consecutive_failures_only_abort_after_stall_window() {
         let failure = || room::RoomResult {
-            failures: vec!["建房失败: 连接 ws://127.0.0.1:18080/ws 失败: \
+            failures: vec![
+                "建房失败: 连接 ws://127.0.0.1:18080/ws 失败: \
                  IO error: Connection refused (os error 61)"
-                .into()],
+                    .into(),
+            ],
             ..room::RoomResult::default()
         };
         let mut raw = ResidenceRaw::default();
         for _ in 0..super::MAX_CONSECUTIVE_FAILURES {
             raw.record(failure(), 500);
         }
-        assert!(raw.unreachable_reason(9_999).is_none(), "抖动窗口内不应判定");
+        assert!(
+            raw.unreachable_reason(9_999).is_none(),
+            "抖动窗口内不应判定"
+        );
 
         let mut raw = ResidenceRaw::default();
         for _ in 0..super::MAX_CONSECUTIVE_FAILURES {
