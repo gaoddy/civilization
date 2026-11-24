@@ -97,6 +97,36 @@ class ClientCacheCopyTest(unittest.TestCase):
             self.assertTrue((worktree / "client" / ".godot" / "imported" / "tex.bin").is_file())
             self.assertFalse((worktree / "client" / ".godot" / "imported.seed").exists())
 
+    def test_sidecar_failure_leaves_no_partial_seed(self):
+        sys.path.insert(0, str(ROOT / "scripts"))
+        import client_cache_copy as module
+        with tempfile.TemporaryDirectory() as tmp:
+            main = self.make_checkout(tmp, "main")
+            worktree = pathlib.Path(tmp) / "wt"
+            (worktree / "client" / "assets").mkdir(parents=True)
+            (main / "client" / ".godot" / "imported" / "tex.bin").write_bytes(b"x")
+            (main / "client" / "assets" / "a.png").write_bytes(b"png")
+            (main / "client" / "assets" / "a.png.import").write_text("sidecar")
+            (worktree / "client" / "assets" / "a.png").write_bytes(b"png")
+
+            real_copy_file = module.copy_file
+
+            def failing_copy_file(src, dst, prefer_clone=True):
+                raise OSError("模拟旁车复制失败")
+
+            module.copy_file = failing_copy_file
+            try:
+                code = module.main(["--main", str(main), "--worktree", str(worktree)])
+            finally:
+                module.copy_file = real_copy_file
+            self.assertEqual(code, 1)
+            self.assertFalse((worktree / "client" / ".godot" / "imported").exists())
+
+            code = module.main(["--main", str(main), "--worktree", str(worktree)])
+            self.assertEqual(code, 0)
+            self.assertTrue((worktree / "client" / ".godot" / "imported" / "tex.bin").is_file())
+            self.assertTrue((worktree / "client" / "assets" / "a.png.import").is_file())
+
     def test_copy_tree_falls_back_without_clone(self):
         sys.path.insert(0, str(ROOT / "scripts"))
         import client_cache_copy as module

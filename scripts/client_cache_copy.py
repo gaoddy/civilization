@@ -148,21 +148,36 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     seed = target.with_name("imported.seed")
-    if seed.exists():
+    if seed.is_dir():
         shutil.rmtree(seed)
+    elif seed.exists():
+        seed.unlink()
 
     started = time.monotonic()
     try:
         copy_tree(source, seed)
-        if target.exists():
-            shutil.rmtree(target)
-        os.replace(seed, target)
     except OSError as error:
         shutil.rmtree(seed, ignore_errors=True)
         print(f"{PREFIX}复制导入缓存失败：{error}", file=sys.stderr)
         return 1
 
-    copied, skipped = copy_sidecars(main_root, worktree)
+    # 旁车先复制、成功后才让 imported 生效：中断或失败不会留下
+    # “缓存已就位、旁车缺失”的半套状态，下次运行仍会重新播种。
+    try:
+        copied, skipped = copy_sidecars(main_root, worktree)
+    except OSError as error:
+        shutil.rmtree(seed, ignore_errors=True)
+        print(f"{PREFIX}复制 .import 旁车失败：{error}", file=sys.stderr)
+        return 1
+
+    try:
+        if target.exists():
+            shutil.rmtree(target)
+        os.replace(seed, target)
+    except OSError as error:
+        shutil.rmtree(seed, ignore_errors=True)
+        print(f"{PREFIX}导入缓存生效失败：{error}", file=sys.stderr)
+        return 1
     if not args.quiet:
         elapsed = time.monotonic() - started
         print(
