@@ -3157,7 +3157,7 @@
     "in_shop_pool": true,
     "level": 5,
     "skills": [
-      "trigger-all-friendly-plus-0-plus-1"
+      "combatstart-all-enemies-damage-2"
     ],
     "subtype": null,
     "taxon": "physics"

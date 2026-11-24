@@ -7,7 +7,7 @@ era: future
 categories: [play:mammal, play:machine]
 taxon: physics
 cost: 3
-skills: [trigger-all-friendly-plus-0-plus-1]
+skills: [combatstart-all-enemies-damage-2]
 ---
 
 # 广义相对论
@@ -22,13 +22,13 @@ skills: [trigger-all-friendly-plus-0-plus-1]
 | 星级 | 5 |
 | 时代 | 未来 |
 | 玩法 | 哺乳纲、机械 |
-| 技能 | trigger-all-friendly-plus-0-plus-1 |
+| 技能 | combatstart-all-enemies-damage-2 |
 | 费用 | 3 |
 | 科学分类 | 科学 › 物理学 |
 
 ## 效果
 
-使你的随从获得 +0/+1
+战斗开始时，对敌方所有随从造成 2 点伤害
 
 ## 出处
 
