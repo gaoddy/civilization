@@ -9,7 +9,7 @@ level: 1
 era: prehistoric
 attack: 1
 health: 2
-skills: [keyword-breed-2]
+skills: [keyword-sow]
 ---
 
 # 原始真菌
@@ -27,13 +27,13 @@ skills: [keyword-breed-2]
 | 时代 | 史前 |
 | 攻击力 | 1 |
 | 生命值 | 2 |
-| 关键词 | 繁衍 2 |
-| 技能 | keyword-breed-2 |
+| 关键词 | 播种 |
+| 技能 | keyword-sow |
 | 科学分类 | 真菌界 › 未定科 |
 
 ## 效果
 
-繁衍 2：回合开始时获得 +2 生命
+播种：死亡时召唤一个 1/1 的幼苗
 
 ## 出处
 

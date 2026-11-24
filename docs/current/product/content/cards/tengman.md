@@ -9,7 +9,7 @@ level: 1
 era: primitive
 attack: 1
 health: 3
-skills: [battlecry-friendly-plant-growth-once]
+skills: [keyword-sow]
 ---
 
 # 藤蔓
@@ -27,13 +27,13 @@ skills: [battlecry-friendly-plant-growth-once]
 | 时代 | 原始 |
 | 攻击力 | 1 |
 | 生命值 | 3 |
-| 关键词 | 战吼 |
-| 技能 | battlecry-friendly-plant-growth-once |
+| 关键词 | 播种 |
+| 技能 | keyword-sow |
 | 科学分类 | 植物界 › 未定科 |
 
 ## 效果
 
-战吼：使一个友方植物随从获得一次成长
+播种：死亡时召唤一个 1/1 的幼苗
 
 ## 出处
 
