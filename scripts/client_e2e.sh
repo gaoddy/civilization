@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# v0.1 M1b 无头端到端：1 个 Godot 客户端建房 + 7 个 sim 机器人加入，打完一局。
+# 客户端无头端到端：1 个 Godot 客户端建房 + 7 个 sim 机器人加入，打完一局。
 set -euo pipefail
 
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
-PORT=${M1B_PORT:-18080}
+PORT=${CIVILIZATION_E2E_PORT:-18080}
 URL="ws://127.0.0.1:${PORT}/ws"
 GODOT=${GODOT:-$(command -v godot 2>/dev/null || echo /Applications/Godot.app/Contents/MacOS/Godot)}
-LOG_DIR="$ROOT/output/m1b-e2e"
+LOG_DIR="$ROOT/output/client-e2e"
 CODE_FILE="$LOG_DIR/room-code.txt"
 SERVER_LOG="$LOG_DIR/server.log"
 CLIENT_LOG="$LOG_DIR/client.log"
@@ -54,11 +54,11 @@ if ! kill -0 "$SERVER_PID" 2>/dev/null; then
   exit 1
 fi
 
-M1B_URL="$URL" \
-M1B_CODE_FILE="$CODE_FILE" \
-M1B_HERO="${M1B_HERO:-darwin}" \
-M1B_NAME="${M1B_NAME:-GodotClient}" \
-M1B_TIMEOUT_SECONDS="${M1B_TIMEOUT_SECONDS:-300}" \
+CIVILIZATION_E2E_URL="$URL" \
+CIVILIZATION_E2E_CODE_FILE="$CODE_FILE" \
+CIVILIZATION_E2E_HERO="${CIVILIZATION_E2E_HERO:-darwin}" \
+CIVILIZATION_E2E_NAME="${CIVILIZATION_E2E_NAME:-GodotClient}" \
+CIVILIZATION_E2E_TIMEOUT_SECONDS="${CIVILIZATION_E2E_TIMEOUT_SECONDS:-300}" \
   "$GODOT" --headless --path "$ROOT/client" res://tests/headless_game.tscn >"$CLIENT_LOG" 2>&1 &
 CLIENT_PID=$!
 
@@ -105,8 +105,8 @@ if [ "$STATUS" -ne 0 ]; then
   tail -n 40 "$SERVER_LOG"
   exit "$STATUS"
 fi
-if ! grep -q "M1B_GAME_OVER" "$CLIENT_LOG"; then
-  echo "日志缺少 M1B_GAME_OVER"
+if ! grep -q "CLIENT_E2E_GAME_OVER" "$CLIENT_LOG"; then
+  echo "日志缺少 CLIENT_E2E_GAME_OVER"
   exit 1
 fi
 if grep -q "SCRIPT ERROR" "$CLIENT_LOG"; then
@@ -114,7 +114,7 @@ if grep -q "SCRIPT ERROR" "$CLIENT_LOG"; then
   exit 1
 fi
 
-RESULT=$(grep "M1B_GAME_OVER" "$CLIENT_LOG" | tail -n 1)
+RESULT=$(grep "CLIENT_E2E_GAME_OVER" "$CLIENT_LOG" | tail -n 1)
 PLACE=$(echo "$RESULT" | sed -n 's/.*place=\([0-9]*\).*/\1/p')
 SEED=$(echo "$RESULT" | sed -n 's/.*seed=\([^ ]*\).*/\1/p')
 RANKING=$(echo "$RESULT" | sed -n 's/.*ranking=\([0-9]*\).*/\1/p')
@@ -140,7 +140,7 @@ if [ -z "$INTENTS" ] || [ "$INTENTS" -lt 20 ]; then
 fi
 if [ "$ERRORS" != "$SOFT" ]; then
   echo "客户端收到未预期的协议错误（errors=${ERRORS} soft=${SOFT}）：${RESULT}"
-  grep "M1B 收到错误" "$CLIENT_LOG" | tail -n 10
+  grep "CLIENT_E2E 收到错误" "$CLIENT_LOG" | tail -n 10
   exit 1
 fi
 if ! kill -0 "$SERVER_PID" 2>/dev/null; then
@@ -154,4 +154,4 @@ if grep -q "panicked" "$SERVER_LOG" "$LOG_DIR"/bot*.log 2>/dev/null; then
   exit 1
 fi
 
-echo "M1B_E2E_OK place=$PLACE ranking=$RANKING intents=$INTENTS seed=$SEED soft_errors=$SOFT"
+echo "CLIENT_E2E_OK place=$PLACE ranking=$RANKING intents=$INTENTS seed=$SEED soft_errors=$SOFT"

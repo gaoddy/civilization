@@ -255,7 +255,7 @@ check:
 		"$(MAKE) --no-print-directory data-check" \
 		"$(MAKE) --no-print-directory test" \
 		"$(MAKE) --no-print-directory lint" \
-		"$(MAKE) --no-print-directory m0-determinism"
+		"$(MAKE) --no-print-directory sim-determinism"
 ```
 
 六项互不依赖，默认按 CPU 数（上限 8）并行执行；`JOBS=<n>` 覆盖并行度，`JOBS=1` 退回串行。任一目标失败时其余目标仍执行完毕，整体非 0 退出并汇总失败命令。
@@ -271,7 +271,7 @@ check:
 | 卡牌数据 | `make data-check` → `gen_card_data.py --check`、`audit_effects.py` | `生成数据无漂移`、`审计通过` | 0 |
 | 测试 | `make test` → `unittest discover`、`cargo test --workspace` | Python `Ran 130 tests ... OK`；workspace 全部 `test result: ok`，其中 `room-service` 集成测试含 `social`（12 个）、`social_e2e`（12 个）、`persistence`（5 个，无 `DATABASE_URL` 时跳过）、`e2e`（9 个，含 `eight_bots_finish_a_game`） | 0 |
 | 静态检查 | `make lint` → `cargo fmt --check`、`cargo clippy --workspace --all-targets -- -D warnings` | 无警告 | 0 |
-| 确定性 | `make m0-determinism` → `cargo test -p sim --test sim_determinism replay_same_log_100_times_has_same_hash` | `1 passed`（约 26 s） | 0 |
+| 确定性 | `make sim-determinism` → `cargo test -p sim --test sim_determinism replay_same_log_100_times_has_same_hash` | `1 passed`（约 26 s） | 0 |
 
 持久化证据由 `make db-test` 单独提供：先 `make db-up` 启动 `postgres:16`，`tests/persistence.rs` 的 9 个用例在真实数据库上全部通过（账号身份恢复、Steam 身份恢复、手机号绑定、账号成就解锁恢复、社交数据跨重启恢复、过期数据不载入、重启后重新登录、固定时钟下邀请窗口不变、迁移可重复执行）。
 

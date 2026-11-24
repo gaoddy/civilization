@@ -32,8 +32,10 @@ cd server && cargo test -p room-service --test reconnect
 ```bash
 make client-check
 make client-smoke
-make m1b-e2e
+make client-e2e
 ```
+
+> 2026-11-24 起 `m1b-e2e` 更名为 `client-e2e`，日志标记 `M1B_*` 更名为 `CLIENT_E2E_*`；下表历史记录保留当时的命令名与输出。
 
 | 日期 | 项 | 结果 | 备注 |
 | --- | --- | --- | --- |

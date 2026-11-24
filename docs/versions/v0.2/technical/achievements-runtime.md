@@ -135,7 +135,7 @@ pub struct AchievementProgress {
 | 规则引擎与房间服务测试（含新增成就用例） | `cargo test -p rule-engine -p room-service` |
 | 静态检查 | `make lint` |
 | 数据与文档校验 | `make data-check` |
-| 确定性重放 | `make m0-determinism` |
+| 确定性重放 | `make sim-determinism` |
 | 数据库迁移与账号成就落库 | `make db-test` |
 
 客户端不改代码：`AchievementState` / `AchievementUnlocked` 的幂等同步逻辑已存在，非 Steam 渠道只记录状态。

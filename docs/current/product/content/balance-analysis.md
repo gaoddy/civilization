@@ -2,7 +2,7 @@
 
 > 依赖：[卡牌规范与数据](card-system.md)（卡牌字段规范与卡牌文档）、[数值与经济](../systems/economy-and-numbers.md)（星级区间、关键词折算、伤害曲线）、[关键词与机制](../rules/keywords-and-mechanics.md)
 > 状态：已实现
-> 说明：本文按最新卡牌参数与 1000 局模拟结果测算；2026-11-19 修正 12 张多技能卡的第二技能，2026-11-20 玩法改为多归属后按最新数据复算。数值取自 `server/data/v0.1/cards.json`（由卡牌文档生成），复算命令为 `make balance-check` 与 `make m0-batch && make m0-report`；任何一格与卡牌文档不符，以卡牌文档为准并回改本文。
+> 说明：本文按最新卡牌参数与 1000 局模拟结果测算；2026-11-19 修正 12 张多技能卡的第二技能，2026-11-20 玩法改为多归属后按最新数据复算。数值取自 `server/data/v0.1/cards.json`（由卡牌文档生成），复算命令为 `make balance-check` 与 `make sim-batch && make sim-report`；任何一格与卡牌文档不符，以卡牌文档为准并回改本文。
 
 本文描述玩法定位的攻血比、星级身材、技能密度与模拟器胜率；不描述具体实现。归属已实现产品状态的内容。
 
@@ -88,7 +88,7 @@
 
 ## 5. 1000 局模拟
 
-1000 局、种子 1（`make m0-batch && make m0-report`）：
+1000 局、种子 1（`make sim-batch && make sim-report`）：
 
 | 玩法 | 夺冠‰ |
 | --- | --- |

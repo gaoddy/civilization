@@ -2,7 +2,7 @@
 
 > 状态：已实现（v0.1 M1b + 首版剩余四项：赛后回顾、房间生命周期、首局引导、macOS 与 iOS 导出；v0.2 起加入 Android 导出与系统返回路由）
 > 代码：`client/`
-> 验收：`make client-check`、`make client-smoke`、`make client-env-check`、`make m1b-e2e`、`make client-export`、`make client-export PLATFORM=ios`、`make client-export PLATFORM=android`、`make client-export PLATFORM=android AAB=1`
+> 验收：`make client-check`、`make client-smoke`、`make client-env-check`、`make client-e2e`、`make client-export`、`make client-export PLATFORM=ios`、`make client-export PLATFORM=android`、`make client-export PLATFORM=android AAB=1`
 
 本文记录 v0.1 已实现的 Godot 客户端现状：工程结构、全局状态与网络层、六个场景、生成物与运行方式；不描述服务端房间服务（见[房间服务与联网](room-service/README.md)）与产品规则（见[规则引擎与模拟器](rule-engine-and-simulator.md)）。
 
@@ -283,13 +283,13 @@ client/
 | `make client-check` | 协议/数据/文本表漂移 + 客户端边界断言 + 国际化断言 + 工程导入 |
 | `make client-env-check` | 校验客户端构建环境只能是 `local`、`dev` 或 `prod`，默认 `local`；`ENV` 与 `env` 等价，同时传且值不同直接失败；`dev`/`prod` 分别要求 `CLIENT_DEV_SERVER_URL` / `CLIENT_PROD_SERVER_URL`，未配置直接失败 |
 | `make client-smoke` | 用 glob 逐个运行 `ui_smoke*.tscn` 冒烟场景，要求各自输出 `UI_SMOKE_OK` 且无 `SCRIPT ERROR`；任一场景断言失败时不输出 `UI_SMOKE_OK`，目标以非 0 退出；`SMOKE=<名称>` 只跑 `ui_smoke_<名称>.tscn` |
-| `make client-export PLATFORM=local` | 依赖 `client-export-templates`、`client-import` 与 `m1b-build`；导出调试用 `output/desktop-local/Civilization.app`，并把 debug 的 `room-service`、`sim` 复制进 `Contents/MacOS/`；仅 macOS、仅本机调试，见 §8 |
+| `make client-export PLATFORM=local` | 依赖 `client-export-templates`、`client-import` 与 `server-build`；导出调试用 `output/desktop-local/Civilization.app`，并把 debug 的 `room-service`、`sim` 复制进 `Contents/MacOS/`；仅 macOS、仅本机调试，见 §8 |
 | `make ui-preview` | 真实窗口装载指定页面/场景并注入夹具，`FOCUS` 高亮子节点；不截图，窗口保持打开；见 §5 |
 | `make ui-preview-check` | 与 `ui-preview` 参数相同但自动退出，按 `VIEW_PREVIEW_OK` / `VIEW_PREVIEW_FAIL` 判定；只用于本机 GUI 冒烟 |
 | `make client-export PLATFORM=ios` | 按 `ENV`/`env` 写入对应环境地址（默认 `local` 写空配置）后导出 Xcode 工程，并用 `xcodebuild` 自动签名，打包 `output/ios/Civilization-ios.ipa`；见 §9 |
 | `make client-export PLATFORM=android` | 导出 arm64 APK 到 `output/android/Civilization.apk`；签名参数从 `ANDROID_KEYSTORE_*` 环境变量读取，缺失时失败；见 §9 |
 | `make client-export PLATFORM=android AAB=1` | 导出 arm64 AAB 到 `output/android/Civilization.aab`；同一 keystore 签名，走 Gradle 构建；见 §9 |
-| `make m1b-e2e` | 启动服务端、Godot 无头客户端与 7 个 `sim bot`，要求输出 `M1B_E2E_OK` |
+| `make client-e2e` | 启动服务端、Godot 无头客户端与 7 个 `sim bot`，要求输出 `CLIENT_E2E_OK` |
 | `make dev-bots` | 启动服务端（监听 `0.0.0.0`，手机可直连）与 7 个机器人并打印房间码，一局结束后自动准备下一局，供开发者用客户端作为第 8 人反复联调 |
 
 Godot 可执行文件通过 `GODOT` 变量覆盖，默认自动探测 `godot` 或 `/Applications/Godot.app/Contents/MacOS/Godot`。引擎补丁版本固定为 `4.7.2`（`Makefile` 的 `GODOT_VERSION`）；`make client-import` 及所有依赖它的客户端目标会先校验本机引擎，版本不符直接失败。
@@ -337,7 +337,7 @@ make client-run DEVICE=desktop                     # 窗口按屏幕可用区自
 手动方式：
 
 ```
-make m1b-build
+make server-build
 cd server && cargo run -q -p room-service          # 终端 1；手机联调加 --listen 0.0.0.0:8080
 make client-run                                     # 终端 2，手动登录并创建房间
 cargo run -q -p sim -- bot --connect ws://127.0.0.1:8080/ws \
@@ -346,10 +346,10 @@ cargo run -q -p sim -- bot --connect ws://127.0.0.1:8080/ws \
 
 - 客户端创建房间后把 6 位房间码发给 7 个机器人；开发者入房并准备、8 名真人全部准备后，房主机器人发送 `StartGame`，服务端进入选英雄阶段。
 - 机器人参数与协议顺序见[房间服务与联网](room-service/README.md) §12。
-- 无头验收用 `make m1b-e2e`：客户端自动建房并写入房间码，脚本再拉起 7 个机器人，结束后输出 `M1B_GAME_OVER place=<n> seed=<seed> ranking=<n> intents=<n> errors=<n> soft=<n>`；脚本校验名次、8 人排名、种子、意图数，并要求错误全部落在预期白名单（`NO_SPACE`、`NOT_ENOUGH_GOLD`、`SHOP_SLOT_EMPTY`，以及目标候选与视图偏差导致的 `NO_VALID_TARGET`），其余错误为 0，服务端与机器人日志无 panic。
+- 无头验收用 `make client-e2e`：客户端自动建房并写入房间码，脚本再拉起 7 个机器人，结束后输出 `CLIENT_E2E_GAME_OVER place=<n> seed=<seed> ranking=<n> intents=<n> errors=<n> soft=<n>`；脚本校验名次、8 人排名、种子、意图数，并要求错误全部落在预期白名单（`NO_SPACE`、`NOT_ENOUGH_GOLD`、`SHOP_SLOT_EMPTY`，以及目标候选与视图偏差导致的 `NO_VALID_TARGET`），其余错误为 0，服务端与机器人日志无 panic。
 - 无头驱动不等上一条意图确认就按新视图继续决策，服务端按最新状态拒绝属预期；因此 `errors` 与 `soft` 必须相等。驱动另外对同一回合的同一商店槽位只提交一次购买（刷新后允许再次购买），避免重复购买同一槽位。
 - 驱动按 `clientIntentId` 找回被拒意图，收到 `NO_VALID_TARGET` 时沿服务端下发的候选（`targetCandidates` 或待选 `candidates`，键为 `zone:id`）换下一个重发；队首待选为 `target` 时发 `ChooseTarget { target }`，不再一律当发现处理；`sim bot` 的处理方式相同（见[房间服务与联网](room-service/README.md) §12）。候选遍历完仍无合法目标时，本回合跳过该手牌（连续被拒 3 张且可结束时直接结束招募）；`ChooseTarget` 被拒则换下一个候选。否则会形成「重试 → 拒绝 → 再重试」的空转，直到演示超时。
-- 默认端口 `18080` 被其他进程占用时，脚本会因监听失败退出；用 `M1B_PORT=<端口> make m1b-e2e` 覆盖，脚本与客户端读取同一个变量。
+- 默认端口 `18080` 被其他进程占用时，脚本会因监听失败退出；用 `CIVILIZATION_E2E_PORT=<端口> make client-e2e` 覆盖，脚本据此拼出客户端连接地址。
 
 ### 运行态视图预览
 
@@ -382,7 +382,7 @@ make ui-preview SETUP=res://tests/previews/game_rail.gd     # 无 .tscn 的组�
   - 枚举：`enum.card_type.<id>`、`enum.playstyle.<id>`、`enum.taxon.<id>`、`enum.era.<id>`、`enum.keyword.<id>`、`enum.subtype.<slug>`、`enum.evolve.<id>`、`enum.stat_layer.<id>`；
   - 错误与界面：`error.<CODE>`（默认文案）、`error.<CODE>.<detail>`（服务端 `messageId` 的细分文案）、`ui.*`（页面静态文案）。
 - **所有权**：`card.*`、`skill.*` 与 `enum.card_type|playstyle|taxon|era|keyword|subtype.*` 是生成 key，由 `scripts/gen_text.py` 从实体文档与 `taxonomy.md` 整体重算；`ui.*`、`error.*`、`enum.evolve.*`、`enum.stat_layer.*` 是人工 key，原样保留；出现未知前缀直接报错。`make data` 会写入 CSV，`make data-check` 检测漂移。
-- **前置条件**：修改 CSV 或任何实体文本后必须运行 `make client-import`（或任何以它为前提的目标，如 `client-run`、`client-smoke`、`m1b-e2e`），让 Godot 重新导入并生成 `.translation`；只在编辑器外改 CSV 而不导入，运行时仍读旧翻译。`make client-check` 已包含 `client-import`。
+- **前置条件**：修改 CSV 或任何实体文本后必须运行 `make client-import`（或任何以它为前提的目标，如 `client-run`、`client-smoke`、`client-e2e`），让 Godot 重新导入并生成 `.translation`；只在编辑器外改 CSV 而不导入，运行时仍读旧翻译。`make client-check` 已包含 `client-import`。
 - **服务端错误**：`ErrorMessage.messageId` 默认 `error.<CODE>`，`messageParams` 按 `%s` 填充；客户端状态栏先按 `code` 取 `error.<CODE>`，悬停详情优先用 `messageId`/`messageParams`，`message` 仅面向日志。
 - **新增语言**：一个语言一个文件。新增语言需要：新增 `client/text/<locale>.csv`，并扩展 `scripts/gen_text.py` 以支持按语言文件读写与产出（每个语言文件独立生成内容 key 与枚举 key）；用 `make client-import` 导入后把对应 `.translation` 加入 `[internationalization]` 的 `locale/translations`。业务代码（`CardDB`、`UIWording` / `UIControls`、`tr()` 调用）与实体文档、协议均无需改动。
 - **内置字体**：`client/assets/fonts/NotoSansSC-Regular-subset.ttf`（Noto Sans SC 子集，OFL 许可见同目录 `OFL.txt`）由 `project.godot` 的 `gui/theme/custom_font` 设为默认主题字体，所有文本不再依赖系统字体回退；iOS 真机因此不再缺字。子集把垂直度量对齐 PingFang SC（`hhea` 1060/−340、`OS/2` typo 860/−140/400），切换前后行高一致，现有布局不需要按字体调整。
@@ -390,7 +390,7 @@ make ui-preview SETUP=res://tests/previews/game_rail.gd     # 无 .tscn 的组�
 
 ## 7. 与设计的偏差
 
-1. 设计 §5.6 只要求“1 个客户端 + 7 个机器人人工验收”；实现额外提供 `client/tests/headless_game.*` 与 `make m1b-e2e`，用真实客户端栈（Net + GameStore）自动打完一局，作为协议与视图消费的回归证据。该驱动不点击 UI，五场景可读性仍由 `make client-smoke` 与手动运行保证。
+1. 设计 §5.6 只要求“1 个客户端 + 7 个机器人人工验收”；实现额外提供 `client/tests/headless_game.*` 与 `make client-e2e`，用真实客户端栈（Net + GameStore）自动打完一局，作为协议与视图消费的回归证据。该驱动不点击 UI，五场景可读性仍由 `make client-smoke` 与手动运行保证。
 2. 卡牌展示表新增 `display_cost`：随从固定 3、效果牌取文档 `cost`，仅用于显示；规则判定仍全部在服务端。
 3. `PlayCard` 的目标由拖拽落点直接给出（随从牌带 `position`，需要目标的效果牌带 `target: {zone, id}`，取自视图候选）；需要目标的随从战吼改为两段式：第一段出牌不带目标，服务端推入目标待选，第二段由瞄准层发 `ChooseTarget`，落空或 `Esc` 发 `AbandonTarget` 退回手牌。账本上的消耗与退还都由服务端待选状态决定，客户端不做本地预判。
 4. 主动技能需要目标且候选非空时按住该技能按钮进入瞄准，松手命中候选发 `UseHeroPower { skillId, target }`；不需要目标时直接发送，候选为空时该按钮禁用、不发送。`pendingChoices` 的目标待选也走同一瞄准层，不再使用弹层。
