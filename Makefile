@@ -11,6 +11,12 @@ PYTHON ?= python3
 # 独立步骤的并行度：留空按 CPU 数（上限 8），JOBS=1 退回串行。
 JOBS ?=
 
+# 本地日志根目录：按当前分支隔离，避免同一 checkout 切分支后日志互相覆盖。
+# 分支名中的 / 换成 -；detached HEAD 用短提交号；取不到时回落 local。
+OUTPUT_LOG_BRANCH := $(shell git symbolic-ref --short -q HEAD 2>/dev/null || git rev-parse --short HEAD 2>/dev/null)
+OUTPUT_LOG_BRANCH := $(if $(strip $(OUTPUT_LOG_BRANCH)),$(subst /,-,$(strip $(OUTPUT_LOG_BRANCH))),local)
+OUTPUT_LOG_DIR ?= output/logs/$(OUTPUT_LOG_BRANCH)
+
 .DEFAULT_GOAL := test
 
 include make/client.mk

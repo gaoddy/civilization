@@ -102,21 +102,21 @@ client-check:
 # 如 make client-smoke SMOKE=combat；缺省跑 client/tests/ui_smoke*.tscn 全部。
 SMOKE ?=
 client-smoke: client-import
-	@mkdir -p output
+	@mkdir -p $(OUTPUT_LOG_DIR)
 	@if [ -n "$(SMOKE)" ]; then \
 	  for name in $$(echo "$(SMOKE)" | tr ',' ' '); do \
 	    scene="client/tests/ui_smoke_$$name.tscn"; \
 	    [ -f "$$scene" ] || { echo "未找到冒烟场景：$$scene" >&2; exit 1; }; \
-	    $(CLIENT_CONTENT_ENV) $(GODOT) --headless --path client res://tests/ui_smoke_$$name.tscn 2>&1 | tee output/ui_smoke_$$name.log; \
-	    grep -q "UI_SMOKE_OK" output/ui_smoke_$$name.log || exit 1; \
-	    ! grep -q "SCRIPT ERROR" output/ui_smoke_$$name.log || exit 1; \
+	    $(CLIENT_CONTENT_ENV) $(GODOT) --headless --path client res://tests/ui_smoke_$$name.tscn 2>&1 | tee $(OUTPUT_LOG_DIR)/ui_smoke_$$name.log; \
+	    grep -q "UI_SMOKE_OK" $(OUTPUT_LOG_DIR)/ui_smoke_$$name.log || exit 1; \
+	    ! grep -q "SCRIPT ERROR" $(OUTPUT_LOG_DIR)/ui_smoke_$$name.log || exit 1; \
 	  done; \
 	else \
 	  for scene in client/tests/ui_smoke*.tscn; do \
 	    name=$$(basename $$scene .tscn); \
-	    $(CLIENT_CONTENT_ENV) $(GODOT) --headless --path client res://tests/$$name.tscn 2>&1 | tee output/$$name.log; \
-	    grep -q "UI_SMOKE_OK" output/$$name.log || exit 1; \
-	    ! grep -q "SCRIPT ERROR" output/$$name.log || exit 1; \
+	    $(CLIENT_CONTENT_ENV) $(GODOT) --headless --path client res://tests/$$name.tscn 2>&1 | tee $(OUTPUT_LOG_DIR)/$$name.log; \
+	    grep -q "UI_SMOKE_OK" $(OUTPUT_LOG_DIR)/$$name.log || exit 1; \
+	    ! grep -q "SCRIPT ERROR" $(OUTPUT_LOG_DIR)/$$name.log || exit 1; \
 	  done; \
 	fi
 
@@ -248,7 +248,7 @@ ui-preview-check: client-import
 	  echo "用法：make ui-preview-check PAGE=game FOCUS=PlayersPanel EXPECT=SeatRow=8" >&2; \
 	  exit 1; \
 	fi
-	@mkdir -p output
+	@mkdir -p $(OUTPUT_LOG_DIR)
 	@$(CLIENT_CONTENT_ENV) $(GODOT) --path client --quit-after 900 res://tests/view_preview.tscn -- \
 		$(if $(PAGE),--preview-page=$(PAGE),) \
 		$(if $(SCENE),--preview-scene=$(SCENE),) \
@@ -258,9 +258,9 @@ ui-preview-check: client-import
 		$(if $(SETUP),--preview-setup=$(SETUP),) \
 		$(if $(DEVICE),--preview-device=$(DEVICE),) \
 		$(if $(EXPECT),--preview-expect=$(EXPECT),) \
-		--preview-frames=$(PREVIEW_FRAMES) --preview-quit 2>&1 | tee output/ui_preview.log
-	@grep -q "VIEW_PREVIEW_OK" output/ui_preview.log
-	@! grep -qE "VIEW_PREVIEW_FAIL|SCRIPT ERROR" output/ui_preview.log
+		--preview-frames=$(PREVIEW_FRAMES) --preview-quit 2>&1 | tee $(OUTPUT_LOG_DIR)/ui_preview.log
+	@grep -q "VIEW_PREVIEW_OK" $(OUTPUT_LOG_DIR)/ui_preview.log
+	@! grep -qE "VIEW_PREVIEW_FAIL|SCRIPT ERROR" $(OUTPUT_LOG_DIR)/ui_preview.log
 
 # macOS 导出模板：目录按固定的 Godot 版本隔离，缺失时下载官方 tpz 并只拷贝其中的 templates/。
 client-export-templates: client-godot-check

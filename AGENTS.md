@@ -68,7 +68,8 @@
 ### 本地产物目录 output/
 
 - `output/` 是纯缓存目录：任何内容都可随时整体删除，不保证下次还在。真源（素材源、发布记录、实验结论）一律不放这里。
-- 固定路径只由 `make` 目标写入，不手改：`ios/`、`desktop/`、`desktop-local/`、`steam/`、`android/`、`wireframes/`、`ui_smoke_*.log`、`ui_preview.log`、`loadtest-*.json`、`sim-batch.json`、`sim-report.log`。
+- 固定路径只由 `make` 目标写入，不手改：`ios/`、`desktop/`、`desktop-local/`、`steam/`、`android/`、`wireframes/`、`logs/<分支>/`、`loadtest-*.json`、`sim-batch.json`。
+- 日志统一写 `output/logs/<当前分支>/`（分支名中的 `/` 换成 `-`；detached HEAD 用短提交号，取不到时回落 `local`）：`ui_smoke_<场景>.log`、`ui_preview.log`、`sim-report.log`、`loadtest-server.log`，以及 `client-e2e/`、`dev-bots/` 子目录；切分支后日志互不覆盖。
 - 一次性探针、截图与临时数据统一放 `output/scratch/<日期>-<主题>/`；任务结束前要么迁到真源位置，要么删除。
 - 效果牌封面源按需临时放到 `output/effect-covers/generated/`（`ASSET_COVERS` 默认值），`make assets-covers` 处理完即可删除。
 - `make font-subset` 自动把源字体下载到 `output/fonts/`，并在缺少 fontTools 时创建 `output/fonttools-venv/`；两者都是缓存，删掉后重跑目标即可恢复。
