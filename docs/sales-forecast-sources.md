@@ -15,6 +15,7 @@
 | D3 | 平台与语言占比 | Steam 官方硬件调查 | 一手（抓取） | 高：月度波动大 |
 | D4 | Steam 整体收入分布 | Gamalytic / GameDiscoverCo / VG Insights | **二手（搜索转述）** | **低：未核对原文** |
 | D5 | 项目实现状态 | 本仓库代码 | 一手（核对） | 高 |
+| D6 | 炉石传说注册 / 活跃 / 收入 | Blizzard 公告、SuperData / KeyBanc 转述、ActivePlayer.io | 混合：官方一手 + 第三方估计 | 官方高；第三方低 |
 
 ---
 
@@ -71,6 +72,22 @@ curl -s 'https://store.steampowered.com/hwsurvey/' | grep -iE 'macos|windows|lin
 ```
 
 页面为服务端渲染的统计表；`store.steampowered.com/hwsurvey` 也可直接浏览。
+
+### 2.6 炉石传说与酒馆战棋（D6）
+
+先确认是否在 Steam 上：
+
+```bash
+curl -s 'https://store.steampowered.com/api/storesearch/?term=Hearthstone&cc=us&l=english'
+```
+
+返回 `{"total":0,"items":[]}`——**炉石传说没有 Steam 版**，因此没有 SteamSpy 拥有量口径，也不能用 `GetNumberOfCurrentPlayers` 估算。核对日期 2026-11-25。
+
+第三方月活：
+
+- https://activeplayer.io/hearthstone/ （第三方模型，绝对值低可信，只取趋势）
+
+官方与二手数字为 Wikipedia 汇总的 Blizzard 公告与媒体估计，见 §4.1。
 
 ---
 
@@ -157,17 +174,38 @@ curl -s 'https://store.steampowered.com/hwsurvey/' | grep -iE 'macos|windows|lin
 - Backpack Battles：17,454 / (17,454 + 1,713) = 91.1%
 - Yi Xian：4,531 / (4,531 + 1,601) = 73.9%
 
+### 4.1 炉石传说（D6）
+
+核对日期 2026-11-25。炉石传说是免费游戏，**没有"销量"**，只有注册 / 活跃 / 收入口径。
+
+| 指标 | 数值 | 时间 | 来源 | 类型 |
+| --- | --- | --- | --- | --- |
+| 累计注册 | 1 亿 | 2018-11 | Blizzard 公告 | 一手（经 Wikipedia 转述，未打开原文） |
+| 活跃玩家 | 2,000 万+ | 2020 | Blizzard《Year of the Phoenix》回顾（2021-11） | 一手（经 Wikipedia 转述） |
+| 月收入 | 约 $2,000 万 | 2015-06 | SuperData Research | 二手估计 |
+| 年收入 | 约 $6 亿 | 2019-07 | KeyBanc Capital Markets | 二手估计 |
+| 当前月活 | 3,406,146（近 30 天均值） | 2026-11 | ActivePlayer.io | 第三方模型 |
+
+**已知空缺与偏差**：
+
+- 酒馆战棋（Battlegrounds，2019-11 上线）的独立玩家数 **Blizzard 从未披露**，第三方拆分数不可信。
+- 2023-10 微软完成收购后，不再按 IP 单独披露用户或收入。
+- ActivePlayer 的 340 万月活与 Blizzard 2020 年 2,000 万+ 的口径相差近一个数量级，说明第三方模型不可用于绝对值；只取"2024 年起明显下台阶"的趋势。
+- 2015-05 Activision Blizzard 称"炉石 + Destiny 合计近 $10 亿"，为合并口径，**不可拆分归因**，本文不使用。
+
 ---
 
 ## 5. 二级来源（未经原文核对）
 
-以下数据来自网络搜索的**转述**，未能逐项打开原始报告核对，**可信度低**，仅用于说明"Steam 整体收入分布极度头部化"这一趋势：
+以下数据来自网络搜索的**转述**，未能逐项打开原始报告核对，**可信度低**。前三行仅用于说明"Steam 整体收入分布极度头部化"这一趋势；炉石两行仅用于说明品类的收入量级，不进入销量计算。
 
 | 数值 | 转述来源 |
 | --- | --- |
 | 中位游戏首年收入约 $1,000–2,000 | Gamalytic 博客、GameDiscoverCo |
 | 58–70% 首年不到 $1,000 | Gamalytic、GameDiscoverCo、VG Insights |
 | 2025 年 Steam 发行 18,000+ 款 | VG Insights |
+| 炉石 2015 年月收入约 $2,000 万 | SuperData Research（经 Wikipedia 转述） |
+| 炉石 2019 年收入约 $6 亿 | KeyBanc Capital Markets（经 Wikipedia 转述） |
 
 参考入口（需自行核对原文）：
 
