@@ -32,7 +32,9 @@ func _init() -> void:
     var row := HBoxContainer.new()
     row.alignment = BoxContainer.ALIGNMENT_END
     box.add_child(row)
-    var confirm := UIControls.styled_button(tr("ui.lobby.close"), "primary")
+    var confirm := UIControls.styled_button(
+        tr("ui.lobby.close"), "primary", UITheme.stage_metric("action-button-height")
+    )
     confirm.name = "NoticeConfirmButton"
     confirm.pressed.connect(close_layer)
     row.add_child(confirm)
