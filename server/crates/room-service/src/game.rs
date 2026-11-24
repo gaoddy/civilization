@@ -709,7 +709,7 @@ impl GameTask {
     /// 选英雄阶段的全量更新：每个未弃权座位一条 `HeroPick`。
     fn hero_pick_updates(&self) -> Vec<SeatUpdate> {
         (0..SEAT_COUNT as Seat)
-            .filter(|seat| !self.is_departed(*seat))
+            .filter(|seat| !self.is_seat_departed(*seat))
             .map(|seat| SeatUpdate {
                 player_id: self.seats[usize::from(seat)].player_id.clone(),
                 kind: UpdateKind::HeroPick,
@@ -966,7 +966,7 @@ impl GameTask {
 
         let mut updates = Vec::new();
         for seat in 0..SEAT_COUNT as Seat {
-            if self.is_departed(seat) {
+            if self.is_seat_departed(seat) {
                 continue;
             }
             updates.push(SeatUpdate {
@@ -1142,7 +1142,7 @@ impl GameTask {
         let Some(seat) = self.seat_of.get(player_id).copied() else {
             return Vec::new();
         };
-        if self.is_departed(seat) {
+        if self.is_seat_departed(seat) {
             return Vec::new();
         }
         if self.stage == GameStage::HeroPick {
@@ -1224,7 +1224,7 @@ impl GameTask {
 
             let mut updates = self.view_updates(&events, &all_seats);
             for seat in all_seats {
-                if self.is_departed(seat) {
+                if self.is_seat_departed(seat) {
                     continue;
                 }
                 updates.push(SeatUpdate {
@@ -1249,9 +1249,14 @@ impl GameTask {
     }
 
     /// 座位是否已在本局弃权。
-    fn is_departed(&self, seat: Seat) -> bool {
+    fn is_seat_departed(&self, seat: Seat) -> bool {
         self.departed
             .contains(&self.seats[usize::from(seat)].player_id)
+    }
+
+    /// 玩家是否已在本局弃权；未知玩家视为未弃权，由座位查询另行判断。
+    pub fn is_departed(&self, player_id: &str) -> bool {
+        self.departed.contains(player_id)
     }
 
     /// 本场全部参战座位是否都已回报。
@@ -1275,7 +1280,7 @@ impl GameTask {
             )];
         };
         // 已弃权的座位不再接收任何更新；其意图也一并忽略。
-        if self.is_departed(seat) {
+        if self.is_seat_departed(seat) {
             return Vec::new();
         }
 
@@ -1540,7 +1545,7 @@ impl GameTask {
         let started_at = self.combat_started_at();
         reports
             .iter()
-            .filter(|(seat, _)| !self.is_departed(**seat))
+            .filter(|(seat, _)| !self.is_seat_departed(**seat))
             .map(|(&seat, report)| SeatUpdate {
                 player_id: self.seats[usize::from(seat)].player_id.clone(),
                 kind: UpdateKind::CombatResult(Box::new(combat_result(
@@ -1670,7 +1675,7 @@ impl GameTask {
             self.log_game_over_if_needed();
             // 逐座位生成载荷：`selfStats` 只填接收者自己的统计，不能共享同一份。
             for seat in 0..SEAT_COUNT as Seat {
-                if self.is_departed(seat) {
+                if self.is_seat_departed(seat) {
                     continue;
                 }
                 updates.push(SeatUpdate {
@@ -1849,7 +1854,7 @@ impl GameTask {
     fn view_updates(&self, events: &[EngineEvent], recipients: &[Seat]) -> Vec<SeatUpdate> {
         let mut updates = Vec::new();
         for seat in 0..SEAT_COUNT as Seat {
-            if self.is_departed(seat) {
+            if self.is_seat_departed(seat) {
                 continue;
             }
             let filtered: Vec<ProtocolGameEvent> = events

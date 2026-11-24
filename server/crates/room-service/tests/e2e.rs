@@ -841,6 +841,9 @@ async fn mid_game_disconnect_is_recorded_in_registry() {
 
 /// 整桌断线且无人发送 `LeaveRoom`：宽限期到期按弃权结算，房间销毁，账号能重新建房。
 ///
+/// 宽限期内同账号新登录会接管仍在进行的对局（收到 `Snapshot`），接管连接断开后座位
+/// 重新写回断线时刻；因此回收必须等接管连接也断开的宽限期到期。
+///
 /// 修复前这里没有回收路径：对局只能靠阶段截止磨满 20 回合（实测 2–37 分钟），
 /// 期间这 8 个账号再建房一律 `ALREADY_IN_ROOM`。
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
@@ -883,19 +886,46 @@ async fn abandoned_game_is_reclaimed_after_grace() {
     .await;
     assert!(marked.is_ok(), "8 条连接断开后应全部写回断线时刻");
 
-    // 宽限期内账号仍占着房间。
+    // 宽限期内同账号新登录接管仍在的房间；随后再次断线，座位回到断线状态。
     let mut probe = RawClient::connect(addr).await;
     let _ = authenticate(&mut probe, "host").await;
-    probe.send("CreateRoom", json!({})).await;
-    let within_grace = tokio::time::timeout(Duration::from_secs(5), probe.recv_room())
+    let taken = tokio::time::timeout(Duration::from_secs(5), probe.recv_room())
         .await
-        .expect("宽限期内应收到回应")
+        .expect("宽限期内应收到接管视图")
         .expect("连接不应关闭")
         .1;
+    let joined_room = match &taken {
+        ServerMessage::RoomUpdate(update) => update.room_id == room_id,
+        ServerMessage::Snapshot(snapshot) => snapshot.view.room_id == room_id,
+        _ => false,
+    };
     assert!(
-        matches!(&within_grace, ServerMessage::Error(error) if error.code == ErrorCode::AlreadyInRoom),
-        "宽限期内重新建房应仍是 ALREADY_IN_ROOM"
+        joined_room,
+        "宽限期内同账号新登录应接管原房间，实际收到 {taken:?}"
     );
+    drop(probe);
+    // 等接管后的断线重新写回断线时刻。
+    tokio::time::timeout(Duration::from_secs(5), async {
+        loop {
+            let disconnected = {
+                let rooms = state.rooms.lock().await;
+                rooms.room(&room_id).map_or(0, |room| {
+                    (0..8u8)
+                        .filter(|seat| {
+                            room.slot(*seat)
+                                .is_some_and(|slot| slot.disconnected_at_ms.is_some())
+                        })
+                        .count()
+                })
+            };
+            if disconnected == 8 {
+                return;
+            }
+            tokio::time::sleep(Duration::from_millis(20)).await;
+        }
+    })
+    .await
+    .expect("接管连接断开后应重新写回 8 个座位的断线时刻");
 
     // 宽限期到期：整桌无人在线，房间 task 应结束对局并销毁房间。
     clock.advance(RECONNECT_GRACE_MS);
@@ -917,9 +947,11 @@ async fn abandoned_game_is_reclaimed_after_grace() {
         "宽限期到期后整桌断线的房间应被回收，不能一直占到第 20 回合"
     );
 
-    // 账号已释放：同一手机号重新建房应成功。
-    probe.send("CreateRoom", json!({})).await;
-    let created = tokio::time::timeout(Duration::from_secs(5), probe.recv_room())
+    // 账号已释放：同一手机号重新登录后建房应成功。
+    let mut fresh = RawClient::connect(addr).await;
+    let _ = authenticate(&mut fresh, "host").await;
+    fresh.send("CreateRoom", json!({})).await;
+    let created = tokio::time::timeout(Duration::from_secs(5), fresh.recv_room())
         .await
         .expect("重新建房应收到回应")
         .expect("连接不应关闭")

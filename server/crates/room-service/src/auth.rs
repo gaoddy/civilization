@@ -223,7 +223,13 @@ impl SessionStore {
     }
 
     /// 用已解析账号签发会话；编号登记与会话表写入只在这里。
+    ///
+    /// 同一账号只保留最新登录签发的令牌：旧令牌在写入新会话前即从 `by_token` 移除，
+    /// 此后用它认证返回 `TOKEN_EXPIRED`。令牌续登不经过这里，不轮换令牌。
     fn issue(&mut self, account: Account, clock: &dyn Clock) -> Session {
+        if let Some(previous) = self.by_player.get(&account.player_id) {
+            self.by_token.remove(&previous.token);
+        }
         self.codes
             .insert(account.player_code.clone(), account.player_id.clone());
         let session = Session {

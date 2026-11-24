@@ -24,6 +24,12 @@ func _ready() -> void:
     Net.disconnected.connect(_on_disconnected)
     GameStore.auth_changed.connect(_on_auth_changed)
     GameStore.error_received.connect(_on_error)
+    GameStore.login_required.connect(_on_login_required)
+    if GameStore.session_replaced:
+        # 被顶下线后停在登录页等用户主动重试：Steam 与调试包都不自动重登，
+        # 否则两个客户端会互相顶号。
+        _show_session_replaced()
+        return
     if Platform.is_steam():
         _begin_steam_login.call_deferred()
     if LocalServer.enabled and LocalServer.auto_flow and _login_button != null:
@@ -99,6 +105,12 @@ func _add_field(parent: VBoxContainer, title: String, value: String) -> LineEdit
 
 func _on_login_pressed() -> void:
     _login_button.disabled = true
+    if GameStore.session_replaced:
+        # 顶号后连接已被主动停下：先重新拉起连接，由 `connected` 回调继续认证。
+        GameStore.session_replaced = false
+        Net.resume()
+        _status.text = tr("ui.login.connecting") % Net.default_url()
+        return
     _status.text = tr("ui.login.connecting") % Net.default_url()
     if Net.is_open():
         _on_connected()
@@ -165,6 +177,9 @@ func _send_steam_auth() -> void:
 func _on_retry_pressed() -> void:
     _retry_button.visible = false
     _retry_button.disabled = true
+    if GameStore.session_replaced:
+        GameStore.session_replaced = false
+        Net.resume()
     var startup := Platform.retry_startup()
     if startup != "":
         _show_steam_failure(startup)
@@ -198,6 +213,8 @@ func _steam_failure_text(reason: String) -> String:
             return tr("ui.login.steam.unavailable")
         "STEAM_DISABLED":
             return tr("ui.login.steam.unavailable")
+        "SESSION_REPLACED":
+            return UIWording.error_text(Protocol.ERROR_SESSION_REPLACED)
         _:
             return UIWording.error_text(reason)
 
@@ -219,10 +236,47 @@ func _on_connected() -> void:
 
 
 func _on_auth_changed() -> void:
+    # 认证结果与接管下行（`RoomUpdate` / `Snapshot`）通常同批到达：把落地页面的决定
+    # 推迟到本帧下行处理完，避免先进大厅再跳转；接管消息晚到时由大厅页按信号补导航。
+    _navigate_after_auth.call_deferred()
+
+
+func _navigate_after_auth() -> void:
+    if not is_inside_tree():
+        return
+    if not GameStore.hero_pick.is_empty() or not GameStore.view.is_empty():
+        UINavigation.navigate(self, UINavigation.PAGE_GAME)
+        return
+    if (
+        GameStore.room_id != ""
+        and not GameStore.room_players.is_empty()
+        and not GameStore.am_host()
+    ):
+        UINavigation.navigate(self, UINavigation.PAGE_ROOM)
+        return
     UINavigation.navigate(self, UINavigation.PAGE_LOBBY)
 
 
+## 顶号提示：Steam 与调试包都只展示文案并停在登录页，登录动作等用户主动触发。
+func _show_session_replaced() -> void:
+    if Platform.is_steam():
+        _show_steam_failure(Protocol.ERROR_SESSION_REPLACED)
+        return
+    _status.text = UIWording.error_text(Protocol.ERROR_SESSION_REPLACED)
+    _status.tooltip_text = UIWording.error_tooltip(Protocol.ERROR_SESSION_REPLACED)
+    _login_button.disabled = false
+
+
+## 顶号在登录页生效：用户已在本页时直接刷新提示，不重复切场景。
+func _on_login_required() -> void:
+    _show_session_replaced()
+
+
 func _on_disconnected() -> void:
+    # 顶号后的连接关闭会紧跟提示到达，不能把提示覆盖成「连接已断开」。
+    if GameStore.session_replaced:
+        _show_session_replaced()
+        return
     if Platform.is_steam():
         _show_steam_failure("network")
         return
@@ -231,6 +285,9 @@ func _on_disconnected() -> void:
 
 
 func _on_error() -> void:
+    if GameStore.session_replaced:
+        _show_session_replaced()
+        return
     var code := str(GameStore.last_error.get("code", ""))
     if Platform.is_steam():
         _show_steam_failure(code)

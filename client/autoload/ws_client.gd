@@ -123,6 +123,14 @@ func is_open() -> bool:
     return socket != null and socket.get_ready_state() == WebSocketPeer.STATE_OPEN
 
 
+## 顶号后连接被主动停下；用户主动重试登录时重新拉起连接。
+##
+## 复用 `relogin` 的关闭与重建流程：旧 socket 可能仍占着服务端的关闭流程，
+## 直接复用会把认证发到即将关闭的连接上。
+func resume() -> void:
+    relogin()
+
+
 func send(type: String, payload: Dictionary) -> String:
     if not is_open():
         return ""
@@ -208,6 +216,10 @@ func _on_packet(text: String) -> void:
     if not (payload is Dictionary):
         payload = {}
     GameStore.handle(type, payload)
+    if GameStore.session_replaced:
+        # 令牌已失效：停止用旧令牌重连，等用户在登录页主动重试。
+        _want_connection = false
+        _pending_reconnect = false
     if type == Protocol.MSG_AUTH_RESULT and _pending_reconnect:
         _pending_reconnect = false
         send(Protocol.MSG_RECONNECT, {"roomId": GameStore.room_id, "lastSeq": GameStore.last_seq})
