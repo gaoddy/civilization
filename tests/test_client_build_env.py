@@ -16,6 +16,14 @@ CLEARED = (
     "CLIENT_DEV_SERVER_URL",
     "CLIENT_PROD_SERVER_URL",
     "STEAM_APP_ID",
+    "PLATFORM",
+    "DEVICE",
+    "WIDTH",
+    "HEIGHT",
+    "LOCAL_SERVER",
+    "AAB",
+    "IOS_DEVICE",
+    "IOS_LAUNCH",
 )
 DEV_URL = "wss://civilization.satori.host/ws"
 
@@ -110,25 +118,99 @@ class ClientBuildEnvTest(unittest.TestCase):
         self.assertIn("--require-server", line)
 
     def test_ios_dry_run_uses_dev_url(self):
-        proc = self._run_make(["-n", "client-export-ios", "ENV=dev"])
+        proc = self._run_make(["-n", "client-export", "PLATFORM=ios", "ENV=dev"])
         self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
         line = self._gen_line(proc)
         self.assertIn(DEV_URL, line)
         self.assertNotIn("cooter.local", line)
 
     def test_run_ios_defaults_to_local(self):
-        proc = self._run_make(["-n", "client-run-ios"])
+        proc = self._run_make(["-n", "client-run", "PLATFORM=ios"])
         self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
         line = self._gen_line(proc)
         self.assertIn('SERVER_URL=""', line)
         self.assertNotIn("cooter.local", line)
 
     def test_android_dry_run_bakes_dev_url(self):
-        proc = self._run_make(["-n", "client-export-android", "ENV=dev"])
+        proc = self._run_make(["-n", "client-export", "PLATFORM=android", "ENV=dev"])
         self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
         line = self._gen_line(proc)
         self.assertIn(DEV_URL, line)
         self.assertIn("--require-url", line)
+
+    def test_unknown_platform_is_rejected(self):
+        proc = self._run_make(["-n", "client-export", "PLATFORM=bogus"])
+        self.assertNotEqual(proc.returncode, 0)
+        self.assertIn("PLATFORM 只能是", proc.stdout + proc.stderr)
+
+    def test_local_and_steam_reject_env(self):
+        for platform in ("local", "steam"):
+            with self.subTest(platform=platform):
+                proc = self._run_make(["-n", "client-export", f"PLATFORM={platform}", "ENV=dev"])
+                self.assertNotEqual(proc.returncode, 0)
+                self.assertIn("不支持 ENV", proc.stdout + proc.stderr)
+
+    def test_local_does_not_bake_build_config(self):
+        proc = self._run_make(["-n", "client-export", "PLATFORM=local"])
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        self.assertNotIn("gen_build_config.py", proc.stdout + proc.stderr)
+
+    def test_android_aab_uses_aab_script(self):
+        proc = self._run_make(["-n", "client-export", "PLATFORM=android", "AAB=1"])
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        self.assertIn("android_export.sh aab", proc.stdout)
+
+    def test_android_invalid_aab_is_rejected(self):
+        proc = self._run_make(["-n", "client-export", "PLATFORM=android", "AAB=2"])
+        self.assertNotEqual(proc.returncode, 0)
+        self.assertIn("AAB 只能是 0 或 1", proc.stdout + proc.stderr)
+
+    def test_run_iphone_uses_preset_size(self):
+        proc = self._run_make(["-n", "client-run", "DEVICE=iphone"])
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        self.assertIn('CIVILIZATION_WINDOW_SIZE="2622x1206"', proc.stdout)
+        self.assertIn('CIVILIZATION_DEVICE="phone"', proc.stdout)
+        self.assertIn('CIVILIZATION_LOCAL_SERVER="1"', proc.stdout)
+
+    def test_run_without_device_keeps_server_off(self):
+        proc = self._run_make(["-n", "client-run"])
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        self.assertIn('CIVILIZATION_LOCAL_SERVER="0"', proc.stdout)
+        self.assertNotIn("cargo build -q -p room-service", proc.stdout)
+
+    def test_run_unknown_device_is_rejected(self):
+        proc = self._run_make(["-n", "client-run", "DEVICE=bogus"])
+        self.assertNotEqual(proc.returncode, 0)
+        self.assertIn("DEVICE 只能是", proc.stdout + proc.stderr)
+
+    def test_run_requires_both_width_and_height(self):
+        proc = self._run_make(["-n", "client-run", "WIDTH=960"])
+        self.assertNotEqual(proc.returncode, 0)
+        self.assertIn("WIDTH 与 HEIGHT 需同时传入正整数", proc.stdout + proc.stderr)
+
+    def test_alias_run_iphone_matches_device_preset(self):
+        proc = self._run_make(["-n", "run-iphone"])
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        self.assertIn('CIVILIZATION_WINDOW_SIZE="2622x1206"', proc.stdout)
+        self.assertIn('CIVILIZATION_DEVICE="phone"', proc.stdout)
+        self.assertIn('CIVILIZATION_LOCAL_SERVER="1"', proc.stdout)
+
+    def test_alias_export_aab_uses_aab_script(self):
+        proc = self._run_make(["-n", "export-aab"])
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        self.assertIn("android_export.sh aab", proc.stdout)
+
+    def test_alias_export_ios_passes_env(self):
+        proc = self._run_make(["-n", "export-ios", "ENV=dev"])
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        line = self._gen_line(proc)
+        self.assertIn(DEV_URL, line)
+        self.assertIn("--require-url", line)
+
+    def test_alias_platform_overrides_conflicting_argument(self):
+        proc = self._run_make(["-n", "export-ios", "PLATFORM=bogus"])
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        self.assertIn('--export-release "iOS"', proc.stdout)
 
     def test_generator_dev_allows_ws_url(self):
         with tempfile.TemporaryDirectory() as tmp:

@@ -62,16 +62,6 @@ pub struct TierBand {
 pub struct RankedConfig {
     /// Elo K 系数。
     pub k: f64,
-    /// 初始匹配窗口（±分）。
-    pub initial_window: i32,
-    /// 等待一个放宽步长后的窗口。
-    pub relaxed_window: i32,
-    /// 等待两个放宽步长后的窗口。
-    pub wide_window: i32,
-    /// 每次放宽窗口的等待间隔。
-    pub relax_step_ms: u64,
-    /// 超过该等待时长后不再限制积分。
-    pub unlimited_after_ms: u64,
     /// 等待满该时长后不再排除最近对手。
     pub recent_opponent_relax_ms: u64,
     /// 宗师判定使用的前 N 名。
@@ -84,11 +74,6 @@ impl Default for RankedConfig {
     fn default() -> Self {
         Self {
             k: DEFAULT_K_FACTOR,
-            initial_window: queue::INITIAL_RATING_WINDOW,
-            relaxed_window: queue::RELAXED_RATING_WINDOW,
-            wide_window: queue::WIDE_RATING_WINDOW,
-            relax_step_ms: queue::WINDOW_RELAX_STEP_MS,
-            unlimited_after_ms: queue::UNLIMITED_AFTER_MS,
             recent_opponent_relax_ms: queue::RECENT_OPPONENT_RELAX_MS,
             master_rank_limit: DEFAULT_MASTER_RANK_LIMIT,
             tiers: default_tiers(),
@@ -158,15 +143,6 @@ impl RankedConfig {
         if !self.k.is_finite() || self.k <= 0.0 {
             return Err("RANKED_CONFIG: k 必须是正数".to_string());
         }
-        if self.initial_window < 0 || self.relaxed_window < 0 || self.wide_window < 0 {
-            return Err("RANKED_CONFIG: 匹配窗口不能为负".to_string());
-        }
-        if self.relax_step_ms == 0 {
-            return Err("RANKED_CONFIG: relaxStepMs 必须大于 0".to_string());
-        }
-        if self.unlimited_after_ms < self.relax_step_ms.saturating_mul(2) {
-            return Err("RANKED_CONFIG: unlimitedAfterMs 不能早于第二次放宽".to_string());
-        }
         if self.master_rank_limit == 0 {
             return Err("RANKED_CONFIG: masterRankLimit 必须大于 0".to_string());
         }
@@ -198,20 +174,6 @@ impl RankedConfig {
             previous = Some(band.min_rating);
         }
         Ok(())
-    }
-
-    /// 当前等待时长对应的匹配窗口；`None` 表示不限积分。
-    #[must_use]
-    pub fn window_for(&self, waited_ms: u64) -> Option<i32> {
-        if waited_ms < self.relax_step_ms {
-            Some(self.initial_window)
-        } else if waited_ms < self.relax_step_ms.saturating_mul(2) {
-            Some(self.relaxed_window)
-        } else if waited_ms < self.unlimited_after_ms {
-            Some(self.wide_window)
-        } else {
-            None
-        }
     }
 
     /// 仅按积分算出的段位 id；宗师排名条件由 [`RatingStore::tier`] 叠加。
@@ -761,10 +723,6 @@ mod tests {
         assert_eq!(config.rating_tier(1099), "bronze");
         assert_eq!(config.rating_tier(1100), "silver");
         assert_eq!(config.rating_tier(1900), "grandmaster");
-        assert_eq!(config.window_for(0), Some(150));
-        assert_eq!(config.window_for(30_000), Some(300));
-        assert_eq!(config.window_for(60_000), Some(500));
-        assert_eq!(config.window_for(90_000), None);
     }
 
     #[test]

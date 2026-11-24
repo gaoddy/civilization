@@ -24,11 +24,6 @@ config:
   # 调整后按当前积分实时重算。字段名与 room-service 的 RankedConfig 一致。
   rankedConfig:
     k: 200
-    initialWindow: 150
-    relaxedWindow: 300
-    wideWindow: 500
-    relaxStepMs: 30000
-    unlimitedAfterMs: 90000
     recentOpponentRelaxMs: 60000
     masterRankLimit: 500
     tiers:

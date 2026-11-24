@@ -248,11 +248,11 @@ func _ready() -> void:
 
 拖动缩放后不再调整窗口尺寸；全屏、最大化不介入。
 
-`make client-run` 的 `WIDTH` 与 `HEIGHT` 指定窗口像素尺寸，`CLIENT_DEVICE` 指定设备档位（`phone` / `tablet` / `desktop`）。只传尺寸不改档位；模拟移动端布局需同时指定档位：
+`make client-run` 的 `WIDTH` 与 `HEIGHT` 指定窗口像素尺寸，`DEVICE` 指定设备档位（`phone` / `tablet` / `desktop`，或整机预设 `iphone` / `ipad`）。只传尺寸不改档位；模拟移动端布局需同时指定档位：
 
 ```bash
-make client-run WIDTH=960 HEIGHT=540 CLIENT_DEVICE=phone   # 模拟 iPhone 档位
-make client-run WIDTH=1280 HEIGHT=800                      # 只模拟 16:10 窗口尺寸
+make client-run WIDTH=960 HEIGHT=540 DEVICE=phone   # 模拟 iPhone 档位
+make client-run WIDTH=1280 HEIGHT=800                # 只模拟 16:10 窗口尺寸
 ```
 
 ### 移动端
@@ -392,20 +392,20 @@ A: 基准尺寸是架构约束，不是可配置参数。所有设备只有两�
 
 ### Q: 如何在桌面端测试不同设备？
 
-A: 用 `make client-run` 的 `WIDTH`、`HEIGHT` 指定窗口像素尺寸，`CLIENT_DEVICE` 指定设备档位：
+A: 用 `make client-run` 的 `WIDTH`、`HEIGHT` 指定窗口像素尺寸，`DEVICE` 指定设备档位：
 
 ```bash
 # 模拟 iPhone 档位（960×540 逻辑基准、紧凑卡面、触控输入）
-make client-run-on-iphone
+make client-run DEVICE=iphone
 
 # 模拟 iPad 档位
-make client-run-on-ipad
+make client-run DEVICE=ipad
 
 # 只模拟 16:10 窗口尺寸，设备档位仍按桌面
 make client-run WIDTH=1280 HEIGHT=800
 ```
 
-设备档位也可直接传 `CLIENT_DEVICE`；`ScreenProfile.set_device_for_test()` 只用于测试代码。
+设备档位也可直接传 `DEVICE`；`ScreenProfile.set_device_for_test()` 只用于测试代码。
 
 ## 相关文档
 

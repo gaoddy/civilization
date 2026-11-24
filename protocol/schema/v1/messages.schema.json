@@ -249,7 +249,7 @@
     "QueueState": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["waitingMs", "waitingPlayers", "ratingWindow"],
+      "required": ["waitingMs", "waitingPlayers"],
       "properties": {
         "waitingMs": { "type": "integer", "minimum": 0, "description": "本人已等待时长（毫秒）" },
         "waitingPlayers": {
@@ -257,11 +257,6 @@
           "minimum": 0,
           "maximum": 8,
           "description": "当前队列里的玩家数，客户端显示为「已凑 X/8」"
-        },
-        "ratingWindow": {
-          "type": ["integer", "null"],
-          "minimum": 0,
-          "description": "当前匹配积分半径；null 表示不限积分"
         }
       }
     },

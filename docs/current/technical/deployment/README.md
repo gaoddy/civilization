@@ -74,7 +74,7 @@ prod 首次新增 hostname 时，platform 侧还需要同步 satori nginx 转发
 
 服务端地址由客户端构建配置决定，登录页不再提供服务器输入。客户端构建环境分 `local`、`dev`、`prod` 三档，默认 `local`；参数写 `ENV=` 或 `env=` 均可。
 
-- 开发构建（`make client-export ENV=dev`、`make client-export-ios ENV=dev`；环境默认 `local`，连 dev 入口必须显式传 `ENV=dev` 或 `env=dev`）内置 dev 公网入口：
+- 开发构建（`make client-export ENV=dev`、`make client-export PLATFORM=ios ENV=dev`；环境默认 `local`，连 dev 入口必须显式传 `ENV=dev` 或 `env=dev`）内置 dev 公网入口：
 
 ```text
 wss://civilization.satori.host/ws

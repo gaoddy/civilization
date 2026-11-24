@@ -66,7 +66,7 @@
 
 | 命令 | 行为 |
 | --- | --- |
-| `make client-export-steam SERVER_URL=wss://… STEAM_APP_ID=…` | 临时写入发布配置后导出 `output/steam/Civilization.app`，校验 `libsteam_api.dylib` 同时含 `x86_64` 与 `arm64`，退出时恢复空配置 |
+| `make client-export PLATFORM=steam SERVER_URL=wss://… STEAM_APP_ID=…` | 临时写入发布配置后导出 `output/steam/Civilization.app`，校验 `libsteam_api.dylib` 同时含 `x86_64` 与 `arm64`，退出时恢复空配置 |
 | `make client-notarize CODESIGN_IDENTITY=… NOTARY_PROFILE=…` | 先签 `Contents/Frameworks/*.dylib`，再以 hardened runtime 与 `deploy/steam/entitlements.plist` 签 `.app`；验证后提交公证、staple 并用 `spctl` 复核 |
 | `make steam-upload STEAM_APP_ID=… STEAM_DEPOT_ID=… STEAM_USER=…` | 要求产物已签名；渲染 `deploy/steam/*.vdf` 到输出目录后调用 `steamcmd`，密码交互输入 |
 
