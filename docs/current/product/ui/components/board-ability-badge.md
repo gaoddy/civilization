@@ -11,7 +11,7 @@
 ## 外观与尺寸
 
 - 叠在卡片右上角、纵向排列，不进入卡面内部；顶部避开 ★/潜行角标行，底部为攻血数值留出空间。
-- 文本为 `◆<费用>×<剩余次数>`；`◆` 是费用字形，内置字体子集不含 `⚡`。
+- 文本按文案键 `ui.game.minion_ability.badge`（默认模板 `◆<费用>×<剩余次数>`）；`◆` 是费用字形，内置字体子集不含 `⚡`。
 - 高度上限取 `hit_small()`，宽度取 `space-3xl + space-lg`，字号 `font-caption`；样式取 `UITheme.button_style("slot", state)`，可发动时用强调色描边。
 - 不可用（`can_use = false`）时置灰、文本转 `color-text-muted`，不响应点击。
 - 悬停 tooltip 依次显示技能名与技能文本（`CardDB.skill_info`），缺省时留空，不暴露技能 id。
@@ -27,7 +27,7 @@
 
 - `GameRecruitView._minion_card` 在卡片外层建 `AbilityBadges` 容器，按 `abilities` 顺序实例化 `MinionAbility<position>_<skillIndex>`，并把角标登记到 `_ability_badges` 供 `ability_rect()` 查询。
 - 页面连接 `minion_ability_pressed` / `minion_ability_down`：不需要目标时点击直接发 `UseMinionAbility { minionId, skillId }`；需要目标且可用时按下缓存含 `minionId` / `skillId` 的意图，从 `ability_rect()` 起手复用 `GameAimLayer.begin_skill`，命中候选后补 `target` 提交。
-- 拖动棋盘卡仍从卡身开始，角标不参与拖拽；视图重建时清空登记并重排角标。
+- 拖动棋盘卡仍从卡身开始，角标不参与拖拽；拖拽进行期间角标让出命中（`MOUSE_FILTER_IGNORE`），落点仍由棋盘容器处理；视图重建时清空登记并重排角标。
 
 ## 边界
 
