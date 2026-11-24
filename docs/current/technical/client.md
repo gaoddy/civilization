@@ -274,11 +274,12 @@ client/
 | `make font-subset` | 由文本表 + ASCII + GB2312 生成内置中文字体子集 `client/assets/fonts/NotoSansSC-Regular-subset.ttf`；见 §6 |
 | `make client-import` | 导入客户端工程，默认用 `godot --headless --path client --import`（CPU 压缩）；`CLIENT_IMPORT_GPU=1` 改走非无头导入（仅 S3TC/HDR 纹理能用 GPU 压缩），`auto` 按图形会话自动判断。PNG 纹理导入本身走线程池，见 §10 |
 | `make client-cache-copy` | 从主检出复制 `client/.godot/imported` 与全部 `*.import` 旁车到当前 worktree，跳过纹理冷编码；随后照常 `make client-import` 只补增量产物。在主检出执行时为空跑；主检出缺缓存时失败并提示先执行 `client-import`，见 §10 |
-| `make client-run` | 先导入再启动桌面客户端；新增或改名 `class_name` 脚本后必须走这个入口，否则沿用旧全局类缓存。`DEVICE` 取 `phone`、`tablet`、`desktop` 时按该设备档位运行，取 `iphone`、`ipad` 时同时套用验收机横屏尺寸；同时传 `WIDTH=<宽> HEIGHT=<高>` 时按指定像素开窗并覆盖预设尺寸。显式传入 `DEVICE` 时默认内嵌启动本机服务端与 7 个机器人（`LOCAL_SERVER=1`），不传 `DEVICE` 时保持关闭；也可用 `LOCAL_SERVER=0/1` 显式覆盖。`PLATFORM=ios` 改为导出并安装到真机，见 §5、§9 |
+| `make client-run` | 先导入再启动桌面客户端；新增或改名 `class_name` 脚本后必须走这个入口，否则沿用旧全局类缓存。`DEVICE` 取 `phone`、`tablet`、`desktop` 时按该设备档位运行，取 `iphone`、`ipad` 时同时套用验收机横屏尺寸；同时传 `WIDTH=<宽> HEIGHT=<高>` 时按指定像素开窗并覆盖预设尺寸。显式传入 `DEVICE` 且环境为 `local` 时默认内嵌启动本机服务端与 7 个机器人（`LOCAL_SERVER=1`），`dev`/`prod` 与不传 `DEVICE` 时保持关闭；也可用 `LOCAL_SERVER=0/1` 显式覆盖。运行前按 `ENV`/`env` 写入连接地址：`local` 为空配置，`dev`/`prod` 临时写入对应 `BuildConfig.SERVER_URL` 并在退出后恢复。`PLATFORM=ios` 改为导出并安装到真机，见 §5、§9 |
 | `make client-run PLATFORM=ios` | 导出 iOS 签名包后用 `xcrun devicectl` 安装到真机并启动；默认第一台已连接的 iPhone，`IOS_DEVICE_TYPE=ipad` 改选第一台已连接的 iPad，`IOS_DEVICE` 指定具体设备（设备名或 UDID），`IOS_LAUNCH=0` 只安装 |
-| `make run-iphone` / `run-ipad` / `run-desktop` / `run-phone` / `run-tablet` | `client-run` 的常用设备别名，分别固定 `DEVICE=`；`run-iphone` 与 `run-ipad` 同时套用验收机尺寸，显式 `DEVICE` 默认带本地服务。`make run` 等价于不带参数的 `client-run` |
-| `make run-ios` | 等价于 `make client-run PLATFORM=ios` |
+| `make run-<设备>-<环境>` | `client-run` 的设备与环境别名：设备取 `desktop` / `iphone` / `ipad` / `phone` / `tablet`，环境取 `local` / `dev` / `prod`，共 15 个（如 `run-desktop-dev`、`run-iphone-local`）。设备含义同 `DEVICE`；`local` 默认内嵌本地服务，`dev` / `prod` 默认不启本地服务，并在启动前临时写入对应地址、退出后恢复。`make run` 等价于不带参数的 `client-run` |
+| `make run-iphone` / `run-ipad` / `run-desktop` / `run-phone` / `run-tablet` | 旧设备别名，保留为对应 `local` 快捷入口（等价于 `run-<设备>-local`）；`run-iphone` 与 `run-ipad` 同时套用验收机尺寸 |
 | `make run-ios-<设备>-<环境>` | 同时固定 `PLATFORM=ios`、设备类型与 `ENV`：设备取 `iphone` / `ipad`，环境取 `local` / `dev` / `prod`，共 6 个（如 `run-ios-ipad-dev`）。设备类型交给脚本自动选已连接的同类型设备，`IOS_DEVICE` 仍可覆盖具体设备；`local` 写空配置，`dev` 写开发公网入口，`prod` 需要先配置 `CLIENT_PROD_SERVER_URL` |
+| `make run-ios` | 旧真机别名，保留为 `run-ios-iphone-local`（默认 iPhone） |
 | `make export-macos` / `export-local` / `export-steam` / `export-ios` / `export-android` / `export-aab` | `client-export` 的平台别名，分别固定 `PLATFORM=`；`export-aab` 同时设 `AAB=1`。`make export` 等价于默认 `client-export`（macOS）。`ENV`、`SERVER_URL`、`STEAM_APP_ID` 等参数照常透传 |
 | `make export-<平台>-<环境>` | 同时固定 `PLATFORM` 与 `ENV`：平台取 `macos` / `ios` / `android`，环境取 `local` / `dev` / `prod`，共 9 个（如 `export-ios-dev`、`export-android-prod`）。`local` 写空配置，`dev` 写开发公网入口，`prod` 需要先配置 `CLIENT_PROD_SERVER_URL`。Android AAB 仍用 `make export-aab ENV=…` |
 | `make client-check` | 协议/数据/文本表漂移 + 客户端边界断言 + 国际化断言 + 工程导入 |
@@ -317,7 +318,7 @@ make client-run WIDTH=2556 HEIGHT=1179               # iPhone 横屏物理像素
 
 指定尺寸只改变窗口大小并居中，不改变设备档位；不传时窗口按屏幕可用区自动收拢。尺寸不合法或只传一个时命令直接报错，不启动客户端。
 
-在桌面模拟移动端布局与触控交互时，用 `DEVICE` 指定设备档位：`phone` / `tablet` / `desktop`，也接受整机预设 `iphone` / `ipad`（见下）。其余值直接报错，不再按平台自动回落。手机档使用 960×540 逻辑基准与紧凑卡面，触控端控件尺寸生效，并在启动时开启鼠标模拟触摸，卡牌长按详情、拖拽与瞄准走真实触控路径。非真机触控平台不读系统屏幕安全区与虚拟键盘，避免桌面整屏安全区算出错误边距。设备档位不改变默认连接地址：桌面模拟档位仍连 `ws://127.0.0.1:8080/ws`。
+在桌面模拟移动端布局与触控交互时，用 `DEVICE` 指定设备档位：`phone` / `tablet` / `desktop`，也接受整机预设 `iphone` / `ipad`（见下）。其余值直接报错，不再按平台自动回落。手机档使用 960×540 逻辑基准与紧凑卡面，触控端控件尺寸生效，并在启动时开启鼠标模拟触摸，卡牌长按详情、拖拽与瞄准走真实触控路径。非真机触控平台不读系统屏幕安全区与虚拟键盘，避免桌面整屏安全区算出错误边距。设备档位不改变默认连接地址：`local` 环境仍连 `ws://127.0.0.1:8080/ws`；`dev` / `prod` 由 `run-<设备>-<环境>` 在启动前临时写入对应 `BuildConfig.SERVER_URL`，退出后恢复。
 
 常用整机预设同时给出验收机横屏尺寸与设备档位：
 
@@ -327,7 +328,7 @@ make client-run DEVICE=ipad                        # 2360×1640，tablet 档位
 make client-run DEVICE=desktop                     # 窗口按屏幕可用区自动收拢
 ```
 
-显式传入 `DEVICE` 时默认带本地服务（等价于追加 `LOCAL_SERVER=1`）：客户端启动后由 `LocalServer` 在 `server/target/debug` 下内嵌拉起 `room-service` 与 7 个机器人，服务端就绪后自动登录，拿到房间码后自动入房，无需另开终端跑 `make dev-bots`。不传 `DEVICE` 的 `make client-run` 不启动本地服务；可用 `LOCAL_SERVER=0` 或 `LOCAL_SERVER=1` 显式覆盖。客户端正常退出时一并回收它自己启动的服务端与机器人（`Ctrl-C` 同进程组一并结束）；若 8080 上已有可复用的服务端则直接复用，既不再启动也不回收。内嵌服务端只监听 `127.0.0.1:8080`，真机联调仍需用 `make dev-bots`。
+显式传入 `DEVICE` 且环境为 `local` 时默认带本地服务（等价于追加 `LOCAL_SERVER=1`）：客户端启动后由 `LocalServer` 在 `server/target/debug` 下内嵌拉起 `room-service` 与 7 个机器人，服务端就绪后自动登录，拿到房间码后自动入房，无需另开终端跑 `make dev-bots`。`dev` / `prod` 环境与不传 `DEVICE` 的 `make client-run` 不启动本地服务；可用 `LOCAL_SERVER=0` 或 `LOCAL_SERVER=1` 显式覆盖。客户端正常退出时一并回收它自己启动的服务端与机器人（`Ctrl-C` 同进程组一并结束）；若 8080 上已有可复用的服务端则直接复用，既不再启动也不回收。内嵌服务端只监听 `127.0.0.1:8080`，真机联调仍需用 `make dev-bots`。
 
 客户端一律用 `make client-run` 启动：它会先 `--import` 刷新全局类缓存。直接跑 `Godot --path client` 时，若工程新增或改名过 `class_name` 脚本而缓存未更新，依赖它的脚本编译失败，对局页会缺整块区域（例如中央舞台整体不构建，只剩右上角工具组与左栏）。
 
@@ -411,7 +412,7 @@ make ui-preview SETUP=res://tests/previews/game_rail.gd     # 无 .tscn 的组�
 - 两个目标只在 macOS 上可用，非 Darwin 主机直接报错退出；本机引擎版本与固定版本不符时同样退出非 0。
 - Universal 导出要求 `project.godot` 启用 `rendering/textures/vram_compression/import_etc2_astc` 与 `import_s3tc_bptc`，缺失时 Godot 会拒绝导出。
 - 产物未做正式签名与公证：`codesign/codesign=0` 禁用导出时的重签，但可执行文件仍保留 Godot 模板内置的 ad-hoc 签名。首次打开需右键「打开」，或在「系统设置 → 隐私与安全性」中放行；经 zip 下载后解压的副本同样会被 Gatekeeper 拦截。
-- 导出物内置服务器地址由构建环境决定：release 导出按 `ENV`/`env` 写入地址（`local` 为空配置，`dev` 为 `wss://civilization.satori.host/ws`，`prod` 取 `CLIENT_PROD_SERVER_URL`）；编辑器运行与 `make client-export PLATFORM=local` 同样为空配置，回落到桌面 `ws://127.0.0.1:8080/ws`、移动端 `ws://cooter.local:8080/ws`。`PLATFORM=local` 与 `PLATFORM=steam` 不接受 `ENV`：前者始终使用空配置，后者只读 `SERVER_URL` 与 `STEAM_APP_ID`，显式传 `ENV` 直接报错。登录页不提供服务器输入，运行时始终使用构建配置或平台默认值。连接前 `ws://` 地址的主机名先解析为 IPv4，避免双栈主机名拿到 IPv6；`wss://` 保留域名以满足证书校验。
+- 导出物内置服务器地址由构建环境决定：release 导出按 `ENV`/`env` 写入地址（`local` 为空配置，`dev` 为 `wss://civilization.satori.host/ws`，`prod` 取 `CLIENT_PROD_SERVER_URL`）；编辑器运行按 `ENV`/`env` 生效：`local` 为空配置（默认），`dev` / `prod` 在启动前临时写入对应地址并在退出后恢复；`make client-export PLATFORM=local` 始终为空配置，回落到桌面 `ws://127.0.0.1:8080/ws`、移动端 `ws://cooter.local:8080/ws`。`PLATFORM=local` 与 `PLATFORM=steam` 不接受 `ENV`：前者始终使用空配置，后者只读 `SERVER_URL` 与 `STEAM_APP_ID`，显式传 `ENV` 直接报错。登录页不提供服务器输入，运行时始终使用构建配置或平台默认值。连接前 `ws://` 地址的主机名先解析为 IPv4，避免双栈主机名拿到 IPv6；`wss://` 保留域名以满足证书校验。
 
 ### 单机调试包
 

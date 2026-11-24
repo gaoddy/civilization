@@ -116,13 +116,23 @@ client-smoke: client-import
 	  done; \
 	fi
 
+# 客户端构建环境：local / dev / prod，默认 local。ENV 与 env 等价，同时传且值不同直接失败。
+# local 写空配置，客户端运行时按平台回落本机调试地址；dev 写开发公网入口；prod 读正式地址
+# （当前为空，配置前运行或导出直接失败，避免把开发包当正式包）。
+# 定义放在运行参数之前：client-run 的前置依赖在解析期就要读取 CLIENT_ENV。
+CLIENT_DEV_SERVER_URL ?= wss://civilization.satori.host/ws
+CLIENT_PROD_SERVER_URL ?=
+CLIENT_ENV = $(if $(and $(filter command line environment,$(origin ENV)),$(strip $(ENV))),$(strip $(ENV)),$(if $(and $(filter command line environment,$(origin env)),$(strip $(env))),$(strip $(env)),local))
+CLIENT_SERVER_URL = $(if $(filter prod,$(CLIENT_ENV)),$(CLIENT_PROD_SERVER_URL),$(if $(filter dev,$(CLIENT_ENV)),$(CLIENT_DEV_SERVER_URL),))
+CLIENT_REQUIRE_SERVER = $(if $(filter prod,$(CLIENT_ENV)),--require-server,$(if $(filter dev,$(CLIENT_ENV)),--require-url,))
+
 # 运行参数：DEVICE 是设备档位（desktop / tablet / phone）或整机预设（iphone / ipad，
 # 同时给出验收机横屏尺寸）。WIDTH/HEIGHT 显式传入时覆盖预设尺寸，两者必须同时给出。
-# 显式传入 DEVICE 时默认带上本地服务端与机器人；不传 DEVICE 时保持关闭。
+# 显式传入 DEVICE 且环境为 local 时默认带上本地服务端与机器人；dev/prod 与不传 DEVICE 时关闭。
 WIDTH ?=
 HEIGHT ?=
 DEVICE ?=
-LOCAL_SERVER ?= $(if $(strip $(DEVICE)),1,0)
+LOCAL_SERVER ?= $(if $(strip $(DEVICE)),$(if $(filter local,$(CLIENT_ENV)),1,0),0)
 SIDECAR_DIR ?= $(CURDIR)/server/target/debug
 
 # 平台入口：client-run 支持 macos（编辑器）与 ios（真机）；client-export 支持全部发行平台。
@@ -146,6 +156,7 @@ CLIENT_EXPORT_TARGET := _client-export-$(if $(filter $(CLIENT_EXPORT_PLATFORMS),
 #   make client-run DEVICE=ipad LOCAL_SERVER=0       # 平板尺寸，不启本地服务
 #   make client-run WIDTH=960 HEIGHT=540             # 自定义窗口
 #   make client-run PLATFORM=ios                     # 真机安装运行
+#   make run-desktop-dev                             # 桌面编辑器连开发服
 #   make run-ios-ipad-dev                            # 导出并安装到 iPad，连开发服
 client-run: client-run-platform-check client-run-check $(CLIENT_RUN_TARGET)
 
@@ -157,8 +168,12 @@ client-run-check:
 	@$(if $(filter 0 1,$(LOCAL_SERVER)),,$(error LOCAL_SERVER 只能是 0 或 1，收到：$(LOCAL_SERVER)))
 	@$(if $(strip $(WIDTH)),$(if $(strip $(HEIGHT)),,$(error WIDTH 与 HEIGHT 需同时传入正整数)),$(if $(strip $(HEIGHT)),$(error WIDTH 与 HEIGHT 需同时传入正整数),))
 
-_client-run-macos: client-import $(if $(filter 1,$(LOCAL_SERVER)),server-build)
+# 编辑器运行接受 ENV：local 写空配置并回落本机地址；dev/prod 在启动前临时写入对应
+# BuildConfig.SERVER_URL，退出后由 EXIT trap 恢复。dev/prod 默认不启本地服务端。
+_client-run-macos: client-env-check client-import $(if $(filter 1,$(LOCAL_SERVER)),server-build)
 	@set -e; \
+	if [ "$(CLIENT_ENV)" != "local" ]; then $(CLIENT_BACKUP_CONFIG); fi; \
+	SERVER_URL="$(CLIENT_SERVER_URL)" STEAM_APP_ID="" $(PYTHON) scripts/gen_build_config.py $(CLIENT_REQUIRE_SERVER); \
 	w="$(CLIENT_RUN_WIDTH)"; h="$(CLIENT_RUN_HEIGHT)"; \
 	if [ -n "$$w" ] || [ -n "$$h" ]; then \
 	  case "$$w" in ''|*[!0-9]*) echo "WIDTH 与 HEIGHT 需同时传入正整数：make client-run WIDTH=960 HEIGHT=540" >&2; exit 1 ;; esac; \
@@ -259,15 +274,6 @@ client-export-templates: client-godot-check
 	  cp -R "$$tmp/unpacked/templates/." "$(GODOT_TEMPLATE_DIR)/" || { echo "导出模板复制失败" >&2; exit 1; }; \
 	  echo "导出模板已安装：$(GODOT_TEMPLATE_DIR)"; \
 	fi
-
-# 客户端导出环境：local / dev / prod，默认 local。ENV 与 env 等价，同时传且值不同直接失败。
-# local 写空配置，客户端运行时按平台回落本机调试地址；dev 写开发公网入口；prod 读正式地址
-# （当前为空，配置前导出直接失败，避免把开发包当正式包）。
-CLIENT_DEV_SERVER_URL ?= wss://civilization.satori.host/ws
-CLIENT_PROD_SERVER_URL ?=
-CLIENT_ENV = $(if $(and $(filter command line environment,$(origin ENV)),$(strip $(ENV))),$(strip $(ENV)),$(if $(and $(filter command line environment,$(origin env)),$(strip $(env))),$(strip $(env)),local))
-CLIENT_SERVER_URL = $(if $(filter prod,$(CLIENT_ENV)),$(CLIENT_PROD_SERVER_URL),$(if $(filter dev,$(CLIENT_ENV)),$(CLIENT_DEV_SERVER_URL),))
-CLIENT_REQUIRE_SERVER = $(if $(filter prod,$(CLIENT_ENV)),--require-server,$(if $(filter dev,$(CLIENT_ENV)),--require-url,))
 
 client-env-check:
 	@$(if $(and $(filter command line environment,$(origin ENV)),$(filter command line environment,$(origin env)),$(strip $(ENV)),$(strip $(env))),$(if $(filter $(strip $(ENV)),$(strip $(env))),,$(error ENV 与 env 不能同时传不同值：ENV=$(ENV) env=$(env))),)
@@ -452,27 +458,41 @@ _client-export-android: client-export-android-check client-env-check client-expo
 
 # 快速别名：常用设备与平台的短入口，等价于带参数的 client-run / client-export。
 # 命令行传入的 ENV、SERVER_URL、STEAM_APP_ID、WIDTH/HEIGHT、LOCAL_SERVER 等会原样传给子 make；
-# 别名自身指定的 DEVICE / PLATFORM / AAB 优先。
+# 别名自身指定的 DEVICE / PLATFORM / ENV / AAB 优先。
+# 基础命令 make run / make client-run 不带环境（ENV 可选，默认 local）；其余运行别名显式带环境：
+# run-<设备>-<环境>（编辑器运行）与 run-ios-<设备>-<环境>（真机运行）。
 run:
 	@$(MAKE) --no-print-directory client-run
 
+CLIENT_RUN_DEVICES := desktop iphone ipad phone tablet
+CLIENT_RUN_ENVS := local dev prod
+
+define client_run_device_alias
+.PHONY: run-$(1)-$(2)
+run-$(1)-$(2):
+	@$$(MAKE) --no-print-directory client-run DEVICE=$(1) ENV=$(2)
+endef
+
+$(foreach device,$(CLIENT_RUN_DEVICES),$(foreach env,$(CLIENT_RUN_ENVS),$(eval $(call client_run_device_alias,$(device),$(env)))))
+
+# 旧设备别名保留为 local 快捷入口，等价于对应的 run-<设备>-local。
 run-iphone:
-	@$(MAKE) --no-print-directory client-run DEVICE=iphone
+	@$(MAKE) --no-print-directory client-run DEVICE=iphone ENV=local
 
 run-ipad:
-	@$(MAKE) --no-print-directory client-run DEVICE=ipad
+	@$(MAKE) --no-print-directory client-run DEVICE=ipad ENV=local
 
 run-desktop:
-	@$(MAKE) --no-print-directory client-run DEVICE=desktop
+	@$(MAKE) --no-print-directory client-run DEVICE=desktop ENV=local
 
 run-phone:
-	@$(MAKE) --no-print-directory client-run DEVICE=phone
+	@$(MAKE) --no-print-directory client-run DEVICE=phone ENV=local
 
 run-tablet:
-	@$(MAKE) --no-print-directory client-run DEVICE=tablet
+	@$(MAKE) --no-print-directory client-run DEVICE=tablet ENV=local
 
 run-ios:
-	@$(MAKE) --no-print-directory client-run PLATFORM=ios
+	@$(MAKE) --no-print-directory client-run PLATFORM=ios ENV=local
 
 export:
 	@$(MAKE) --no-print-directory client-export
@@ -527,7 +547,6 @@ export-android-prod:
 # iOS 运行别名：run-ios-<设备>-<环境>，设备取 iphone / ipad，环境取 local / dev / prod。
 # 同时固定 PLATFORM=ios、设备类型与 ENV；IOS_DEVICE 仍可指定具体设备并覆盖自动选择。
 CLIENT_RUN_IOS_DEVICES := iphone ipad
-CLIENT_RUN_IOS_ENVS := local dev prod
 
 define client_run_ios_alias
 .PHONY: run-ios-$(1)-$(2)
@@ -535,4 +554,4 @@ run-ios-$(1)-$(2):
 	@$$(MAKE) --no-print-directory client-run PLATFORM=ios IOS_DEVICE_TYPE=$(1) ENV=$(2)
 endef
 
-$(foreach device,$(CLIENT_RUN_IOS_DEVICES),$(foreach env,$(CLIENT_RUN_IOS_ENVS),$(eval $(call client_run_ios_alias,$(device),$(env)))))
+$(foreach device,$(CLIENT_RUN_IOS_DEVICES),$(foreach env,$(CLIENT_RUN_ENVS),$(eval $(call client_run_ios_alias,$(device),$(env)))))
