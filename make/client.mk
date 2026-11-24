@@ -17,7 +17,10 @@ CLIENT_IMPORT_GPU ?= 0
 	_client-export-android _client-export-invalid client-export-android-check client-notarize steam-upload \
 	ui-wireframe ui-preview ui-preview-check \
 	run export run-iphone run-ipad run-phone run-tablet run-desktop run-ios \
-	export-macos export-local export-steam export-ios export-android export-aab
+	export-macos export-local export-steam export-ios export-android export-aab \
+	export-macos-local export-macos-dev export-macos-prod \
+	export-ios-local export-ios-dev export-ios-prod \
+	export-android-local export-android-dev export-android-prod
 
 # 本机引擎必须与固定的补丁版本一致，避免用错版本导入或导出。
 client-godot-check:
@@ -484,3 +487,32 @@ export-android:
 
 export-aab:
 	@$(MAKE) --no-print-directory client-export PLATFORM=android AAB=1
+
+# 带环境的导出别名：export-<平台>-<环境>，同时固定 PLATFORM 与 ENV。
+# 环境取 local / dev / prod；prod 需要先配置 CLIENT_PROD_SERVER_URL，否则导出报错。
+export-macos-local:
+	@$(MAKE) --no-print-directory client-export PLATFORM=macos ENV=local
+
+export-macos-dev:
+	@$(MAKE) --no-print-directory client-export PLATFORM=macos ENV=dev
+
+export-macos-prod:
+	@$(MAKE) --no-print-directory client-export PLATFORM=macos ENV=prod
+
+export-ios-local:
+	@$(MAKE) --no-print-directory client-export PLATFORM=ios ENV=local
+
+export-ios-dev:
+	@$(MAKE) --no-print-directory client-export PLATFORM=ios ENV=dev
+
+export-ios-prod:
+	@$(MAKE) --no-print-directory client-export PLATFORM=ios ENV=prod
+
+export-android-local:
+	@$(MAKE) --no-print-directory client-export PLATFORM=android ENV=local
+
+export-android-dev:
+	@$(MAKE) --no-print-directory client-export PLATFORM=android ENV=dev
+
+export-android-prod:
+	@$(MAKE) --no-print-directory client-export PLATFORM=android ENV=prod

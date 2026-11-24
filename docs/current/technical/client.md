@@ -274,6 +274,7 @@ client/
 | `make run-iphone` / `run-ipad` / `run-desktop` / `run-phone` / `run-tablet` | `client-run` 的常用设备别名，分别固定 `DEVICE=`；`run-iphone` 与 `run-ipad` 同时套用验收机尺寸，显式 `DEVICE` 默认带本地服务。`make run` 等价于不带参数的 `client-run` |
 | `make run-ios` | 等价于 `make client-run PLATFORM=ios` |
 | `make export-macos` / `export-local` / `export-steam` / `export-ios` / `export-android` / `export-aab` | `client-export` 的平台别名，分别固定 `PLATFORM=`；`export-aab` 同时设 `AAB=1`。`make export` 等价于默认 `client-export`（macOS）。`ENV`、`SERVER_URL`、`STEAM_APP_ID` 等参数照常透传 |
+| `make export-<平台>-<环境>` | 同时固定 `PLATFORM` 与 `ENV`：平台取 `macos` / `ios` / `android`，环境取 `local` / `dev` / `prod`，共 9 个（如 `export-ios-dev`、`export-android-prod`）。`local` 写空配置，`dev` 写开发公网入口，`prod` 需要先配置 `CLIENT_PROD_SERVER_URL`。Android AAB 仍用 `make export-aab ENV=…` |
 | `make client-check` | 协议/数据/文本表漂移 + 客户端边界断言 + 国际化断言 + 工程导入 |
 | `make client-env-check` | 校验客户端构建环境只能是 `local`、`dev` 或 `prod`，默认 `local`；`ENV` 与 `env` 等价，同时传且值不同直接失败；`dev`/`prod` 分别要求 `CLIENT_DEV_SERVER_URL` / `CLIENT_PROD_SERVER_URL`，未配置直接失败 |
 | `make client-smoke` | 用 glob 逐个运行 `ui_smoke*.tscn` 冒烟场景，要求各自输出 `UI_SMOKE_OK` 且无 `SCRIPT ERROR`；任一场景断言失败时不输出 `UI_SMOKE_OK`，目标以非 0 退出；`SMOKE=<名称>` 只跑 `ui_smoke_<名称>.tscn` |
