@@ -1606,6 +1606,7 @@ ui.game.hero_pick.progress,已选 %d/8
 ui.game.hero_pick.timeout,时间到，已自动选择
 ui.game.hero_pick.title,选择英雄
 ui.game.hero_pick.waiting,等待其他玩家选择…
+ui.game.minion_ability.badge,◆%d×%d
 ui.game.overlay.discover_hint,发现：选择一张卡牌
 ui.game.overlay.evolve_hint,进化：选择一项
 ui.game.rail.damage,伤害 %d

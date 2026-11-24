@@ -34,6 +34,7 @@ static func names() -> PackedStringArray:
 
 static func _game() -> bool:
     var view := FixtureScript.game_view()
+    _add_preview_abilities(view)
     GameStore.player_id = "p0"
     GameStore.phase = Protocol.PHASE_RECRUIT
     GameStore.turn = int(view.get("turn", 3))
@@ -42,6 +43,35 @@ static func _game() -> bool:
     # 假装已连接，页面才会进可操作状态；不发起真实连接。
     Net.socket = FixtureScript.FakeSocket.new()
     return true
+
+
+## 预览角标：给前两张棋盘随从挂主动技能，桌面与手机档位都能检查叠加位置。
+static func _add_preview_abilities(view: Dictionary) -> void:
+    var board: Array = view.get("self", {}).get("board", [])
+    if board.size() < 2:
+        return
+    board[0]["abilities"] = [
+        {
+            "skillId": "combat-optimal-attack",
+            "cost": 1,
+            "usesLeft": 2,
+            "requiresTarget": false,
+            "targetCandidates": [],
+            "canUse": true,
+            "disabledReason": null,
+        },
+    ]
+    board[1]["abilities"] = [
+        {
+            "skillId": "division-of-labor",
+            "cost": 2,
+            "usesLeft": 1,
+            "requiresTarget": true,
+            "targetCandidates": [{"zone": "board", "id": "mi_1"}],
+            "canUse": true,
+            "disabledReason": null,
+        },
+    ]
 
 
 ## 战斗态预览：同一局视图切到战斗阶段，并补齐当前回合战报，供对手镜像行与河道金币检查。

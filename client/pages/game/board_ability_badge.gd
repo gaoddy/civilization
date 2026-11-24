@@ -35,8 +35,9 @@ func _init() -> void:
 
 ## 按注入字段刷新文本、悬停详情与可用状态；尺寸由调用方按卡片空间设置。
 func refresh() -> void:
-    # 费用图标与剩余次数尾缀：一次点击只看一枚角标，多技能时费用与次数仍可区分。
-    text = "◆%d×%d" % [cost, uses_left]
+    # 文案表控制费用字形与剩余次数尾缀；多个角标共用同一模板，靠数值区分。
+    var template := TranslationServer.translate("ui.game.minion_ability.badge")
+    text = template % [cost, uses_left]
     tooltip_text = _skill_tooltip()
     _sync_enabled()
 

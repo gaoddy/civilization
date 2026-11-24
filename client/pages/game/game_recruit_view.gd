@@ -25,6 +25,8 @@ var _river: GameRiver
 var _board_row: BoardDrop
 ## 角标登记：`minion_id|skill_id` → 控件，供瞄准弧线取全局矩形。
 var _ability_badges: Dictionary = {}
+## 拖拽进行中：角标让出命中，避免 STOP 截断 Godot 从落点控件向上的查找。
+var _drag_active := false
 
 
 func _init() -> void:
@@ -51,6 +53,23 @@ func _init() -> void:
     add_child(_gap("RecruitRiverGap", _stage_gap()))
 
     add_child(_build_board())
+
+
+## 任意来源的拖拽（卡身、手牌、商店、效果牌）开始/结束时统一切换角标命中：
+## 拖拽期间角标降到 IGNORE，落点才能穿过它交给祖先 `BoardDrop`。
+func _notification(what: int) -> void:
+    if what == NOTIFICATION_DRAG_BEGIN:
+        _drag_active = true
+        _set_ability_mouse_filter(Control.MOUSE_FILTER_IGNORE)
+    elif what == NOTIFICATION_DRAG_END:
+        _drag_active = false
+        _set_ability_mouse_filter(Control.MOUSE_FILTER_STOP)
+
+
+func _set_ability_mouse_filter(value: int) -> void:
+    for badge in _ability_badges.values():
+        if is_instance_valid(badge):
+            badge.mouse_filter = value
 
 
 ## 舞台内小间距：iPhone 基准下再收紧一档。
@@ -166,7 +185,8 @@ func _minion_card(
     if detail != null:
         detail.track(panel, {"detail_kind": "minion", "minion": minion})
 
-    # 棋盘卡只提供拖拽：拖到棋盘内换位，拖到商店出售；卡内不再放操作按钮。
+    # 棋盘卡只提供拖拽：拖到棋盘内换位，拖到商店出售；卡内不放操作按钮，
+    # 主动技能以卡外右上角标呈现。
     panel.payload = {
         "epoch": epoch,
         "minionId": str(minion.get("minionId", "")),
@@ -208,11 +228,16 @@ func _add_ability_badges(
         + UITheme.space("space-md")
     )
     var count := abilities.size()
-    # 底部为攻血数值留出固定高度：角标纵向排列到底也不会盖住数值行。
+    # 底部为名称与攻血数值行留出空间：角标纵向排列到底也不压住卡面文字。
+    var bottom_reserve := (
+        UITheme.space("space-3xl")
+        + UITheme.space("space-md")
+        + UITheme.space("space-xs")
+    )
     var available := (
         UITheme.stage_metric("minion-card-height")
         - top
-        - UITheme.space("space-3xl")
+        - bottom_reserve
         - gap * maxi(count - 1, 0)
     )
     var height := mini(UITheme.hit_small(), maxi(1, available / count))
@@ -241,6 +266,10 @@ func _add_ability_badges(
         )
         badge.button_down.connect(
             func() -> void: minion_ability_down.emit(minion_id, skill_id)
+        )
+        # 拖拽中途若整块重建，新角标沿用拖拽态的放行命中。
+        badge.mouse_filter = (
+            Control.MOUSE_FILTER_IGNORE if _drag_active else Control.MOUSE_FILTER_STOP
         )
         overlay.add_child(badge)
         _ability_badges[_ability_key(minion_id, skill_id)] = badge

@@ -82,6 +82,7 @@ func _ready() -> void:
     await _check_pending_aim_abandon()
     await _check_skill_aim()
     await _check_minion_ability()
+    await _check_minion_ability_drop()
     await _check_effect_drag_aim_visual()
     await _check_overlay_hidden_in_combat()
     await _check_discover_choice_row()
@@ -3517,6 +3518,76 @@ func _check_minion_ability() -> void:
     instance.queue_free()
     await get_tree().process_frame
     GameStore.last_error = {}
+    GameStore.view = {}
+    GameStore.turn = 1
+    _fake_disconnect()
+
+
+## 拖拽落在技能角标矩形内也必须命中棋盘落点：角标在拖拽期间让出命中，
+## 不能因自身 STOP 截断 Godot `_gui_drop` 从命中控件向上的查找。
+## 手牌上场是 headless 下可稳定复现的真实拖放路径（棋盘换位无真实落点用例）。
+func _check_minion_ability_drop() -> void:
+    _fake_connect()
+    GameStore.player_id = "p0"
+    GameStore.phase = Protocol.PHASE_RECRUIT
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    _clear_combat()
+    var view: Dictionary = FixtureScript.view()
+    var minion := FixtureScript.board_minion("mi_1", "huo", 0)
+    minion["abilities"] = [
+        {
+            "skillId": "combat-optimal-attack",
+            "cost": 1,
+            "usesLeft": 1,
+            "requiresTarget": false,
+            "targetCandidates": [],
+            "canUse": true,
+            "disabledReason": null,
+        },
+    ]
+    view["self"]["board"] = [minion]
+    view["self"]["hand"] = [FixtureScript.hand("archimedes", false)]
+    view["self"]["affordances"]["handCards"] = [
+        {"index": 0, "playable": true, "disabledReason": null},
+    ]
+    GameStore.view = view
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
+    if instance == null:
+        _fake_disconnect()
+        return
+    var hand_card = instance.find_child("HandCard0", true, false)
+    var badge = instance.find_child("MinionAbility0_0", true, false)
+    _expect(hand_card != null and badge != null, "角标落点夹具缺少手牌或角标")
+    if hand_card != null and badge != null:
+        var captured: Array = []
+        instance.intent_sent.connect(func(intent: Dictionary) -> void: captured.append(intent))
+        var start: Vector2 = hand_card.get_global_rect().get_center()
+        var target: Vector2 = badge.get_global_rect().get_center()
+        await _push_motion(instance, start)
+        await _push_button(instance, start, true)
+        await _push_motion_held(instance, start + Vector2(24, 0), Vector2(24, 0))
+        await get_tree().process_frame
+        var viewport = instance.get_viewport()
+        _expect(viewport.gui_is_dragging(), "按住手牌拖动应开始引擎拖拽")
+        _expect(
+            badge.mouse_filter == Control.MOUSE_FILTER_IGNORE,
+            "拖拽期间技能角标应让出命中，实际 %d" % badge.mouse_filter,
+        )
+        await _push_motion_held(instance, target, target - start - Vector2(24, 0))
+        await _push_button(instance, target, false)
+        await get_tree().process_frame
+        _expect(captured.size() == 1, "落在角标矩形内应发 1 条出牌意图，实际 %d" % captured.size())
+        if captured.size() == 1:
+            var intent: Dictionary = captured[0]
+            _expect(
+                str(intent.get("kind", "")) == Protocol.INTENT_PLAY_CARD,
+                "角标上的落点应交给棋盘上场",
+            )
+            _expect(int(intent.get("handIndex", -1)) == 0, "出牌意图应带手牌下标 0")
+            _expect(int(intent.get("position", -1)) == 0, "落在该随从上应插到下标 0")
+    instance.queue_free()
+    await get_tree().process_frame
     GameStore.view = {}
     GameStore.turn = 1
     _fake_disconnect()

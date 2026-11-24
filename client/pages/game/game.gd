@@ -18,7 +18,7 @@ const ERROR_NOTICE_SECONDS := 4.0
 
 # 页面级状态与门槛。
 var _intent_counter := 0
-## 技能瞄准期间缓存的 `UseHeroPower` 意图；命中候选后补 `target` 再发出。
+## 技能瞄准期间缓存的技能意图（`UseHeroPower` / `UseMinionAbility`）；命中候选后补 `target` 再发出。
 var _aim_skill_intent: Dictionary = {}
 ## 最近一次发送意图的 kind：错误文案据此区分随从技能与英雄技能的拒绝语境。
 var _last_intent_kind := ""
@@ -969,7 +969,8 @@ func _on_choose(choice_index: int) -> void:
 	_send_intent({"kind": Protocol.INTENT_CHOOSE_DISCOVER, "choice": choice_index})
 
 
-## 瞄准提交：技能模式补 `target` 发 `UseHeroPower`；待选模式发 `ChooseTarget`。
+## 瞄准提交：技能模式补 `target` 发缓存的技能意图（`UseHeroPower` / `UseMinionAbility`）；
+## 待选模式发 `ChooseTarget`。
 func _on_aim_target_chosen(target: Dictionary) -> void:
 	if not _aim_submit_allowed():
 		return
