@@ -126,7 +126,7 @@ protocol/
 | `RECRUIT_STEP_SECONDS` | 15 | 每回合递增的招募秒数 |
 | `RECRUIT_CAP_SECONDS` | 120 | 招募时长上限（秒） |
 | `TIMER_WARNING_SECONDS` | 10 | 剩余秒数警告阈值（M1a 只暴露常量与 `seconds_left`） |
-| `RECONNECT_GRACE_MS` | 30000 | 对局内断线保留窗口（毫秒） |
+| `RECONNECT_GRACE_MS` | 30000 | 对局内断线保留窗口（毫秒）；到期标记离线，整桌都离线时收束对局 |
 | `SEAT_COUNT` | 8 | 固定座位数 |
 
 - 计时只走注入的 `Clock`，不读系统时间；房间 task 每 100 ms（`TICK_INTERVAL`）调用一次 `GameTask::tick`。
@@ -185,7 +185,7 @@ protocol/
 
 ## 10. 断线重连
 
-- 对局内断线：座位保留 30 秒（`RECONNECT_GRACE_MS`）。窗口内重连回一条全量 `Snapshot`；超过窗口只把座位标记为离线，不释放座位、不结束对局，也不向其他座位下发通知。
+- 对局内断线：座位保留 30 秒（`RECONNECT_GRACE_MS`）。窗口内重连回一条全量 `Snapshot`；超过窗口只把座位标记为离线，不释放座位、不结束对局（v0.1 不做托管，座位保留到对局结束），也不向其他座位下发通知。若整桌都过了窗口且无人重连，则按弃权结算逐个淘汰、存活降到 1 时进入 `GameOver` 并销毁房间：否则没人提交意图的对局只能靠阶段截止磨满 20 回合，期间 8 个账号一直占房，再建房只会得到 `ALREADY_IN_ROOM`。整桌收束不登记 `departed`；主动 `LeaveRoom` 才登记 `departed`，重连不再回房。
 - `Combat` 阶段重连：快照之后追加补发该座位本场 `CombatResult`（报告保留到 `finish_combat` 为止），客户端据此按 `phaseDeadline` 续播。
 - 对局已结束：房间已在对局结束时销毁，旧 `roomId` 重连只回 `ROOM_NOT_FOUND`（房间 task 已退出）或 `NOT_IN_ROOM`（task 尚未回收），不补发 `GameOver`，也不恢复房间。结算页断线后直接回大厅。
 - 重连与 `RequestSnapshot` 共用全量快照路径；M1 **不重放历史**，`last_seq` 不参与判断，一律回全量快照，快照序号必然大于重连前最后一条。
@@ -233,7 +233,9 @@ sim load --serve-room-service PATH | --connect ws://HOST:PORT/ws
          [--fresh-server-per-step] [--allow-remote-ramp] [--quiet]
 ```
 
-- **steady**：维持 `rooms` 个活跃房间，一局结束立即补位，持续 `duration-ms`；输出活跃峰值、已开局/已结束/启动失败、开局时延 p50/p95、意图速率、服务端与压测器 CPU/RSS。
+- **steady**：维持 `rooms` 个活跃房间，一局结束立即补位，持续 `duration-ms`；输出单档时长、尝试数、活跃峰值、已开局/已结束/启动失败、开局时延 p50/p95、意图速率、服务端与压测器 CPU/RSS。
+- 失败诊断：`failureKinds` 按「阶段 + 错误码」聚合启动失败原因，`firstFailureMs` / `lastFailureMs` 给出首次与最近一次启动失败距本档开始的时间；开局后掉线等运行期失败单独记在 `runtimeFailureKinds`，不与启动失败混计。长窗口排查先看分类与首末时刻，再看 `failures` 里的 20 条原始样本；每条样本以 `#序号` 开头，标明是哪一次补位（序号决定该房间 8 个机器人的手机号），据此可定位具体撞上的账号。
+- 后端不可达判定：连续 50 次启动失败且 10 秒内没有任何房间开局时，本档立即结束并判为不健康，原因写明「判定后端不可达」与最后一条失败（例如 `连接失败: Connection refused`）。远端压测的 `ssh -L` 隧道断开属于这类故障；没有该判定时补位会在毫秒级重试，几十秒内产生数百万次尝试。
 - **ramp**：按 `rooms → rooms+step → … ≤ rooms-max` 逐档压测，每档 `step-ms`；启动失败率 >10‰、开局 p95 >10s 或 server+generator CPU 接近机器核数时判为不健康/受限于生成器，停止爬坡并把前一档记为上限。
 - 每档结束向全部机器人发停止信号；机器人发送 `LeaveRoom`，对局中按弃权结算，存活数降到 1 时 `GameOver` 并销毁房间，不等待 30 秒断线宽限。失败房间同样清理，避免大厅座位挂满宽限期。
 - 身份：每个机器人按全局序号注入唯一手机号（`sim bot` 由名字派生的手机号在多房间时可能撞号）；`--quiet` 关闭逐条错误输出。
