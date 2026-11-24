@@ -19,18 +19,21 @@ PREFIX = "client-cache-copy："
 
 def resolve_main(worktree: Path) -> Path:
     """由 worktree 的 git 公共目录反推主检出根。"""
-    result = subprocess.run(
-        [
-            "git",
-            "-C",
-            str(worktree),
-            "rev-parse",
-            "--path-format=absolute",
-            "--git-common-dir",
-        ],
-        text=True,
-        capture_output=True,
-    )
+    try:
+        result = subprocess.run(
+            [
+                "git",
+                "-C",
+                str(worktree),
+                "rev-parse",
+                "--path-format=absolute",
+                "--git-common-dir",
+            ],
+            text=True,
+            capture_output=True,
+        )
+    except OSError as error:
+        raise RuntimeError(f"无法执行 git：{error}") from error
     if result.returncode != 0:
         raise RuntimeError(f"不在 git 仓库内：{worktree}")
     common_dir = Path(result.stdout.strip())
@@ -39,25 +42,47 @@ def resolve_main(worktree: Path) -> Path:
     return common_dir.resolve().parent
 
 
+def resolve_worktree(explicit: str | None) -> Path:
+    """当前 worktree 根：显式参数优先，否则取 git 顶层目录，非 git 回落当前目录。"""
+    if explicit:
+        return Path(explicit).resolve()
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            cwd=Path.cwd(),
+            text=True,
+            capture_output=True,
+        )
+    except OSError:
+        return Path.cwd()
+    if result.returncode == 0 and result.stdout.strip():
+        return Path(result.stdout.strip()).resolve()
+    return Path.cwd()
+
+
 def count_files(path: Path) -> int:
     if not path.is_dir():
         return 0
     return sum(1 for item in path.rglob("*") if item.is_file())
 
 
+def clone_command(directory: bool) -> list[str] | None:
+    """写时复制命令前缀；目录用递归归档，单文件保留元数据。"""
+    system = platform.system()
+    if system == "Darwin":
+        return ["cp", "-c", "-R"] if directory else ["cp", "-c", "-p"]
+    if system == "Linux":
+        return ["cp", "-a", "--reflink=auto"] if directory else ["cp", "--reflink=auto", "-p"]
+    return None
+
+
 def copy_tree(src: Path, dst: Path, prefer_clone: bool = True) -> None:
     """把 src 整目录复制到尚不存在的 dst。"""
     dst.parent.mkdir(parents=True, exist_ok=True)
     if prefer_clone:
-        system = platform.system()
-        if system == "Darwin":
-            command = ["cp", "-c", "-R", str(src), str(dst)]
-        elif system == "Linux":
-            command = ["cp", "-a", "--reflink=auto", str(src), str(dst)]
-        else:
-            command = None
+        command = clone_command(directory=True)
         if command is not None:
-            result = subprocess.run(command, capture_output=True, text=True)
+            result = subprocess.run([*command, str(src), str(dst)], capture_output=True, text=True)
             if result.returncode == 0:
                 return
             if dst.exists():
@@ -68,15 +93,9 @@ def copy_tree(src: Path, dst: Path, prefer_clone: bool = True) -> None:
 def copy_file(src: Path, dst: Path, prefer_clone: bool = True) -> None:
     dst.parent.mkdir(parents=True, exist_ok=True)
     if prefer_clone:
-        system = platform.system()
-        if system == "Darwin":
-            command = ["cp", "-c", "-p", str(src), str(dst)]
-        elif system == "Linux":
-            command = ["cp", "--reflink=auto", "-p", str(src), str(dst)]
-        else:
-            command = None
+        command = clone_command(directory=False)
         if command is not None:
-            result = subprocess.run(command, capture_output=True, text=True)
+            result = subprocess.run([*command, str(src), str(dst)], capture_output=True, text=True)
             if result.returncode == 0:
                 return
     shutil.copy2(src, dst)
@@ -108,22 +127,29 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
     parser.add_argument(
         "--strict",
         action="store_true",
-        help="主检出缺少导入缓存时失败；缺省只告警并跳过",
+        help="主检出缺缓存、缓存读取失败或无法定位 git 时失败；缺省只告警并跳过",
     )
     parser.add_argument("--main", help="主检出根目录（缺省由 git 公共目录反推）")
-    parser.add_argument("--worktree", help="当前 worktree 根目录（缺省当前目录）")
-    parser.add_argument("--quiet", action="store_true", help="成功路径不打印摘要")
+    parser.add_argument("--worktree", help="当前 worktree 根目录（缺省 git 顶层目录）")
+    parser.add_argument(
+        "--quiet",
+        action="store_true",
+        help="只静默空跑提示，不抑制播种摘要与错误",
+    )
     return parser.parse_args(argv)
 
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
-    worktree = Path(args.worktree).resolve() if args.worktree else Path.cwd()
+    worktree = resolve_worktree(args.worktree)
     try:
         main_root = Path(args.main).resolve() if args.main else resolve_main(worktree)
     except RuntimeError as error:
-        print(f"{PREFIX}{error}", file=sys.stderr)
-        return 1
+        if args.strict:
+            print(f"{PREFIX}{error}", file=sys.stderr)
+            return 1
+        print(f"{PREFIX}{error}，跳过播种", file=sys.stderr)
+        return 0
 
     if main_root == worktree:
         if not args.quiet:
@@ -132,12 +158,25 @@ def main(argv: list[str] | None = None) -> int:
 
     source = main_root / "client" / ".godot" / "imported"
     target = worktree / "client" / ".godot" / "imported"
-    if count_files(target) > 0:
-        if not args.quiet:
-            print(f"{PREFIX}已有导入缓存，跳过播种")
+    try:
+        if count_files(target) > 0:
+            if not args.quiet:
+                print(f"{PREFIX}已有导入缓存，跳过播种")
+            return 0
+    except OSError as error:
+        print(f"{PREFIX}读取本地导入缓存失败：{error}", file=sys.stderr)
+        return 1
+
+    try:
+        source_files = count_files(source)
+    except OSError as error:
+        if args.strict:
+            print(f"{PREFIX}读取主检出导入缓存失败：{error}", file=sys.stderr)
+            return 1
+        print(f"{PREFIX}读取主检出导入缓存失败：{error}，跳过播种", file=sys.stderr)
         return 0
 
-    if count_files(source) == 0:
+    if source_files == 0:
         if args.strict:
             print(
                 f"{PREFIX}主检出缺少导入缓存，请先执行：cd {main_root} && make client-import",
@@ -178,12 +217,11 @@ def main(argv: list[str] | None = None) -> int:
         shutil.rmtree(seed, ignore_errors=True)
         print(f"{PREFIX}导入缓存生效失败：{error}", file=sys.stderr)
         return 1
-    if not args.quiet:
-        elapsed = time.monotonic() - started
-        print(
-            f"{PREFIX}已从 {main_root} 播种 {count_files(target)} 个缓存文件"
-            f"与 {copied} 个 .import 旁车（跳过 {skipped} 个无源旁车，耗时 {elapsed:.2f}s）"
-        )
+    elapsed = time.monotonic() - started
+    print(
+        f"{PREFIX}已从 {main_root} 播种 {source_files} 个缓存文件"
+        f"与 {copied} 个 .import 旁车（跳过 {skipped} 个无源旁车，耗时 {elapsed:.2f}s）"
+    )
     return 0
 
 
