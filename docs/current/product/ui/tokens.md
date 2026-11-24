@@ -34,6 +34,19 @@
 | `color-info` | `#62a8e8` | 时代、中性提示 |
 | `color-highlight` | `#8fd3ff` | 结算页本人名次行与数据分组标题 |
 | `color-combat-tint` | `#ff8c8c` | 战斗受击闪白的目标色 |
+| `color-era-prehistoric` | `#b4552a` | 史前卡框合金色 |
+| `color-era-primitive` | `#8f8b46` | 原始卡框合金色 |
+| `color-era-classical` | `#c2a878` | 古典卡框合金色 |
+| `color-era-feudal` | `#c8a24a` | 封建卡框合金色 |
+| `color-era-industrial` | `#8d97a6` | 工业卡框合金色 |
+| `color-era-modern` | `#b9c6d2` | 现代卡框合金色 |
+| `color-era-future` | `#5fd3e8` | 未来卡框合金色 |
+| `color-golden` | `#f0c66b` | 三连金框与足金强调 |
+| `color-star` | `#ffe089` | 卡框等级星点 |
+| `color-damage` | `#ff7a6b` | 战斗伤害数字 |
+| `color-plate-ring` | `#6d4a18` | 攻防圆牌的黄铜外环 |
+| `color-plate-well` | `#14100a` | 攻防圆牌的暗底 |
+| `color-danger-deep` | `#33080a` | 血滴描边与暗部 |
 | `color-white` | `#ffffff` | 白色文字、描边与提亮基色 |
 | `color-black` | `#000000` | 黑色描边与遮罩基色 |
 | `color-transparent` | 透明 | StyleBox 无底色、无描边时的占位色 |

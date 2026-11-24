@@ -53,6 +53,9 @@ client/
     icons.gd                 # 代码绘制的矢量图标（class_name Icons）
     stat_plate.gd            # 攻防底牌（class_name StatPlate）
     card_frame.gd            # 卡框与星级（class_name CardFrame）
+    corner_badge.gd          # 卡面角标小牌：深底、铜边与顶部高光（class_name CornerBadge）
+    frame_material.gd        # 框体材质：给控件叠 shader 倒角边框与内侧阴影（class_name FrameMaterial）
+    frame_material.gdshader  # 黄铜浮雕边框：时代合金色、三连足金与引导流光
     era_glyph.gd             # 时代象形（class_name EraGlyph）
     card_face_base.gd        # 卡面共享绘制：圆角封面、美术内缩、角标行、自适应信息区、冻结蒙层与就地改身材
     card_text.gd             # 卡牌与卡面周边的显示文本格式化
