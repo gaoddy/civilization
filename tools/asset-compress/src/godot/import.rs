@@ -1,6 +1,6 @@
 //! `.import` 生成与 uid 规则。
 //!
-//! uid 语义（阶段 0 实测，见 `output/gpu-texture-phase0/UID_VERIFICATION.md`）：
+//! uid 语义（阶段 0 实测，见 `tools/asset-compress/docs/phase0/UID_VERIFICATION.md`）：
 //!
 //! - 省略 `uid=` → Godot 重写 `.import`、分配新 uid 并重编该资源。
 //! - 自造唯一 uid → 原样接受，0 变更。

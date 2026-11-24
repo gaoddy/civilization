@@ -1,7 +1,7 @@
 // BC7 (BPTC) compute shader encoder — modes 1 and 6 (mode 4 code is retained
 // but disabled; see the `use4 = false` note below).
 //
-// Ported from the phase-0 prototype `output/gpu-texture-phase0/bc7/bc7_mode1.wgsl`
+// Ported from the phase-0 prototype `tools/asset-compress/docs/phase0/bc7_mode1.wgsl`
 // (see src/shaders/THIRD_PARTY.md). MIT.
 //
 // One invocation per 4×4 block. Emits 16 bytes = 4 u32s into the storage

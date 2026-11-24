@@ -1,7 +1,7 @@
 //! 跨资源唯一的 uid 分配。
 //!
 //! `.import` 的 uid 必须全局唯一：冲突不会报错，只会让 Godot 重编该资源并
-//! 留下歧义引用（见 `output/gpu-texture-phase0/UID_VERIFICATION.md` 约束 3）。
+//! 留下歧义引用（见 `tools/asset-compress/docs/phase0/UID_VERIFICATION.md` 约束 3）。
 //! 已有 `.import` 的资源直接复用其 uid、不经过这里；只有全新资源才需要分配，
 //! 分配前扫描项目内全部 `.import`，撞上已占用的值就按确定性加盐重算。
 
