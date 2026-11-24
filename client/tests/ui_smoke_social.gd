@@ -3,9 +3,28 @@ extends "res://tests/smoke_case.gd"
 
 
 func _ready() -> void:
+    await _check_friends_button()
     await _check_lobby_social()
     await _check_room_invites()
     _finish()
+
+
+## 好友入口只显示在线好友数，点击转发打开请求。
+func _check_friends_button() -> void:
+    var button := FriendsButton.new()
+    add_child(button)
+    button.set_online_count(1)
+    await get_tree().process_frame
+    _expect(button.text == "1", "好友入口只显示在线好友数")
+    _expect(
+        button.custom_minimum_size.x >= UITheme.stage_metric("lobby-friends-button-width"),
+        "好友入口宽度取大厅令牌"
+    )
+    var opened := [false]
+    button.open_requested.connect(func(): opened[0] = true)
+    button.pressed.emit()
+    _expect(opened[0], "点击好友入口应请求打开好友面板")
+    button.queue_free()
 
 
 func _seed_social() -> void:
