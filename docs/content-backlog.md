@@ -39,7 +39,10 @@
 
 - [诺贝尔奖得主与获奖理由](current/product/content/reference/nobel-laureates.md)：1901–2026 年六奖全部得主与官方英文获奖理由，作为内容设计原始材料。
 - [诺贝尔奖得主与获奖理由（中文版）](current/product/content/reference/nobel-laureates-zh.md)：同一名单的中文译本，供中文阅读与内容设计使用。
-- [诺奖卡牌设计角度](current/product/content/reference/nobel-laureates-card-angles.md)：现有卡池覆盖、机制原型、玩法落位与首批建议。
+
+## 卡牌设计
+
+- [内容素材库存](current/product/content/reference/content-inventory.md)：全部卡牌素材的唯一库存文档；含 152 张精选设计（首批 26 + 扩展 94 + 诺奖效果牌 32）、1028 位诺奖得主/机构全量名册（一人一卡）、引擎支持矩阵、新机制与技能模板，以及诺奖设计角度与风险边界。
 
 ## 相关文档
 
