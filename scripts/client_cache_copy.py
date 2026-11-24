@@ -19,18 +19,21 @@ PREFIX = "client-cache-copy："
 
 def resolve_main(worktree: Path) -> Path:
     """由 worktree 的 git 公共目录反推主检出根。"""
-    result = subprocess.run(
-        [
-            "git",
-            "-C",
-            str(worktree),
-            "rev-parse",
-            "--path-format=absolute",
-            "--git-common-dir",
-        ],
-        text=True,
-        capture_output=True,
-    )
+    try:
+        result = subprocess.run(
+            [
+                "git",
+                "-C",
+                str(worktree),
+                "rev-parse",
+                "--path-format=absolute",
+                "--git-common-dir",
+            ],
+            text=True,
+            capture_output=True,
+        )
+    except OSError as error:
+        raise RuntimeError(f"无法执行 git：{error}") from error
     if result.returncode != 0:
         raise RuntimeError(f"不在 git 仓库内：{worktree}")
     common_dir = Path(result.stdout.strip())
@@ -43,12 +46,15 @@ def resolve_worktree(explicit: str | None) -> Path:
     """当前 worktree 根：显式参数优先，否则取 git 顶层目录，非 git 回落当前目录。"""
     if explicit:
         return Path(explicit).resolve()
-    result = subprocess.run(
-        ["git", "rev-parse", "--show-toplevel"],
-        cwd=Path.cwd(),
-        text=True,
-        capture_output=True,
-    )
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            cwd=Path.cwd(),
+            text=True,
+            capture_output=True,
+        )
+    except OSError:
+        return Path.cwd()
     if result.returncode == 0 and result.stdout.strip():
         return Path(result.stdout.strip()).resolve()
     return Path.cwd()
@@ -121,7 +127,7 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
     parser.add_argument(
         "--strict",
         action="store_true",
-        help="主检出缺少导入缓存时失败；缺省只告警并跳过",
+        help="主检出缺缓存、缓存读取失败或无法定位 git 时失败；缺省只告警并跳过",
     )
     parser.add_argument("--main", help="主检出根目录（缺省由 git 公共目录反推）")
     parser.add_argument("--worktree", help="当前 worktree 根目录（缺省 git 顶层目录）")

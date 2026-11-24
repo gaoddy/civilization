@@ -182,6 +182,9 @@ class ClientCacheCopyTest(unittest.TestCase):
 
             def failing_run(command, *args, **kwargs):
                 if isinstance(command, list) and command and command[0] == "cp":
+                    leftover = pathlib.Path(command[-1])
+                    leftover.mkdir(parents=True, exist_ok=True)
+                    (leftover / "residual.bin").write_bytes(b"junk")
                     return subprocess.CompletedProcess(command, 1, "", "clone failed")
                 return real_run(command, *args, **kwargs)
 
@@ -190,6 +193,7 @@ class ClientCacheCopyTest(unittest.TestCase):
                 module.copy_tree(src, dst)
             finally:
                 module.subprocess.run = real_run
+            self.assertFalse((dst / "residual.bin").exists())
             self.assertEqual((dst / "a.bin").read_bytes(), b"a")
 
     def test_unreadable_source_cache_is_handled(self):
@@ -226,6 +230,69 @@ class ClientCacheCopyTest(unittest.TestCase):
                 self.assertIn("读取主检出导入缓存失败", stderr.getvalue())
             finally:
                 module.count_files = real_count
+
+    def test_unreadable_local_cache_is_handled(self):
+        sys.path.insert(0, str(ROOT / "scripts"))
+        import client_cache_copy as module
+
+        with tempfile.TemporaryDirectory() as tmp:
+            main = self.make_checkout(tmp, "main")
+            worktree = pathlib.Path(tmp) / "wt"
+            target = worktree / "client" / ".godot" / "imported"
+            target.mkdir(parents=True)
+            (target / "local.bin").write_bytes(b"y")
+            (main / "client" / ".godot" / "imported" / "tex.bin").write_bytes(b"x")
+            real_count = module.count_files
+
+            def failing_count(path):
+                if path.resolve() == target.resolve():
+                    raise PermissionError("denied")
+                return real_count(path)
+
+            module.count_files = failing_count
+            try:
+                stderr = io.StringIO()
+                with contextlib.redirect_stderr(stderr):
+                    code = module.main(["--main", str(main), "--worktree", str(worktree)])
+                self.assertEqual(code, 1)
+                self.assertIn("读取本地导入缓存失败", stderr.getvalue())
+            finally:
+                module.count_files = real_count
+
+    def test_missing_git_executable_soft_skips(self):
+        sys.path.insert(0, str(ROOT / "scripts"))
+        import client_cache_copy as module
+
+        with tempfile.TemporaryDirectory() as tmp:
+            worktree = pathlib.Path(tmp) / "wt"
+            worktree.mkdir()
+            real_run = module.subprocess.run
+
+            def missing_git(command, *args, **kwargs):
+                if isinstance(command, list) and command and command[0] == "git":
+                    raise FileNotFoundError("git")
+                return real_run(command, *args, **kwargs)
+
+            module.subprocess.run = missing_git
+            try:
+                stderr = io.StringIO()
+                with contextlib.redirect_stderr(stderr):
+                    code = module.main(["--worktree", str(worktree)])
+                self.assertEqual(code, 0)
+                self.assertIn("无法执行 git", stderr.getvalue())
+                self.assertIn("跳过播种", stderr.getvalue())
+
+                stderr = io.StringIO()
+                with contextlib.redirect_stderr(stderr):
+                    code = module.main(["--strict", "--worktree", str(worktree)])
+                self.assertEqual(code, 1)
+                self.assertIn("无法执行 git", stderr.getvalue())
+            finally:
+                module.subprocess.run = real_run
+
+    def test_client_import_seeds_quietly(self):
+        makefile = (ROOT / "make" / "client.mk").read_text(encoding="utf-8")
+        self.assertIn("scripts/client_cache_copy.py --quiet", makefile)
 
     def test_non_git_environment_soft_skips(self):
         with tempfile.TemporaryDirectory() as tmp:
