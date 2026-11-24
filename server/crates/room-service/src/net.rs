@@ -1928,9 +1928,6 @@ async fn send_protocol<T: Serialize>(
 /// 把排队状态转成协议载荷。
 fn queue_state_payload(data: QueueStateData) -> QueueState {
     QueueState {
-        rating_window: data
-            .rating_window
-            .and_then(|window| u64::try_from(window).ok()),
         waiting_ms: data.waiting_ms,
         // 契约上限 8：队列里可能暂存第九人，展示只按一局需要的人数封顶。
         waiting_players: data.waiting_players.min(SEAT_COUNT) as i64,

@@ -165,7 +165,6 @@ async fn eight_players_match_into_one_ranked_room() {
         let state = wait_queue_state(&mut client).await;
         assert_eq!(state.waiting_ms, 0, "刚入队等待时长应为 0");
         assert!(state.waiting_players >= 1, "至少包含本人");
-        assert_eq!(state.rating_window, Some(150), "初始匹配窗口应为 ±150 分");
         waiting.push(player_id);
         clients.push(client);
     }
