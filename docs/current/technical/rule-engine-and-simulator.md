@@ -204,8 +204,8 @@ impl Taxonomy {
 | `make protocol` / `make protocol-check` | 生成协议 GDScript 常量与字段表 / 漂移检测 |
 | `make m0-determinism` | 运行 `sim_determinism::replay_same_log_100_times_has_same_hash`：同一局用 `sim replay` 重放 100 次，终局状态哈希与事件序列哈希全部一致 |
 | `make m0-batch` | 1000 局 8 AI 批量对局（seed 1），写入 `output/m0-batch.json` |
-| `make m0-check` | `data-check`、`test`、`lint`、`m0-determinism` 四项并行执行（计划中的 M0 汇总门禁），任一失败整体非 0 |
-| `make m1-check` | M1a 汇合门禁：`protocol-rs-check`、`protocol-check`、`data-check`、`test`、`lint`、`m0-determinism` 六项并行执行；e2e 由 `make test` 覆盖，详见[房间服务与联网](room-service/README.md) |
+| `make check-core` | `data-check`、`test`、`lint`、`m0-determinism` 四项并行执行（基础验收门禁），任一失败整体非 0 |
+| `make check` | 全量验收门禁：`protocol-rs-check`、`protocol-check`、`data-check`、`test`、`lint`、`m0-determinism` 六项并行执行；e2e 由 `make test` 覆盖，详见[房间服务与联网](room-service/README.md) |
 | `make m0-report` | 先校验批量日志（`sim check --expect-games 1000`：局数、每局 8 名排名），再生成基线报告（字段口径见第 7 节）；输出同时写入 `output/m0-report.log`。可用 `M0_BATCH_LOG`、`M0_GAMES` 指向其他批量日志与局数 |
 | `make load-build` | release 构建 `room-service` 与 `sim`，供压测使用（debug 结果与线上不可比） |
 | `make loadtest` | 并发容量稳态压测：本机起 `room-service`，维持 `LOAD_ROOMS`（默认 10）个活跃房间并补位 `LOAD_DURATION_MS`（默认 30000），报告写 `output/loadtest-steady.json` |
@@ -234,7 +234,7 @@ M0 确定性 AI（`sim/src/ai.rs`）针对效果牌补充三条规则：
 
 ## 6. 验证方式
 
-验证矩阵：`make data-check && python3 scripts/validate_docs.py && make m0-check && make m0-batch && make m0-report`（其中 `make m0-check` 并行执行 `data-check`、`test`、`lint` 与 `m0-determinism`）。
+验证矩阵：`make data-check && python3 scripts/validate_docs.py && make check-core && make m0-batch && make m0-report`（其中 `make check-core` 并行执行 `data-check`、`test`、`lint` 与 `m0-determinism`）。
 
 每个 M0 标准类别由下列命令与字段支撑；表中「报告字段」指 `make m0-report` 输出的 JSON 字段。
 

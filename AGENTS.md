@@ -48,7 +48,7 @@
 ### 命令与验证
 
 - 顶层入口统一走根目录 `Makefile`，不手写等效命令。根 `Makefile` 只保留共享变量与验收入口，目标分册在 `make/`：`client.mk`（客户端构建、运行、检查、导出）、`content.mk`（内容、协议、资产、文档）、`server.mk`（服务端测试、模拟器、压测、联调）、`deploy.mk`（部署）。
-- 全量检查：`make m1-check`（协议生成物、文档数据、测试、静态检查、确定性）；客户端另有 `make client-check`、`make client-smoke`（`TESTS=<模块>`、`SMOKE=<场景>` 只跑单项，逗号分隔可多选）。
+- 全量检查：`make check`（协议生成物、文档数据、测试、静态检查、确定性）；基础检查 `make check-core`（不含协议生成物）；客户端另有 `make client-check`、`make client-smoke`（`TESTS=<模块>`、`SMOKE=<场景>` 只跑单项，逗号分隔可多选）。
 - 页面线框图：`make ui-wireframe PAGE=gallery`（`ALL=1` 出全部页面，`DEVICE=phone` 出手机档位），无头解算真实布局后写到 `output/wireframes/`（忽略目录）。
 - 运行态视图预览：`make ui-preview PAGE=game FIXTURE=game FOCUS=PlayersPanel`（`SCENE=` 任意场景、`SETUP=` 组件脚本、`DEVICE=phone` 手机档位），真实窗口直接查看；自检用 `make ui-preview-check ... EXPECT=SeatRow=8`。
 - 纹理产物：`make asset-compress`（增量，源图未变按 source_md5 跳过）、`make asset-compress-check`（工具测试 + clippy + 60 张卡面 BC7 门禁）。

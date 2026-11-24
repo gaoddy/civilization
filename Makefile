@@ -18,18 +18,20 @@ include make/content.mk
 include make/server.mk
 include make/deploy.mk
 
-.PHONY: m0-check m1-check
+.PHONY: check-core check
 
-m0-check:
+# 基础验收：文档数据、服务端测试、静态检查与模拟器确定性。
+check-core:
 	$(PYTHON) scripts/run_parallel.py $(if $(JOBS),--jobs $(JOBS),) \
 		"$(MAKE) --no-print-directory data-check" \
 		"$(MAKE) --no-print-directory test" \
 		"$(MAKE) --no-print-directory lint" \
 		"$(MAKE) --no-print-directory m0-determinism"
 
-# M1a 收尾验收入口。e2e 由 `make test` 的 `cargo test --workspace` 覆盖，
-# 不在此单独再跑：那会用真实 WebSocket 起 8 个 bot 跑两次。
-m1-check:
+# 全量验收：协议生成物、文档数据、测试、静态检查与确定性。
+# e2e 由 `make test` 的 `cargo test --workspace` 覆盖，不在此单独再跑：
+# 那会用真实 WebSocket 起 8 个 bot 跑两次。
+check:
 	$(PYTHON) scripts/run_parallel.py $(if $(JOBS),--jobs $(JOBS),) \
 		"$(MAKE) --no-print-directory protocol-rs-check" \
 		"$(MAKE) --no-print-directory protocol-check" \

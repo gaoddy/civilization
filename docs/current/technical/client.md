@@ -294,7 +294,7 @@ client/
 
 Godot 可执行文件通过 `GODOT` 变量覆盖，默认自动探测 `godot` 或 `/Applications/Godot.app/Contents/MacOS/Godot`。引擎补丁版本固定为 `4.7.2`（`Makefile` 的 `GODOT_VERSION`）；`make client-import` 及所有依赖它的客户端目标会先校验本机引擎，版本不符直接失败。
 
-`make data`、`make data-check`、`make protocol`、`make protocol-check`、`make test`、`make client-check` 与 `make m0-check`、`make m1-check` 中互不依赖的步骤由 `scripts/run_parallel.py` 并行执行：默认并行度取 CPU 数（上限 8），`JOBS=<n>` 可覆盖，`JOBS=1` 退回串行。任一命令失败时其余命令仍执行完毕，目标以非 0 退出并汇总失败命令与退出码；单条命令输出超过 12,000 字符时保留末尾。
+`make data`、`make data-check`、`make protocol`、`make protocol-check`、`make test`、`make client-check` 与 `make check-core`、`make check` 中互不依赖的步骤由 `scripts/run_parallel.py` 并行执行：默认并行度取 CPU 数（上限 8），`JOBS=<n>` 可覆盖，`JOBS=1` 退回串行。任一命令失败时其余命令仍执行完毕，目标以非 0 退出并汇总失败命令与退出码；单条命令输出超过 12,000 字符时保留末尾。
 
 导入压缩：`make client-import` 默认 `CLIENT_IMPORT_GPU=0`，走 `--headless` 并用 CPU 压缩。原因是当前卡面为 `compress/high_quality=true` 的 RGBA8，导入选择 BPTC（BC7），而 Godot 4.7 的 Betsy GPU 压缩只覆盖 S3TC（BC1/BC3）与 BC6H，BC7 明确不支持；实测非无头冷导入与 headless 耗时一致，且没有 `Betsy: Encoding` 日志。headless 显示服务固定拒绝创建 RenderingDevice，所以 headless 导入只能 CPU 压缩。需要 GPU 时设 `CLIENT_IMPORT_GPU=1` 去掉 `--headless`：Betsy 能创建 RenderingDevice 时用 GPU 压缩 BC1/BC3/BC4/BC5/BC6（即改用 `compress/high_quality=false` 的 S3TC 或 HDR 纹理后才会生效），否则回落 CPU；无图形会话时由命令自身失败并回退 headless。`CLIENT_IMPORT_GPU=auto` 用 `DISPLAY` / `WAYLAND_DISPLAY` 或 macOS 的 `launchctl print gui/<uid>` 判断图形会话。非无头导入会按引擎格式重写 `client/project.godot`（去掉默认值设置、重排 section），命令会提示检查 diff。ETC2/ASTC 始终不走 GPU。
 
