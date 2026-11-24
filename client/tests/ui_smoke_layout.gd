@@ -15,9 +15,21 @@ const PAGES := [
     },
     {
         "path": "res://pages/lobby/lobby.tscn",
-        "children": 4,
-        "direct_names": ["InvitePopup", "FriendsPanel", "QueuePanel"],
-        "deep_names": ["GalleryButton", "FriendsButton", "LeaderboardButton"],
+        "children": 6,
+        "direct_names": [
+            "FriendsPanel",
+            "InvitePopup",
+            "LobbyJoinDialog",
+            "LobbyNoticeDialog",
+            "ConnectionDialog",
+        ],
+        "deep_names": [
+            "GalleryButton",
+            "FriendsButton",
+            "LeaderboardButton",
+            "LobbyHallImage",
+            "LobbyColumns",
+        ],
     },
     {
         "path": "res://pages/room/room.tscn",
@@ -392,7 +404,7 @@ func _check_compact() -> void:
                     _check(bounds.grow(1.0).encloses(rect),
                         "%s 的 %s 越界：%s 不在 %s 内" % [page_case["path"], node_name, str(rect), str(bounds)])
             if str(page_case["path"]).ends_with("lobby.tscn"):
-                _check_lobby_inputs(page, host, compact)
+                await _check_lobby_inputs(page, host, compact)
         host.queue_free()
         await get_tree().process_frame
     await _check_game_compact(compact)
@@ -400,8 +412,12 @@ func _check_compact() -> void:
 
 
 ## 手机基准下大厅输入框：命中高度按触控换算，且不越出 960×540 宿主。
-## 输入框工厂把触控端最小高度抬到 `hit_primary()`，这里防止大厅面板被撑高后溢出。
+## 房间码输入已收进加入弹窗，这里先打开弹窗再检查。
 func _check_lobby_inputs(page: Node, host: Control, compact: Vector2) -> void:
+    var dialog := page.find_child("LobbyJoinDialog", true, false)
+    if dialog != null:
+        dialog.open_dialog()
+        await get_tree().process_frame
     var bounds := Rect2(host.get_global_rect().position, compact).grow(1.0)
     var visible := 0
     for child in page.find_children("*", "LineEdit", true, false):

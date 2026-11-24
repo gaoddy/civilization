@@ -80,10 +80,10 @@ func _check_lobby_social() -> void:
     _expect(labels.contains("100001"), "大厅应展示本人玩家编号")
     _expect(labels.contains("ABC234"), "邀请弹窗应展示房间码")
 
-    # 好友管理收在浮层里：主页只留入口，入口显示待处理申请数。
+    # 好友管理收在抽屉里：主页只留入口，入口显示在线好友数。
     var entry := instance.find_child("FriendsButton", true, false)
     _expect(entry != null, "大厅应有好友入口")
-    _expect(entry != null and str(entry.text).contains("1"), "好友入口应展示待处理申请数")
+    _expect(entry != null and str(entry.text) == "1", "好友入口应展示在线好友数")
     var panel = instance.find_child("FriendsPanel", true, false)
     _expect(panel != null and not panel.visible, "好友浮层初始应隐藏")
     if entry == null or panel == null:
