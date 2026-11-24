@@ -188,6 +188,30 @@ class ClientBuildEnvTest(unittest.TestCase):
         self.assertNotEqual(proc.returncode, 0)
         self.assertIn("WIDTH 与 HEIGHT 需同时传入正整数", proc.stdout + proc.stderr)
 
+    def test_alias_run_iphone_matches_device_preset(self):
+        proc = self._run_make(["-n", "run-iphone"])
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        self.assertIn('CIVILIZATION_WINDOW_SIZE="2622x1206"', proc.stdout)
+        self.assertIn('CIVILIZATION_DEVICE="phone"', proc.stdout)
+        self.assertIn('CIVILIZATION_LOCAL_SERVER="1"', proc.stdout)
+
+    def test_alias_export_aab_uses_aab_script(self):
+        proc = self._run_make(["-n", "export-aab"])
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        self.assertIn("android_export.sh aab", proc.stdout)
+
+    def test_alias_export_ios_passes_env(self):
+        proc = self._run_make(["-n", "export-ios", "ENV=dev"])
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        line = self._gen_line(proc)
+        self.assertIn(DEV_URL, line)
+        self.assertIn("--require-url", line)
+
+    def test_alias_platform_overrides_conflicting_argument(self):
+        proc = self._run_make(["-n", "export-ios", "PLATFORM=bogus"])
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        self.assertIn('--export-release "iOS"', proc.stdout)
+
     def test_generator_dev_allows_ws_url(self):
         with tempfile.TemporaryDirectory() as tmp:
             output = pathlib.Path(tmp) / "build_config.gd"

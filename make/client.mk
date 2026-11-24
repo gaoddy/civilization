@@ -15,7 +15,9 @@ CLIENT_IMPORT_GPU ?= 0
 	client-env-check client-export-templates client-export client-export-platform-check \
 	_client-export-macos _client-export-local _client-export-steam _client-export-ios \
 	_client-export-android _client-export-invalid client-export-android-check client-notarize steam-upload \
-	ui-wireframe ui-preview ui-preview-check
+	ui-wireframe ui-preview ui-preview-check \
+	run export run-iphone run-ipad run-phone run-tablet run-desktop run-ios \
+	export-macos export-local export-steam export-ios export-android export-aab
 
 # 本机引擎必须与固定的补丁版本一致，避免用错版本导入或导出。
 client-godot-check:
@@ -437,3 +439,48 @@ _client-export-android: client-export-android-check client-env-check client-expo
 	SERVER_URL="$(CLIENT_SERVER_URL)" STEAM_APP_ID="" $(PYTHON) scripts/gen_build_config.py $(CLIENT_REQUIRE_SERVER); \
 	GODOT="$(GODOT)" GODOT_TEMPLATE_DIR="$(GODOT_TEMPLATE_DIR)" ANDROID_OUTPUT="$(ANDROID_OUTPUT)" \
 	  bash scripts/android_export.sh $(if $(filter 1,$(AAB)),aab,apk)
+
+# 快速别名：常用设备与平台的短入口，等价于带参数的 client-run / client-export。
+# 命令行传入的 ENV、SERVER_URL、STEAM_APP_ID、WIDTH/HEIGHT、LOCAL_SERVER 等会原样传给子 make；
+# 别名自身指定的 DEVICE / PLATFORM / AAB 优先。
+run:
+	@$(MAKE) --no-print-directory client-run
+
+run-iphone:
+	@$(MAKE) --no-print-directory client-run DEVICE=iphone
+
+run-ipad:
+	@$(MAKE) --no-print-directory client-run DEVICE=ipad
+
+run-desktop:
+	@$(MAKE) --no-print-directory client-run DEVICE=desktop
+
+run-phone:
+	@$(MAKE) --no-print-directory client-run DEVICE=phone
+
+run-tablet:
+	@$(MAKE) --no-print-directory client-run DEVICE=tablet
+
+run-ios:
+	@$(MAKE) --no-print-directory client-run PLATFORM=ios
+
+export:
+	@$(MAKE) --no-print-directory client-export
+
+export-macos:
+	@$(MAKE) --no-print-directory client-export PLATFORM=macos
+
+export-local:
+	@$(MAKE) --no-print-directory client-export PLATFORM=local
+
+export-steam:
+	@$(MAKE) --no-print-directory client-export PLATFORM=steam
+
+export-ios:
+	@$(MAKE) --no-print-directory client-export PLATFORM=ios
+
+export-android:
+	@$(MAKE) --no-print-directory client-export PLATFORM=android
+
+export-aab:
+	@$(MAKE) --no-print-directory client-export PLATFORM=android AAB=1

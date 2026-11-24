@@ -271,6 +271,9 @@ client/
 | `make client-cache-copy` | 从主检出复制 `client/.godot/imported` 与全部 `*.import` 旁车到当前 worktree，跳过纹理冷编码；随后照常 `make client-import` 只补增量产物。在主检出执行时为空跑；主检出缺缓存时失败并提示先执行 `client-import`，见 §10 |
 | `make client-run` | 先导入再启动桌面客户端；新增或改名 `class_name` 脚本后必须走这个入口，否则沿用旧全局类缓存。`DEVICE` 取 `phone`、`tablet`、`desktop` 时按该设备档位运行，取 `iphone`、`ipad` 时同时套用验收机横屏尺寸；同时传 `WIDTH=<宽> HEIGHT=<高>` 时按指定像素开窗并覆盖预设尺寸。显式传入 `DEVICE` 时默认内嵌启动本机服务端与 7 个机器人（`LOCAL_SERVER=1`），不传 `DEVICE` 时保持关闭；也可用 `LOCAL_SERVER=0/1` 显式覆盖。`PLATFORM=ios` 改为导出并安装到真机，见 §5、§9 |
 | `make client-run PLATFORM=ios` | 导出 iOS 签名包后用 `xcrun devicectl` 安装到 iPhone 并启动，默认第一台已连接的 iPhone；`IOS_DEVICE` 指定设备，`IOS_LAUNCH=0` 只安装 |
+| `make run-iphone` / `run-ipad` / `run-desktop` / `run-phone` / `run-tablet` | `client-run` 的常用设备别名，分别固定 `DEVICE=`；`run-iphone` 与 `run-ipad` 同时套用验收机尺寸，显式 `DEVICE` 默认带本地服务。`make run` 等价于不带参数的 `client-run` |
+| `make run-ios` | 等价于 `make client-run PLATFORM=ios` |
+| `make export-macos` / `export-local` / `export-steam` / `export-ios` / `export-android` / `export-aab` | `client-export` 的平台别名，分别固定 `PLATFORM=`；`export-aab` 同时设 `AAB=1`。`make export` 等价于默认 `client-export`（macOS）。`ENV`、`SERVER_URL`、`STEAM_APP_ID` 等参数照常透传 |
 | `make client-check` | 协议/数据/文本表漂移 + 客户端边界断言 + 国际化断言 + 工程导入 |
 | `make client-env-check` | 校验客户端构建环境只能是 `local`、`dev` 或 `prod`，默认 `local`；`ENV` 与 `env` 等价，同时传且值不同直接失败；`dev`/`prod` 分别要求 `CLIENT_DEV_SERVER_URL` / `CLIENT_PROD_SERVER_URL`，未配置直接失败 |
 | `make client-smoke` | 用 glob 逐个运行 `ui_smoke*.tscn` 冒烟场景，要求各自输出 `UI_SMOKE_OK` 且无 `SCRIPT ERROR`；任一场景断言失败时不输出 `UI_SMOKE_OK`，目标以非 0 退出；`SMOKE=<名称>` 只跑 `ui_smoke_<名称>.tscn` |

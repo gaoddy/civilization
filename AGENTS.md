@@ -61,6 +61,7 @@
 - 模拟器基线：`make m0-determinism`、`make m0-batch`、`make m0-report`。
 - 并发容量压测：`make load-build` 后 `make loadtest`（稳态，默认 10 局/30s）、`make loadtest-ramp`（爬坡找上限）、`make loadtest-smoke`（2 局/5s 冒烟）；报告写 `output/loadtest-*.json`。
 - 本地联调：`make dev-bots` 起服务端与 7 个机器人；客户端用 `make client-run`，桌面端产物用 `make client-export`，iOS 真机用 `make client-run PLATFORM=ios`（默认第一台已连接的 iPhone）。
+- 快速别名：`make run-iphone`/`run-ipad`/`run-desktop`/`run-phone`/`run-tablet`/`run-ios` 转发到 `client-run`，`make export-macos`/`export-local`/`export-steam`/`export-ios`/`export-android`/`export-aab` 转发到 `client-export`；`ENV`、`SERVER_URL`、`STEAM_APP_ID` 等参数照常透传。
 - 数据库：`make db-up`、`make db-test`、`make db-reset`。
 - 慢命令阈值：`120s`；预计超过该时长的命令放后台执行，读末尾输出与退出状态。
 
