@@ -307,8 +307,10 @@ fn host_ready_cannot_be_cleared() {
     registry
         .ready(&room_id, &second.player_id, false)
         .expect("其他成员可以取消准备");
-    assert!(!registry.room(&room_id).unwrap().slot(1).unwrap().ready,
-        "非房主的准备状态仍按请求写入");
+    assert!(
+        !registry.room(&room_id).unwrap().slot(1).unwrap().ready,
+        "非房主的准备状态仍按请求写入"
+    );
 }
 
 #[test]
@@ -334,10 +336,7 @@ fn host_transfer_marks_new_host_ready() {
 
     let room = registry.room(&room_id).expect("房间仍存在");
     assert_eq!(room.host_id, second.player_id, "房主转给最小座位号的玩家");
-    assert!(
-        room.slot(1).unwrap().ready,
-        "继承房主身份的成员自动准备"
-    );
+    assert!(room.slot(1).unwrap().ready, "继承房主身份的成员自动准备");
 }
 
 #[test]
