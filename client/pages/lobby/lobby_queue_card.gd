@@ -48,7 +48,9 @@ func _init() -> void:
     add_child(_timer)
 
 
-func _ready() -> void:
+## 订阅放在进出树而不是 `_ready`：安全区收纳会重挂父容器，子树节点的 `_ready`
+## 不会重跑，只有进出树回调能保证重挂后订阅恢复。
+func _enter_tree() -> void:
     if not GameStore.queue_changed.is_connected(_refresh):
         GameStore.queue_changed.connect(_refresh)
     _refresh()

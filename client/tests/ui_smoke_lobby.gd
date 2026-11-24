@@ -33,6 +33,7 @@ func _ready() -> void:
         await _check_layout(lobby)
         await _check_hall_texture(lobby)
         await _check_match_toggle(lobby)
+        await _check_queue_timer(lobby)
         await _check_join_dialog(lobby, socket)
         await _check_creating_blocks_match(lobby)
         await _check_disconnect(lobby)
@@ -159,6 +160,46 @@ func _check_match_toggle(lobby: Node) -> void:
     _expect(not GameStore.queueing, "再点应取消排队")
     _expect(match_button.text == tr("ui.lobby.start_match"), "取消后主按钮应回到开始匹配")
     _expect(queue_card != null and not queue_card.visible, "取消后应隐藏排队卡")
+
+
+## 等待时长由客户端本地时钟累计：开始匹配即起算，服务端下发 `waitingMs` 不重置。
+func _check_queue_timer(lobby: Node) -> void:
+    var match_button := lobby.find_child("MatchButton", true, false) as Button
+    var timer := lobby.find_child("QueueTimer", true, false) as Label
+    if match_button == null or timer == null:
+        _expect(false, "排队卡应提供计时与匹配按钮")
+        return
+
+    match_button.pressed.emit()
+    await get_tree().process_frame
+    _expect(GameStore.queueing, "开始匹配后应进入排队")
+    _expect(timer.text == "00:00", "刚入队应从 00:00 起算，实际 %s" % timer.text)
+
+    # 计时器每 0.5 秒刷新一次，采样留出一个刷新周期的余量。
+    await get_tree().create_timer(1.8).timeout
+    var started := _clock_seconds(timer.text)
+    _expect(started >= 1, "排队后计时应开始走，实际 %s" % timer.text)
+
+    # 服务端只在人数变化时下发快照，且 waitingMs 可能为 0；不得把本地计时清零。
+    GameStore.handle(Protocol.MSG_QUEUE_STATE, {"waitingMs": 0, "waitingPlayers": 2})
+    await get_tree().process_frame
+    var after_snapshot := _clock_seconds(timer.text)
+    _expect(after_snapshot >= started, "服务端 waitingMs=0 不应把计时归零，实际 %s" % timer.text)
+
+    await get_tree().create_timer(1.4).timeout
+    _expect(_clock_seconds(timer.text) > after_snapshot, "收到快照后计时应继续走，实际 %s" % timer.text)
+
+    match_button.pressed.emit()
+    await get_tree().process_frame
+    _expect(not GameStore.queueing, "测试结束应取消排队")
+
+
+## 计时文本换算成秒；格式不符返回 -1。
+static func _clock_seconds(text: String) -> int:
+    var parts := text.split(":")
+    if parts.size() != 2:
+        return -1
+    return int(parts[0]) * 60 + int(parts[1])
 
 
 func _check_join_dialog(lobby: Node, socket: RecordingSocket) -> void:

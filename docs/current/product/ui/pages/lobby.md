@@ -106,7 +106,7 @@
 | 未连接 | `Net` 未连接 | 断线弹窗；快捷操作与房间操作禁用 | 重连成功后收起弹窗 |
 | 重连中 | 点「重新连接」 | 弹窗标题变「正在重新连接…」，按钮禁用 | 连接成功或再次失败 |
 | 默认 | 已连接且未排队、无创建房间 | 段位卡 + 快捷操作可见 | 排队、建房、加入或跳转 |
-| 排队中 | 点「开始匹配」 | 主按钮变「取消匹配」；段位卡换排队卡；创建与加入禁用 | 取消排队、匹配成功或断线 |
+| 排队中 | 点「开始匹配」 | 主按钮变「取消匹配」；段位卡换排队卡；创建与加入禁用；等待时长按本地时钟从点按起算 | 取消排队、匹配成功或断线 |
 | 匹配成功 | 收到 `MatchFound` | 排队卡停表，显示成功文案 | 进入对局页 |
 | 创建中 | 点「创建房间」 | 创建按钮禁用，等待 `RoomUpdate` | 房主进入创建房间模式或收到错误 |
 | 创建房间 | 房主 + 房间非空 + `Lobby` 阶段 | 座位列表与房间操作替换段位卡与快捷操作 | 开始、解散、被移出 |
@@ -133,7 +133,8 @@
 | 显示名与玩家长编号 | `GameStore.display_name`、`GameStore.player_code` |
 | 段位与积分 | `GameStore.my_tier()`、`GameStore.my_rating()`；账号视图变化时刷新 |
 | 在线好友数 | `GameStore.friends[]` 中 `status == "online"` 的条数 |
-| 排队状态、人数与等待时长 | `GameStore.queueing`、`GameStore.queue_state`、`GameStore.queue_wait_seconds()` |
+| 排队状态与人数 | `GameStore.queueing`、`GameStore.queue_state` |
+| 等待时长 | `GameStore.queue_wait_seconds()`：从本地入队时刻起算，与服务端 `QueueState` 下发节奏无关 |
 | 房间成员、座位与准备状态 | `GameStore.room_players[]` 的 `seat`、`playerId`、`displayName`、`ready`、`isHost` |
 | 房主身份与本人准备 | `GameStore.am_host()`、`GameStore.my_ready()` |
 | 机器人补位开关 | `GameStore.room_bot_fill` |
