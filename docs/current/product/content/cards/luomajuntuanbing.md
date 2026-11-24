@@ -8,8 +8,8 @@ subtype: unit
 level: 3
 era: feudal
 attack: 3
-health: 7
-skills: [keyword-taunt, shout]
+health: 4
+skills: [keyword-taunt, battlecry-friendly-growth-twice]
 ---
 
 # 罗马军团兵
@@ -26,14 +26,14 @@ skills: [keyword-taunt, shout]
 | 星级 | 3 |
 | 时代 | 封建 |
 | 攻击力 | 3 |
-| 生命值 | 7 |
-| 关键词 | 嘲讽 |
-| 技能 | keyword-taunt；shout |
+| 生命值 | 4 |
+| 关键词 | 嘲讽；战吼 |
+| 技能 | keyword-taunt；battlecry-friendly-growth-twice |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果
 
-嘲讽；使一个友方随从获得一次成长
+嘲讽；战吼：使一个友方随从获得两次成长
 
 ## 出处
 

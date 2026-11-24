@@ -7,8 +7,8 @@ taxon: information-computing
 subtype: timekeeping
 level: 1
 era: classical
-attack: 2
-health: 3
+attack: 3
+health: 2
 skills: [battlecry-friendly-plus-0-plus-1]
 ---
 
@@ -25,8 +25,8 @@ skills: [battlecry-friendly-plus-0-plus-1]
 | 子类 | 计时 |
 | 星级 | 1 |
 | 时代 | 古典 |
-| 攻击力 | 2 |
-| 生命值 | 3 |
+| 攻击力 | 3 |
+| 生命值 | 2 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-plus-0-plus-1 |
 | 科学分类 | 造物 › 信息与计算 |

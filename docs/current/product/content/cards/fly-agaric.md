@@ -8,7 +8,7 @@ subtype: fungus
 level: 2
 era: classical
 attack: 3
-health: 5
+health: 4
 skills: [decompose-kill-original]
 ---
 
@@ -26,7 +26,7 @@ skills: [decompose-kill-original]
 | 星级 | 2 |
 | 时代 | 古典 |
 | 攻击力 | 3 |
-| 生命值 | 5 |
+| 生命值 | 4 |
 | 关键词 | 分解 |
 | 技能 | decompose-kill-original |
 | 科学分类 | 真菌界 › 担子菌门 › 伞菌纲 › 伞菌目 › 鹅膏科 |

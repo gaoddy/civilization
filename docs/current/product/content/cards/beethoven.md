@@ -7,7 +7,7 @@ taxon: hominidae
 subtype: music
 level: 4
 era: industrial
-attack: 5
+attack: 4
 health: 8
 skills: [human-growth-twice]
 ---
@@ -25,7 +25,7 @@ skills: [human-growth-twice]
 | 子类 | 音乐 |
 | 星级 | 4 |
 | 时代 | 工业 |
-| 攻击力 | 5 |
+| 攻击力 | 4 |
 | 生命值 | 8 |
 | 关键词 | 无 |
 | 技能 | human-growth-twice |

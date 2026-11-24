@@ -7,8 +7,8 @@ taxon: hexamitidae
 subtype: protozoa
 level: 4
 era: classical
-attack: 7
-health: 9
+attack: 6
+health: 7
 skills: [devour-3, aura-other-protozoa-plus-1-attack]
 ---
 
@@ -25,8 +25,8 @@ skills: [devour-3, aura-other-protozoa-plus-1-attack]
 | 子类 | 原生生物 |
 | 星级 | 4 |
 | 时代 | 古典 |
-| 攻击力 | 7 |
-| 生命值 | 9 |
+| 攻击力 | 6 |
+| 生命值 | 7 |
 | 关键词 | 无 |
 | 技能 | devour-3；aura-other-protozoa-plus-1-attack |
 | 科学分类 | 原生生物界 › 后滴虫门 › 叉鞭毛纲 › 双滴虫目 › 六鞭毛虫科 |

@@ -7,7 +7,7 @@ taxon: tetraodontidae
 subtype: fish
 level: 3
 era: feudal
-attack: 5
+attack: 6
 health: 4
 skills: [keyword-taunt, aura-school-fish-1]
 ---
@@ -25,7 +25,7 @@ skills: [keyword-taunt, aura-school-fish-1]
 | 子类 | 鱼类 |
 | 星级 | 3 |
 | 时代 | 封建 |
-| 攻击力 | 5 |
+| 攻击力 | 6 |
 | 生命值 | 4 |
 | 关键词 | 嘲讽 |
 | 技能 | keyword-taunt；aura-school-fish-1 |
@@ -38,7 +38,7 @@ skills: [keyword-taunt, aura-school-fish-1]
 ## 设计说明
 
 定位：鱼纲的防守型随从，嘲讽吸收攻击并以群聚强化鱼群。
-平衡边界：3 星 5/4；攻击力取该星级上限，生命值取该星级下限；关键词折算 0.5 点，合计 9.5，低于 13 上限 3.5 点。
+平衡边界：3 星 6/4；攻击力取该星级上限，生命值取该星级下限；关键词折算 0.5 点，合计 10.5，低于 13 上限 2.5 点。
 使用建议：放在鱼群前排保护核心，在场时持续为其他鱼纲随从提供群聚加成。
 
 ## 出处

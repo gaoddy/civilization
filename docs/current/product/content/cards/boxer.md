@@ -7,8 +7,8 @@ taxon: hominidae
 subtype: athlete
 level: 4
 era: modern
-attack: 6
-health: 9
+attack: 5
+health: 10
 skills: [trigger-3-humans-self-plus-2-attack, shout]
 ---
 
@@ -25,8 +25,8 @@ skills: [trigger-3-humans-self-plus-2-attack, shout]
 | 子类 | 运动员 |
 | 星级 | 4 |
 | 时代 | 现代 |
-| 攻击力 | 6 |
-| 生命值 | 9 |
+| 攻击力 | 5 |
+| 生命值 | 10 |
 | 关键词 | 无 |
 | 技能 | trigger-3-humans-self-plus-2-attack；shout |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |

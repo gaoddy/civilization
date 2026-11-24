@@ -8,7 +8,7 @@ subtype: microorganism
 level: 2
 era: prehistoric
 attack: 3
-health: 5
+health: 4
 skills: [trigger-enemy-death-self-plus-1-plus-1]
 ---
 
@@ -26,7 +26,7 @@ skills: [trigger-enemy-death-self-plus-1-plus-1]
 | 星级 | 2 |
 | 时代 | 史前 |
 | 攻击力 | 3 |
-| 生命值 | 5 |
+| 生命值 | 4 |
 | 关键词 | 无 |
 | 技能 | trigger-enemy-death-self-plus-1-plus-1 |
 | 科学分类 | 病毒 › 未定科 |

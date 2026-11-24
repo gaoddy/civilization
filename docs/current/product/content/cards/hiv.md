@@ -7,8 +7,8 @@ taxon: retroviridae
 subtype: virus
 level: 4
 era: modern
-attack: 6
-health: 9
+attack: 4
+health: 10
 skills: [keyword-contagion, combatstart-random-enemy-contagion-1]
 ---
 
@@ -25,8 +25,8 @@ skills: [keyword-contagion, combatstart-random-enemy-contagion-1]
 | 子类 | 病毒 |
 | 星级 | 4 |
 | 时代 | 现代 |
-| 攻击力 | 6 |
-| 生命值 | 9 |
+| 攻击力 | 4 |
+| 生命值 | 10 |
 | 关键词 | 传染 |
 | 技能 | keyword-contagion；combatstart-random-enemy-contagion-1 |
 | 科学分类 | 病毒 › 核糖病毒门 › 逆转录病毒纲 › 逆转录病毒目 › 逆转录病毒科 |

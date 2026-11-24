@@ -8,7 +8,7 @@ subtype: captain
 level: 7
 era: future
 attack: 15
-health: 14
+health: 16
 skills: [keyword-taunt, shout]
 ---
 
@@ -26,7 +26,7 @@ skills: [keyword-taunt, shout]
 | 星级 | 7 |
 | 时代 | 未来 |
 | 攻击力 | 15 |
-| 生命值 | 14 |
+| 生命值 | 16 |
 | 关键词 | 嘲讽 |
 | 技能 | keyword-taunt；shout |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |

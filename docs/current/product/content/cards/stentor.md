@@ -8,7 +8,7 @@ subtype: protozoa
 level: 2
 era: primitive
 attack: 2
-health: 4
+health: 3
 skills: [devour-1]
 ---
 
@@ -26,7 +26,7 @@ skills: [devour-1]
 | 星级 | 2 |
 | 时代 | 原始 |
 | 攻击力 | 2 |
-| 生命值 | 4 |
+| 生命值 | 3 |
 | 关键词 | 无 |
 | 技能 | devour-1 |
 | 科学分类 | 原生生物界 › 纤毛门 › 异毛纲 › 异毛目 › 喇叭虫科 |

@@ -7,8 +7,8 @@ taxon: hominidae
 subtype: pharmacology
 level: 4
 era: feudal
-attack: 5
-health: 7
+attack: 4
+health: 10
 skills: [battlecry-plant-growth-twice]
 ---
 
@@ -25,8 +25,8 @@ skills: [battlecry-plant-growth-twice]
 | 子类 | 医药学 |
 | 星级 | 4 |
 | 时代 | 封建 |
-| 攻击力 | 5 |
-| 生命值 | 7 |
+| 攻击力 | 4 |
+| 生命值 | 10 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-plant-growth-twice |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
@@ -38,7 +38,7 @@ skills: [battlecry-plant-growth-twice]
 ## 设计说明
 
 定位：植物流的定向双成长战吼，把播种体系的身材拉开。
-平衡边界：单体两次成长按战吼折算 2 点，5/7 加 2 等于 14，未超上限 17。
+平衡边界：单体两次成长按战吼折算 2 点，4/10 加 2 等于 16，未超上限 17。
 使用建议：打给带播种的植物随从，让死亡召唤的幼苗也更结实。
 
 ## 出处

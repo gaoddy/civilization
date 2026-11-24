@@ -7,8 +7,8 @@ taxon: hominidae
 subtype: engineering
 level: 5
 era: industrial
-attack: 7
-health: 11
+attack: 8
+health: 9
 skills: [aura-other-mech-plus-1-plus-1]
 ---
 
@@ -25,8 +25,8 @@ skills: [aura-other-mech-plus-1-plus-1]
 | 子类 | 工程 |
 | 星级 | 5 |
 | 时代 | 工业 |
-| 攻击力 | 7 |
-| 生命值 | 11 |
+| 攻击力 | 8 |
+| 生命值 | 9 |
 | 关键词 | 无 |
 | 技能 | aura-other-mech-plus-1-plus-1 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |

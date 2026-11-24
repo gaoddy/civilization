@@ -8,7 +8,7 @@ subtype: fungus
 level: 3
 era: feudal
 attack: 3
-health: 7
+health: 6
 skills: [decompose-kill-original]
 ---
 
@@ -26,7 +26,7 @@ skills: [decompose-kill-original]
 | 星级 | 3 |
 | 时代 | 封建 |
 | 攻击力 | 3 |
-| 生命值 | 7 |
+| 生命值 | 6 |
 | 关键词 | 分解 |
 | 技能 | decompose-kill-original |
 | 科学分类 | 真菌界 › 担子菌门 › 伞菌纲 › 伞菌目 › 光茸菌科 |

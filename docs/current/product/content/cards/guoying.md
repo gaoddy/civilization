@@ -8,7 +8,7 @@ subtype: insect
 level: 1
 era: prehistoric
 attack: 2
-health: 2
+health: 3
 skills: [keyword-breed-1]
 ---
 
@@ -26,7 +26,7 @@ skills: [keyword-breed-1]
 | 星级 | 1 |
 | 时代 | 史前 |
 | 攻击力 | 2 |
-| 生命值 | 2 |
+| 生命值 | 3 |
 | 关键词 | 繁衍 1 |
 | 技能 | keyword-breed-1 |
 | 科学分类 | 动物界 › 节肢动物门 › 昆虫纲 › 双翅目 › 果蝇科 |

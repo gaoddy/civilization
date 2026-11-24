@@ -8,7 +8,7 @@ subtype: siege
 level: 2
 era: classical
 attack: 3
-health: 4
+health: 3
 skills: [battlecry-random-enemy-damage-1]
 ---
 
@@ -26,7 +26,7 @@ skills: [battlecry-random-enemy-damage-1]
 | 星级 | 2 |
 | 时代 | 古典 |
 | 攻击力 | 3 |
-| 生命值 | 4 |
+| 生命值 | 3 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-random-enemy-damage-1 |
 | 科学分类 | 造物 › 武器与攻城 |

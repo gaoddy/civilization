@@ -7,9 +7,9 @@ taxon: weapon-siege
 subtype: siege
 level: 3
 era: classical
-attack: 4
-health: 6
-skills: [combatstart-leftmost-damage-3, shout]
+attack: 3
+health: 4
+skills: [combatstart-leftmost-damage-4, shout]
 ---
 
 # 弩炮
@@ -25,15 +25,15 @@ skills: [combatstart-leftmost-damage-3, shout]
 | 子类 | 攻城 |
 | 星级 | 3 |
 | 时代 | 古典 |
-| 攻击力 | 4 |
-| 生命值 | 6 |
+| 攻击力 | 3 |
+| 生命值 | 4 |
 | 关键词 | 无 |
-| 技能 | combatstart-leftmost-damage-3；shout |
+| 技能 | combatstart-leftmost-damage-4；shout |
 | 科学分类 | 造物 › 武器与攻城 |
 
 ## 效果
 
-战斗开始时，对敌方最左侧随从造成 3 点伤害；使一个友方随从获得一次成长
+战斗开始时，对敌方最左侧随从造成 4 点伤害；使一个友方随从获得一次成长
 
 ## 出处
 

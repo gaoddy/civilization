@@ -4,9 +4,9 @@ use common::{test_catalog, test_playstyles};
 use rule_engine::engine::Engine;
 use rule_engine::state::{MinionInstance, MinionStats, Phase, StatComponent};
 
-/// 卡面 3/3 的普通随从。
+/// 卡面 3/5 的普通随从。
 const FOUR: &str = "jianchihu";
-/// 卡面 0/5、攻击力为 0 的随从。
+/// 卡面 0/6、攻击力为 0 的随从。
 const SCHOLAR: &str = "euclid";
 
 #[test]
@@ -128,15 +128,15 @@ fn new_resolves_card_stats_and_golden_doubles() {
     let plain = MinionInstance::new(&catalog, 1, FOUR, false);
     assert_eq!(
         (plain.stats.attack.current, plain.stats.health.current),
-        (3, 3)
+        (3, 5)
     );
-    assert_eq!((plain.attack(), plain.health()), (3, 3));
+    assert_eq!((plain.attack(), plain.health()), (3, 5));
     let golden = MinionInstance::new(&catalog, 2, FOUR, true);
     assert_eq!(
         (golden.stats.attack.initial, golden.stats.health.initial),
-        (6, 6)
+        (6, 10)
     );
-    assert_eq!((golden.attack(), golden.health()), (6, 6));
+    assert_eq!((golden.attack(), golden.health()), (6, 10));
 }
 
 #[test]
@@ -146,7 +146,7 @@ fn zero_attack_layers_accumulate_normally() {
     minion.stats.attack.add_permanent(1);
     assert_eq!(minion.stats.attack.current, 1);
     assert_eq!(minion.attack(), 1);
-    assert_eq!(minion.health(), 5);
+    assert_eq!(minion.health(), 6);
 }
 
 #[test]
@@ -157,11 +157,11 @@ fn growth_layers_track_attack_and_health() {
     // 普通成长：攻血各 +1。
     minion.stats.attack.add_growth(1);
     minion.stats.health.add_growth(1);
-    assert_eq!((minion.attack(), minion.health()), (4, 4));
+    assert_eq!((minion.attack(), minion.health()), (4, 6));
 
     // 只加生命的成长（原 `growth_health_only`）只进入生命层。
     minion.stats.health.add_growth(2);
-    assert_eq!((minion.attack(), minion.health()), (4, 6));
+    assert_eq!((minion.attack(), minion.health()), (4, 8));
     assert_eq!(minion.stats.health.growth, 3);
 }
 
@@ -182,7 +182,7 @@ fn contagion_writes_negative_health_permanent() {
 
     let minion = &state.players[0].board[0];
     assert_eq!(minion.stats.health.permanent, -2);
-    assert_eq!(minion.health(), 1);
+    assert_eq!(minion.health(), 3);
 
     let mut clone = minion.clone();
     clone.stats.health.add_growth(5);

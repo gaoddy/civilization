@@ -7,8 +7,8 @@ taxon: hominidae
 subtype: primate
 level: 4
 era: modern
-attack: 6
-health: 8
+attack: 4
+health: 10
 skills: [battlecry-self-growth-twice]
 ---
 
@@ -25,8 +25,8 @@ skills: [battlecry-self-growth-twice]
 | 子类 | 灵长 |
 | 星级 | 4 |
 | 时代 | 现代 |
-| 攻击力 | 6 |
-| 生命值 | 8 |
+| 攻击力 | 4 |
+| 生命值 | 10 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-self-growth-twice |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |

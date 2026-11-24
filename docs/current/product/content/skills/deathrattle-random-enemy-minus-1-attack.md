@@ -1,5 +1,6 @@
 ---
 id: deathrattle-random-enemy-minus-1-attack
+keyword: deathrattle
 template: on-death-stats-enemy-random-attack(attack=-1)
 ---
 
@@ -10,7 +11,7 @@ template: on-death-stats-enemy-random-attack(attack=-1)
 | 属性 | 值 |
 | --- | --- |
 | id | deathrattle-random-enemy-minus-1-attack |
-| 关键词 | 无 |
+| 关键词 | 亡语 |
 | 模板 | on-death-stats-enemy-random-attack |
 
 ## 效果

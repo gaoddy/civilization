@@ -8,7 +8,7 @@ subtype: bird
 level: 1
 era: prehistoric
 attack: 2
-health: 2
+health: 3
 skills: [dive-1]
 ---
 
@@ -26,7 +26,7 @@ skills: [dive-1]
 | 星级 | 1 |
 | 时代 | 史前 |
 | 攻击力 | 2 |
-| 生命值 | 2 |
+| 生命值 | 3 |
 | 关键词 | 无 |
 | 技能 | dive-1 |
 | 科学分类 | 动物界 › 脊索动物门 › 鸟纲 › 始祖鸟目 › 始祖鸟科 |

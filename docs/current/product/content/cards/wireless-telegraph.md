@@ -7,8 +7,8 @@ taxon: information-computing
 subtype: telecommunication
 level: 6
 era: modern
-attack: 8
-health: 12
+attack: 11
+health: 11
 skills: [keyword-assemble-2, battlecry-all-mech-growth-once-no-keyword]
 ---
 
@@ -25,8 +25,8 @@ skills: [keyword-assemble-2, battlecry-all-mech-growth-once-no-keyword]
 | 子类 | 通讯 |
 | 星级 | 6 |
 | 时代 | 现代 |
-| 攻击力 | 8 |
-| 生命值 | 12 |
+| 攻击力 | 11 |
+| 生命值 | 11 |
 | 关键词 | 装配 2 |
 | 技能 | keyword-assemble-2；battlecry-all-mech-growth-once-no-keyword |
 | 科学分类 | 造物 › 信息与计算 |

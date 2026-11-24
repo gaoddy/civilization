@@ -7,8 +7,8 @@ taxon: hominidae
 subtype: city-state
 level: 1
 era: classical
-attack: 2
-health: 2
+attack: 1
+health: 3
 skills: [battlecry-friendly-plus-0-plus-1]
 ---
 
@@ -25,8 +25,8 @@ skills: [battlecry-friendly-plus-0-plus-1]
 | 子类 | 城邦 |
 | 星级 | 1 |
 | 时代 | 古典 |
-| 攻击力 | 2 |
-| 生命值 | 2 |
+| 攻击力 | 1 |
+| 生命值 | 3 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-plus-0-plus-1 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |

@@ -7,8 +7,8 @@ taxon: information-computing
 subtype: telecommunication
 level: 4
 era: modern
-attack: 6
-health: 9
+attack: 7
+health: 6
 skills: [keyword-assemble-1]
 ---
 
@@ -25,8 +25,8 @@ skills: [keyword-assemble-1]
 | 子类 | 通讯 |
 | 星级 | 4 |
 | 时代 | 现代 |
-| 攻击力 | 6 |
-| 生命值 | 9 |
+| 攻击力 | 7 |
+| 生命值 | 6 |
 | 关键词 | 装配 1 |
 | 技能 | keyword-assemble-1 |
 | 科学分类 | 造物 › 信息与计算 |

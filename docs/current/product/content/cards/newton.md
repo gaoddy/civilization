@@ -8,8 +8,8 @@ subtype: physics
 level: 5
 era: modern
 attack: 0
-health: 16
-skills: [battlecry-friendly-growth-twice]
+health: 17
+skills: [battlecry-all-friendly-plus-0-plus-1]
 ---
 
 # 牛顿
@@ -26,14 +26,14 @@ skills: [battlecry-friendly-growth-twice]
 | 星级 | 5 |
 | 时代 | 现代 |
 | 攻击力 | 0 |
-| 生命值 | 16 |
+| 生命值 | 17 |
 | 关键词 | 战吼 |
-| 技能 | battlecry-friendly-growth-twice |
+| 技能 | battlecry-all-friendly-plus-0-plus-1 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果
 
-战吼：使一个友方随从获得两次成长
+战吼：使你的所有随从获得 +0/+1
 
 ## 出处
 

@@ -8,7 +8,7 @@ subtype: crop
 level: 2
 era: prehistoric
 attack: 2
-health: 5
+health: 6
 skills: [keyword-breed-2]
 ---
 
@@ -26,7 +26,7 @@ skills: [keyword-breed-2]
 | 星级 | 2 |
 | 时代 | 史前 |
 | 攻击力 | 2 |
-| 生命值 | 5 |
+| 生命值 | 6 |
 | 关键词 | 繁衍 2 |
 | 技能 | keyword-breed-2 |
 | 科学分类 | 植物界 › 被子植物门 › 双子叶植物纲 › 菊目 › 菊科 |

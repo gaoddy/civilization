@@ -7,7 +7,7 @@ taxon: salmonidae
 subtype: fish
 level: 4
 era: industrial
-attack: 4
+attack: 6
 health: 6
 skills: [deathrattle-summon-fish-fry-2]
 ---
@@ -25,7 +25,7 @@ skills: [deathrattle-summon-fish-fry-2]
 | 子类 | 鱼类 |
 | 星级 | 4 |
 | 时代 | 工业 |
-| 攻击力 | 4 |
+| 攻击力 | 6 |
 | 生命值 | 6 |
 | 关键词 | 亡语 |
 | 技能 | deathrattle-summon-fish-fry-2 |
@@ -38,7 +38,7 @@ skills: [deathrattle-summon-fish-fry-2]
 ## 设计说明
 
 定位：鱼纲铺场与分裂的衔接点，死亡后留下两个鱼苗。
-平衡边界：4 星 4/6；攻击力取该星级下限，生命值取该星级下限；关键词折算 4 点，合计 14，低于 17 上限 3 点。
+平衡边界：4 星 6/6；攻击力取该星级中位，生命值取该星级下限；关键词折算 4 点，合计 16，低于 17 上限 1 点。
 使用建议：鱼苗可继续接受群聚光环，适合放在会主动交换的位置。
 
 ## 出处

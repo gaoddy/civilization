@@ -8,7 +8,7 @@ subtype: protozoa
 level: 3
 era: modern
 attack: 4
-health: 6
+health: 5
 skills: [devour-2]
 ---
 
@@ -26,7 +26,7 @@ skills: [devour-2]
 | 星级 | 3 |
 | 时代 | 现代 |
 | 攻击力 | 4 |
-| 生命值 | 6 |
+| 生命值 | 5 |
 | 关键词 | 无 |
 | 技能 | devour-2 |
 | 科学分类 | 原生生物界 › 眼虫门 › 动质体纲 › 锥虫目 › 锥虫科 |

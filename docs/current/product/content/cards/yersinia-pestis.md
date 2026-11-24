@@ -8,7 +8,7 @@ subtype: bacteria
 level: 4
 era: feudal
 attack: 4
-health: 9
+health: 10
 skills: [keyword-contagion, detonate-1]
 ---
 
@@ -26,7 +26,7 @@ skills: [keyword-contagion, detonate-1]
 | 星级 | 4 |
 | 时代 | 封建 |
 | 攻击力 | 4 |
-| 生命值 | 9 |
+| 生命值 | 10 |
 | 关键词 | 传染 |
 | 技能 | keyword-contagion；detonate-1 |
 | 科学分类 | 细菌域 › 变形菌门 › γ-变形菌纲 › 肠杆菌目 › 耶尔森菌科 |

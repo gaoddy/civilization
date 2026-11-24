@@ -7,8 +7,8 @@ taxon: life-medical
 subtype: medical
 level: 5
 era: future
-attack: 6
-health: 9
+attack: 8
+health: 10
 skills: [battlecry-summon-3-3-synthetic-cell, shout]
 ---
 
@@ -25,8 +25,8 @@ skills: [battlecry-summon-3-3-synthetic-cell, shout]
 | 子类 | 医疗 |
 | 星级 | 5 |
 | 时代 | 未来 |
-| 攻击力 | 6 |
-| 生命值 | 9 |
+| 攻击力 | 8 |
+| 生命值 | 10 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-summon-3-3-synthetic-cell；shout |
 | 科学分类 | 造物 › 生活与医疗 |

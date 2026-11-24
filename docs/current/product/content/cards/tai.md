@@ -7,8 +7,8 @@ taxon: bryaceae
 subtype: moss
 level: 1
 era: primitive
-attack: 1
-health: 4
+attack: 2
+health: 3
 skills: [keyword-sow]
 ---
 
@@ -25,8 +25,8 @@ skills: [keyword-sow]
 | 子类 | 苔藓 |
 | 星级 | 1 |
 | 时代 | 原始 |
-| 攻击力 | 1 |
-| 生命值 | 4 |
+| 攻击力 | 2 |
+| 生命值 | 3 |
 | 关键词 | 播种 |
 | 技能 | keyword-sow |
 | 科学分类 | 植物界 › 苔藓植物门 › 藓纲 › 真藓目 › 真藓科 |

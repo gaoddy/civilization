@@ -7,8 +7,8 @@ taxon: hominidae
 subtype: politics
 level: 3
 era: classical
-attack: 4
-health: 4
+attack: 5
+health: 5
 skills: [battlecry-other-friendly-humans-plus-1-attack]
 ---
 
@@ -25,8 +25,8 @@ skills: [battlecry-other-friendly-humans-plus-1-attack]
 | 子类 | 政治 |
 | 星级 | 3 |
 | 时代 | 古典 |
-| 攻击力 | 4 |
-| 生命值 | 4 |
+| 攻击力 | 5 |
+| 生命值 | 5 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-other-friendly-humans-plus-1-attack |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |

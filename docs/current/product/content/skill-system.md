@@ -2,7 +2,7 @@
 
 > 依赖：[卡牌规范与数据](card-system.md) §2.1「英雄卡」、[关键词与机制](../rules/keywords-and-mechanics.md)
 > 状态：已实现
-> 数据：`docs/current/product/content/skills/`（255 份，文件名 = id）
+> 数据：`docs/current/product/content/skills/`（262 份，文件名 = id）
 > 模板：`docs/current/product/content/skill-templates/`（文件名 = id）
 
 本文描述技能实体的定义、字段规范、引用与渲染规则、共享规则、数据总览与校验方式；不描述具体实现与后续版本技能。归属已实现产品状态的内容。
@@ -174,44 +174,44 @@ OnAllyKill|Decompose|self|basis=pre_kill,duration=permanent
 
 | 维度 | 数量 |
 | --- | --- |
-| 技能总数 | 255 |
-| 经卡牌 `skills` 引用的技能 | 243 |
-| 仅经英雄卡 `skills` 引用的技能 | 8 |
+| 技能总数 | 262 |
+| 经卡牌 `skills` 引用的技能 | 251 |
+| 仅经英雄卡 `skills` 引用的技能 | 7 |
 | 既未被卡牌也未被英雄引用的技能 | 4 |
 | 引用技能的效果牌 | 100（每张 1 个技能） |
 | 引用技能的随从牌 | 308 |
-| 不带技能的随从牌 | 1 |
-| 卡牌技能引用 | 535 段效果单元 |
+| 不带技能的随从牌 | 24 |
+| 卡牌技能引用 | 538 段效果单元 |
 
-255 个技能中，243 个经卡牌 `skills` 引用，8 个仅由英雄卡引用（英雄专属主动技能），其余 4 个既未被卡牌也未被英雄引用。卡牌技能共 535 段引用（随从 435 段 + 效果牌 100 段），其中 2 处「若其为<筛选对象>」条件变体已并回前一段（见 §2「技能边界」）。
+262 个技能中，251 个经卡牌 `skills` 引用，7 个仅由英雄卡引用（`binomial-nomenclature`、`cold-damage-treatise`、`mass-energy-equivalence`、`materia-medica`、`mechanism-art`、`radium`、`seven-voyages`，均为英雄专属主动技能），其余 4 个既未被卡牌也未被英雄引用。24 张不带技能的随从牌中，23 张是非池衍生随从，另 1 张是池内的 `einstein-fridge`（爱因斯坦冰箱，3 星 3/5，效果为「无」）。卡牌技能共 538 段引用（随从 438 段 + 效果牌 100 段），其中 2 处「若其为<筛选对象>」条件变体已并回前一段（见 §2「技能边界」）。
 
 ### 5.1 筛选键使用分布
 
-按实例模板展开后的效果中实际出现的筛选键统计（同一技能内同一键只计一次）：
+按实例模板展开后的效果中实际出现的筛选键统计，含 `selector.filters` 与 `timesIf` / `condition` / `when` 里的筛选条件（同一技能内同一键只计一次）：
 
 | 筛选键 | 取值示例 | 使用技能数 |
 | --- | --- | --- |
-| `taxon` | `taxon=animalia`、`taxon=canidae` | 16 |
-| `playstyle` | `playstyle=machine`、`playstyle=plant`、`playstyle=virus` | 66 |
-| `scholar` | `scholar=true` | 3 |
-| `keyword` | `keyword=breed`、`keyword=taunt`、`keyword=poison` | 35 |
+| `taxon` | `taxon=animalia`、`taxon=canidae` | 22 |
+| `playstyle` | `playstyle=machine`、`playstyle=plant`、`playstyle=virus` | 74 |
+| `keyword` | `keyword=breed`、`keyword=taunt`、`keyword=poison` | 0 |
 | `type` | `type=minion` | 3 |
 | `id` | `id=gongjianshou` | 1 |
-| `other` | `other=true` | 17 |
+| `other` | `other=true` | 20 |
 | `play` / `prey` / `host` / `subtype` | — | 0 |
 
-`timesIf` 共 3 处，分别为 `timesIf=taxon:hominidae:2`、`timesIf=playstyle:plant:2` 与 `timesIf=scholar:2`；`condition` 共 6 处，均按 `taxon` 统计阵营内数量（`taxon=animalia` 1 处、`taxon=hominidae` 5 处）；`when` 共 3 处，其中 1 处按 `taxon=animalia` 限定触发对象、2 处按 `taxon=hominidae` 限定。数值以脚本统计为准，改技能后同步更新。
+`timesIf` 共 2 处，分别为 `timesIf=taxon:hominidae:2` 与 `timesIf=playstyle:plant:2`；`condition` 共 6 处，均按 `taxon` 统计阵营内数量（`taxon=animalia` 1 处、`taxon=hominidae` 5 处）；`when` 共 3 处，其中 1 处按 `taxon=animalia` 限定触发对象、2 处按 `taxon=hominidae` 限定。数值以脚本统计为准，改技能后同步更新。
 
 ### 5.2 共享度
 
 | 技能 | 引用数 |
 | --- | --- |
-| `shout` 战吼 | 28 |
-| `keyword-taunt` 嘲讽 | 20 |
+| `shout` 战吼 | 22 |
+| `keyword-taunt` 嘲讽 | 21 |
+| `keyword-contagion` 传染 | 16 |
 | `keyword-sow` 播种 | 16 |
-| `keyword-contagion` 传染 | 15 |
+| `keyword-ignore-taunt` 无视嘲讽 | 12 |
 
-引用数由校验脚本统计，不写入技能实体文档；另有多项并列 11 次引用（`keyword-windfury`、`keyword-assemble-1`、`battlecry-friendly-growth-once`、`combatstart-random-enemy-contagion-1`），表中从略。
+引用数由校验脚本按卡牌（不含英雄卡）统计，不写入技能实体文档；另有并列 11 次引用（`keyword-windfury`、`keyword-breed-1`、`keyword-assemble-1`），表中从略。
 
 ## 6. 校验
 
@@ -223,7 +223,7 @@ python3 scripts/validate_docs.py
 
 技能相关校验覆盖：
 
-1. 技能文档 255 份，`id` 等于文件名且在技能命名空间内唯一；
+1. 技能文档 262 份，`id` 等于文件名且在技能命名空间内唯一；
 2. 技能属性表与 front matter 一致；
 3. 主动技能必须有 `name`，`cost` 与 `uses_per_turn` 成对出现且取值在 0–3 / 1–2 内；
 4. 每张效果牌至少引用 1 个技能；全池恰好 1 张无技能随从（`einstein-fridge`）的 `skills` 为空且 `## 效果` 为「无」；
@@ -236,7 +236,7 @@ python3 scripts/validate_docs.py
 11. 专属关键词按玩法与分类校验：`decompose` 仅 play 命中真菌界/细菌域、`assemble` 仅 play 命中机械（含造物六类工具卡）、`sow` 仅 play 命中植物界、`evolve` 仅生物卡；
 12. 派生小节由 `python3 scripts/render_docs.py --check` 校验：技能 `## 属性` 的派生行、技能与卡牌的 `## 效果` 无漂移；`make data-check` 已包含这一步。
 
-期望：输出包含 `随从 332 张、效果牌 100 张、技能 255 个、英雄卡 32 张，校验通过`，退出码 0；否则逐条打印违规并以退出码 1 结束。
+期望：输出包含 `随从 332 张、效果牌 100 张、技能 262 个、英雄卡 32 张，校验通过`，退出码 0；否则逐条打印违规并以退出码 1 结束。
 
 模板渲染、`effects` 解析与校验函数有独立单元测试，改动校验逻辑后运行：
 

@@ -67,7 +67,7 @@ class GenClientDataTest(unittest.TestCase):
         cards = bundle["cards"]
         skills = bundle["skills"]
         self.assertEqual(len(cards), 432)
-        self.assertEqual(len(skills), 255)
+        self.assertEqual(len(skills), 262)
         heroes = bundle["heroes"]
         self.assertEqual(len(heroes), 32)
         self.assertEqual([hero["id"] for hero in heroes],

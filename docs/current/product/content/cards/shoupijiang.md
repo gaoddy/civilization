@@ -7,8 +7,8 @@ taxon: hominidae
 subtype: primitive
 level: 2
 era: primitive
-attack: 3
-health: 3
+attack: 2
+health: 4
 skills: [battlecry-friendly-plus-0-plus-2]
 ---
 
@@ -25,8 +25,8 @@ skills: [battlecry-friendly-plus-0-plus-2]
 | 子类 | 原始 |
 | 星级 | 2 |
 | 时代 | 原始 |
-| 攻击力 | 3 |
-| 生命值 | 3 |
+| 攻击力 | 2 |
+| 生命值 | 4 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-plus-0-plus-2 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |

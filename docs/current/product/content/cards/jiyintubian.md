@@ -7,7 +7,7 @@ era: future
 categories: [play:plant, play:protozoa]
 taxon: biology
 cost: 2
-skills: [trigger-friendly-growth-twice]
+skills: [trigger-friendly-single-plus-2-plus-2]
 ---
 
 # 基因突变
@@ -22,13 +22,13 @@ skills: [trigger-friendly-growth-twice]
 | 星级 | 3 |
 | 时代 | 未来 |
 | 玩法 | 植物界、原生生物界 |
-| 技能 | trigger-friendly-growth-twice |
+| 技能 | trigger-friendly-single-plus-2-plus-2 |
 | 费用 | 2 |
 | 科学分类 | 科学 › 生物学 |
 
 ## 效果
 
-使一个友方随从获得两次成长
+使一个友方随从获得 +2/+2
 
 ## 出处
 

@@ -7,8 +7,8 @@ taxon: polypodiaceae
 subtype: fern
 level: 2
 era: prehistoric
-attack: 2
-health: 5
+attack: 3
+health: 3
 skills: [keyword-breed-2]
 ---
 
@@ -25,8 +25,8 @@ skills: [keyword-breed-2]
 | 子类 | 蕨类 |
 | 星级 | 2 |
 | 时代 | 史前 |
-| 攻击力 | 2 |
-| 生命值 | 5 |
+| 攻击力 | 3 |
+| 生命值 | 3 |
 | 关键词 | 繁衍 2 |
 | 技能 | keyword-breed-2 |
 | 科学分类 | 植物界 › 蕨类植物门 › 水龙骨纲 › 水龙骨目 › 水龙骨科 |

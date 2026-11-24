@@ -7,9 +7,9 @@ taxon: hominidae
 subtype: martial-artist
 level: 4
 era: modern
-attack: 7
-health: 6
-skills: [keyword-windfury, shout]
+attack: 6
+health: 7
+skills: [keyword-windfury, aura-school-mammal]
 ---
 
 # 李小龙
@@ -25,15 +25,15 @@ skills: [keyword-windfury, shout]
 | 子类 | 武术家 |
 | 星级 | 4 |
 | 时代 | 现代 |
-| 攻击力 | 7 |
-| 生命值 | 6 |
+| 攻击力 | 6 |
+| 生命值 | 7 |
 | 关键词 | 连击 |
-| 技能 | keyword-windfury；shout |
+| 技能 | keyword-windfury；aura-school-mammal |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果
 
-连击：每回合可攻击两次；使一个友方随从获得一次成长
+连击：每回合可攻击两次；群聚：你的其他哺乳纲随从获得 +1/+1；每有一个其他哺乳纲随从，再获得 +1 攻击力
 
 ## 出处
 

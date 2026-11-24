@@ -8,7 +8,7 @@ subtype: behemoth
 level: 7
 era: future
 attack: 15
-health: 14
+health: 15
 skills: [keyword-windfury]
 ---
 
@@ -26,7 +26,7 @@ skills: [keyword-windfury]
 | 星级 | 7 |
 | 时代 | 未来 |
 | 攻击力 | 15 |
-| 生命值 | 14 |
+| 生命值 | 15 |
 | 关键词 | 连击 |
 | 技能 | keyword-windfury |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 未定科 |

@@ -9,7 +9,7 @@ level: 5
 era: feudal
 attack: 6
 health: 12
-skills: [revive-2, keyword-armor-1]
+skills: [revive-2, keyword-armor-1, trigger-cnidarian-permanent-taunt]
 ---
 
 # 红珊瑚
@@ -27,13 +27,13 @@ skills: [revive-2, keyword-armor-1]
 | 时代 | 封建 |
 | 攻击力 | 6 |
 | 生命值 | 12 |
-| 关键词 | 减伤 1 |
-| 技能 | revive-2；keyword-armor-1 |
+| 关键词 | 减伤 1；战吼 |
+| 技能 | revive-2；keyword-armor-1；trigger-cnidarian-permanent-taunt |
 | 科学分类 | 动物界 › 刺胞动物门 › 珊瑚纲 › 软珊瑚目 › 红珊瑚科 |
 
 ## 效果
 
-复苏：以 +2/+2 复活一次；减伤 1：受到伤害时，减免 1 点伤害
+复苏：以 +2/+2 复活一次；减伤 1：受到伤害时，减免 1 点伤害；战吼：使一个友方水螅纲随从获得嘲讽
 
 ## 设计说明
 

@@ -7,8 +7,8 @@ taxon: architeuthidae
 subtype: mollusk
 level: 5
 era: modern
-attack: 7
-health: 10
+attack: 8
+health: 11
 skills: [keyword-stealth, devour-3]
 ---
 
@@ -25,8 +25,8 @@ skills: [keyword-stealth, devour-3]
 | 子类 | 软体 |
 | 星级 | 5 |
 | 时代 | 现代 |
-| 攻击力 | 7 |
-| 生命值 | 10 |
+| 攻击力 | 8 |
+| 生命值 | 11 |
 | 关键词 | 潜行 |
 | 技能 | keyword-stealth；devour-3 |
 | 科学分类 | 动物界 › 软体动物门 › 头足纲 › 开眼目 › 大王乌贼科 |

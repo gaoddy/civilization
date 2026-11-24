@@ -7,8 +7,8 @@ taxon: poxviridae
 subtype: virus
 level: 2
 era: primitive
-attack: 3
-health: 5
+attack: 4
+health: 4
 skills: [deathrattle-all-enemies-minus-1-health]
 ---
 
@@ -25,8 +25,8 @@ skills: [deathrattle-all-enemies-minus-1-health]
 | 子类 | 病毒 |
 | 星级 | 2 |
 | 时代 | 原始 |
-| 攻击力 | 3 |
-| 生命值 | 5 |
+| 攻击力 | 4 |
+| 生命值 | 4 |
 | 关键词 | 亡语 |
 | 技能 | deathrattle-all-enemies-minus-1-health |
 | 科学分类 | 病毒 › 核质巨 DNA 病毒门 › 痘病毒纲 › 痘病毒目 › 痘病毒科 |

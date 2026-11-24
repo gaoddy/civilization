@@ -8,7 +8,7 @@ subtype: medicine
 level: 3
 era: primitive
 attack: 0
-health: 9
+health: 11
 skills: [trigger-friendly-growth-extra-plus-0-plus-1]
 ---
 
@@ -26,7 +26,7 @@ skills: [trigger-friendly-growth-extra-plus-0-plus-1]
 | 星级 | 3 |
 | 时代 | 原始 |
 | 攻击力 | 0 |
-| 生命值 | 9 |
+| 生命值 | 11 |
 | 关键词 | 无 |
 | 技能 | trigger-friendly-growth-extra-plus-0-plus-1 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |

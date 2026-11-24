@@ -8,7 +8,7 @@ subtype: primate
 level: 3
 era: modern
 attack: 4
-health: 5
+health: 6
 skills: [battlecry-friendly-growth-once, shout]
 ---
 
@@ -26,7 +26,7 @@ skills: [battlecry-friendly-growth-once, shout]
 | 星级 | 3 |
 | 时代 | 现代 |
 | 攻击力 | 4 |
-| 生命值 | 5 |
+| 生命值 | 6 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-growth-once；shout |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |

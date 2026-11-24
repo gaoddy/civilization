@@ -154,8 +154,8 @@ ACHIEVEMENT_FIELDS = ["id", "name", "event", "condition", "count", "reward",
                       "steam_api_name", "affects_power"]
 # Steamworks 成就 API 名：ASCII 大写字母开头，后接大写字母、数字或下划线。
 STEAM_API_NAME_RE = re.compile(r"^[A-Z][A-Z0-9_]{2,63}$")
-RANGE = {1: (1, 2, 2, 4), 2: (2, 3, 3, 5), 3: (3, 5, 4, 7),
-         4: (4, 7, 6, 9), 5: (6, 9, 8, 12), 6: (8, 12, 10, 16),
+RANGE = {1: (1, 3, 2, 5), 2: (2, 4, 3, 6), 3: (3, 6, 4, 8),
+         4: (4, 8, 6, 10), 5: (6, 10, 8, 13), 6: (8, 12, 10, 16),
          7: (10, 15, 14, 20)}
 CAP = {1: 8, 2: 10, 3: 13, 4: 17, 5: 22, 6: 26, 7: 33}
 KW_UNLOCK = {"breed": 1, "taunt": 2, "windfury": 3, "ignore_taunt": 3,
@@ -167,6 +167,34 @@ EXPECT_LEVEL = {1: 50, 2: 58, 3: 61, 4: 60, 5: 55, 6: 28, 7: 20}
 SKILL_FIELDS = ["id"]
 SKILL_OPTIONAL_FIELDS = {"text", "text_golden", "template", "keyword", "cost",
                          "uses_per_turn", "name"}
+
+# 随从不可达的触发：引擎只在效果牌分支 fire OnPlayEffect，随从落场只 fire
+# OnPlay；主动技能（OnActivate）只能经英雄入口 UseHeroPower 结算。以下 41 张
+# 为卡池差异化开始前就存在的历史卡（shout 等主动技能，或旧的 on_play_effect
+# 文本技能），本波不把它们全部改掉；新增随从命中一律报错，名单条目必须仍然
+# 命中，防止陈旧。2026-11-25 修复鲁班、内燃机后为 49 张，再修复 8 张差异化
+# 回归卡后为 41 张。
+UNREACHABLE_MINION_SKILL_ALLOWLIST = {
+    "adam-smith", "airplane", "artificial-womb", "beethoven", "boxer", "darwin",
+    "davinci", "dianbaoji", "dianhua-jiaohuanji", "dyson-sphere", "edison",
+    "einstein", "famingjia", "faraday", "fleming", "gauss", "gongchangzhu",
+    "gongchengta", "hela-cell", "huochongdui", "huoqiangshou", "jiyin-gaizaoren",
+    "kanzi", "knuth", "koko", "lamarck", "luxun", "mammoth", "mendel", "menghu",
+    "mozi", "muhammad-ali", "nami-fengqun", "neanderthal", "nupao", "phonograph",
+    "quyuan", "tesla", "wright-brothers", "xingji-jianzhang", "zhenghe",
+}
+UNREACHABLE_TRIGGERS = {"OnActivate", "OnPlayEffect"}
+# 关键词-文本一致性：技能渲染文本的触发前缀必须登记对应关键词。
+KEYWORD_TEXT_PREFIXES = {"战吼": "battlecry", "亡语": "deathrattle"}
+# 规则落地前就以「文本写战吼/亡语、keyword 为空」形态发布的既有技能，登记会
+# 使承载卡超强度上限（mimic-1 的 argonaut / blue-ringed-octopus，
+# battlecry-all-mech-growth-once-no-keyword 的 wireless-telegraph）。它们属于
+# 历史展示口径，需专门平衡轮决定是登记并降身材还是改文案；本轮只保留例外，
+# 新增技能不得进入此名单，条目必须仍然命中，防止陈旧。
+KEYWORD_TEXT_LEGACY_ALLOWLIST = {
+    "mimic-1",
+    "battlecry-all-mech-growth-once-no-keyword",
+}
 MINION_FIELDS = ["id", "name", "card_type", "taxon", "subtype", "level", "era",
                  "attack", "health"]
 EFFECT_FIELDS = ["id", "name", "card_type", "level", "era", "taxon",
@@ -1120,6 +1148,58 @@ def expected_skill_attrs(skill):
     return attrs
 
 
+def keyword_text_errors(skills):
+    """技能文本前缀必须与登记的关键词一致（战吼 / 亡语）。"""
+    errors = []
+    hits = set()
+    for skill in skills:
+        text = skill.get("_rendered_text")
+        if text is None:
+            continue
+        for prefix, base in KEYWORD_TEXT_PREFIXES.items():
+            if not text.startswith(prefix):
+                continue
+            keyword = skill.get("keyword")
+            actual = str(keyword).split()[0] if keyword else None
+            if actual == base:
+                continue
+            hits.add(skill["id"])
+            if skill["id"] not in KEYWORD_TEXT_LEGACY_ALLOWLIST:
+                errors.append(
+                    f"{skill.get('_file', skill['id'])}: 文本以「{prefix}」开头，"
+                    f"但 keyword 为 {keyword!r}，必须登记 {base}")
+    for skill_id in sorted(KEYWORD_TEXT_LEGACY_ALLOWLIST - hits):
+        errors.append(
+            f"关键词-文本 allowlist 条目 {skill_id} 已不再命中，请移除")
+    return errors
+
+
+def unreachable_minion_skill_errors(minions, skill_map):
+    """随从引用的技能不得依赖只在效果牌/英雄入口结算的触发。"""
+    errors = []
+    hits = set()
+    for card in minions:
+        for skill_id in card_skills(card):
+            skill = skill_map.get(skill_id)
+            if skill is None:
+                continue
+            effects, parse_errors = parse_effects(skill.get("_rendered_effects"))
+            if parse_errors:
+                continue
+            bad = sorted({effect["trigger"] for effect in effects
+                          if effect["trigger"] in UNREACHABLE_TRIGGERS})
+            if not bad:
+                continue
+            hits.add(card["id"])
+            if card["id"] not in UNREACHABLE_MINION_SKILL_ALLOWLIST:
+                errors.append(
+                    f"{card['_file']}: 随从引用不可达技能 {skill_id}（trigger={bad}）")
+    for card_id in sorted(UNREACHABLE_MINION_SKILL_ALLOWLIST - hits):
+        errors.append(
+            f"不可达技能 allowlist 条目 {card_id} 已不存在或不再命中，请移除")
+    return errors
+
+
 def validate_skill_template(skill, templates, renderer):
     """校验模板实例：模板存在、参数合法、展开后的 DSL 可解析、文案非空。"""
     name = skill.get("_file", skill.get("id", "?"))
@@ -1170,8 +1250,8 @@ def check_skills():
     global KEYWORD_LABELS
     KEYWORD_LABELS = keyword_labels()
     skills = load("skills", SKILL_FIELDS)
-    if len(skills) != 255:
-        fail(f"技能数量 {len(skills)}，期望 255")
+    if len(skills) != 262:
+        fail(f"技能数量 {len(skills)}，期望 262")
     dup = [v for v, n in collections.Counter(s["id"] for s in skills).items() if n > 1]
     if dup:
         fail(f"技能 id 重复: {dup}")
@@ -1225,6 +1305,8 @@ def check_skills():
             fail(f"{name}: 属性表多出字段 {sorted(extra)}")
         if body_text(path) != text:
             fail(f"{name}: 「## 效果」与 text 不一致")
+    for message in keyword_text_errors(skills):
+        fail(message)
     return skills
 
 
@@ -1330,6 +1412,80 @@ def skill_ref_errors(doc, skill_map):
     """卡牌引用的技能必须在技能池中存在。"""
     return [f"{doc['_file']}: 引用的技能不存在 {sid!r}"
             for sid in card_skills(doc) if sid not in skill_map]
+
+
+def effect_skill_set(card):
+    """随从的效果技能：剔除 keyword- 前缀的条目，保留原顺序。"""
+    return tuple(skill for skill in card_skills(card)
+                 if not skill.startswith("keyword-"))
+
+
+def _distribution_cards(minions):
+    """参与分布统计的商店随从；缺数值字段的卡由其他校验负责报告。"""
+    return [card for card in minions
+            if card.get("card_type") == "minion"
+            and card.get("in_shop_pool", True)
+            and all(field in card for field in ("level", "attack", "health"))]
+
+
+def _rule_violations(cards, key_of, limit, enabled=lambda card: True):
+    """按 (玩法, 星级, key) 计数，返回计数超过 limit 的组与卡数。"""
+    counts = collections.Counter()
+    for card in cards:
+        if not enabled(card):
+            continue
+        for play in effective_playstyles(card):
+            counts[(play, *key_of(card))] += 1
+    return [(key, count) for key, count in counts.items() if count > limit]
+
+
+def _distribution_groups(minions):
+    """四条分布规则的违例组，键为规则名，值为 [(组键, 卡数)]。"""
+    cards = _distribution_cards(minions)
+    return {
+        "身材": _rule_violations(
+            cards, lambda c: (c["level"], c["attack"], c["health"]), 2,
+            lambda c: c["attack"] != 0),
+        "效果技能": _rule_violations(
+            cards, lambda c: (c["level"], effect_skill_set(c)), 1,
+            lambda c: bool(effect_skill_set(c))),
+        "只带关键词": _rule_violations(
+            cards, lambda c: (c["level"], c["attack"], c["health"],
+                              tuple(card_skills(c))), 1,
+            lambda c: bool(card_skills(c)) and not effect_skill_set(c)),
+        "攻 0": _rule_violations(
+            cards, lambda c: (c["level"], tuple(card_skills(c))), 1,
+            lambda c: c["attack"] == 0),
+    }
+
+
+def distribution_errors(minions):
+    """四条卡池分布规则：身材、效果技能、只带关键词、攻 0。"""
+    messages = []
+    groups = _distribution_groups(minions)
+    for (play, level, attack, health), count in sorted(groups["身材"]):
+        messages.append(
+            f"play:{play} {level} 星身材 {attack}/{health} 重复 {count} 张")
+    for (play, level, skills), count in sorted(groups["效果技能"]):
+        messages.append(
+            f"play:{play} {level} 星效果技能 {list(skills)} 重复 {count} 张")
+    for (play, level, attack, health, skills), count in sorted(groups["只带关键词"]):
+        messages.append(
+            f"play:{play} {level} 星只带关键词 {attack}/{health} "
+            f"{list(skills)} 重复 {count} 张")
+    for (play, level, skills), count in sorted(groups["攻 0"]):
+        messages.append(
+            f"play:{play} {level} 星攻 0 技能 {list(skills)} 重复 {count} 张")
+    return messages
+
+
+def distribution_stats(minions):
+    """四条分布规则的违规组数与涉及卡数，用于逐项清零。"""
+    stats = {}
+    for name, groups in _distribution_groups(minions).items():
+        stats[f"{name}组"] = len(groups)
+        stats[f"{name}卡"] = sum(count for _, count in groups)
+    return stats
 
 
 def check_cards(skill_map):
@@ -1448,6 +1604,9 @@ def check_cards(skill_map):
     actual_level = collections.Counter(c["level"] for c in minions)
     if dict(actual_level) != EXPECT_LEVEL:
         fail(f"随从星级分布不符: {dict(actual_level)}")
+    for message in distribution_errors(minions):
+        fail(message)
+    print("分布", distribution_stats(minions))
     return raw, minions, effects
 
 
@@ -1612,6 +1771,8 @@ def main():
     skills = check_skills()
     skill_map = {s["id"]: s for s in skills}
     raw, minions, effects = check_cards(skill_map)
+    for message in unreachable_minion_skill_errors(minions, skill_map):
+        fail(message)
     check_keyword_unlock(minions, skill_map)
     hero_cards = check_hero_cards(raw, minions, effects, skill_map)
     check_skill_context(skill_map, effects)

@@ -8,7 +8,7 @@ subtype: siege
 level: 3
 era: feudal
 attack: 3
-health: 5
+health: 6
 skills: [keyword-assemble-2]
 ---
 
@@ -26,7 +26,7 @@ skills: [keyword-assemble-2]
 | 星级 | 3 |
 | 时代 | 封建 |
 | 攻击力 | 3 |
-| 生命值 | 5 |
+| 生命值 | 6 |
 | 关键词 | 装配 2 |
 | 技能 | keyword-assemble-2 |
 | 科学分类 | 造物 › 武器与攻城 |

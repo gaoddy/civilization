@@ -7,8 +7,8 @@ taxon: automation
 subtype: vehicle
 level: 4
 era: future
-attack: 7
-health: 6
+attack: 5
+health: 7
 skills: [keyword-ignore-taunt, keyword-assemble-1]
 ---
 
@@ -25,8 +25,8 @@ skills: [keyword-ignore-taunt, keyword-assemble-1]
 | 子类 | 载具 |
 | 星级 | 4 |
 | 时代 | 未来 |
-| 攻击力 | 7 |
-| 生命值 | 6 |
+| 攻击力 | 5 |
+| 生命值 | 7 |
 | 关键词 | 无视嘲讽；装配 1 |
 | 技能 | keyword-ignore-taunt；keyword-assemble-1 |
 | 科学分类 | 造物 › 自动机械 |

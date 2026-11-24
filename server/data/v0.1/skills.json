@@ -555,6 +555,35 @@
     "cost": null,
     "effects": [
       {
+        "op": "grant_keyword",
+        "params": {
+          "duration": "permanent",
+          "keyword": {
+            "keyword": "taunt"
+          }
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "plant"
+            }
+          ],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "aura"
+      }
+    ],
+    "id": "aura-plant-taunt",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
         "op": "modify_stats",
         "params": {
           "attack": 1,
@@ -655,6 +684,39 @@
     "cost": null,
     "effects": [
       {
+        "op": "modify_stats",
+        "params": {
+          "attack": 1,
+          "duration": "permanent",
+          "max_count": 6,
+          "per_health": 1
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "mammal"
+            },
+            {
+              "key": "other",
+              "value": "true"
+            }
+          ],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "aura"
+      }
+    ],
+    "id": "aura-school-mammal-1",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
         "op": "growth",
         "params": {
           "times": 1
@@ -738,6 +800,28 @@
       }
     ],
     "id": "battlecry-all-friendly-plus-0-plus-1",
+    "keyword": "battlecry",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "duration": "permanent",
+          "health": 2
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "on_play"
+      }
+    ],
+    "id": "battlecry-all-friendly-plus-0-plus-2",
     "keyword": "battlecry",
     "uses_per_turn": null
   },
@@ -1044,6 +1128,32 @@
       }
     ],
     "id": "battlecry-friendly-human-plus-0-plus-1",
+    "keyword": "battlecry",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "growth",
+        "params": {
+          "times": 1
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "mammal"
+            }
+          ],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play"
+      }
+    ],
+    "id": "battlecry-friendly-mammal-growth-once",
     "keyword": "battlecry",
     "uses_per_turn": null
   },
@@ -2257,7 +2367,7 @@
       }
     ],
     "id": "deathrattle-all-friendly-plus-0-plus-1",
-    "keyword": null,
+    "keyword": "deathrattle",
     "uses_per_turn": null
   },
   {
@@ -2426,7 +2536,7 @@
       }
     ],
     "id": "deathrattle-random-enemy-minus-1-attack",
-    "keyword": null,
+    "keyword": "deathrattle",
     "uses_per_turn": null
   },
   {
@@ -4241,6 +4351,35 @@
       {
         "op": "grant_keyword",
         "params": {
+          "duration": "permanent",
+          "keyword": {
+            "keyword": "taunt"
+          }
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "cnidarian"
+            }
+          ],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play"
+      }
+    ],
+    "id": "trigger-cnidarian-permanent-taunt",
+    "keyword": "battlecry",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "grant_keyword",
+        "params": {
           "duration": "combat",
           "keyword": {
             "keyword": "poison"
@@ -4679,6 +4818,30 @@
     ],
     "id": "trigger-friendly-human-taunt-until-turn-end",
     "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "grant_keyword",
+        "params": {
+          "duration": "permanent",
+          "keyword": {
+            "keyword": "taunt"
+          }
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play"
+      }
+    ],
+    "id": "trigger-friendly-permanent-taunt",
+    "keyword": "battlecry",
     "uses_per_turn": null
   },
   {
@@ -5596,6 +5759,35 @@
     ],
     "id": "trigger-reptile-all-plus-0-plus-3",
     "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "grant_keyword",
+        "params": {
+          "duration": "permanent",
+          "keyword": {
+            "keyword": "taunt"
+          }
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "reptile"
+            }
+          ],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play"
+      }
+    ],
+    "id": "trigger-reptile-permanent-taunt",
+    "keyword": "battlecry",
     "uses_per_turn": null
   },
   {

@@ -8,7 +8,7 @@ subtype: medical
 level: 4
 era: modern
 attack: 7
-health: 6
+health: 7
 skills: [keyword-ignore-taunt]
 ---
 
@@ -26,7 +26,7 @@ skills: [keyword-ignore-taunt]
 | 星级 | 4 |
 | 时代 | 现代 |
 | 攻击力 | 7 |
-| 生命值 | 6 |
+| 生命值 | 7 |
 | 关键词 | 无视嘲讽 |
 | 技能 | keyword-ignore-taunt |
 | 科学分类 | 造物 › 生活与医疗 |

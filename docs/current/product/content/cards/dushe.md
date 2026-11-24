@@ -8,7 +8,7 @@ subtype: reptile
 level: 2
 era: prehistoric
 attack: 2
-health: 5
+health: 6
 skills: [deathrattle-random-enemy-minus-1-attack]
 ---
 
@@ -26,8 +26,8 @@ skills: [deathrattle-random-enemy-minus-1-attack]
 | 星级 | 2 |
 | 时代 | 史前 |
 | 攻击力 | 2 |
-| 生命值 | 5 |
-| 关键词 | 无 |
+| 生命值 | 6 |
+| 关键词 | 亡语 |
 | 技能 | deathrattle-random-enemy-minus-1-attack |
 | 科学分类 | 动物界 › 脊索动物门 › 爬行纲 › 有鳞目 › 未定科 |
 

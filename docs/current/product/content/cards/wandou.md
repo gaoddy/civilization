@@ -8,7 +8,7 @@ subtype: crop
 level: 1
 era: prehistoric
 attack: 1
-health: 4
+health: 5
 skills: [keyword-breed-1]
 ---
 
@@ -26,7 +26,7 @@ skills: [keyword-breed-1]
 | 星级 | 1 |
 | 时代 | 史前 |
 | 攻击力 | 1 |
-| 生命值 | 4 |
+| 生命值 | 5 |
 | 关键词 | 繁衍 1 |
 | 技能 | keyword-breed-1 |
 | 科学分类 | 植物界 › 被子植物门 › 双子叶植物纲 › 豆目 › 豆科 |

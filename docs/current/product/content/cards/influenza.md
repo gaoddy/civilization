@@ -7,8 +7,8 @@ taxon: orthomyxoviridae
 subtype: virus
 level: 3
 era: modern
-attack: 4
-health: 6
+attack: 3
+health: 7
 skills: [keyword-contagion]
 ---
 
@@ -25,8 +25,8 @@ skills: [keyword-contagion]
 | 子类 | 病毒 |
 | 星级 | 3 |
 | 时代 | 现代 |
-| 攻击力 | 4 |
-| 生命值 | 6 |
+| 攻击力 | 3 |
+| 生命值 | 7 |
 | 关键词 | 传染 |
 | 技能 | keyword-contagion |
 | 科学分类 | 病毒 › 核糖病毒门 › 流感病毒纲 › 节段病毒目 › 正黏病毒科 |

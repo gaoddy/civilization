@@ -7,9 +7,9 @@ taxon: hominidae
 subtype: worker
 level: 5
 era: modern
-attack: 8
-health: 11
-skills: [battlecry-other-friendly-humans-plus-1-attack, shout]
+attack: 9
+health: 9
+skills: [battlecry-other-friendly-humans-plus-1-attack, battlecry-all-friendly-growth-once]
 ---
 
 # 工业工人
@@ -25,15 +25,15 @@ skills: [battlecry-other-friendly-humans-plus-1-attack, shout]
 | 子类 | 工人 |
 | 星级 | 5 |
 | 时代 | 现代 |
-| 攻击力 | 8 |
-| 生命值 | 11 |
+| 攻击力 | 9 |
+| 生命值 | 9 |
 | 关键词 | 战吼 |
-| 技能 | battlecry-other-friendly-humans-plus-1-attack；shout |
+| 技能 | battlecry-other-friendly-humans-plus-1-attack；battlecry-all-friendly-growth-once |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果
 
-战吼：使你的其他人科随从获得 +1 攻击力；使一个友方随从获得一次成长
+战吼：使你的其他人科随从获得 +1 攻击力；战吼：使你的所有随从获得一次成长
 
 ## 出处
 

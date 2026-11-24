@@ -8,7 +8,7 @@ subtype: fish
 level: 1
 era: primitive
 attack: 2
-health: 2
+health: 3
 skills: [aura-other-fish-plus-0-plus-1]
 ---
 
@@ -26,7 +26,7 @@ skills: [aura-other-fish-plus-0-plus-1]
 | 星级 | 1 |
 | 时代 | 原始 |
 | 攻击力 | 2 |
-| 生命值 | 2 |
+| 生命值 | 3 |
 | 关键词 | 无 |
 | 技能 | aura-other-fish-plus-0-plus-1 |
 | 科学分类 | 动物界 › 脊索动物门 › 鱼纲 › 鲤形目 › 鲤科 |

@@ -8,7 +8,7 @@ subtype: computer
 level: 6
 era: future
 attack: 0
-health: 20
+health: 21
 skills: [battlecry-all-friendly-growth-twice]
 ---
 
@@ -26,7 +26,7 @@ skills: [battlecry-all-friendly-growth-twice]
 | 星级 | 6 |
 | 时代 | 未来 |
 | 攻击力 | 0 |
-| 生命值 | 20 |
+| 生命值 | 21 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-all-friendly-growth-twice |
 | 科学分类 | 造物 › 自动机械 |

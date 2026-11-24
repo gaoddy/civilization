@@ -7,8 +7,8 @@ taxon: loliginidae
 subtype: mollusk
 level: 3
 era: classical
-attack: 4
-health: 6
+attack: 5
+health: 4
 skills: [keyword-stealth]
 ---
 
@@ -25,8 +25,8 @@ skills: [keyword-stealth]
 | 子类 | 软体 |
 | 星级 | 3 |
 | 时代 | 古典 |
-| 攻击力 | 4 |
-| 生命值 | 6 |
+| 攻击力 | 5 |
+| 生命值 | 4 |
 | 关键词 | 潜行 |
 | 技能 | keyword-stealth |
 | 科学分类 | 动物界 › 软体动物门 › 头足纲 › 闭眼目 › 枪乌贼科 |
@@ -38,7 +38,7 @@ skills: [keyword-stealth]
 ## 设计说明
 
 定位：头足纲的潜行突袭单位，绕开敌方指向性效果。
-平衡边界：3 星 4/6；攻击力取该星级中位，生命值取该星级偏上；关键词折算 3 点，合计 13，等于 13 上限。
+平衡边界：3 星 5/4；攻击力取该星级偏上，生命值取该星级下限；关键词折算 3 点，合计 12，低于 13 上限 1 点。
 使用建议：优先攻击敌方后排或残血目标，造成伤害后失去潜行。
 
 ## 出处

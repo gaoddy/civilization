@@ -7,8 +7,8 @@ taxon: hominidae
 subtype: cell
 level: 4
 era: modern
-attack: 4
-health: 6
+attack: 5
+health: 8
 skills: [deathrattle-summon-2-2-hela-cell-clone, shout]
 ---
 
@@ -25,8 +25,8 @@ skills: [deathrattle-summon-2-2-hela-cell-clone, shout]
 | 子类 | 细胞 |
 | 星级 | 4 |
 | 时代 | 现代 |
-| 攻击力 | 4 |
-| 生命值 | 6 |
+| 攻击力 | 5 |
+| 生命值 | 8 |
 | 关键词 | 亡语 |
 | 技能 | deathrattle-summon-2-2-hela-cell-clone；shout |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |

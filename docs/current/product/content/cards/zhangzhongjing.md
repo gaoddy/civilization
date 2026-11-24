@@ -7,9 +7,9 @@ taxon: hominidae
 subtype: medicine
 level: 4
 era: feudal
-attack: 5
-health: 8
-skills: [battlecry-all-friendly-plus-0-plus-1]
+attack: 8
+health: 6
+skills: [battlecry-all-friendly-plus-0-plus-2]
 ---
 
 # 张仲景
@@ -25,21 +25,21 @@ skills: [battlecry-all-friendly-plus-0-plus-1]
 | 子类 | 医学 |
 | 星级 | 4 |
 | 时代 | 封建 |
-| 攻击力 | 5 |
-| 生命值 | 8 |
+| 攻击力 | 8 |
+| 生命值 | 6 |
 | 关键词 | 战吼 |
-| 技能 | battlecry-all-friendly-plus-0-plus-1 |
+| 技能 | battlecry-all-friendly-plus-0-plus-2 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果
 
-战吼：使你的所有随从获得 +0/+1
+战吼：使你的所有随从获得 +0/+2
 
 ## 设计说明
 
-定位：入场即给的群体 +0/+1，把战吼收益摊到全队。
-平衡边界：群体 +0/+1 按战吼折算 2 点，5/8 加 2 等于 15，未超过 4 星上限 17。
-使用建议：场上已有 2 个以上随从时打出，收益接近同星级上限。
+定位：入场即给的全体生命强化，抬高整条战线的存活。
+平衡边界：全体 +0/+2 登记战吼，按 2 点折算，8/6 加 2 等于 16，未超过 4 星上限 17；与摩西的全体 +0/+1 分属不同技能实例。
+使用建议：在场上有 2 个以上随从时打出，把生命值换成更长的站场时间。
 
 ## 出处
 

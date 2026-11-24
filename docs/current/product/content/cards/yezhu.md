@@ -7,8 +7,8 @@ taxon: suidae
 subtype: mammal
 level: 1
 era: primitive
-attack: 2
-health: 2
+attack: 1
+health: 4
 skills: [battlecry-self-plus-1-health]
 ---
 
@@ -25,8 +25,8 @@ skills: [battlecry-self-plus-1-health]
 | 子类 | 哺乳 |
 | 星级 | 1 |
 | 时代 | 原始 |
-| 攻击力 | 2 |
-| 生命值 | 2 |
+| 攻击力 | 1 |
+| 生命值 | 4 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-self-plus-1-health |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 偶蹄目 › 猪科 |

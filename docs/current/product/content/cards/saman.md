@@ -8,8 +8,8 @@ subtype: primitive
 level: 2
 era: primitive
 attack: 2
-health: 3
-skills: [battlecry-friendly-growth-once]
+health: 4
+skills: [battlecry-friendly-growth-twice]
 ---
 
 # 萨满
@@ -26,14 +26,14 @@ skills: [battlecry-friendly-growth-once]
 | 星级 | 2 |
 | 时代 | 原始 |
 | 攻击力 | 2 |
-| 生命值 | 3 |
+| 生命值 | 4 |
 | 关键词 | 战吼 |
-| 技能 | battlecry-friendly-growth-once |
+| 技能 | battlecry-friendly-growth-twice |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果
 
-战吼：使一个友方随从获得一次成长
+战吼：使一个友方随从获得两次成长
 
 ## 出处
 

@@ -7,8 +7,8 @@ taxon: information-computing
 subtype: computer
 level: 5
 era: future
-attack: 6
-health: 9
+attack: 8
+health: 8
 skills: [keyword-divine-shield, keyword-assemble-2]
 ---
 
@@ -25,8 +25,8 @@ skills: [keyword-divine-shield, keyword-assemble-2]
 | 子类 | 计算机 |
 | 星级 | 5 |
 | 时代 | 未来 |
-| 攻击力 | 6 |
-| 生命值 | 9 |
+| 攻击力 | 8 |
+| 生命值 | 8 |
 | 关键词 | 护盾；装配 2 |
 | 技能 | keyword-divine-shield；keyword-assemble-2 |
 | 科学分类 | 造物 › 信息与计算 |

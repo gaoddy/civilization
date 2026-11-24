@@ -8,8 +8,8 @@ subtype: chemistry
 level: 3
 era: primitive
 attack: 0
-health: 9
-skills: [battlecry-friendly-growth-once]
+health: 10
+skills: [battlecry-random-enemy-damage-1]
 ---
 
 # 炼金术士
@@ -26,14 +26,14 @@ skills: [battlecry-friendly-growth-once]
 | 星级 | 3 |
 | 时代 | 原始 |
 | 攻击力 | 0 |
-| 生命值 | 9 |
+| 生命值 | 10 |
 | 关键词 | 战吼 |
-| 技能 | battlecry-friendly-growth-once |
+| 技能 | battlecry-random-enemy-damage-1 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果
 
-战吼：使一个友方随从获得一次成长
+战吼：对随机一个敌方随从造成 1 点伤害
 
 ## 出处
 

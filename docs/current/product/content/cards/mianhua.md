@@ -8,7 +8,7 @@ subtype: crop
 level: 2
 era: industrial
 attack: 2
-health: 3
+health: 5
 skills: [keyword-sow]
 ---
 
@@ -26,7 +26,7 @@ skills: [keyword-sow]
 | 星级 | 2 |
 | 时代 | 工业 |
 | 攻击力 | 2 |
-| 生命值 | 3 |
+| 生命值 | 5 |
 | 关键词 | 播种 |
 | 技能 | keyword-sow |
 | 科学分类 | 植物界 › 被子植物门 › 双子叶植物纲 › 锦葵目 › 锦葵科 |

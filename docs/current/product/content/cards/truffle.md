@@ -7,8 +7,8 @@ taxon: tuberaceae
 subtype: fungus
 level: 4
 era: feudal
-attack: 7
-health: 9
+attack: 6
+health: 7
 skills: [decompose-friendly-death-original]
 ---
 
@@ -25,8 +25,8 @@ skills: [decompose-friendly-death-original]
 | 子类 | 真菌 |
 | 星级 | 4 |
 | 时代 | 封建 |
-| 攻击力 | 7 |
-| 生命值 | 9 |
+| 攻击力 | 6 |
+| 生命值 | 7 |
 | 关键词 | 分解 |
 | 技能 | decompose-friendly-death-original |
 | 科学分类 | 真菌界 › 子囊菌门 › 盘菌纲 › 盘菌目 › 块菌科 |

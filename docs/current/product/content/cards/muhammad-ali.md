@@ -7,8 +7,8 @@ taxon: hominidae
 subtype: athlete
 level: 6
 era: modern
-attack: 12
-health: 10
+attack: 10
+health: 11
 skills: [keyword-windfury, shout]
 ---
 
@@ -25,8 +25,8 @@ skills: [keyword-windfury, shout]
 | 子类 | 运动员 |
 | 星级 | 6 |
 | 时代 | 现代 |
-| 攻击力 | 12 |
-| 生命值 | 10 |
+| 攻击力 | 10 |
+| 生命值 | 11 |
 | 关键词 | 连击 |
 | 技能 | keyword-windfury；shout |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |

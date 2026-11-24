@@ -8,7 +8,7 @@ subtype: virus
 level: 6
 era: future
 attack: 8
-health: 16
+health: 15
 skills: [keyword-contagion, combatstart-all-enemies-contagion-1]
 ---
 
@@ -26,7 +26,7 @@ skills: [keyword-contagion, combatstart-all-enemies-contagion-1]
 | 星级 | 6 |
 | 时代 | 未来 |
 | 攻击力 | 8 |
-| 生命值 | 16 |
+| 生命值 | 15 |
 | 关键词 | 传染 |
 | 技能 | keyword-contagion；combatstart-all-enemies-contagion-1 |
 | 科学分类 | 病毒 › 未定科 |

@@ -8,7 +8,7 @@ subtype: ocean
 level: 3
 era: modern
 attack: 4
-health: 6
+health: 5
 skills: [recall-1]
 ---
 
@@ -26,7 +26,7 @@ skills: [recall-1]
 | 星级 | 3 |
 | 时代 | 现代 |
 | 攻击力 | 4 |
-| 生命值 | 6 |
+| 生命值 | 5 |
 | 关键词 | 无 |
 | 技能 | recall-1 |
 | 科学分类 | 动物界 › 刺胞动物门 › 水螅纲 › 花水螅目 › 海螅水母科 |
