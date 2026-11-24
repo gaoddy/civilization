@@ -846,6 +846,29 @@ fn unfreeze(state: &mut GameState, seat: Seat, slot: Option<u8>) -> Result<Outco
     Ok(Outcome::empty())
 }
 
+/// 七下西洋同一时间只能有一个航程；到账后才能再次启航。
+///
+/// 英雄与随从主动技能共用。卡池目前没有随从卡引用航程技能，随从入口仍保留
+/// 同一门控，避免未来数据引入后出现两个并行航程。
+fn check_voyage_available(
+    engine: &Engine,
+    player: &PlayerState,
+    skill_id: &str,
+    subject: &str,
+) -> Result<(), Reject> {
+    let is_voyage = engine
+        .skill_effects_of(skill_id, Trigger::OnActivate)
+        .iter()
+        .any(|effect| effect.op == Op::SevenVoyages);
+    if is_voyage && player.seven_voyages.is_some() {
+        return Err(Reject::new(
+            RejectCode::SevenVoyagesActive,
+            format!("{subject} {skill_id} 已有进行中的航程"),
+        ));
+    }
+    Ok(())
+}
+
 /// `UseHeroPower` 的只读预检：技能属于当前英雄、是主动技能、次数未用尽且金币足够。
 /// 不修改状态、不消耗随机流。
 ///
@@ -898,16 +921,7 @@ pub(crate) fn check_hero_power(
         ));
     }
     // 七下西洋同一时间只能有一个航程；到账后才能再次启航。
-    let is_voyage = engine
-        .skill_effects_of(skill_id, Trigger::OnActivate)
-        .iter()
-        .any(|effect| effect.op == Op::SevenVoyages);
-    if is_voyage && player.seven_voyages.is_some() {
-        return Err(Reject::new(
-            RejectCode::SevenVoyagesActive,
-            format!("技能 {skill_id} 已有进行中的航程"),
-        ));
-    }
+    check_voyage_available(engine, player, skill_id, "技能")?;
     player
         .gold
         .checked_sub(cost)
@@ -1044,6 +1058,7 @@ pub(crate) fn check_minion_ability(
             format!("随从技能 {skill_id} 本回合已用尽（{limit} 次）"),
         ));
     }
+    check_voyage_available(engine, player, skill_id, "随从技能")?;
     player
         .gold
         .checked_sub(cost)

@@ -6,7 +6,7 @@ use common::{place, setup_with_gold, test_catalog, turn_started};
 use rule_engine::effects::{TargetRef, Zone};
 use rule_engine::hash::state_hash;
 use rule_engine::intent::{Intent, RejectCode};
-use rule_engine::state::{GameState, InstanceId, StatSourceOrigin};
+use rule_engine::state::{GameState, InstanceId, SevenVoyagesState, StatSourceOrigin};
 
 const GAUSS_SKILL: &str = "activate-friendly-growth-twice";
 const BOXER_PASSIVE: &str = "trigger-3-humans-self-plus-2-attack";
@@ -324,5 +324,51 @@ fn multiple_minions_track_uses_independently() {
             .minion_uses
             .get(&(101, GAUSS_SKILL.to_string())),
         Some(&1)
+    );
+}
+
+/// 当前卡池没有随从卡引用航程技能；测试注入到拳击手的卡面上。
+#[test]
+fn rejects_minion_voyage_when_one_is_already_active() {
+    let (mut engine, mut state) = setup_with_gold(212);
+    let voyage = engine
+        .catalog
+        .skill_id("seven-voyages")
+        .expect("航程技能应在目录中");
+    engine
+        .catalog
+        .cards
+        .get_mut("boxer")
+        .expect("拳击手应在目录中")
+        .skills
+        .push(voyage);
+    place(&test_catalog(), &mut state, 0, 100, "boxer");
+    state.players[0].gold = 5;
+    state.players[0].seven_voyages = Some(SevenVoyagesState {
+        remaining: 3,
+        pending: 0,
+        total: 3,
+    });
+
+    let before = state_hash(&state);
+    let reject = engine
+        .apply(&mut state, 0, use_ability(100, "seven-voyages", None))
+        .expect_err("已有航程时随从技能不能再启航");
+
+    assert_eq!(reject.code, RejectCode::SevenVoyagesActive);
+    assert!(
+        reject.message.contains("随从技能"),
+        "拒绝消息应说明是随从技能：{}",
+        reject.message
+    );
+    assert_eq!(before, state_hash(&state), "拒绝时状态不变");
+
+    state.players[0].seven_voyages = None;
+    engine
+        .apply(&mut state, 0, use_ability(100, "seven-voyages", None))
+        .expect("航程清空后可以再次启航");
+    assert!(
+        state.players[0].seven_voyages.is_some(),
+        "成功发动应开启航程"
     );
 }
