@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
-"""从 v0.1 实体文档生成客户端只读展示表。
+"""组装客户端下发内容 `server/data/v0.1/client-content.json`。
 
-只读 docs/current/product 下的实体文档，输出确定性 JSON 到
-client/generated/。只输出展示费用与规则字段，文本由文本表提供；客户端不做规则计算。
-费用只用于展示：随从购买费用固定 3，效果牌取文档 cost。
+与 `gen_card_data.py` 使用同一份生成结果，只额外附加展示费用 `display_cost`，
+其余字段原样下发。文本仍由客户端本地文本表提供，客户端不做规则计算。
+
+bundle 结构：`{"version", "cards", "heroes", "skills", "taxonomy"}`；
+版本为四段确定性 JSON 内容的 SHA-256 前 16 位，供客户端缓存比对与 ETag。
 """
 
 import argparse
+import hashlib
 import json
 import pathlib
 import sys
@@ -14,58 +17,56 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 
 import gen_card_data  # noqa: E402
-import skill_templates  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-DEFAULT_OUTPUT = ROOT / "client" / "generated"
-FILES = ("cards.json", "heroes.json", "skills.json", "taxonomy.json")
+DEFAULT_OUTPUT = ROOT / "server" / "data" / "v0.1"
+FILE = "client-content.json"
+SECTIONS = ("cards", "heroes", "skills", "taxonomy")
+VERSION_LENGTH = 16
 
 # 与 rule-engine 的随从购买费用一致；客户端仅用于展示，不参与判定。
 MINION_DISPLAY_COST = 3
 
 
-def _display_card(doc):
-    card = gen_card_data.card_entry(doc)
-    card["display_cost"] = MINION_DISPLAY_COST if card["card_type"] == "minion" else card["cost"]
-    return card
+def _display_card(card):
+    """规则表原样保留，只补展示费用；随从固定 3，其余取 cost。"""
+    return {
+        **card,
+        "display_cost": MINION_DISPLAY_COST if card["card_type"] == "minion" else card["cost"],
+    }
+
+
+def content_version(sections):
+    """四段数据确定性序列化后的短哈希；任一内容变化都会改变版本。"""
+    canonical = json.dumps(
+        sections, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    )
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()[:VERSION_LENGTH]
 
 
 def build(root):
     """返回文件名到确定性 JSON 文本的映射。"""
-    content = pathlib.Path(root) / "docs" / "current" / "product" / "content"
-    renderer = skill_templates.Renderer(content)
-    cards = [_display_card(doc) for doc in gen_card_data.load_docs(content, "cards")]
-    heroes = [gen_card_data.hero_entry(doc) for doc in gen_card_data.load_docs(content, "heroes")]
-    skills = [gen_card_data.skill_entry(doc, renderer)
-              for doc in gen_card_data.load_docs(content, "skills")]
-    taxonomy = gen_card_data.parse_taxonomy(content / gen_card_data.TAXONOMY_FILE)
-    return {
-        "cards.json": gen_card_data.dumps(cards),
-        "heroes.json": gen_card_data.dumps(heroes),
-        "skills.json": gen_card_data.dumps(skills),
-        "taxonomy.json": gen_card_data.dumps(taxonomy),
-    }
+    tables = gen_card_data.build(root)
+    sections = {name: json.loads(tables[f"{name}.json"]) for name in SECTIONS}
+    sections["cards"] = [_display_card(card) for card in sections["cards"]]
+    bundle = {"version": content_version(sections), **sections}
+    return {FILE: gen_card_data.dumps(bundle)}
 
 
 def write(root, output_dir):
     """将生成结果写入 output_dir（不存在时创建）。"""
     out = pathlib.Path(output_dir)
     out.mkdir(parents=True, exist_ok=True)
-    data = build(root)
-    for name in FILES:
-        (out / name).write_text(data[name], encoding="utf-8")
+    (out / FILE).write_text(build(root)[FILE], encoding="utf-8")
 
 
 def check(output_dir):
     """比较当前生成结果与已提交数据；返回差异文件名列表。"""
-    out = pathlib.Path(output_dir)
-    data = build(ROOT)
-    drift = []
-    for name in FILES:
-        path = out / name
-        if not path.exists() or path.read_text(encoding="utf-8") != data[name]:
-            drift.append(name)
-    return drift
+    path = pathlib.Path(output_dir) / FILE
+    data = build(ROOT)[FILE]
+    if not path.exists() or path.read_text(encoding="utf-8") != data:
+        return [FILE]
+    return []
 
 
 def main(argv=None):
@@ -81,7 +82,7 @@ def main(argv=None):
         print("客户端生成数据无漂移")
         return 0
     write(ROOT, args.output)
-    print(f"已生成 {len(FILES)} 个文件到 {args.output}")
+    print(f"已生成 {FILE} 到 {args.output}")
     return 0
 
 

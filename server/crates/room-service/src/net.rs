@@ -257,10 +257,12 @@ pub enum RoomMessage {
     Ignore,
 }
 
-/// 构造路由：`GET /ws` 升级为 WebSocket，`/healthz` 与 `/readyz` 供探针使用。
+/// 构造路由：`GET /ws` 升级为 WebSocket，`GET /content` 下发客户端展示内容，
+/// `/healthz` 与 `/readyz` 供探针使用。
 pub fn router(state: AppState) -> Router {
     Router::new()
         .route("/ws", get(ws_handler))
+        .route("/content", get(crate::content::content))
         .route("/healthz", get(healthz))
         .route("/readyz", get(readyz))
         .with_state(state)
@@ -3428,5 +3430,50 @@ mod probe_tests {
             .await
             .unwrap();
         assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+    }
+
+    #[tokio::test]
+    async fn content_serves_bundle_and_honors_etag() {
+        let state = AppState::new(Arc::new(SystemClock)).expect("状态应能装配");
+        let app = router(state);
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .uri("/content")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
+        let etag = response
+            .headers()
+            .get("etag")
+            .expect("响应应带 ETag")
+            .to_str()
+            .expect("ETag 应为 ASCII")
+            .to_string();
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let parsed: serde_json::Value = serde_json::from_slice(&body).expect("响应应是 JSON");
+        assert!(
+            parsed["cards"]
+                .as_array()
+                .is_some_and(|cards| !cards.is_empty())
+        );
+
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .uri("/content")
+                    .header("if-none-match", etag)
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::NOT_MODIFIED);
     }
 }

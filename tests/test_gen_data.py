@@ -59,20 +59,42 @@ class GenCardDataTest(unittest.TestCase):
 
 
 class GenClientDataTest(unittest.TestCase):
+    def _bundle(self):
+        return json.loads(gen_client_data.build(ROOT)[gen_client_data.FILE])
+
     def test_card_and_skill_counts(self):
-        data = gen_client_data.build(ROOT)
-        cards = json.loads(data["cards.json"])
-        skills = json.loads(data["skills.json"])
+        bundle = self._bundle()
+        cards = bundle["cards"]
+        skills = bundle["skills"]
         self.assertEqual(len(cards), 432)
         self.assertEqual(len(skills), 255)
-        heroes = json.loads(data["heroes.json"])
+        heroes = bundle["heroes"]
         self.assertEqual(len(heroes), 32)
         self.assertEqual([hero["id"] for hero in heroes],
                          sorted(hero["id"] for hero in heroes))
         self.assertEqual([card["id"] for card in cards], sorted(card["id"] for card in cards))
 
+    def test_sections_match_server_tables(self):
+        """下发内容与规则数据同源：只有 cards 额外附展示费用。"""
+        bundle = self._bundle()
+        tables = gen_card_data.build(ROOT)
+        for name in ("heroes", "skills", "taxonomy"):
+            self.assertEqual(bundle[name], json.loads(tables[f"{name}.json"]), name)
+        server_cards = json.loads(tables["cards.json"])
+        stripped = [
+            {key: value for key, value in card.items() if key != "display_cost"}
+            for card in bundle["cards"]
+        ]
+        self.assertEqual(stripped, server_cards)
+
+    def test_version_is_content_hash(self):
+        bundle = self._bundle()
+        sections = {name: bundle[name] for name in gen_client_data.SECTIONS}
+        self.assertEqual(bundle["version"], gen_client_data.content_version(sections))
+        self.assertRegex(bundle["version"], r"^[0-9a-f]{16}$")
+
     def test_display_cost(self):
-        cards = json.loads(gen_client_data.build(ROOT)["cards.json"])
+        cards = self._bundle()["cards"]
         for card in cards:
             if card["card_type"] == "minion":
                 self.assertEqual(card["display_cost"], 3, card["id"])
@@ -80,11 +102,9 @@ class GenClientDataTest(unittest.TestCase):
                 self.assertIsInstance(card["display_cost"], int, card["id"])
 
     def test_non_pool_cards_have_display_cost(self):
-        data = gen_client_data.build(ROOT)
-        self.assertNotIn("tokens.json", data)
-        cards = json.loads(data["cards.json"])
+        bundle = self._bundle()
         non_pool = [
-            card for card in cards
+            card for card in bundle["cards"]
             if not card["in_shop_pool"] and card["card_type"] == "minion"
         ]
         self.assertLessEqual(

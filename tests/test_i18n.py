@@ -173,6 +173,6 @@ class TextTableTest(unittest.TestCase):
         self.assertEqual(len(raw.splitlines()), len(list(csv.reader(io.StringIO(raw)))))
 
     def test_generated_data_has_no_cjk(self):
-        for base in (ROOT / "client/generated", ROOT / "server/data/v0.1"):
+        for base in (ROOT / "server/data/v0.1",):
             for path in sorted(base.glob("*.json")):
                 self.assertIsNone(_CJK.search(path.read_text(encoding="utf-8")), path.name)

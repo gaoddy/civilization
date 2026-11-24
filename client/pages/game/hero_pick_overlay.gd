@@ -33,6 +33,11 @@ var _remaining_second := -1
 var _selected := ""
 ## 由服务端「本人已选」或页面发送成功后的 `set_confirmed` 置真。
 var _locked := false
+## 最近一次收到的候选 id：卡牌内容晚到或断线恢复后按它重建。
+var _last_ids: Array[String] = []
+## 当前 `_status` 显示的是「内容未就绪」而非断线提示。
+var _content_notice := false
+var _offline_notice := false
 
 var _pointer := Vector2.ZERO
 # 与 DetailLayer 共用同一组长按阈值：覆盖层只判短按选中，详情显示仍归详情层。
@@ -44,6 +49,7 @@ func _init() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	_build()
+	CardDB.content_changed.connect(_on_content_changed)
 
 
 func _build() -> void:
@@ -146,6 +152,8 @@ func setup(payload: Dictionary, self_id: String) -> void:
 	_remaining_second = -1
 	_timeout.visible = false
 	_status.visible = false
+	_offline_notice = false
+	_content_notice = false
 	_timer.add_theme_color_override("font_color", UITheme.color("color-accent"))
 
 	var players := Array(payload.get("players", []))
@@ -153,22 +161,17 @@ func setup(payload: Dictionary, self_id: String) -> void:
 	# 服务端「本人已选」是锁定态的唯一权威：重连、他人刷新和本地确认都据此校正。
 	_locked = _self_picked(players)
 	var ids := _candidate_ids(payload)
+	_last_ids = ids
 	if not _locked and not ids.has(_selected):
 		_selected = ""
 
 	_render_seats(players)
 	_refresh_progress(players)
 
-	_detail.reset()
-	if _list.changed(ids):
-		_list.rebuild(ids, _selected, _locked)
-	else:
-		_list.apply_state(_selected, _locked)
-	for card in _list.cards():
-		_detail.track(card, {"detail_kind": "hero", "heroId": card.hero_id})
-	_list.sync_hover(_pointer)
+	_render_candidates()
 	_tick_timer()
 	_sync_confirm_state()
+	_sync_content_notice()
 
 
 ## 本人是否已确认（按钮置灰、候选锁定）；只在发送成功或服务端回填后调用。
@@ -179,15 +182,53 @@ func set_confirmed(card_id: String) -> void:
 	_detail.hide_panel()
 	_waiting.visible = false
 	_status.visible = false
+	_content_notice = false
+	_offline_notice = false
 	_confirm.text = tr("ui.game.hero_pick.confirmed")
 	_confirm.disabled = true
 
 
 ## 断线或发送不可用时的可见反馈：提示留在覆盖层内，不交给被遮住的页面模态。
 func show_offline_notice() -> void:
+	_offline_notice = true
+	_content_notice = false
 	_status.text = (
 		tr("ui.game.status.reconnecting") if Net.socket != null else tr("ui.game.status.disconnected")
 	)
+	_status.visible = true
+
+
+## 候选卡重建：只在 id 集合变化时重建，否则保留卡片以维持悬停详情。
+func _render_candidates() -> void:
+	if _last_ids.is_empty():
+		return
+	_detail.reset()
+	if _list.changed(_last_ids):
+		_list.rebuild(_last_ids, _selected, _locked)
+	else:
+		_list.apply_state(_selected, _locked)
+	for card in _list.cards():
+		_detail.track(card, {"detail_kind": "hero", "heroId": card.hero_id})
+	_list.sync_hover(_pointer)
+
+
+## 卡牌展示内容晚到（或失败后恢复）时补建候选卡；内容缺失时保留提示。
+func _on_content_changed() -> void:
+	_sync_content_notice()
+	if is_visible_in_tree():
+		_render_candidates()
+
+
+func _sync_content_notice() -> void:
+	if _offline_notice:
+		return
+	if CardDB.is_loaded():
+		if _content_notice:
+			_content_notice = false
+			_status.visible = false
+		return
+	_content_notice = true
+	_status.text = tr("ui.content.unavailable")
 	_status.visible = true
 
 

@@ -159,10 +159,6 @@ client/
     previews/game_rail.gd    # 左栏积分榜单视图的 `SETUP` 构建脚本
   generated/
     protocol.gd              # schema 生成的 GDScript 常量
-    cards.json               # 产品文档生成的卡牌展示表
-    heroes.json              # 英雄卡展示表（只含身份与技能）
-    skills.json              # 技能展示表（effects 为结构化数组，仅展示不解析）
-    taxonomy.json            # 分类树生成物：{nodes, playstyles}
 ```
 
 窗口启动时由 `WindowSizer` 按当前屏幕可用区域（`screen_get_usable_rect`，已排除菜单栏与 Dock）的 90% 设置尺寸，再用 `ScreenProfile.launch_window_size` 收成 16:9 并居中；无头模式下固定为设计基准尺寸，保证冒烟按 16:9 复现。`stretch/aspect` 为 `expand`：逻辑视口按设计基准（桌面/iPad 1280×720、iPhone 960×540）等比缩放后铺满整个窗口，宽度与高度都随窗口比例扩展，比例不匹配时内容框外的背景带由页面背景填满，不露引擎黑边。页面内容由 `UILayout.safe_area(page, page_texture)` 包成多层：`PageBackground` 留在包裹层外，铺满整个视口并按等比裁切（`STRETCH_KEEP_ASPECT_COVERED`），作为所有页面共用的软件背景；`ContentFrame` 由 `ScreenProfile.content_frame(viewport, base)` 按 contain 算出，固定 16:9、受限一侧贴满、另一侧居中留背景；`ContentRoot` 固定为设计基准尺寸，按 `frame_h / base_h` 整体缩放；`ContentRoot` 内是设计画布尺寸的 `PageBody`，其子节点 `PageSurface` 承载页面自己的背景（对局页传设备档位分区图，其余页面用统一语义面板），`SafeAreaMargin` 只约束内容。内容始终完整、居中、不裁切——窗口比 16:9 更宽时左右露背景，更窄时上下露背景。窗口尺寸只在启动时设定一次，拖动缩放后不回弹，全屏、最大化与触控端不介入。
@@ -172,9 +168,9 @@ client/
 - `GameStore`：保存 `playerId`、`playerCode`、`token`、`roomId`、`roomCode`、房间成员、`PlayerView`、`lastSeq`、排名、种子、本人赛后统计 `self_stats`、`RoomClosed` 原因 `room_closed_reason`，以及社交视图 `friends` / `incoming_requests` / `outgoing_requests` / `recent_players` / `pending_invites`。`handle(type, payload)` 只做字段搬运，发出 `auth_changed`、`room_changed`、`view_changed`、`events_received`、`game_started`、`game_over`、`room_closed`、`error_received`、`social_changed`、`invite_received`、`invite_result_received` 信号；每封 `StateUpdate` 的 `events` 在视图写入后原样转发一次，`Snapshot` 重连补发不转发；`FriendUpdate` 整段替换社交列表，`FriendInvite` 按 `inviteId` 去重后入队，`InviteAccepted` 移除邀请并自动补发 `JoinRoom{roomCode}`。`GameOver` 写入 `ranking`、`game_seed` 与 `selfStats`；`RoomClosed` 先暂存 `reason`，`reset_room()` 后写回 `room_closed_reason`、补发 `LeaveRoom` 并发出 `room_closed`。`reset_room()` 清空房间与对局状态，`clear_game_view()` 只清本局视图（保留房间与社交），`reset_social()` 清空社交，`reset_session()` 两者都清并清空身份与令牌。
 - `Net`：持有一个 `WebSocketPeer`，`_process` 中轮询；连接建立后先认证，断线每 3 秒自动重连。重连时以令牌发 `AuthRequest`，若仍在房间再发 `Reconnect{roomId, lastSeq}`，由服务端回全量 `Snapshot`。连接前用 `prefer_ipv4_url` 把 `ws://` URL 主机名解析成 IPv4（`wss://` 保留域名交给 TLS 证书校验）：`WebSocketPeer` 只尝试解析结果的第一条地址，双栈主机名常先拿到 IPv6。
 - 下行信封只校验 `v == 1` 与 `type`，`payload` 原样交给 `GameStore`；未知类型忽略。上行信封为 `{v, id, type, ts, payload}`，`id` 由时间戳与计数器生成。
-- `CardDB`：启动时读取 `client/generated/{cards,heroes,skills,taxonomy}.json`。卡名、技能文本与时代名不放在生成数据里，而是按文本 id 从 `client/text/zh_CN.csv` 取：`display_name` 取 `card.<id>.name`，`hero_introduction` 取 `card.<id>.introduction`，`display_text` 取 `skill.<id>.text`，`era_name` 取 `enum.era.<id>`。不参与任何规则判定。
+- `CardDB`：启动时从服务端 `GET /content` 下载展示内容，包内不再包含卡牌数据。数据按内容版本缓存到 `user://content_cache.json`：启动先读缓存保证离线可用，再用 `If-None-Match` 请求；`304` 保留缓存，`200` 覆盖缓存。请求地址由 WebSocket 地址推导（`ws://` → `http://`、`wss://` → `https://`，去掉 `/ws` 后追加 `/content`）。无缓存且请求失败时 `has_failed()` 为真；页面监听 `content_changed` / `content_failed` 重建或提示。本地调试、冒烟、预览与线框图通过 `CIVILIZATION_CONTENT_DIR` 直接读 `server/data/v0.1/client-content.json`，不依赖服务端。卡名、技能文本与时代名不放在下发数据里，而是按文本 id 从 `client/text/zh_CN.csv` 取：`display_name` 取 `card.<id>.name`，`hero_introduction` 取 `card.<id>.introduction`，`display_text` 取 `skill.<id>.text`，`era_name` 取 `enum.era.<id>`。不参与任何规则判定。
 - `CardDB` 的玩法与分类接口：
-  - `taxonomy`：节点 id → `{id, parent, rank}` 的字典，来自 `generated/taxonomy.json` 的 `nodes`；
+  - `taxonomy`：节点 id → `{id, parent, rank}` 的字典，来自下发内容的 `taxonomy.nodes`；
   - `playstyle_name(id)`：取 `enum.playstyle.<id>`，空 id 返回空串，缺键回退为 id；
   - `taxon_name(id)`：取 `enum.taxon.<id>`，空 id 返回空串，缺键回退为 id；
   - `taxon_path(id)`：从叶子沿 `parent` 上溯到根（最多 7 层），返回「界 → 科」顺序的展示名数组；未知节点或空 id 返回空数组；
@@ -266,7 +262,7 @@ client/
 | --- | --- |
 | `make protocol` | 由 `protocol/schema/v1/` 生成 `protocol/generated/protocol.gd` 与 `client/generated/protocol.gd` |
 | `make protocol-check` | 校验协议样例，并比对两处 GDScript 生成物漂移 |
-| `make data` | 生成服务端数据（含 `taxonomy.json`）、`client/generated/{cards,skills,taxonomy}.json` 与文本表 `client/text/zh_CN.csv` |
+| `make data` | 生成服务端数据（含 `taxonomy.json`）、客户端下发内容 `server/data/v0.1/client-content.json` 与文本表 `client/text/zh_CN.csv` |
 | `make data-check` | 比对服务端与客户端生成数据、文本表漂移，运行效果审计 |
 | `make assets` | 按 `ASSET_MAP` 对源立绘去水印，派生头像与卡面并更新 `client/assets/asset_manifest.json`（保留清单内其它条目）；需安装 Pillow，见 §10 |
 | `make assets-covers` | 对 `ASSET_COVERS`（默认 `output/effect-covers/generated`）下 `<card_id>/*.png` 去水印，缩放到 448×584 写入 `client/assets/cards/faces/`，只登记 `card_face` 与 `display.card_face`；需安装 Pillow，见 §10 |
