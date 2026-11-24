@@ -48,7 +48,7 @@ client-godot-check:
 # CLIENT_IMPORT_GPU=1 手动切非无头（改用 S3TC/HDR 纹理后才有 GPU 加速）；
 # auto 按图形会话自动判断，CI 与无 GUI 环境回落到 headless。
 client-import: client-godot-check
-	@if [ "$(CLIENT_CACHE_COPY)" = "0" ]; then echo "client-import：CLIENT_CACHE_COPY=0，跳过导入缓存播种"; else $(PYTHON) scripts/client_cache_copy.py; fi
+	@if [ "$(CLIENT_CACHE_COPY)" = "0" ]; then echo "client-import：CLIENT_CACHE_COPY=0，跳过导入缓存播种"; else $(PYTHON) scripts/client_cache_copy.py --quiet; fi
 	@mode="$(CLIENT_IMPORT_GPU)"; \
 	case "$$mode" in \
 	  auto|1|0) ;; \
