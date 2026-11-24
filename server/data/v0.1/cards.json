@@ -4509,7 +4509,7 @@
     "in_shop_pool": true,
     "level": 3,
     "skills": [
-      "mechanism-art"
+      "battlecry-friendly-growth-once"
     ],
     "subtype": "artisan",
     "taxon": "hominidae"
@@ -5268,7 +5268,7 @@
     "level": 4,
     "skills": [
       "keyword-ignore-taunt",
-      "activate-friendly-growth-twice"
+      "battlecry-friendly-mech-growth-once"
     ],
     "subtype": "power",
     "taxon": "power-energy"

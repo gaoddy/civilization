@@ -9,7 +9,7 @@ level: 4
 era: industrial
 attack: 6
 health: 7
-skills: [keyword-ignore-taunt, activate-friendly-growth-twice]
+skills: [keyword-ignore-taunt, battlecry-friendly-mech-growth-once]
 ---
 
 # 内燃机
@@ -27,13 +27,13 @@ skills: [keyword-ignore-taunt, activate-friendly-growth-twice]
 | 时代 | 工业 |
 | 攻击力 | 6 |
 | 生命值 | 7 |
-| 关键词 | 无视嘲讽 |
-| 技能 | keyword-ignore-taunt；activate-friendly-growth-twice |
+| 关键词 | 无视嘲讽；战吼 |
+| 技能 | keyword-ignore-taunt；battlecry-friendly-mech-growth-once |
 | 科学分类 | 造物 › 动力与能源 |
 
 ## 效果
 
-无视嘲讽：攻击时无视敌方嘲讽；使一个友方随从获得两次成长
+无视嘲讽：攻击时无视敌方嘲讽；战吼：使一个友方机械随从获得一次成长
 
 ## 出处
 
