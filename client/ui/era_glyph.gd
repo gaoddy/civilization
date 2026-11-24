@@ -21,6 +21,28 @@ static func create(era_value: String, side: int) -> EraGlyph:
 
 
 func _draw() -> void:
+	# 徽章底盘：深底 + 时代色铜边 + 顶部受光，图标不再直接浮在立绘上。
+	var tint := FrameMaterial.tint_for_era(era_id)
+	var center := size * 0.5
+	var radius := minf(size.x, size.y) * 0.5
+	draw_circle(center, radius, UITheme.alpha("color-bg", 0.88))
+	draw_arc(center, radius - 0.5, 0.0, TAU, 32, UITheme.fade(tint, 0.85), 1.0, true)
+	draw_arc(
+		center,
+		radius - 1.6,
+		-PI * 0.85,
+		-PI * 0.15,
+		16,
+		UITheme.fade(UITheme.color("color-accent").lightened(0.45), 0.42),
+		1.0,
+		true,
+	)
+	# 图标收进底盘里侧，按时代合金色提亮。
+	var inset := size * 0.16
 	Icons.draw_era(
-		self, era_id, Rect2(Vector2.ZERO, size), UITheme.alpha("color-accent", 0.62), 1.4
+		self,
+		era_id,
+		Rect2(inset, size - inset * 2.0),
+		tint.lightened(0.35),
+		1.8,
 	)

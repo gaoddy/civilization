@@ -36,6 +36,7 @@ var _steam_invite_blocked := false
 func _ready() -> void:
     UILayout.safe_area(self)
     _build()
+    FrameMaterial.dress_page(self)
     _connect_signals()
     _connected = Net.is_open()
     _render_identity()

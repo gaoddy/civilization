@@ -86,6 +86,7 @@ var _hero_pick: HeroPickOverlay
 func _ready() -> void:
 	UILayout.safe_area(self, _page_texture())
 	_build()
+	FrameMaterial.dress_page(self)
 	GameStore.hero_pick_started.connect(_on_hero_pick_started)
 	GameStore.view_changed.connect(_refresh)
 	GameStore.events_received.connect(_on_game_events)

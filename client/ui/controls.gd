@@ -9,6 +9,9 @@ const PAGE_SURFACE_NAME := "PageSurface"
 
 static func clear(node: Node) -> void:
     for child in node.get_children():
+        # 材质层是挂在控件上的表面装饰，不是内容：清空内容时保留，避免边框闪没。
+        if child.name == FrameMaterial.OVERLAY_NAME:
+            continue
         node.remove_child(child)
         child.queue_free()
 
@@ -45,7 +48,9 @@ static func line_edit(placeholder := "", min_width := 0) -> LineEdit:
 
 
 static func panel() -> PanelContainer:
-    return PanelContainer.new()
+    var node := PanelContainer.new()
+    FrameMaterial.apply(node, FrameMaterial.Style.BEVEL)
+    return node
 
 
 ## 软件背景：铺满整个窗口的深底纹理；纹理缺失时退回纯色，不留空白页。
@@ -97,6 +102,9 @@ static func page_surface(texture_path := "") -> Control:
 static func card_panel(variant := "surface") -> PanelContainer:
     var node := PanelContainer.new()
     node.add_theme_stylebox_override("panel", UITheme.panel_style(variant))
+    # 卡面信息条（cover-info）贴在卡框里面，由卡面统一描边，不单独上材质。
+    if variant != "cover-info":
+        FrameMaterial.apply(node, FrameMaterial.Style.BEVEL)
     return node
 
 
@@ -149,6 +157,8 @@ static func apply_button_style(node: Button, variant := "default") -> void:
     node.add_theme_color_override("font_focus_color", text_color)
     node.add_theme_color_override("font_disabled_color", UITheme.color("color-text-muted"))
     node.add_theme_font_size_override("font_size", UITheme.font_size("font-body"))
+    # 框体材质：按钮是可操作表面，默认带引导流光；重复调用只更新参数。
+    FrameMaterial.apply(node, FrameMaterial.Style.BEVEL, {"guide": true})
 
 
 ## 淘汰或失效的行：统一降低透明度，不改变布局。

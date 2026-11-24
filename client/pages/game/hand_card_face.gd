@@ -15,6 +15,7 @@ static func build(card: Dictionary, measure_host: Node = null) -> Control:
     if not golden and reward_level != null:
         badge_text = str(int(reward_level))
     var face_node := CardFaceBase.create_face(card_id, true)
+    face_node.set_meta("golden", golden)
     CardFaceBase.add_info(
         face_node,
         card_id,

@@ -11,6 +11,7 @@ var _received := false
 func _ready() -> void:
     UILayout.safe_area(self)
     _build()
+    FrameMaterial.dress_page(self)
     GameStore.leaderboard_changed.connect(_on_leaderboard_changed)
     _render()
     GameStore.request_leaderboard()

@@ -26,6 +26,7 @@ var _countdown_left := 0.0
 func _ready() -> void:
     UILayout.safe_area(self)
     _build()
+    FrameMaterial.dress_page(self)
     GameStore.account_changed.connect(_on_account_changed)
     GameStore.phone_code_sent.connect(_on_code_sent)
     GameStore.error_received.connect(_on_error)

@@ -34,6 +34,18 @@ const PRIMITIVE_COLOR := {
 	"lime-400": "a3cf61",
 	"rose-400": "d9799b",
 	"sand-400": "cdb98c",
+	"coral-300": "ff7a6b",
+	"gold-200": "ffe089",
+	"brass-700": "6d4a18",
+	"ink-1000": "14100a",
+	"blood-900": "33080a",
+	"rust-500": "b4552a",
+	"moss-500": "8f8b46",
+	"clay-400": "c2a878",
+	"brass-500": "c8a24a",
+	"steel-500": "8d97a6",
+	"chrome-300": "b9c6d2",
+	"arc-400": "5fd3e8",
 	"red-200": "ff8c8c",
 	"white": "ffffff",
 	"black": "000000",
@@ -92,6 +104,21 @@ const SEMANTIC_COLOR := {
 	"color-info": "blue-400",
 	"color-highlight": "blue-300",
 	"color-combat-tint": "red-200",
+	# 框体材质：每个时代一种合金基色，卡框、角标与时代图标共用同一取值。
+	"color-era-prehistoric": "rust-500",
+	"color-era-primitive": "moss-500",
+	"color-era-classical": "clay-400",
+	"color-era-feudal": "brass-500",
+	"color-era-industrial": "steel-500",
+	"color-era-modern": "chrome-300",
+	"color-era-future": "arc-400",
+	"color-golden": "gold-400",
+	# 框体与战斗表现：星点、伤害数字、金属环与血滴阴影。
+	"color-star": "gold-200",
+	"color-damage": "coral-300",
+	"color-plate-ring": "brass-700",
+	"color-plate-well": "ink-1000",
+	"color-danger-deep": "blood-900",
 	"color-white": "white",
 	"color-black": "black",
 }
@@ -313,6 +340,13 @@ static func alpha(name: String, value: float) -> Color:
 	var value_color := color(name)
 	value_color.a = value
 	return value_color
+
+
+## 在已有颜色上换不透明度：脉冲、渐隐与光晕按时间改 alpha 时使用，不改色相。
+static func fade(value: Color, opacity: float) -> Color:
+	var out := value
+	out.a = opacity
+	return out
 
 
 static func font_size(name: String) -> int:
