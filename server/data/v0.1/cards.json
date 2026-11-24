@@ -6623,7 +6623,7 @@
     "skills": [
       "keyword-armor-2",
       "keyword-taunt",
-      "activate-reptile-permanent-taunt"
+      "trigger-reptile-permanent-taunt"
     ],
     "subtype": "reptile",
     "taxon": "cheloniidae"

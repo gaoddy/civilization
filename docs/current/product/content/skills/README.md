@@ -5,7 +5,6 @@
 | 技能 | 关键词 | 文本 | 引用数 |
 | --- | --- | --- | --- |
 | [activate-friendly-growth-twice](activate-friendly-growth-twice.md) | 无 | 使一个友方随从获得两次成长 | 1 |
-| [activate-reptile-permanent-taunt](activate-reptile-permanent-taunt.md) | 无 | 使一个友方随从获得嘲讽 | 1 |
 | [alternating-current](alternating-current.md) | 无 | 使一个友方随从获得无视嘲讽直到回合结束 | 1 |
 | [aura-adjacent-mammal](aura-adjacent-mammal.md) | 无 | 相邻的友方哺乳纲随从获得 +2/+2 | 1 |
 | [aura-all-plus-0-plus-1](aura-all-plus-0-plus-1.md) | 无 | 你的随从获得 +0/+1 | 3 |
@@ -252,6 +251,7 @@
 | [trigger-protozoa-single-taunt-this-turn](trigger-protozoa-single-taunt-this-turn.md) | 无 | 使一个友方原生生物界随从获得嘲讽直到回合结束 | 1 |
 | [trigger-refresh-shop-free](trigger-refresh-shop-free.md) | 无 | 刷新商店 | 1 |
 | [trigger-reptile-all-plus-0-plus-3](trigger-reptile-all-plus-0-plus-3.md) | 无 | 使你的爬行纲随从获得 +0/+3 | 1 |
+| [trigger-reptile-permanent-taunt](trigger-reptile-permanent-taunt.md) | 无 | 战吼：使一个友方爬行纲随从获得嘲讽 | 1 |
 | [trigger-reptile-single-armor-2-this-turn](trigger-reptile-single-armor-2-this-turn.md) | 无 | 使一个友方爬行纲随从获得减伤 2 直到回合结束 | 1 |
 | [trigger-reptile-single-poison-this-turn](trigger-reptile-single-poison-this-turn.md) | 无 | 使一个友方爬行纲随从获得剧毒直到回合结束 | 1 |
 | [trigger-summon-1-neutral-token-2-2](trigger-summon-1-neutral-token-2-2.md) | 无 | 召唤一个 2/2 的随从 | 1 |

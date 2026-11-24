@@ -21,30 +21,6 @@
     "uses_per_turn": 1
   },
   {
-    "cost": 1,
-    "effects": [
-      {
-        "op": "grant_keyword",
-        "params": {
-          "duration": "permanent",
-          "keyword": {
-            "keyword": "taunt"
-          }
-        },
-        "selector": {
-          "filters": [],
-          "kind": "side",
-          "pick": "single",
-          "side": "friendly"
-        },
-        "trigger": "on_activate"
-      }
-    ],
-    "id": "activate-reptile-permanent-taunt",
-    "keyword": null,
-    "uses_per_turn": 1
-  },
-  {
     "cost": 2,
     "effects": [
       {
@@ -5701,6 +5677,35 @@
       }
     ],
     "id": "trigger-reptile-all-plus-0-plus-3",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "grant_keyword",
+        "params": {
+          "duration": "permanent",
+          "keyword": {
+            "keyword": "taunt"
+          }
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "reptile"
+            }
+          ],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play"
+      }
+    ],
+    "id": "trigger-reptile-permanent-taunt",
     "keyword": null,
     "uses_per_turn": null
   },
