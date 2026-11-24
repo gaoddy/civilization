@@ -1,9 +1,9 @@
 class_name QueuePanel
 extends PopupLayer
-## 匹配排队浮层：展示等待时长、已凑人数与当前积分窗口，并提供取消入口。
+## 匹配排队浮层：展示等待时长与已凑人数，并提供取消入口。
 ##
 ## 自己订阅 `GameStore.queue_changed`，排队中显示、其余时间隐藏；取消只发出
-## `cancel_pressed`，由宿主决定发送 `LeaveQueue`。人数、窗口与等待基准都来自
+## `cancel_pressed`，由宿主决定发送 `LeaveQueue`。人数与等待基准都来自
 ## `GameStore.queue_state`，本组件不做二次判断。
 
 signal cancel_pressed
@@ -12,7 +12,6 @@ const REFRESH_SECONDS := 0.5
 
 var _waiting: Label
 var _count: Label
-var _window: Label
 var _timer: Timer
 
 
@@ -38,11 +37,6 @@ func _init() -> void:
     _count = UIControls.pill_label("", "accent")
     _count.name = "QueueCount"
     box.add_child(_count)
-
-    _window = UIControls.label("", UITheme.font_size("font-body-sm"), false)
-    _window.name = "QueueWindow"
-    _window.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
-    box.add_child(_window)
 
     var cancel := UIControls.button(tr("ui.queue.cancel"))
     cancel.name = "CancelQueueButton"
@@ -81,12 +75,6 @@ func _refresh() -> void:
     _waiting.text = tr("ui.queue.waiting") % _clock(GameStore.queue_wait_seconds())
     var state: Dictionary = GameStore.queue_state
     _count.text = tr("ui.queue.players") % int(state.get("waitingPlayers", 0))
-    var window = state.get("ratingWindow", null)
-    _window.text = (
-        tr("ui.queue.window_unlimited")
-        if window == null
-        else tr("ui.queue.window") % int(window)
-    )
 
 
 ## 等待时长按分:秒展示；超过一小时仍用分累计，避免再引入小时单位。

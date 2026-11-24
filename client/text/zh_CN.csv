@@ -1738,8 +1738,6 @@ ui.queue.cancel,取消匹配
 ui.queue.players,已凑齐 %d/8
 ui.queue.title,正在匹配
 ui.queue.waiting,等待 %s
-ui.queue.window,匹配范围 ±%d 分
-ui.queue.window_unlimited,匹配范围不限积分
 ui.result.board_empty,无随从
 ui.result.board_item,%s  %d/%d
 ui.result.board_title,最终阵容
