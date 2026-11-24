@@ -53,6 +53,22 @@ class DeployAliasTest(unittest.TestCase):
         self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
         self.assertIn("ssh root@example", proc.stdout)
 
+    def test_smoke_dev_resolves_gateway_without_cert_check(self):
+        """dev 无内网 DNS 且网关自签：smoke 从集群取地址并跳过证书校验。"""
+        proc = self._run_make(["-n", "deploy-smoke-dev"])
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        self.assertIn("--resolve civilization.dev.platform.internal:443:", proc.stdout)
+        self.assertIn("-k ", proc.stdout)
+        self.assertIn("platform-dev get gateway platform-gateway", proc.stdout)
+
+    def test_smoke_prod_uses_dns_and_cert_check(self):
+        proc = self._run_make(["-n", "deploy-smoke-prod"])
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        self.assertIn("https://civilization.platform.internal/healthz", proc.stdout)
+        self.assertNotIn("--resolve", proc.stdout)
+        self.assertNotIn("platform-dev", proc.stdout)
+        self.assertNotIn("-k ", proc.stdout)
+
     def test_full_alias_maps_to_deploy(self):
         for env in ("dev", "prod"):
             with self.subTest(env=env):

@@ -45,8 +45,13 @@ deploy-rollout: deploy-check-env
 deploy-status: deploy-check-env
 	ssh $(SERVER) "kubectl get pods,service,httproute -n $(DEPLOY_NAMESPACE) -l app.kubernetes.io/name=civilization-server"
 
+# dev 节点没有 *.platform.internal 的 DNS，且 dev Gateway 用自签证书：
+# 直连集群内网关地址并跳过证书校验；prod 仍走 DNS 与正常证书校验。
+DEPLOY_GATEWAY_NS ?= platform-dev
+DEPLOY_SMOKE_CURL ?= $(if $(filter dev,$(ENV)),-k --resolve $(DEPLOY_HOST):443:$$(kubectl -n $(DEPLOY_GATEWAY_NS) get gateway platform-gateway -o jsonpath="{.status.addresses[0].value}"),)
+
 deploy-smoke: deploy-check-env
-	ssh $(SERVER) "curl -fsS https://$(DEPLOY_HOST)/healthz && curl -fsS https://$(DEPLOY_HOST)/readyz"
+	ssh $(SERVER) 'curl -fsS $(DEPLOY_SMOKE_CURL) https://$(DEPLOY_HOST)/healthz && curl -fsS $(DEPLOY_SMOKE_CURL) https://$(DEPLOY_HOST)/readyz'
 
 deploy: deploy-check-env deploy-image deploy-load deploy-preflight deploy-apply deploy-rollout deploy-smoke
 
