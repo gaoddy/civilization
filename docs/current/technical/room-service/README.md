@@ -248,7 +248,7 @@ sim load --serve-room-service PATH | --connect ws://HOST:PORT/ws
 - 每档结束向全部机器人发停止信号；机器人发送 `LeaveRoom`，对局中按弃权结算，存活数降到 1 时 `GameOver` 并销毁房间，不等待 30 秒断线宽限。失败房间同样清理，避免大厅座位挂满宽限期。
 - 身份：每个机器人按全局序号注入唯一手机号（`sim bot` 由名字派生的手机号在多房间时可能撞号）；`--quiet` 关闭逐条错误输出。
 - 本机模式自动以 `--listen 127.0.0.1:0` 起停 `room-service`，服务端日志持续 drain 到 `--server-log`，采样用 `ps`；远端 `--connect` 可用 `--ssh-host` + `--ssh-pid` 经 ssh 读 `/proc/<pid>`。远端 ramp 默认拒绝，需显式 `--allow-remote-ramp`（房间会清理，但账号与会话在服务端累积）。
-- 健康档至少一个时退出码为 0；报告字段与上限判定写 `--out`（默认 stdout），服务端日志默认 `output/loadtest-server.log`。
+- 健康档至少一个时退出码为 0；报告字段与上限判定写 `--out`（默认 stdout），服务端日志默认 `output/logs/<分支>/loadtest-server.log`（`make loadtest*` 显式传入）。
 - 远端 `wss://` 尚未支持（`tokio-tungstenite` 未启用 TLS feature）：压远端前用 `kubectl port-forward` 或 `ssh -L` 转成本地 `ws://`。
 
 ## 13. 命令与验收证据
