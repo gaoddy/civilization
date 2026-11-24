@@ -40,3 +40,5 @@ func _apply_styles() -> void:
 	for state in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
 		add_theme_color_override(state, text_color)
 	add_theme_color_override("font_disabled_color", UITheme.color("color-text-muted"))
+	# 材质与 `styled_button` 一致：可操作表面带引导流光。
+	FrameMaterial.apply(self, FrameMaterial.Style.BEVEL, {"guide": true})

@@ -20,6 +20,7 @@ var _local_failed := false
 func _ready() -> void:
     UILayout.safe_area(self)
     _build()
+    FrameMaterial.dress_page(self)
     Net.connected.connect(_on_connected)
     Net.disconnected.connect(_on_disconnected)
     GameStore.auth_changed.connect(_on_auth_changed)

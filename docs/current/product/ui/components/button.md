@@ -31,6 +31,7 @@
 - 状态：默认、悬停、按下、聚焦、禁用，规则见 [interactions.md](../interactions.md#1-控件状态)。
 - 事件：标准 `Button.pressed`，由页面连接意图发送。
 - 禁用时必须同时给出 `tooltip_text` 说明原因。
+- `apply_button_style` 会给按钮叠一层 [框体材质](frame-material.md)，按钮因此默认带引导流光；`PillButton` 走同一规则。
 
 ## 禁用场景
 

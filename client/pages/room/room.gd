@@ -28,6 +28,7 @@ var _steam_invite_blocked := false
 func _ready() -> void:
     UILayout.safe_area(self)
     _build()
+    FrameMaterial.dress_page(self)
     GameStore.room_changed.connect(_on_room_changed)
     GameStore.hero_pick_started.connect(_on_hero_pick_started)
     GameStore.room_closed.connect(_on_room_closed)

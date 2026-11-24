@@ -9,19 +9,34 @@ extends Control
 ## 避免抢走原卡与详情层的悬停。
 
 ## 攻方单程飞行时长（毫秒）；往返共两程，需小于播放器单条动作节奏 `PACE_MS`。
-const FLY_MS := 130.0
+const FLY_MS := 150.0
 
-## 阵亡卡淡出时长（毫秒）。
-const FADE_MS := 160.0
+## 阵亡卡淡出时长（毫秒）；与淡入一样短于 320ms 的动作节拍，不跨到下一条动作。
+const FADE_MS := 260.0
 
-## 复生 / 召唤卡的缩放淡入时长（毫秒）。
-const APPEAR_MS := 160.0
+## 复生 / 召唤卡的缩放淡入时长（毫秒）；同样短于动作节拍。
+const APPEAR_MS := 260.0
 
 ## 命中闪光回正时长（毫秒）。
-const FLASH_MS := 120.0
+const FLASH_MS := 180.0
 
 ## 伤害飘字上浮与淡出时长（毫秒）。
-const DAMAGE_MS := 520.0
+const DAMAGE_MS := 950.0
+## 命中火花数量与寿命（毫秒）；火花直接在覆盖层上绘制，不建节点。
+const SPARK_COUNT := 20
+const SPARK_MS := 650.0
+## 命中冲击环的扩散时长与最大半径（像素）。
+const RING_MS := 520.0
+const RING_RADIUS := 38.0
+## 受击卡的挤压回弹时长（毫秒）。
+const PUNCH_MS := 280.0
+## 伤害数字上浮距离与初始放大倍数。
+const DAMAGE_RISE := 46.0
+const DAMAGE_POP := 1.6
+## 火花初速区间与重力，取值固定，保证无头冒烟逐帧结果一致。
+const SPARK_SPEED_MIN := 130.0
+const SPARK_SPEED_MAX := 240.0
+const SPARK_GRAVITY := 520.0
 
 ## 飞行中的克隆卡：[{node, start, end, source, target, damage, t, hit}]。
 var _flights: Array = []
@@ -33,6 +48,12 @@ var _appears: Array = []
 var _flashes: Array = []
 ## 伤害飘字：[{node, t, start}]。
 var _damage_labels: Array = []
+## 命中火花：[{pos, vel, t, size}]，全部按帧推进后在本层 `_draw` 里画。
+var _sparks: Array = []
+## 命中冲击环：[{center, t}]。
+var _rings: Array = []
+## 受击卡的挤压回弹：[{node, t}]。
+var _punches: Array = []
 
 
 func _init() -> void:
@@ -107,11 +128,16 @@ func clear() -> void:
         _reset_card(appear["node"])
     for flash in _flashes:
         _reset_card(flash["node"])
+    for punch in _punches:
+        _reset_card(punch["node"])
     _flights.clear()
     _fades.clear()
     _appears.clear()
     _flashes.clear()
     _damage_labels.clear()
+    _sparks.clear()
+    _rings.clear()
+    _punches.clear()
     for child in get_children():
         child.queue_free()
 
@@ -124,6 +150,10 @@ func advance(delta: float) -> void:
     _advance_appears(delta_ms)
     _advance_flashes(delta_ms)
     _advance_damage_labels(delta_ms)
+    _advance_sparks(delta_ms)
+    _advance_rings(delta_ms)
+    _advance_punches(delta_ms)
+    queue_redraw()
 
 
 func _advance_flights(delta_ms: float) -> void:
@@ -157,19 +187,125 @@ func _strike(flight: Dictionary) -> void:
     var damage := int(flight["damage"])
     if is_instance_valid(target) and damage > 0:
         flash(target)
-        _spawn_damage_label(flight["end"] + target.size * 0.5, damage)
+        var hit: Vector2 = flight["end"] + target.size * 0.5
+        _spawn_impact(hit)
+        _spawn_damage_label(hit, damage)
+        _punches.append({"node": target, "t": 0.0})
 
 
+## 命中冲击：一圈扩散环 + 一束向外飞散的火花，让「打到了」有重量。
+func _spawn_impact(center: Vector2) -> void:
+    _rings.append({"center": center, "t": 0.0})
+    for index in SPARK_COUNT:
+        var spread := float(index) / float(SPARK_COUNT)
+        var angle := -PI * 0.5 + (spread - 0.5) * PI * 1.5
+        var speed := lerpf(SPARK_SPEED_MIN, SPARK_SPEED_MAX, fmod(spread * 3.7, 1.0))
+        _sparks.append({
+            "pos": center,
+            "vel": Vector2(cos(angle), sin(angle)) * speed,
+            "t": 0.0,
+            "size": 1.8 + 1.4 * fmod(spread * 5.3, 1.0),
+        })
+
+
+## 伤害数字：深色底牌 + 亮红数字，压在立绘上也一眼能读到。
 func _spawn_damage_label(center: Vector2, damage: int, label_name := "CombatFxDamage") -> void:
-    var label := UIControls.label("-%d" % damage, UITheme.font_size("font-display"), true)
-    label.name = label_name
-    label.add_theme_color_override("font_color", UITheme.color("color-danger"))
+    var holder := PanelContainer.new()
+    holder.name = label_name
+    holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    var plate := StyleBoxFlat.new()
+    plate.bg_color = UITheme.alpha("color-bg", 0.78)
+    plate.border_color = UITheme.alpha("color-danger", 0.55)
+    plate.set_border_width_all(1)
+    plate.set_corner_radius_all(9)
+    plate.set_content_margin_all(5)
+    holder.add_theme_stylebox_override("panel", plate)
+
+    # 关闭自动换行：底牌宽度按内容增长，负号与数字不会被拆成两行。
+    var label := UIControls.label("-%d" % damage, UITheme.font_size("font-hero") * 1.35, false)
+    label.add_theme_color_override("font_color", UITheme.color("color-damage"))
+    label.add_theme_constant_override("outline_size", 5)
+    label.add_theme_color_override("font_outline_color", UITheme.alpha("color-black", 0.85))
     label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    add_child(label)
-    label.reset_size()
-    var start := center - label.size * 0.5
-    label.position = start
-    _damage_labels.append({"node": label, "t": 0.0, "start": start})
+    holder.add_child(label)
+
+    add_child(holder)
+    holder.reset_size()
+    var start := center - holder.size * 0.5
+    holder.position = start
+    _damage_labels.append({"node": holder, "t": 0.0, "start": start})
+
+
+func _advance_sparks(delta_ms: float) -> void:
+    var step := delta_ms / 1000.0
+    var index := _sparks.size() - 1
+    while index >= 0:
+        var spark: Dictionary = _sparks[index]
+        spark["t"] += delta_ms
+        if float(spark["t"]) >= SPARK_MS:
+            _sparks.remove_at(index)
+            index -= 1
+            continue
+        var vel: Vector2 = spark["vel"]
+        vel.y += SPARK_GRAVITY * step
+        spark["vel"] = vel
+        spark["pos"] = (spark["pos"] as Vector2) + vel * step
+        index -= 1
+
+
+## 受击挤压：先压到 0.92 再弹回 1.0，命中瞬间有被推了一下的重量。
+func _advance_punches(delta_ms: float) -> void:
+    var index := _punches.size() - 1
+    while index >= 0:
+        var punch: Dictionary = _punches[index]
+        punch["t"] += delta_ms
+        var card: Control = punch["node"]
+        if not is_instance_valid(card):
+            _punches.remove_at(index)
+            index -= 1
+            continue
+        var k := clampf(float(punch["t"]) / PUNCH_MS, 0.0, 1.0)
+        var scale := 1.0 - 0.08 * sin(k * PI)
+        card.pivot_offset = card.size * 0.5
+        card.scale = Vector2(scale, scale)
+        if k >= 1.0:
+            _reset_card(card)
+            _punches.remove_at(index)
+        index -= 1
+
+
+func _advance_rings(delta_ms: float) -> void:
+    var index := _rings.size() - 1
+    while index >= 0:
+        var ring: Dictionary = _rings[index]
+        ring["t"] += delta_ms
+        if float(ring["t"]) >= RING_MS:
+            _rings.remove_at(index)
+        index -= 1
+
+
+## 火花与冲击环直接画在覆盖层上：数量固定、无随机，无头冒烟可逐帧断言。
+func _draw() -> void:
+    for spark in _sparks:
+        var k := clampf(float(spark["t"]) / SPARK_MS, 0.0, 1.0)
+        var color := UITheme.fade(UITheme.color("color-accent"), (1.0 - k) * 0.95)
+        draw_circle(spark["pos"], float(spark["size"]) * (1.0 - k * 0.6), color)
+    for ring in _rings:
+        var k := clampf(float(ring["t"]) / RING_MS, 0.0, 1.0)
+        var fade := (1.0 - k) * (1.0 - k)
+        # 冲击核：命中头 30% 的一团白光。
+        draw_circle(ring["center"], lerpf(5.0, 16.0, k), UITheme.fade(UITheme.color("color-accent").lightened(0.45), fade * 0.75))
+        draw_circle(ring["center"], lerpf(3.0, 10.0, k), UITheme.alpha("color-white", fade * 0.9))
+        draw_arc(
+            ring["center"],
+            lerpf(6.0, RING_RADIUS, k),
+            0.0,
+            TAU,
+            32,
+            UITheme.fade(UITheme.color("color-accent"), fade * 0.85),
+            2.5,
+            true,
+        )
 
 
 func _advance_fades(delta_ms: float) -> void:
@@ -241,8 +377,12 @@ func _advance_damage_labels(delta_ms: float) -> void:
             index -= 1
             continue
         var k := clampf(float(entry["t"]) / DAMAGE_MS, 0.0, 1.0)
-        label.position = entry["start"] + Vector2(0, -18.0 * k)
-        label.modulate.a = 1.0 - k
+        label.position = entry["start"] + Vector2(0, -DAMAGE_RISE * k)
+        # 前 40% 从 1.6 倍回落到 1 倍；前 70% 保持不透明，尾段再淡出。
+        var pop := 1.0 + (DAMAGE_POP - 1.0) * maxf(0.0, 1.0 - k * 2.5)
+        label.pivot_offset = label.size * 0.5
+        label.scale = Vector2(pop, pop)
+        label.modulate.a = clampf((1.0 - k) / 0.30, 0.0, 1.0)
         if k >= 1.0:
             _free_node(label)
             _damage_labels.remove_at(index)

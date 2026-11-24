@@ -22,6 +22,7 @@ func _ready() -> void:
     add_child(_gallery)
     _gallery.closed.connect(_on_closed)
     _build_status()
+    FrameMaterial.dress_page(self)
     CardDB.content_changed.connect(_refresh)
     CardDB.content_failed.connect(_on_content_failed)
     _refresh()

@@ -15,6 +15,7 @@ func _ready() -> void:
     if _return_page == "":
         _return_page = UINavigation.PAGE_LOBBY
     _build()
+    FrameMaterial.dress_page(self)
     GameStore.profile_changed.connect(_render)
     _render()
     GameStore.request_profile(GameStore.profile_target)
