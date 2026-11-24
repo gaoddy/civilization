@@ -40,7 +40,7 @@ use rule_engine::effects::{TargetRef as EngineTargetRef, Zone as EngineZone};
 use rule_engine::engine::Engine;
 use rule_engine::error::EngineError;
 use rule_engine::events::GameEvent as EngineEvent;
-use rule_engine::intent::{Intent as EngineIntent, RejectCode};
+use rule_engine::intent::Intent as EngineIntent;
 use rule_engine::rng::seed_from_u64;
 use rule_engine::settle::SeatCombatReport;
 use rule_engine::state::{GameState, InstanceId, Phase, Seat};
@@ -53,7 +53,7 @@ use crate::clock::Clock;
 use crate::envelope::SeatChannel;
 use crate::filter::{combat_result, for_seat};
 use crate::room::{PlayerSlot, SEAT_COUNT};
-use crate::view::{SeatInfo, to_protocol};
+use crate::view::{SeatInfo, error_code_of, to_protocol};
 
 /// 首回合招募时长（秒）。
 const INITIAL_RECRUIT_SECONDS: u64 = 60;
@@ -2159,25 +2159,6 @@ fn map_intent(intent: protocol::intents::Intent) -> Result<EngineIntent, ErrorCo
 
 fn to_u8(value: i64) -> Result<u8, ErrorCode> {
     u8::try_from(value).map_err(|_| ErrorCode::InvalidChoice)
-}
-
-/// 引擎拒绝码转协议错误码；两者取值一一对应。
-pub(crate) fn error_code_of(code: RejectCode) -> ErrorCode {
-    match code {
-        RejectCode::NotEnoughGold => ErrorCode::NotEnoughGold,
-        RejectCode::ShopSlotEmpty => ErrorCode::ShopSlotEmpty,
-        RejectCode::NoSpace => ErrorCode::NoSpace,
-        RejectCode::InvalidStage => ErrorCode::InvalidStage,
-        RejectCode::NoSuchMinion => ErrorCode::NoSuchMinion,
-        RejectCode::AlreadyMaxEra => ErrorCode::AlreadyMaxEra,
-        RejectCode::CardNotInHand => ErrorCode::CardNotInHand,
-        RejectCode::HeroPowerLimit => ErrorCode::HeroPowerLimit,
-        RejectCode::NotActiveSkill => ErrorCode::NotActiveSkill,
-        RejectCode::NoValidTarget => ErrorCode::NoValidTarget,
-        RejectCode::TargetNotAllowed => ErrorCode::TargetNotAllowed,
-        RejectCode::InvalidChoice => ErrorCode::InvalidChoice,
-        RejectCode::SevenVoyagesActive => ErrorCode::SevenVoyagesActive,
-    }
 }
 
 /// 任意可序列化载荷转 JSON 对象；不是对象时返回 `BAD_PAYLOAD`。

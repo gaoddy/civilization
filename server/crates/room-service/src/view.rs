@@ -11,16 +11,15 @@ use protocol::view::{
     PlayerSummary, PlayerView, ShopAffordance, ShopSlot,
 };
 use protocol::{
-    HeroPower, MinionAbility, MinionStatBreakdown, MinionStatSource, MinionStatSourceKind,
-    MinionStatSourceLayer, MinionStats, PlayerViewSelf, ProtocolError, TargetRef, TargetZone,
+    ErrorCode, HeroPower, MinionAbility, MinionStatBreakdown, MinionStatSource,
+    MinionStatSourceKind, MinionStatSourceLayer, MinionStats, PlayerViewSelf, ProtocolError,
+    TargetRef, TargetZone,
 };
 use rule_engine::combat;
 use rule_engine::data::Catalog;
 use rule_engine::effects::TargetRef as EngineTargetRef;
 use rule_engine::intent::RejectCode;
 use std::num::NonZeroU64;
-
-use crate::game::error_code_of;
 
 use rule_engine::state::{MinionInstance, Phase};
 use rule_engine::view::{
@@ -40,7 +39,9 @@ pub struct SeatInfo {
 /// - `seats` 按座位索引，长度固定为 8；引擎座位越界时返回 `BAD_PAYLOAD`。
 /// - `deadline` 是 RFC3339 文本，解析失败返回 `BAD_PAYLOAD`（不 panic）。
 /// - `opponent_seat` 映射为对应座位的 `playerId`，`None` 保持 `null`。
-/// - 所有 `disabled_reason` 使用 [`RejectCode::as_str`]，与 `errors.schema.json` 一致。
+/// - 英雄技能与手牌、棋盘的可打出性把 `disabled_reason` 转成错误码字符串
+///   [`RejectCode::as_str`]；`BoardMinion.abilities[].disabledReason` 是协议
+///   `ErrorCode` 枚举，经 [`error_code_of`] 转换；两者都与 `errors.schema.json` 一致。
 pub fn to_protocol(
     seat_view: &SeatView,
     room_id: &str,
@@ -404,6 +405,25 @@ fn player_id_of(seats: &[SeatInfo; 8], seat: u8) -> Result<String, ProtocolError
 /// 拒绝码转协议字符串；取值与 `errors.schema.json` 一致。
 fn reject_reason(code: RejectCode) -> String {
     code.as_str().to_string()
+}
+
+/// 引擎拒绝码转协议错误码；两者取值一一对应。
+pub(crate) fn error_code_of(code: RejectCode) -> ErrorCode {
+    match code {
+        RejectCode::NotEnoughGold => ErrorCode::NotEnoughGold,
+        RejectCode::ShopSlotEmpty => ErrorCode::ShopSlotEmpty,
+        RejectCode::NoSpace => ErrorCode::NoSpace,
+        RejectCode::InvalidStage => ErrorCode::InvalidStage,
+        RejectCode::NoSuchMinion => ErrorCode::NoSuchMinion,
+        RejectCode::AlreadyMaxEra => ErrorCode::AlreadyMaxEra,
+        RejectCode::CardNotInHand => ErrorCode::CardNotInHand,
+        RejectCode::HeroPowerLimit => ErrorCode::HeroPowerLimit,
+        RejectCode::NotActiveSkill => ErrorCode::NotActiveSkill,
+        RejectCode::NoValidTarget => ErrorCode::NoValidTarget,
+        RejectCode::TargetNotAllowed => ErrorCode::TargetNotAllowed,
+        RejectCode::InvalidChoice => ErrorCode::InvalidChoice,
+        RejectCode::SevenVoyagesActive => ErrorCode::SevenVoyagesActive,
+    }
 }
 
 /// 引擎阶段转协议阶段；两边变体一一对应。

@@ -2415,6 +2415,7 @@ fn forfeit_from_eliminated_or_unknown_seat_returns_empty() {
 /// 测试用随从主动/被动技能 id。
 const MINION_ACTIVE_SKILL: &str = "test-minion-active";
 const MINION_PASSIVE_SKILL: &str = "test-minion-passive";
+const MINION_TARGET_SKILL: &str = "test-minion-target";
 
 /// 给全部 1 级商店随从换上「主动 + 被动」两个测试技能，并抬高首回合金币，
 /// 让买入（固定 3 金）后仍有金币发动技能；效果均不需要目标。
@@ -2438,6 +2439,24 @@ fn catalog_with_minion_skills() -> Catalog {
     for card in catalog.cards.values_mut() {
         if card.card_type == CardType::Minion && card.level == 1 && card.in_shop_pool {
             card.skills = vec![active, passive];
+        }
+    }
+    catalog
+}
+
+/// 在 [`catalog_with_minion_skills`] 基础上再给 1 级随从加一个需要目标的主动技能。
+fn catalog_with_targeting_minion_skill() -> Catalog {
+    let mut catalog = catalog_with_minion_skills();
+    let targeting = catalog.insert_skill(Skill {
+        id: MINION_TARGET_SKILL.to_string(),
+        keyword: None,
+        effects: effects_of("OnActivate|Growth|target|times=1"),
+        cost: Some(1),
+        uses_per_turn: Some(1),
+    });
+    for card in catalog.cards.values_mut() {
+        if card.card_type == CardType::Minion && card.level == 1 && card.in_shop_pool {
+            card.skills.push(targeting);
         }
     }
     catalog
@@ -2606,7 +2625,7 @@ fn use_minion_ability_after_uses_exhausted_is_rejected() {
         "p0",
         "ability-limit-2",
         ProtocolIntent::UseMinionAbility {
-            minion_id,
+            minion_id: minion_id.clone(),
             skill_id: MINION_ACTIVE_SKILL.to_string(),
             target: None,
         },
@@ -2616,9 +2635,65 @@ fn use_minion_ability_after_uses_exhausted_is_rejected() {
         vec![ErrorCode::HeroPowerLimit],
         "次数用尽后应返回 HERO_POWER_LIMIT"
     );
+    let view = task.player_view(0).expect("视图应可用");
+    assert_eq!(view.self_.gold, gold_after, "拒绝的意图不得扣金币");
+    let ability = &view
+        .self_
+        .board
+        .iter()
+        .find(|minion| minion.minion_id == minion_id)
+        .expect("棋盘随从仍在")
+        .abilities[0];
+    assert_eq!(ability.uses_left, 0, "拒绝后剩余次数保持为 0");
+    assert!(!ability.can_use, "拒绝后仍不可发动");
+}
+
+#[test]
+fn player_view_marks_unaffordable_minion_ability() {
+    // 标准首回合金币 3：买入花光，主动技能 cost 1 无法支付。
+    let mut catalog = catalog_with_minion_skills();
+    catalog.config.gold_curve[0] = 3;
+    let (mut task, _clock) = task_with(catalog);
+    let minion_id = play_first_minion(&mut task, 0, "ability-unaffordable");
+
+    let view = task.player_view(0).expect("视图应可用");
+    let ability = &view
+        .self_
+        .board
+        .iter()
+        .find(|minion| minion.minion_id == minion_id)
+        .expect("棋盘随从仍在")
+        .abilities[0];
     assert_eq!(
-        task.player_view(0).expect("视图应可用").self_.gold,
-        gold_after,
-        "拒绝的意图不得扣金币"
+        ability.disabled_reason,
+        Some(ErrorCode::NotEnoughGold),
+        "金币不足时视图应下发具体错误码"
     );
+    assert!(!ability.can_use, "金币不足时不可发动");
+    assert_eq!(ability.uses_left, 1, "未发动过，剩余次数不变");
+}
+
+#[test]
+fn player_view_lists_target_candidates_for_targeted_minion_ability() {
+    let (mut task, _clock) = task_with(catalog_with_targeting_minion_skill());
+    let minion_id = play_first_minion(&mut task, 0, "ability-target");
+
+    let view = task.player_view(0).expect("视图应可用");
+    let board = view
+        .self_
+        .board
+        .iter()
+        .find(|minion| minion.minion_id == minion_id)
+        .expect("棋盘随从仍在");
+    let ability = board
+        .abilities
+        .iter()
+        .find(|ability| ability.skill_id == MINION_TARGET_SKILL)
+        .expect("应下发需要目标的主动技能");
+    assert!(ability.requires_target, "技能需要目标");
+    assert!(
+        !ability.target_candidates.is_empty(),
+        "本人棋盘有随从时应给出目标候选"
+    );
+    assert!(ability.can_use, "金币足够且候选非空，应可发动");
 }
