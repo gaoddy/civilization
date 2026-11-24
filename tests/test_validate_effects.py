@@ -205,5 +205,85 @@ class PlaystyleMechanicsTest(unittest.TestCase):
         self.assertEqual(errors, [])
 
 
+class KeywordTextConsistencyTest(unittest.TestCase):
+    def _errors(self, skills, allowlist=frozenset()):
+        saved = vd.KEYWORD_TEXT_LEGACY_ALLOWLIST
+        try:
+            vd.KEYWORD_TEXT_LEGACY_ALLOWLIST = set(allowlist)
+            return vd.keyword_text_errors(skills)
+        finally:
+            vd.KEYWORD_TEXT_LEGACY_ALLOWLIST = saved
+
+    def test_battlecry_prefix_requires_battlecry_keyword(self):
+        skills = [{"id": "test-bc", "_rendered_text": "战吼：使一个友方随从获得一次成长",
+                   "keyword": None}]
+        self.assertTrue(self._errors(skills))
+
+    def test_battlecry_prefix_with_keyword_passes(self):
+        skills = [{"id": "test-bc", "_rendered_text": "战吼：使一个友方随从获得一次成长",
+                   "keyword": "battlecry"}]
+        self.assertEqual(self._errors(skills), [])
+
+    def test_deathrattle_prefix_requires_deathrattle_keyword(self):
+        skills = [{"id": "test-dr", "_rendered_text": "亡语：使一个友方随从获得 +0/+1",
+                   "keyword": None}]
+        self.assertTrue(self._errors(skills))
+
+    def test_legacy_allowlist_entry_that_no_longer_hits_is_stale(self):
+        skills = [{"id": "test-clean", "_rendered_text": "使一个友方随从获得 +1 攻击力",
+                   "keyword": None}]
+        errors = self._errors(skills, {"mimic-1"})
+        self.assertTrue(any("mimic-1" in e and "不再命中" in e for e in errors))
+
+
+class UnreachableMinionSkillTest(unittest.TestCase):
+    def _minion(self):
+        return {"id": "test-minion", "_file": "test-minion.md", "skills": ["test-skill"]}
+
+    def _skill(self, trigger):
+        return {"id": "test-skill", "_rendered_effects": f"{trigger}|Growth|friendly:single|times=1"}
+
+    def test_on_play_effect_on_minion_rejected(self):
+        saved = vd.UNREACHABLE_MINION_SKILL_ALLOWLIST
+        try:
+            vd.UNREACHABLE_MINION_SKILL_ALLOWLIST = set()
+            errors = vd.unreachable_minion_skill_errors(
+                [self._minion()], {"test-skill": self._skill("OnPlayEffect")})
+        finally:
+            vd.UNREACHABLE_MINION_SKILL_ALLOWLIST = saved
+        self.assertTrue(any("OnPlayEffect" in e for e in errors))
+
+    def test_on_activate_on_minion_rejected(self):
+        saved = vd.UNREACHABLE_MINION_SKILL_ALLOWLIST
+        try:
+            vd.UNREACHABLE_MINION_SKILL_ALLOWLIST = set()
+            errors = vd.unreachable_minion_skill_errors(
+                [self._minion()], {"test-skill": self._skill("OnActivate")})
+        finally:
+            vd.UNREACHABLE_MINION_SKILL_ALLOWLIST = saved
+        self.assertTrue(any("OnActivate" in e for e in errors))
+
+    def test_on_play_on_minion_passes(self):
+        saved = vd.UNREACHABLE_MINION_SKILL_ALLOWLIST
+        try:
+            vd.UNREACHABLE_MINION_SKILL_ALLOWLIST = set()
+            errors = vd.unreachable_minion_skill_errors(
+                [self._minion()], {"test-skill": self._skill("OnPlay")})
+        finally:
+            vd.UNREACHABLE_MINION_SKILL_ALLOWLIST = saved
+        self.assertEqual(errors, [])
+
+    def test_allowlisted_card_passes_and_stale_entry_errors(self):
+        saved = vd.UNREACHABLE_MINION_SKILL_ALLOWLIST
+        try:
+            vd.UNREACHABLE_MINION_SKILL_ALLOWLIST = {"test-minion", "gone-card"}
+            errors = vd.unreachable_minion_skill_errors(
+                [self._minion()], {"test-skill": self._skill("OnActivate")})
+        finally:
+            vd.UNREACHABLE_MINION_SKILL_ALLOWLIST = saved
+        self.assertTrue(any("gone-card" in e for e in errors))
+        self.assertFalse(any("test-minion" in e for e in errors))
+
+
 if __name__ == "__main__":
     unittest.main()
