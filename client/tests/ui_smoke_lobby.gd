@@ -29,6 +29,7 @@ func _ready() -> void:
     var lobby := await _check_scene("res://pages/lobby/lobby.tscn", false)
     if lobby != null:
         await _check_layout(lobby)
+        await _check_hall_texture(lobby)
         await _check_match_toggle(lobby)
         await _check_join_dialog(lobby, socket)
         await _check_disconnect(lobby)
@@ -101,6 +102,26 @@ func _check_layout(lobby: Node) -> void:
     if columns != null:
         var view: Vector2 = lobby.get_viewport().get_visible_rect().size
         _expect(columns.get_global_rect().end.y <= view.y + 1.0, "桌面右栏底边不应超出视口")
+
+
+func _check_hall_texture(lobby: Node) -> void:
+    var hall := lobby.find_child("LobbyHallImage", true, false) as Control
+    var left := lobby.find_child("LobbyLeft", true, false) as Control
+    if hall == null:
+        _expect(false, "大厅应有大厅图容器")
+        return
+    var rect := hall.find_child("HallTexture", true, false) as TextureRect
+    if rect == null:
+        _expect(false, "大厅图应有纹理层")
+    else:
+        _expect(rect.texture != null, "大厅图纹理应能加载")
+        _expect(rect.expand_mode == TextureRect.EXPAND_IGNORE_SIZE, "大厅图应忽略纹理原始尺寸")
+        _expect(
+            rect.stretch_mode == TextureRect.STRETCH_KEEP_ASPECT_COVERED,
+            "大厅图应以 cover 方式铺满"
+        )
+    if left != null:
+        _expect(absf(hall.size.x - left.size.x) <= 1.0, "大厅图应铺满左栏宽度")
 
 
 func _check_match_toggle(lobby: Node) -> void:
