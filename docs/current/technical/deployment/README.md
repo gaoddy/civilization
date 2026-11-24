@@ -60,11 +60,11 @@ make deploy-dev                  # 等价于 make deploy ENV=dev
 make deploy-prod                 # 等价于 make deploy ENV=prod
 ```
 
-`make deploy` 依次执行：构建镜像 → 导入节点 → server-side dry-run → apply → `rollout restart` 与等待 → 通过 Gateway 请求 `/healthz`、`/readyz`。
+`make deploy` 依次执行：构建镜像 → 导入节点 → server-side dry-run → apply → `rollout restart` 与等待 → 通过 Gateway 请求 `/healthz`、`/readyz`（dev 自动用集群网关地址 `--resolve` 并跳过自签证书校验）。
 
 单独步骤：`deploy-render`、`deploy-image`、`deploy-load`、`deploy-preflight`、`deploy-apply`、`deploy-rollout`、`deploy-status`、`deploy-smoke`；每步都有固定环境的别名 `deploy-<步骤>-<dev|prod>`（如 `make deploy-status-prod`、`make deploy-smoke-dev`），等价于 `make deploy-<步骤> ENV=<环境>`，`SERVER` 等参数照常透传。`deploy-lint` 同时校验两套 values、`deploy-check-env` 是内部校验，两者没有别名。
 
-dev 节点没有 `*.platform.internal` 的 DNS，也不信任 dev 自签证书，`make deploy-smoke` 在 dev 会停在 curl 解析或证书校验；用 `curl --resolve civilization.dev.platform.internal:443:192.168.31.5 -k` 验证，见 §5。
+dev 节点没有 `*.platform.internal` 的 DNS，也不信任 dev 自签证书：`deploy-smoke` 在 dev 从集群读取 Gateway 地址，用 `curl --resolve <hostname>:443:<网关地址> -k` 请求 `/healthz`、`/readyz`；prod 仍走 DNS 与正常证书校验。手动排障沿同一个组合（dev 网关 `192.168.31.5`），局域网直连见 §5。
 
 `ENV` 只接受 `dev` 或 `prod`，写成其他值会直接报错，不会回落到 dev 的 namespace 与域名。`deploy-render` 的 stdout 只有清单，可直接管道给 `kubectl apply -f -`。
 
