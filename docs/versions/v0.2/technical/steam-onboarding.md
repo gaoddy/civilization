@@ -65,7 +65,7 @@ xcrun notarytool store-credentials "civilization-notary" \
 | App ID | Steamworks、客户端 `STEAM_APP_ID`、服务端 `STEAM_APP_ID` | 三处完全一致；不一致时验票失败 |
 | Depot ID | `make steam-upload STEAM_DEPOT_ID=...` | SteamPipe 构建日志 |
 | Publisher Key | Helm Secret `STEAM_WEB_API_KEY` | 登录成功即说明验票可用 |
-| 服务端地址 | `make client-export-steam SERVER_URL=wss://...` | 必须是 `wss://`，否则导出直接失败 |
+| 服务端地址 | `make client-export PLATFORM=steam SERVER_URL=wss://...` | 必须是 `wss://`，否则导出直接失败 |
 | 公证配置档 | `make client-notarize NOTARY_PROFILE=...` | 公证提交成功 |
 | 签名主体 | `make client-notarize CODESIGN_IDENTITY=...` | `codesign --verify --deep --strict` 通过 |
 
@@ -74,7 +74,7 @@ xcrun notarytool store-credentials "civilization-notary" \
 在仓库根目录执行：
 
 ```bash
-make client-export-steam \
+make client-export PLATFORM=steam \
   SERVER_URL=wss://<正式域名>/ws \
   STEAM_APP_ID=<App ID>
 ```
@@ -98,7 +98,7 @@ make client-notarize \
 - `notarytool submit --wait` 返回 `Accepted`；
 - `stapler validate` 与 `spctl -a -vv -t exec` 通过。
 
-注意：公证会修改 `.app` 内容。**公证后不要重新执行 `make client-export-steam`**，否则签名被覆盖，需要重新签名与公证。
+注意：公证会修改 `.app` 内容。**公证后不要重新执行 `make client-export PLATFORM=steam`**，否则签名被覆盖，需要重新签名与公证。
 
 本地调试（可选）：把 `steam_appid.txt` 放到 `Civilization.app/Contents/MacOS/` 下可直接运行未由 Steam 启动的包；该文件已被 `.gitignore` 与 depot 配置排除，不得进入发布包。
 
