@@ -80,6 +80,8 @@ func set_state(state: Dictionary) -> void:
     var is_host := bool(state.get("is_host", false))
     var bot_fill_on := bool(state.get("bot_fill", false))
 
+    # 房主默认已准备由服务端保证，等待区不给房主准备按钮。
+    ready_button.visible = not is_host
     ready_button.text = tr("ui.room.unready") if bool(state.get("ready", false)) else tr("ui.room.ready")
     ready_button.disabled = not connected
 
