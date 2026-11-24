@@ -37,6 +37,13 @@ const ARC_SAMPLES := 32
 const ARC_BEND := 0.22
 ## 沿弧线流动的光点数量。
 const FLOW_DOTS := 3
+## 待选时非候选区域的压暗强度与候选内辉光强度。
+const SPOTLIGHT_ALPHA := 0.42
+const SPOTLIGHT_GLOW := 0.05
+## 「选择目标」提示与候选区顶边的间距。
+const HINT_GAP := 10.0
+## 候选选中描边相对卡片内缩的距离：只画在卡片里侧，不改变卡片看上去的尺寸。
+const CANDIDATE_INSET := 2.0
 
 var _mode := Mode.NONE
 var _candidates: Array = []
@@ -48,6 +55,8 @@ var _pressed := false
 var _touch_index := -1
 var _hovered: Dictionary = {}
 var _time := 0.0
+## 待选/技能时的「选择目标」提示：浮在候选区上方，不接收鼠标。
+var _hint: Label = null
 
 
 func _init() -> void:
@@ -55,6 +64,14 @@ func _init() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	set_process(true)
+	_hint = UIControls.label("", UITheme.font_size("font-title"), false)
+	_hint.name = "AimHint"
+	_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_hint.add_theme_color_override("font_color", UITheme.color("color-accent"))
+	_hint.add_theme_constant_override("outline_size", 5)
+	_hint.add_theme_color_override("font_outline_color", UITheme.color("color-bg"))
+	_hint.visible = false
+	add_child(_hint)
 
 
 ## 是否处于技能或待选模式（页面据此决定是否 clearing）。
@@ -328,14 +345,19 @@ func _board_rect(minion_id: String) -> Rect2:
 func _draw() -> void:
 	if _mode == Mode.NONE:
 		return
+	# 待选/技能时先压暗非候选区，视线自然落到能点的卡上。
+	_draw_target_spotlight()
 	# 触控待选按下前没有指针：先画出候选角标与来源环，按下后再续画弧线、箭头与描边。
 	if not _pointer_valid:
 		if draws_pending_guide():
-			_draw_candidate_marks(UITheme.color("color-accent"))
+			_draw_candidate_marks(UITheme.color("color-highlight"))
 			if _source_rect.size != Vector2.ZERO:
 				_draw_source_ring(_source_rect.get_center(), UITheme.color("color-text-muted"))
+		_sync_hint()
 		return
 	var accent := UITheme.color("color-accent")
+	# 选中态用冷色：卡框是黄铜，选中用青蓝，两者不会读成同一条边。
+	var select := UITheme.color("color-highlight")
 	var muted := UITheme.color("color-text-muted")
 	var danger := UITheme.color("color-danger")
 	var source := _source_center()
@@ -346,12 +368,13 @@ func _draw() -> void:
 	_draw_dashed_curve(curve, line)
 	_draw_flow(curve, line)
 	_draw_source_ring(source, line)
-	_draw_candidate_marks(accent)
+	_draw_candidate_marks(select)
 	_draw_arrow_head(curve, line)
 	if valid:
-		_draw_hover_outline(_candidate_rect(_hovered), accent)
+		_draw_hover_outline(_candidate_rect(_hovered), select)
 	elif _pressed:
 		_draw_cross(_pointer, danger)
+	_sync_hint()
 
 
 func _source_center() -> Vector2:
@@ -387,6 +410,15 @@ func _draw_dashed_curve(points: PackedVector2Array, color: Color) -> void:
 	var dash := UITheme.factor("aim-dash", 10.0)
 	var gap := UITheme.factor("aim-gap", 6.0)
 	var width := _arc_width()
+	# 光晕：整条弧先铺一层宽而淡的底，虚线压在上面，弧线才有金属反光感。
+	for index in points.size() - 1:
+		draw_line(
+			points[index],
+			points[index + 1],
+			UITheme.fade(color, 0.12),
+			width * 3.4,
+			true,
+		)
 	var drawing := true
 	var remaining := dash
 	for index in points.size() - 1:
@@ -422,7 +454,9 @@ func _draw_flow(points: PackedVector2Array, color: Color) -> void:
 	var progress := fmod(_time * UITheme.factor("aim-flow-speed", 0.55), 1.0)
 	for index in FLOW_DOTS:
 		var t := fmod(progress + float(index) / float(FLOW_DOTS), 1.0)
-		draw_circle(_point_along(points, t), radius, color)
+		var point := _point_along(points, t)
+		draw_circle(point, radius * 2.3, UITheme.fade(color, 0.16))
+		draw_circle(point, radius, color)
 
 
 func _point_along(points: PackedVector2Array, t: float) -> Vector2:
@@ -432,40 +466,100 @@ func _point_along(points: PackedVector2Array, t: float) -> Vector2:
 
 
 func _draw_source_ring(center: Vector2, color: Color) -> void:
-	draw_arc(
-		center,
-		UITheme.factor("aim-source-radius", 12.0),
-		0.0,
-		TAU,
-		32,
-		color,
-		_arc_width(),
-		true,
+	var period := maxf(UITheme.factor("aim-pulse", 1.2), 0.1)
+	var pulse := 0.5 + 0.5 * sin(_time * TAU / period)
+	var radius := UITheme.factor("aim-source-radius", 12.0) * (1.0 + 0.12 * pulse)
+	# 来源环外再套一圈淡金扩散，标出这次操作是从哪张卡发出的。
+	draw_arc(center, radius * 1.5, 0.0, TAU, 32, UITheme.fade(color, 0.14), _arc_width(), true)
+	draw_arc(center, radius, 0.0, TAU, 32, color, _arc_width(), true)
+
+
+## 待选聚焦：非候选区压暗，候选本身加一层暖色辉光，和框体的黄铜同色。
+func _draw_target_spotlight() -> void:
+	if _mode != Mode.SKILL and _mode != Mode.PENDING:
+		return
+	var union := _candidates_union()
+	if union.size == Vector2.ZERO:
+		return
+	var scrim := UITheme.alpha("color-bg", SPOTLIGHT_ALPHA)
+	draw_rect(Rect2(Vector2.ZERO, Vector2(size.x, union.position.y)), scrim)
+	draw_rect(Rect2(Vector2(0.0, union.end.y), Vector2(size.x, size.y - union.end.y)), scrim)
+	draw_rect(Rect2(Vector2(0.0, union.position.y), Vector2(union.position.x, union.size.y)), scrim)
+	draw_rect(
+		Rect2(Vector2(union.end.x, union.position.y), Vector2(size.x - union.end.x, union.size.y)),
+		scrim,
 	)
+	var glow := UITheme.alpha("color-highlight", SPOTLIGHT_GLOW)
+	for candidate in _candidates:
+		var rect := _candidate_rect(candidate)
+		if rect.size != Vector2.ZERO:
+			draw_rect(rect, glow)
 
 
-## 每个候选四角金色角标：不遮挡卡面内容，同时标出可落点区域。
-func _draw_candidate_marks(color: Color) -> void:
-	var mark := UITheme.factor("aim-mark-length", 8.0)
-	var inset := UITheme.factor("aim-mark-inset", 3.0)
-	var width := _arc_width()
+## 全部候选的包围盒；视图重建期间零尺寸的候选跳过。
+func _candidates_union() -> Rect2:
+	var union := Rect2()
+	var first := true
 	for candidate in _candidates:
 		if not (candidate is Dictionary):
 			continue
 		var rect := _candidate_rect(candidate)
 		if rect.size == Vector2.ZERO:
 			continue
-		var inner := rect.grow(-inset)
+		if first:
+			union = rect
+			first = false
+		else:
+			union = union.merge(rect)
+	return union
+
+
+## 「选择目标」提示跟着候选区移动；不在待选/技能或没有候选时隐藏。
+func _sync_hint() -> void:
+	if _hint == null:
+		return
+	if _mode != Mode.SKILL and _mode != Mode.PENDING:
+		_hint.visible = false
+		return
+	var union := _candidates_union()
+	if union.size == Vector2.ZERO:
+		_hint.visible = false
+		return
+	_hint.text = tr("ui.game.aim.skill") if _mode == Mode.SKILL else tr("ui.game.aim.target")
+	_hint.visible = true
+	_hint.reset_size()
+	_hint.position = Vector2(
+		union.get_center().x - _hint.size.x * 0.5,
+		maxf(union.position.y - _hint.size.y - HINT_GAP, 0.0),
+	)
+
+
+## 每个候选四角金色角标：不遮挡卡面内容，同时标出可落点区域。
+func _draw_candidate_marks(color: Color) -> void:
+	var mark := UITheme.factor("aim-mark-length", 8.0) * 1.8
+	var width := _arc_width()
+	var period := maxf(UITheme.factor("aim-pulse", 1.2), 0.1)
+	var breathe := 0.5 + 0.5 * (0.5 + 0.5 * sin(_time * TAU / period))
+	for candidate in _candidates:
+		if not (candidate is Dictionary):
+			continue
+		var rect := _candidate_rect(candidate)
+		if rect.size == Vector2.ZERO:
+			continue
+		# 选中态画在卡片里侧、用冷色：不动卡片尺寸，也不和黄铜卡框抢同一条边。
+		var ring := rect.grow(-CANDIDATE_INSET)
+		draw_rect(ring, UITheme.fade(color, 0.10 * breathe), true)
+		draw_rect(ring, UITheme.fade(color, 0.90 * breathe), false, 2.0, true)
 		var corners := [
-			[inner.position, Vector2(mark, 0), Vector2(0, mark)],
-			[Vector2(inner.end.x, inner.position.y), Vector2(-mark, 0), Vector2(0, mark)],
-			[inner.end, Vector2(-mark, 0), Vector2(0, -mark)],
-			[Vector2(inner.position.x, inner.end.y), Vector2(mark, 0), Vector2(0, -mark)],
+			[ring.position, Vector2(mark, 0), Vector2(0, mark)],
+			[Vector2(ring.end.x, ring.position.y), Vector2(-mark, 0), Vector2(0, mark)],
+			[ring.end, Vector2(-mark, 0), Vector2(0, -mark)],
+			[Vector2(ring.position.x, ring.end.y), Vector2(mark, 0), Vector2(0, -mark)],
 		]
 		for corner in corners:
 			var origin: Vector2 = corner[0]
-			draw_line(origin, origin + Vector2(corner[1]), color, width, true)
-			draw_line(origin, origin + Vector2(corner[2]), color, width, true)
+			draw_line(origin, origin + Vector2(corner[1]), color, width * 1.2, true)
+			draw_line(origin, origin + Vector2(corner[2]), color, width * 1.2, true)
 
 
 ## 命中候选的呼吸描边：金色随 `aim-pulse` 起伏。
@@ -474,10 +568,11 @@ func _draw_hover_outline(rect: Rect2, color: Color) -> void:
 		return
 	var period := maxf(UITheme.factor("aim-pulse", 1.2), 0.1)
 	var pulse := 0.55 + 0.45 * (0.5 + 0.5 * sin(_time * TAU / period))
-	var edge := color
-	edge.a = color.a * pulse
-	var inset := UITheme.factor("aim-mark-inset", 3.0)
-	draw_rect(rect.grow(-inset), edge, false, UITheme.factor("aim-outline-width", 2.0), true)
+	# 命中候选：卡面压一层冷色微光，里侧描边加粗一档；不向外扩，尺寸看起来不变。
+	draw_rect(rect, UITheme.fade(color, 0.10), true)
+	var ring := rect.grow(-CANDIDATE_INSET)
+	draw_rect(ring, UITheme.fade(color, 0.45 * pulse), false, 5.0, true)
+	draw_rect(ring, UITheme.fade(color, pulse), false, 2.5, true)
 
 
 func _draw_arrow_head(points: PackedVector2Array, color: Color) -> void:
@@ -488,9 +583,12 @@ func _draw_arrow_head(points: PackedVector2Array, color: Color) -> void:
 	var direction := (tip - previous).normalized()
 	if direction == Vector2.ZERO:
 		return
-	var length := UITheme.factor("aim-mark-length", 8.0) * 1.4
-	draw_line(tip, tip - direction.rotated(0.45) * length, color, _arc_width(), true)
-	draw_line(tip, tip - direction.rotated(-0.45) * length, color, _arc_width(), true)
+	# 实心三角箭头 + 中脊高光：和卡框的倒角用同一套光照语言。
+	var length := UITheme.factor("aim-mark-length", 8.0) * 1.6
+	var back := tip - direction * length
+	var side := direction.rotated(PI * 0.5) * length * 0.45
+	draw_colored_polygon(PackedVector2Array([tip, back + side, back - side]), color)
+	draw_line(tip, back, color.lightened(0.55), maxf(_arc_width() * 0.7, 1.0), true)
 
 
 ## 无效落点的红色叉号：替换箭头延续到指针后的终点标记。

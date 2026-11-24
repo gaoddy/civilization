@@ -435,10 +435,11 @@ func _check_attack_collision_flight() -> void:
         "攻击动作不得让目标提前消失",
     )
 
-    # 回程；回位后克隆释放、原卡恢复。
-    instance._process(0.1)
+    # 回程；回位后克隆释放、原卡恢复。步长按演出时长换算，
+    # 并在 320ms 的下一拍到来前收尾，避免第二次攻击重新生成同名克隆。
+    instance._process(CombatFx.FLY_MS / 1000.0 + 0.01)
     _expect(_fx_child(fx, "CombatFxAttack") != null, "回程中克隆卡应仍在")
-    instance._process(0.2)
+    instance._process(CombatFx.FLY_MS / 1000.0)
     _expect(_fx_child(fx, "CombatFxAttack") == null, "回位后克隆卡应释放")
     var returned := _combat_card(instance, "mi_0")
     _expect(
@@ -492,7 +493,7 @@ func _check_death_fades_after_strike() -> void:
     )
     var fx := instance.find_child("CombatFxLayer", true, false)
     _expect(_fx_child(fx, "CombatFxFade") != null, "阵亡后原位应留一张淡出中的克隆卡")
-    instance._process(0.2)
+    instance._process(CombatFx.FADE_MS / 1000.0)
     _expect(_fx_child(fx, "CombatFxFade") == null, "淡出结束后克隆卡应释放")
     instance.queue_free()
     await get_tree().process_frame
