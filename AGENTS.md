@@ -61,7 +61,7 @@
 - 模拟器基线：`make sim-determinism`、`make sim-batch`、`make sim-report`。
 - 并发容量压测：`make load-build` 后 `make loadtest`（稳态，默认 10 局/30s）、`make loadtest-ramp`（爬坡找上限）、`make loadtest-smoke`（2 局/5s 冒烟）；报告写 `output/loadtest-*.json`。
 - 本地联调：`make dev-bots` 起服务端与 7 个机器人；客户端用 `make client-run`，桌面端产物用 `make client-export`，iOS 真机用 `make client-run PLATFORM=ios`（默认第一台已连接的 iPhone，`IOS_DEVICE_TYPE=ipad` 改选 iPad）。
-- 快速别名：基础命令 `make run` 与 `make client-run` 不带环境，`ENV` 可选（默认 `local`）；设备别名 `run-<设备>-<环境>`（设备取 `desktop`/`iphone`/`ipad`/`phone`/`tablet`，环境取 `local`/`dev`/`prod`，如 `run-desktop-dev`）与真机别名 `run-ios-<设备>-<环境>`（如 `run-ios-ipad-dev`）都显式带环境；`run-iphone`/`run-ipad`/`run-desktop`/`run-phone`/`run-tablet`/`run-ios` 保留为对应 `local` 快捷入口。导出别名 `export-<平台>-<环境>` 同时固定平台与环境，`export-macos`/`export-local`/`export-steam`/`export-ios`/`export-android`/`export-aab` 转发到 `client-export`。`ENV`、`SERVER_URL`、`STEAM_APP_ID` 等参数照常透传。
+- 快速别名：基础命令 `make run` 与 `make client-run` 不带环境，`ENV` 可选（默认 `local`）；设备别名 `run-<设备>-<环境>`（设备取 `desktop`/`iphone`/`ipad`/`phone`/`tablet`，环境取 `local`/`dev`/`prod`，如 `run-desktop-dev`）与真机别名 `run-ios-<设备>-<环境>`（如 `run-ios-ipad-dev`）都显式带环境；`run-iphone`/`run-ipad`/`run-desktop`/`run-phone`/`run-tablet`/`run-ios` 保留为对应 `local` 快捷入口。导出别名 `export-<平台>-<环境>` 同时固定平台与环境，`export-macos`/`export-local`/`export-steam`/`export-ios`/`export-android`/`export-aab` 转发到 `client-export`；`export-ipad-<环境>`（`local`/`dev`/`prod`）转发到 `PLATFORM=ios`，iOS 为 iPhone/iPad 通用包，产物同 `export-ios-<环境>`。`ENV`、`SERVER_URL`、`STEAM_APP_ID` 等参数照常透传。
 - 数据库：`make db-up`、`make db-test`、`make db-reset`。
 - 慢命令阈值：`120s`；预计超过该时长的命令放后台执行，读末尾输出与退出状态。
 

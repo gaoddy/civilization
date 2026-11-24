@@ -20,6 +20,7 @@ CLIENT_IMPORT_GPU ?= 0
 	export-macos export-local export-steam export-ios export-android export-aab \
 	export-macos-local export-macos-dev export-macos-prod \
 	export-ios-local export-ios-dev export-ios-prod \
+	export-ipad-local export-ipad-dev export-ipad-prod \
 	export-android-local export-android-dev export-android-prod
 
 # 本机引擎必须与固定的补丁版本一致，避免用错版本导入或导出。
@@ -533,6 +534,17 @@ export-ios-dev:
 	@$(MAKE) --no-print-directory client-export PLATFORM=ios ENV=dev
 
 export-ios-prod:
+	@$(MAKE) --no-print-directory client-export PLATFORM=ios ENV=prod
+
+# iPad 别名：iOS 预设是 iPhone & iPad 通用包（targeted_device_family=2），产物与
+# export-ios-<环境> 完全相同；这里只提供与 run-ios-ipad-<环境> 对齐的命名入口。
+export-ipad-local:
+	@$(MAKE) --no-print-directory client-export PLATFORM=ios ENV=local
+
+export-ipad-dev:
+	@$(MAKE) --no-print-directory client-export PLATFORM=ios ENV=dev
+
+export-ipad-prod:
 	@$(MAKE) --no-print-directory client-export PLATFORM=ios ENV=prod
 
 export-android-local:
