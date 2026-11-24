@@ -186,7 +186,7 @@ iPhone 以 960×540 为宽度基准（高度随窗口扩展），对局页通过
 | `lobby-room-pill-height-compact` | 16 | iPhone 座位行房主标记胶囊高度 |
 | `lobby-room-ready-dot-compact` | 7 | iPhone 座位行准备圆点直径 |
 | `lobby-room-kick-height-compact` | 22 | iPhone 座位行「移除」微按钮高度 |
-| `lobby-room-invite-height-compact` | 34 | iPhone 座位列表「邀请好友」与房间码行按钮高度 |
+| `lobby-room-invite-height-compact` | 44 | iPhone 座位列表「邀请好友」与房间码行按钮高度，达到次要命中尺寸 |
 | `lobby-room-action-height-compact` | 44 | iPhone 创建房间操作按钮高度，按令牌固定 |
 | `lobby-page-margin-compact` | 14 | iPhone 大厅页面四边内边距 |
 

@@ -260,7 +260,7 @@ const SCENARIO := {
 	"lobby-room-kick-height": 24,
 	"lobby-room-kick-height-compact": 22,
 	"lobby-room-invite-height": 32,
-	"lobby-room-invite-height-compact": 34,
+	"lobby-room-invite-height-compact": 44,
 	"lobby-room-action-height": 40,
 	"lobby-room-action-height-compact": 44,
 	"lobby-page-margin": 24,
