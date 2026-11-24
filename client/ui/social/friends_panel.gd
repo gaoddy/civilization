@@ -9,9 +9,12 @@ extends PopupLayer
 signal closed
 
 var _panel: PanelContainer
+var _header: HBoxContainer
 var _scroll: ScrollContainer
+var _footer: VBoxContainer
 var _status: Label
 var _add_input: LineEdit
+var _incoming_title: Label
 var _incoming_box: VBoxContainer
 var _friends_box: VBoxContainer
 var _recent_box: VBoxContainer
@@ -35,18 +38,18 @@ func _init() -> void:
     root.add_theme_constant_override("separation", UITheme.space("space-md"))
     _panel.add_child(root)
 
-    var header := HBoxContainer.new()
-    header.name = "FriendsHeader"
-    header.add_theme_constant_override("separation", UITheme.space("space-sm"))
-    root.add_child(header)
-    header.add_child(UIControls.label(tr("ui.lobby.friends_section"), UITheme.font_size("font-title-lg"), false))
+    _header = HBoxContainer.new()
+    _header.name = "FriendsHeader"
+    _header.add_theme_constant_override("separation", UITheme.space("space-sm"))
+    root.add_child(_header)
+    _header.add_child(UIControls.label(tr("ui.lobby.friends_section"), UITheme.font_size("font-title-lg"), false))
     var spacer := Control.new()
     spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    header.add_child(spacer)
+    _header.add_child(spacer)
     var close_button := UIControls.button(tr("ui.lobby.close"))
     close_button.name = "FriendsClose"
     close_button.pressed.connect(_on_close)
-    header.add_child(close_button)
+    _header.add_child(close_button)
 
     _scroll = ScrollContainer.new()
     _scroll.name = "FriendsScroll"
@@ -60,27 +63,13 @@ func _init() -> void:
     body.add_theme_constant_override("separation", UITheme.space("space-sm"))
     _scroll.add_child(body)
 
-    var add_row := HBoxContainer.new()
-    add_row.add_theme_constant_override("separation", UITheme.space("space-md"))
-    body.add_child(add_row)
-    _add_input = UIControls.line_edit(tr("ui.lobby.add_friend_placeholder"), 220)
-    _add_input.name = "FriendCodeInput"
-    _add_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    add_row.add_child(_add_input)
-    var add := UIControls.button(tr("ui.lobby.add_friend"))
-    add.name = "AddFriendButton"
-    add.pressed.connect(_on_add_friend_pressed)
-    add_row.add_child(add)
-
-    _status = UIControls.label("", UITheme.font_size("font-body-sm"))
-    _status.name = "FriendsStatus"
-    body.add_child(_status)
-
     _outgoing = UIControls.label("", UITheme.font_size("font-body-sm"))
     _outgoing.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
     body.add_child(_outgoing)
 
-    body.add_child(UIControls.label(tr("ui.lobby.incoming_section"), UITheme.font_size("font-title"), false))
+    _incoming_title = UIControls.label(tr("ui.lobby.incoming_section"), UITheme.font_size("font-title"), false)
+    _incoming_title.name = "IncomingSectionTitle"
+    body.add_child(_incoming_title)
     _incoming_box = VBoxContainer.new()
     _incoming_box.name = "IncomingRequests"
     _incoming_box.add_theme_constant_override("separation", UITheme.space("space-sm"))
@@ -96,6 +85,29 @@ func _init() -> void:
     _recent_box.name = "RecentPlayers"
     _recent_box.add_theme_constant_override("separation", UITheme.space("space-sm"))
     body.add_child(_recent_box)
+
+    # 底部固定区：添加好友与状态行不随列表滚动。
+    _footer = VBoxContainer.new()
+    _footer.name = "FriendsFooter"
+    _footer.add_theme_constant_override("separation", UITheme.space("space-sm"))
+    root.add_child(_footer)
+
+    _status = UIControls.label("", UITheme.font_size("font-body-sm"))
+    _status.name = "FriendsStatus"
+    _footer.add_child(_status)
+
+    var add_row := HBoxContainer.new()
+    add_row.name = "FriendsAddRow"
+    add_row.add_theme_constant_override("separation", UITheme.space("space-md"))
+    _footer.add_child(add_row)
+    _add_input = UIControls.line_edit(tr("ui.lobby.add_friend_placeholder"), 220)
+    _add_input.name = "FriendCodeInput"
+    _add_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    add_row.add_child(_add_input)
+    var add := UIControls.button(tr("ui.lobby.add_friend"))
+    add.name = "AddFriendButton"
+    add.pressed.connect(_on_add_friend_pressed)
+    add_row.add_child(add)
 
 
 func _ready() -> void:
@@ -137,6 +149,7 @@ func show_error(code: String) -> void:
     _status.text = UIWording.error_text(code)
     _status.tooltip_text = UIWording.error_tooltip(code)
     _status.add_theme_color_override("font_color", UITheme.color("color-danger"))
+    _sync_scroll_height()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -148,14 +161,29 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 ## 左侧抽屉占满整高：宽度贴合内容，达到令牌上限或视口宽度后停止增长；
-## 头部与输入行固定，列表在剩余高度内滚动。
+## 头部、状态行与添加行固定，列表在剩余高度内滚动。
 func _sync_layout() -> void:
     _panel.custom_minimum_size = Vector2.ZERO
     var fit := int(ceil(_panel.get_combined_minimum_size().x))
     var width := mini(fit, mini(UITheme.metric("lobby-friends-drawer-width"), int(size.x)))
     _panel.custom_minimum_size = Vector2(width, size.y)
     _panel.size = Vector2(width, size.y)
-    _scroll.custom_minimum_size.y = maxi(180, int(size.y) - 230)
+    _sync_scroll_height()
+
+
+## 状态行文本变化会改变底部区高度；只更新滚动区下限，不重算抽屉宽度。
+func _sync_scroll_height() -> void:
+    _scroll.custom_minimum_size.y = maxi(180, int(size.y - _fixed_height()))
+
+
+## 抽屉内不参与滚动的固定高度：面板内边距、头部、底部区与根容器两处间距。
+func _fixed_height() -> float:
+    var style := _panel.get_theme_stylebox("panel")
+    var margins := style.get_content_margin(SIDE_TOP) + style.get_content_margin(SIDE_BOTTOM)
+    return _header.get_combined_minimum_size().y \
+        + _footer.get_combined_minimum_size().y \
+        + UITheme.space("space-md") * 2 \
+        + margins
 
 
 func _render() -> void:
@@ -164,9 +192,11 @@ func _render() -> void:
     _outgoing.visible = not GameStore.outgoing_requests.is_empty()
     _outgoing.text = tr("ui.lobby.outgoing_hint") % GameStore.outgoing_requests.size()
 
+    # 没有待处理申请时整块申请区不显示，不渲染占位提示。
+    var has_incoming := not GameStore.incoming_requests.is_empty()
+    _incoming_title.visible = has_incoming
+    _incoming_box.visible = has_incoming
     UIControls.clear(_incoming_box)
-    if GameStore.incoming_requests.is_empty():
-        _incoming_box.add_child(UIControls.empty_hint(tr("ui.lobby.no_requests")))
     for request in GameStore.incoming_requests:
         var row := FriendRequestRow.new(request)
         row.responded.connect(_on_respond_pressed)
@@ -235,3 +265,4 @@ func _set_status(text: String, is_error := false) -> void:
         "font_color",
         UITheme.color("color-danger") if is_error else UITheme.color("color-text-muted"),
     )
+    _sync_scroll_height()
