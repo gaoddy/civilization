@@ -9,7 +9,7 @@ level: 2
 era: industrial
 attack: 2
 health: 5
-skills: [keyword-sow]
+skills: [keyword-taunt]
 ---
 
 # 棉花
@@ -27,13 +27,13 @@ skills: [keyword-sow]
 | 时代 | 工业 |
 | 攻击力 | 2 |
 | 生命值 | 5 |
-| 关键词 | 播种 |
-| 技能 | keyword-sow |
+| 关键词 | 嘲讽 |
+| 技能 | keyword-taunt |
 | 科学分类 | 植物界 › 被子植物门 › 双子叶植物纲 › 锦葵目 › 锦葵科 |
 
 ## 效果
 
-播种：死亡时召唤一个 1/1 的幼苗
+嘲讽
 
 ## 出处
 

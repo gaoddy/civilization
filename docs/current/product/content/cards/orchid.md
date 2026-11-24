@@ -9,7 +9,7 @@ level: 3
 era: classical
 attack: 4
 health: 4
-skills: [keyword-sow, keyword-breed-1]
+skills: [keyword-sow, keyword-breed-2]
 ---
 
 # 兰花
@@ -27,13 +27,13 @@ skills: [keyword-sow, keyword-breed-1]
 | 时代 | 古典 |
 | 攻击力 | 4 |
 | 生命值 | 4 |
-| 关键词 | 播种；繁衍 1 |
-| 技能 | keyword-sow；keyword-breed-1 |
+| 关键词 | 播种；繁衍 2 |
+| 技能 | keyword-sow；keyword-breed-2 |
 | 科学分类 | 植物界 › 被子植物门 › 单子叶植物纲 › 天门冬目 › 兰科 |
 
 ## 效果
 
-播种：死亡时召唤一个 1/1 的幼苗；繁衍 1：回合开始时获得 +1 生命
+播种：死亡时召唤一个 1/1 的幼苗；繁衍 2：回合开始时获得 +2 生命
 
 ## 设计说明
 

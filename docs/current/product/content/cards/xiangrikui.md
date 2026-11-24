@@ -9,7 +9,7 @@ level: 2
 era: prehistoric
 attack: 2
 health: 6
-skills: [keyword-breed-2]
+skills: [battlecry-friendly-plant-growth-once]
 ---
 
 # 向日葵
@@ -27,13 +27,13 @@ skills: [keyword-breed-2]
 | 时代 | 史前 |
 | 攻击力 | 2 |
 | 生命值 | 6 |
-| 关键词 | 繁衍 2 |
-| 技能 | keyword-breed-2 |
+| 关键词 | 战吼 |
+| 技能 | battlecry-friendly-plant-growth-once |
 | 科学分类 | 植物界 › 被子植物门 › 双子叶植物纲 › 菊目 › 菊科 |
 
 ## 效果
 
-繁衍 2：回合开始时获得 +2 生命
+战吼：使一个友方植物随从获得一次成长
 
 ## 出处
 

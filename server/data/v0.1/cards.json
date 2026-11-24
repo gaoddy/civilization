@@ -4846,7 +4846,7 @@
     "in_shop_pool": true,
     "level": 2,
     "skills": [
-      "keyword-sow"
+      "keyword-taunt"
     ],
     "subtype": "crop",
     "taxon": "malvaceae"
@@ -5522,7 +5522,7 @@
     "level": 3,
     "skills": [
       "keyword-sow",
-      "keyword-breed-1"
+      "keyword-breed-2"
     ],
     "subtype": "flower",
     "taxon": "orchidaceae"
@@ -7688,7 +7688,7 @@
     "in_shop_pool": true,
     "level": 1,
     "skills": [
-      "keyword-sow"
+      "battlecry-friendly-plant-growth-once"
     ],
     "subtype": "vine",
     "taxon": "plantae-incertae-sedis"
@@ -8235,7 +8235,7 @@
     "in_shop_pool": true,
     "level": 1,
     "skills": [
-      "keyword-breed-1"
+      "battlecry-friendly-growth-plant-twice"
     ],
     "subtype": "crop",
     "taxon": "fabaceae"
@@ -8535,7 +8535,7 @@
     "in_shop_pool": true,
     "level": 2,
     "skills": [
-      "keyword-breed-2"
+      "battlecry-friendly-plant-growth-once"
     ],
     "subtype": "crop",
     "taxon": "asteraceae"
@@ -9112,7 +9112,7 @@
     "in_shop_pool": true,
     "level": 1,
     "skills": [
-      "keyword-sow"
+      "keyword-breed-2"
     ],
     "subtype": "fungus",
     "taxon": "fungi-incertae-sedis"
