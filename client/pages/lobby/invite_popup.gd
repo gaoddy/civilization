@@ -63,7 +63,6 @@ func _invite_card(invite: Dictionary) -> VBoxContainer:
             tr("ui.lobby.invite_text") % [
                 str(invite.get("fromDisplayName", "")),
                 str(invite.get("fromPlayerCode", "")),
-                str(invite.get("roomCode", "")),
             ],
             UITheme.font_size("font-body"),
         )

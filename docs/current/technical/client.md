@@ -79,10 +79,9 @@ client/
       lobby_rank_card.gd     # 段位卡：段位名与积分（class_name LobbyRankCard）
       lobby_queue_card.gd    # 排队卡：等待时长与已凑人数（class_name LobbyQueueCard）
       lobby_left_actions.gd  # 左栏底栏：好友入口、卡牌图鉴、排行榜与 Steam 账号入口（class_name LobbyLeftActions）
-      lobby_quick_actions.gd # 右栏快捷操作：匹配 / 取消、创建与加入（class_name LobbyQuickActions）
-      lobby_room_list.gd     # 创建模式座位列表：8 行、准备圆点、邀请与移除，行区可滚动（class_name LobbyRoomList）
+      lobby_quick_actions.gd # 右栏快捷操作：匹配 / 取消与创建房间（class_name LobbyQuickActions）
+      lobby_room_list.gd     # 创建模式座位列表：8 行、准备圆点、邀请行与 Steam 状态行，行区可滚动（class_name LobbyRoomList）
       lobby_room_actions.gd  # 创建模式操作：开始 / 解散与可见原因行（class_name LobbyRoomActions）
-      lobby_join_dialog.gd   # 加入房间弹窗：房间码校验、提交与就地错误（class_name LobbyJoinDialog）
       lobby_notice_dialog.gd # 大厅提示弹窗：标题、说明与关闭（class_name LobbyNoticeDialog）
       invite_popup.gd        # 邀请弹层：订阅 social_changed、逐条接受/拒绝（class_name InvitePopup）
     room/
@@ -185,7 +184,7 @@ client/
 | 场景 | 职责 |
 | --- | --- |
 | 登录 | 输入手机号、固定验证码 `123456` 与显示名；服务器地址由构建配置决定，页面不提供输入；认证成功后进入大厅 |
-| 大厅 | 展示本人 6 位玩家编号；创建房间或凭房间码加入；左下角「好友」入口打开好友浮层（按编号添加、处理申请、删除好友、从最近队友回加），右下角进入卡牌图鉴；有待处理邀请时弹出邀请浮层，接受后自动入房；收到 `RoomUpdate` 后进入房间 |
+| 大厅 | 展示本人 6 位玩家编号；创建房间或接受好友邀请入房；左下角「好友」入口打开好友浮层（按编号添加、处理申请、删除好友、从最近队友回加），右下角进入卡牌图鉴；有待处理邀请时弹出邀请浮层，接受后自动入房；收到 `RoomUpdate` 后进入房间；客户端不展示房间码，也没有手动输入入口 |
 | 房间 | 8 座位等待区：顶部状态行（已准备进度、机器人补位开/关、座位数）与 4×2 座位矩阵（本人/已准备/未准备/空位四态，房主可见成员移除按钮，座位带准备徽标）；邀请行列出在线好友供一键邀请（对局中/离线置灰）；底部操作栏为准备、Steam 邀请、离开、机器人补位、开始、解散与中间状态行；开始由房主调用 `GameStore.request_start()` 显式发送 `StartGame`，收到 `HeroPickStarted` 后进入对局页；房间页不显示房间码；收到 `RoomClosed` 后按原因提示并回大厅 |
 | 对局 | 酒馆战棋式布局：右上角浮层工具组为 `GalleryButton`、`HintButton`、`LeaveGameButton`，页面不再有顶部状态条，等待、断线/重连、错误与未发出统一用居中状态模态（`StatusModal`）显示；左栏 8 行座位（按服务端 `rank` 升序，头像、名次角标、血量条，悬停详情含身份与对战记录）；中央舞台自上而下为招募组合或战斗组合、英雄行与贴底手牌。招募组合 438 高：商店操作行 84（升时代图标—84×84 售货员—刷新/冻结图标）、商店 6 槽、河道（金币在左、回合数居中、倒计时在右）、按容量棋盘；战斗组合 438 高：对手英雄行 84（84×84 英雄卡 + 84 宽身份列）、对手随从行、河道上下各 6（金币在左、回合与结果居中、「战斗中」在右）、我方随从行。英雄行 84 高：84×84 英雄卡、24 高被动技能标记行与全部主动技能图标（主动技能按视图顺序横排），淘汰后显示「已淘汰 · 观战中」；金币已移入河道，英雄行不再显示。手牌行 146 高贴底，允许被压缩且卡底可越过页面底部。十三种意图对应操作，冻结按钮按 `affordances.canUnfreeze` 发送 `FreezeShop` 或 `UnfreezeShop`；`pendingChoices` 弹层只保留发现与进化，以一排卡面或选项块呈现，点击即发 `ChooseDiscover`；战吼目标待选与需要目标的英雄技能改为瞄准层（从技能按钮或入场随从拉出弧线，松手命中候选生效，落空或 `Esc` 取消/放弃）；`GameAimLayer` 同时为需要目标的效果牌拖拽绘制同一套视觉 |
 | 结算 | 按服务端 `ranking` 展示名次行（名次、玩家名、存活回合、造成伤害）、`selfStats` 的本局数据区与最终阵容、`seed`；`ConfirmButton`（「确定」）只清本地房间并重新认证回大厅，不发 `LeaveRoom`（房间已在对局结束时销毁） |

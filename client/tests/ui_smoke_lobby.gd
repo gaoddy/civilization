@@ -1,10 +1,10 @@
 extends "res://tests/smoke_case.gd"
-## 大厅冒烟：两栏比例、卡片、匹配切换、加入校验、断线与错误提示。
+## 大厅冒烟：两栏比例、卡片、匹配切换、创建模式邀请行、断线与错误提示。
 
 const FakeBackend = preload("res://tests/fake_platform_backend.gd")
 
 
-## 记录发送的假连接：加入弹窗的非法输入不能产生任何消息。
+## 记录发送的假连接：大厅持有可用的连接状态，发送的消息不影响断言。
 class RecordingSocket:
     extends RefCounted
 
@@ -26,15 +26,13 @@ class RecordingSocket:
 
 func _ready() -> void:
     _seed()
-    var socket := RecordingSocket.new()
-    Net.socket = socket
+    Net.socket = RecordingSocket.new()
     var lobby := await _check_scene("res://pages/lobby/lobby.tscn", false)
     if lobby != null:
         await _check_layout(lobby)
         await _check_hall_texture(lobby)
         await _check_match_toggle(lobby)
         await _check_queue_timer(lobby)
-        await _check_join_dialog(lobby, socket)
         await _check_creating_blocks_match(lobby)
         await _check_disconnect(lobby)
         await _check_error(lobby)
@@ -89,7 +87,6 @@ func _check_layout(lobby: Node) -> void:
         "LobbyRankCard",
         "MatchButton",
         "CreateRoomButton",
-        "JoinRoomButton",
         "FriendsButton",
         "GalleryButton",
         "LeaderboardButton",
@@ -135,7 +132,6 @@ func _check_hall_texture(lobby: Node) -> void:
 func _check_match_toggle(lobby: Node) -> void:
     var match_button := lobby.find_child("MatchButton", true, false) as Button
     var create_button := lobby.find_child("CreateRoomButton", true, false) as Button
-    var join_button := lobby.find_child("JoinRoomButton", true, false) as Button
     var queue_card := lobby.find_child("LobbyQueueCard", true, false) as Control
     var rank_card := lobby.find_child("LobbyRankCard", true, false) as Control
     if match_button == null:
@@ -148,7 +144,6 @@ func _check_match_toggle(lobby: Node) -> void:
     _expect(queue_card != null and queue_card.visible, "排队中应显示排队卡")
     _expect(rank_card != null and not rank_card.visible, "排队中段位卡应让位")
     _expect(create_button != null and create_button.disabled, "排队中不能创建房间")
-    _expect(join_button != null and join_button.disabled, "排队中不能加入房间")
     _expect(
         queue_card != null and not _node_text(queue_card).contains("匹配范围"),
         "排队卡不应显示匹配范围"
@@ -202,38 +197,6 @@ static func _clock_seconds(text: String) -> int:
     return int(parts[0]) * 60 + int(parts[1])
 
 
-func _check_join_dialog(lobby: Node, socket: RecordingSocket) -> void:
-    var join_button := lobby.find_child("JoinRoomButton", true, false) as Button
-    var dialog := lobby.find_child("LobbyJoinDialog", true, false) as Control
-    var input := lobby.find_child("JoinCodeInput", true, false) as LineEdit
-    var confirm := lobby.find_child("JoinConfirmButton", true, false) as Button
-    var error := lobby.find_child("JoinErrorText", true, false) as Label
-    var cancel := lobby.find_child("JoinCancelButton", true, false) as Button
-    if join_button == null or dialog == null or input == null or confirm == null:
-        return
-
-    join_button.pressed.emit()
-    await get_tree().process_frame
-    _expect(dialog.visible, "点加入房间应打开弹窗")
-
-    input.text = "ABC"
-    confirm.pressed.emit()
-    await get_tree().process_frame
-    _expect(error != null and error.text == tr("ui.lobby.room_code_invalid"), "非法房间码应就地报错")
-    _expect(_sent_count(socket, Protocol.MSG_JOIN_ROOM) == 0, "非法房间码不应发送 JoinRoom")
-
-    input.text = "abc123"
-    confirm.pressed.emit()
-    await get_tree().process_frame
-    _expect(_sent_count(socket, Protocol.MSG_JOIN_ROOM) == 1, "合法房间码应发送 JoinRoom")
-
-    if cancel != null:
-        cancel.pressed.emit()
-        await get_tree().process_frame
-    _expect(not dialog.visible, "取消应关闭加入弹窗")
-    _expect(not join_button.disabled, "取消加入后加入按钮应恢复")
-
-
 func _check_creating_blocks_match(lobby: Node) -> void:
     var match_button := lobby.find_child("MatchButton", true, false) as Button
     lobby.set("_creating", true)
@@ -263,12 +226,8 @@ func _check_match_found(lobby: Node) -> void:
     )
 
 
-## 认证类错误优先于加入弹窗：即使弹窗开着也要清会话；离树后导航被丢弃，便于断言。
+## 认证类错误优先于其余提示：清空会话并回登录；离树后导航被丢弃，便于断言。
 func _check_auth_error(lobby: Node) -> void:
-    var join_button := lobby.find_child("JoinRoomButton", true, false) as Button
-    if join_button != null:
-        join_button.pressed.emit()
-        await get_tree().process_frame
     GameStore.player_id = "p_me"
     GameStore.last_error = {"code": "AUTH_FAILED"}
     var parent := lobby.get_parent()
@@ -326,7 +285,7 @@ func _check_room_mode() -> void:
     _expect(kick is Button and (kick as Button).text == tr("ui.room.kick"), "移除入口应是按钮")
 
     var text := _node_text(lobby)
-    for word in ["玩家列表", "已准备", "未准备"]:
+    for word in ["玩家列表", "已准备", "未准备", "房间码"]:
         _expect(not text.contains(word), "座位列表不应出现「%s」文字" % word)
 
     _expect(lobby.find_child("ReadyButton", true, false) == null, "房主不应有准备按钮")
@@ -345,19 +304,13 @@ func _check_room_mode() -> void:
         "原因行文案应与 tooltip 一致"
     )
 
-    var code := lobby.find_child("RoomCodeValue", true, false) as Label
-    _expect(code != null and code.text == "ABC123", "创建模式应显示房间码")
-    var copy := lobby.find_child("CopyCodeButton", true, false) as Button
-    _expect(copy != null, "创建模式应有复制房间码入口")
+    _expect(lobby.find_child("RoomCodeValue", true, false) == null, "创建模式不应显示房间码")
+    _expect(lobby.find_child("CopyCodeButton", true, false) == null, "创建模式不应有复制房间码入口")
     _expect(lobby.find_child("SteamInviteButton", true, false) == null, "非 Steam 构建没有 Steam 邀请入口")
-    if copy != null:
-        copy.pressed.emit()
-        await get_tree().process_frame
-        _expect(copy.text == tr("ui.lobby.copied"), "复制后应给出已复制反馈")
-    _expect(
-        str(lobby.call("_share_text", "ABC123")) == tr("ui.lobby.room_code_share") % "ABC123",
-        "复制内容应带房间码与打开方式"
-    )
+    var invite_row := lobby.find_child("RoomInviteRow", true, false) as Control
+    var invite_status := lobby.find_child("RoomInviteStatus", true, false) as Label
+    _expect(invite_row != null, "有空位时应显示邀请行")
+    _expect(invite_status != null and not invite_status.visible, "无状态文案时不应显示状态行")
     var fill := lobby.find_child("RoomFillHint", true, false) as Label
     _expect(
         fill != null and fill.text == tr("ui.room.bot_fill_off_hint") % 5,
@@ -387,6 +340,8 @@ func _check_room_mode() -> void:
     GameStore.room_changed.emit()
     await get_tree().process_frame
     _expect(lobby.find_child("RoomInviteButton", true, false) == null, "满员时不应有邀请入口")
+    _expect(lobby.find_child("SteamInviteButton", true, false) == null, "满员时不应有 Steam 邀请入口")
+    _expect(lobby.find_child("RoomInviteStatus", true, false) == null, "满员时不应有邀请状态行")
     _expect(not (hint != null and hint.visible), "开始可用时不应显示原因行")
 
     _seed_room(3, true)
@@ -432,12 +387,12 @@ func _check_room_phone_height() -> void:
         await get_tree().process_frame
         var actions := lobby.find_child("LobbyRoomActions", true, false) as Control
         _expect(actions != null, "手机创建模式应有房间操作")
-        for node_name in ["RoomInviteButton", "CopyCodeButton"]:
+        for node_name in ["RoomInviteButton"]:
             var entry := lobby.find_child(node_name, true, false) as Button
             # 手机档位次要操作命中尺寸为 44 画布单位；无头环境的 hit_small 不换算，直接断言令牌值。
             _expect(
                 entry != null and entry.custom_minimum_size.y >= 44,
-                "手机房间码与邀请入口应达到次要命中尺寸：%s" % node_name
+                "手机邀请入口应达到次要命中尺寸：%s" % node_name
             )
         if actions != null:
             var page := lobby as Control
@@ -476,15 +431,6 @@ func _room_name_count(lobby: Node) -> int:
     return count
 
 
-func _sent_count(socket: RecordingSocket, message_type: String) -> int:
-    var count := 0
-    for raw in socket.sent:
-        var envelope = JSON.parse_string(str(raw))
-        if envelope is Dictionary and str(envelope.get("type", "")) == message_type:
-            count += 1
-    return count
-
-
 func _check_steam_share() -> void:
     var fake = FakeBackend.new()
     Platform.set_backend_for_test(fake, Platform.CHANNEL_STEAM)
@@ -507,10 +453,10 @@ func _check_steam_share() -> void:
         await get_tree().process_frame
         await get_tree().process_frame
         _expect(fake.invited, "token 到手后打开 Steam 好友邀请")
-        var status := lobby.find_child("RoomCodeStatus", true, false) as Label
+        var status := lobby.find_child("RoomInviteStatus", true, false) as Label
         _expect(
             status != null and status.text == tr("ui.room.invite_steam.sent"),
-            "Steam 邀请成功后应在房间码行给出状态"
+            "Steam 邀请成功后应在邀请行下方给出状态"
         )
     lobby.queue_free()
     await get_tree().process_frame

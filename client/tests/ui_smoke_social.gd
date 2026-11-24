@@ -78,7 +78,7 @@ func _check_lobby_social() -> void:
 
     var labels := _node_text(instance)
     _expect(labels.contains("100001"), "大厅应展示本人玩家编号")
-    _expect(labels.contains("ABC234"), "邀请弹窗应展示房间码")
+    _expect(not labels.contains("ABC234"), "邀请弹窗不应展示房间码")
 
     # 好友管理收在抽屉里：主页只留入口，入口显示在线好友数。
     var entry := instance.find_child("FriendsButton", true, false)

@@ -8,7 +8,7 @@
 
 统一全屏弹出层的「壳」：遮罩、内容宿主、定位、显隐与点击遮罩关闭。内容、按钮与业务状态仍由各业务组件自己构建，外壳不读取 `GameStore`，不发请求。
 
-覆盖的场景：邀请弹窗、好友抽屉、选择浮层、战斗开场、图鉴筛选面板、加入房间弹窗、大厅提示与断线弹窗。
+覆盖的场景：邀请弹窗、好友抽屉、选择浮层、战斗开场、图鉴筛选面板、大厅提示与断线弹窗。
 
 ## 2. 结构
 
@@ -58,7 +58,6 @@ PopupLayer（Control，全屏，默认隐藏）
 | `InvitePopup` | `CENTER` | 黑 0.55 | 无邀请时整体隐藏 |
 | `FriendsPanel` | `EDGE_LEFT` | 黑 0.58，遮罩放行 | 贴左整高抽屉，宽度贴合内容、上限 600；根节点拦截点击；Esc 与关闭按钮走 `closed` |
 | `ConnectionDialog` | `CENTER` | 黑 0.6 | 断线提示与重连入口，只有重连按钮接收点击 |
-| `LobbyJoinDialog` | `CENTER` | 黑 0.55 | 加入房间码输入；Esc 与取消关闭 |
 | `LobbyNoticeDialog` | `CENTER` | 黑 0.55 | 单段提示；点遮罩关闭 |
 | `GameChoiceOverlay` | `CENTER` | `color-bg` 0.72 | 拦截点击，待选状态由页面控制 |
 | `CombatIntro` | `CENTER` | `color-bg` 0.6 | 根节点与遮罩都放行，不抢详情与输入 |

@@ -1,7 +1,7 @@
 extends Control
 ## 大厅：内容区 7:3 两栏。左栏大厅图与底栏入口，右栏玩家卡、段位/排队卡与快捷操作。
 ##
-## 好友抽屉、加入弹窗、提示弹窗与断线弹窗都挂在本页，公共组件自己管状态；
+## 好友抽屉、提示弹窗与断线弹窗都挂在本页，公共组件自己管状态；
 ## 页面只负责拼装、导航与把服务端状态转给组件。
 
 var _left: VBoxContainer
@@ -17,7 +17,6 @@ var _quick: LobbyQuickActions
 var _left_actions: LobbyLeftActions
 var _friends: FriendsPanel
 var _invite_popup: InvitePopup
-var _join_dialog: LobbyJoinDialog
 var _notice: LobbyNoticeDialog
 var _connection: ConnectionDialog
 
@@ -105,11 +104,6 @@ func _build() -> void:
     _friends.closed.connect(_close_friends)
     add_child(_friends)
 
-    _join_dialog = LobbyJoinDialog.new()
-    _join_dialog.join_requested.connect(_on_join_requested)
-    _join_dialog.closed.connect(_on_join_dialog_closed)
-    add_child(_join_dialog)
-
     _notice = LobbyNoticeDialog.new()
     add_child(_notice)
 
@@ -135,14 +129,12 @@ func _column(node_name: String, ratio: int) -> VBoxContainer:
 func _connect_signals() -> void:
     _quick.match_toggled.connect(_on_match_toggled)
     _quick.create_pressed.connect(_on_create_pressed)
-    _quick.join_pressed.connect(_on_join_pressed)
     _left_actions.friends_pressed.connect(_on_friends_pressed)
     _left_actions.gallery_pressed.connect(_on_gallery_pressed)
     _left_actions.account_pressed.connect(_on_account_pressed)
     _left_actions.leaderboard_pressed.connect(_on_leaderboard_pressed)
     _room_list.invite_pressed.connect(_on_room_invite_pressed)
     _room_list.kick_requested.connect(_on_kick_pressed)
-    _room_list.copy_code_pressed.connect(_on_copy_code_pressed)
     _room_list.steam_invite_pressed.connect(_on_steam_invite_pressed)
     _room_actions.start_pressed.connect(_on_start_pressed)
     _room_actions.dissolve_pressed.connect(_on_dissolve_pressed)
@@ -219,7 +211,6 @@ func _render_room() -> void:
     _room_list.render(
         players, GameStore.player_id, is_host, GameStore.room_bot_fill, players.size()
     )
-    _room_list.set_room_code(GameStore.room_code)
     var ready_count := 0
     for player in players:
         if bool(player.get("ready", false)):
@@ -265,26 +256,6 @@ func _on_create_pressed() -> void:
     Net.send(Protocol.MSG_CREATE_ROOM, {})
 
 
-func _on_join_pressed() -> void:
-    if not _connected:
-        return
-    _join_dialog.open_dialog()
-
-
-func _on_join_requested(code: String) -> void:
-    _joining = true
-    _join_dialog.set_joining(true)
-    _apply_mode()
-    Net.send(Protocol.MSG_JOIN_ROOM, {"code": code})
-
-
-## 关闭加入弹窗即放弃这次在途加入：服务端失败或晚到成功都不再阻塞入口。
-func _on_join_dialog_closed() -> void:
-    _joining = false
-    _join_dialog.set_joining(false)
-    _apply_mode()
-
-
 func _on_friends_pressed() -> void:
     _friends.open()
 
@@ -310,8 +281,6 @@ func _on_disconnected() -> void:
     _matched = false
     _creating = false
     _joining = false
-    _join_dialog.set_joining(false)
-    _join_dialog.close_layer()
     GameStore.abandon_queue()
     _reset_steam_invite()
     _connection.show_disconnected()
@@ -366,18 +335,6 @@ func _on_kick_pressed(player_id: String) -> void:
 
 func _on_room_invite_pressed() -> void:
     _friends.open_invite()
-
-
-## 复制内容带房间码与打开方式；各渠道一致，Steam 另有大厅邀请入口。
-func _share_text(code: String) -> String:
-    return tr("ui.lobby.room_code_share") % code
-
-
-func _on_copy_code_pressed() -> void:
-    if GameStore.room_code == "":
-        return
-    DisplayServer.clipboard_set(_share_text(GameStore.room_code))
-    _room_list.show_copied()
 
 
 ## Steam 邀请入口与房间等待区同一套流程：先向服务端请求 token，再创建大厅并打开好友邀请。
@@ -463,19 +420,12 @@ func _on_auth_changed() -> void:
 
 func _on_error() -> void:
     var code := str(GameStore.last_error.get("code", ""))
-    # 认证类错误优先于加入弹窗：会话已失效时留在弹窗里没有意义。
+    # 认证类错误优先于其余提示：会话已失效时留在本页没有意义。
     if UINavigation.error_route(code) == UINavigation.ROUTE_LOGIN:
-        _join_dialog.close_layer()
         _joining = false
         _creating = false
         GameStore.reset_session()
         UINavigation.navigate(self, UINavigation.PAGE_LOGIN)
-        return
-    if _join_dialog.visible:
-        _joining = false
-        _join_dialog.set_joining(false)
-        _join_dialog.show_error(code)
-        _apply_mode()
         return
     # 好友抽屉打开时错误回填到抽屉状态行，不再叠一层提示弹窗。
     if _friends.visible:
@@ -503,7 +453,7 @@ func _show_room_closed_reason() -> void:
     GameStore.room_closed_reason = ""
 
 
-## 调试包：本地启动器给出的房间码到达后自动入房；房间码只消费一次。
+## 调试包：本地启动器给出的房间码到达后直接入房；房间码只消费一次，不经过任何 UI。
 func _maybe_local_join() -> void:
     if not LocalServer.enabled or not LocalServer.auto_flow:
         return
@@ -522,8 +472,9 @@ func _on_local_room_code_ready(_code: String) -> void:
 
 
 func _join_local_room(code: String) -> void:
-    _join_dialog.open_dialog(code)
-    _on_join_requested(code)
+    _joining = true
+    _apply_mode()
+    Net.send(Protocol.MSG_JOIN_ROOM, {"code": code})
 
 
 func _on_local_server_failed(reason: String) -> void:

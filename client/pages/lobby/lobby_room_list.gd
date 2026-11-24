@@ -3,29 +3,23 @@ extends PanelContainer
 ## 创建房间模式的中部座位列表：8 行座位、准备圆点、房主标记与踢人入口。
 ##
 ## 列表不写标题、不写准备计数与准备文字；准备状态只用圆点表达，
-## 圆点 tooltip 给读屏与悬停保留说明。列表底部的固定区依次是房间码行与邀请入口：
-## 房间码行给出复制与（Steam 构建）邀请入口，滚动只发生在座位行上。
+## 圆点 tooltip 给读屏与悬停保留说明。列表底部的固定区是补位提示与邀请区：
+## 邀请行放「邀请好友」与（Steam 构建）「邀请 Steam 好友」，Steam 状态行在邀请行下方；
+## 滚动只发生在座位行上。
 
 signal kick_requested(player_id: String)
 signal invite_pressed
-signal copy_code_pressed
 signal steam_invite_pressed
 
 const SEAT_COUNT := 8
-const COPY_FEEDBACK_SECONDS := 2.0
 
 var _box: VBoxContainer
 var _rows: VBoxContainer
-var _invite: Button
 var _fill_hint: Label
-var _code_box: VBoxContainer
-var _code_value: Label
-var _copy: Button
+var _invite_box: VBoxContainer
+var _invite: Button
 var _steam: Button
-var _code_status: Label
-var _code := ""
-var _host := false
-var _copy_timer: SceneTreeTimer
+var _status: Label
 
 
 func _init() -> void:
@@ -41,7 +35,7 @@ func _init() -> void:
     _rows.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     _rows.size_flags_vertical = Control.SIZE_EXPAND_FILL
     _rows.add_theme_constant_override("separation", UITheme.space("space-2xs"))
-    # 座位行放进滚动区：安全区或更小屏幕上列表让出高度，底部邀请入口与房间操作始终可见。
+    # 座位行放进滚动区：安全区或更小屏幕上列表让出高度，底部邀请区与房间操作始终可见。
     var scroll := ScrollContainer.new()
     scroll.name = "RoomScroll"
     scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -56,72 +50,69 @@ func _init() -> void:
     _fill_hint.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
     _box.add_child(_fill_hint)
 
-    _code_box = VBoxContainer.new()
-    _code_box.name = "RoomCodeBox"
-    _code_box.add_theme_constant_override("separation", UITheme.space("space-2xs"))
-    _code_box.visible = false
-    _box.add_child(_code_box)
 
-    var code_row := HBoxContainer.new()
-    code_row.name = "RoomCodeRow"
-    code_row.add_theme_constant_override("separation", UITheme.space("space-sm"))
-    _code_box.add_child(code_row)
-    code_row.add_child(
-        UIControls.label(tr("ui.lobby.room_code"), UITheme.font_size("font-caption"), false)
-    )
-    _code_value = UIControls.label("", UITheme.font_size("font-title"), false)
-    _code_value.name = "RoomCodeValue"
-    _code_value.add_theme_color_override("font_color", UITheme.color("color-accent"))
-    code_row.add_child(_code_value)
-    var spacer := Control.new()
-    spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    code_row.add_child(spacer)
-    _copy = _code_button(tr("ui.lobby.copy"), "CopyCodeButton")
-    _copy.pressed.connect(func() -> void: copy_code_pressed.emit())
-    code_row.add_child(_copy)
-    # Steam 构建多一个邀请入口；其余构建整页不出现 Steam 文案。
+## 邀请区只在有空位时存在：满员时整块移除，不留不可见的按钮与状态行。
+func _render_invite(seat_count: int) -> void:
+    if seat_count >= SEAT_COUNT:
+        _clear_invite_box()
+        return
+    _build_invite_box()
+    _box.move_child(_invite_box, _box.get_child_count() - 1)
+
+
+## 邀请行与 Steam 状态行一起重建；状态文本随重建清空，由下一次状态同步写入。
+func _build_invite_box() -> void:
+    if _invite_box != null:
+        return
+    _invite_box = VBoxContainer.new()
+    _invite_box.name = "RoomInviteBox"
+    _invite_box.add_theme_constant_override("separation", UITheme.space("space-2xs"))
+    _box.add_child(_invite_box)
+
+    var row := HBoxContainer.new()
+    row.name = "RoomInviteRow"
+    row.add_theme_constant_override("separation", UITheme.space("space-sm"))
+    _invite_box.add_child(row)
+
+    _invite = _invite_button(tr("ui.lobby.room_invite"), "RoomInviteButton", "default")
+    _invite.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    _invite.pressed.connect(func() -> void: invite_pressed.emit())
+    row.add_child(_invite)
+
+    # Steam 构建多一个邀请入口，与好友邀请同一行；其余构建整页不出现 Steam 文案。
     if Platform.is_steam():
-        _steam = _code_button(tr("ui.room.invite_steam.entry"), "SteamInviteButton")
+        _steam = _invite_button(tr("ui.room.invite_steam.entry"), "SteamInviteButton", "ghost")
         _steam.tooltip_text = tr("ui.room.invite_steam.unavailable")
         _steam.pressed.connect(func() -> void: steam_invite_pressed.emit())
-        code_row.add_child(_steam)
+        row.add_child(_steam)
 
-    _code_status = UIControls.label("", UITheme.font_size("font-caption"), false)
-    _code_status.name = "RoomCodeStatus"
-    _code_status.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
-    _code_box.add_child(_code_status)
+    _status = UIControls.label("", UITheme.font_size("font-caption"), false)
+    _status.name = "RoomInviteStatus"
+    _status.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
+    _status.visible = false
+    _invite_box.add_child(_status)
 
 
-## 房间码行按钮与邀请入口同高：固定按令牌取值，手机档位不再二次触控抬升。
-func _code_button(text: String, node_name: String) -> Button:
+func _clear_invite_box() -> void:
+    if _invite_box == null:
+        return
+    if _invite_box.get_parent() != null:
+        _invite_box.get_parent().remove_child(_invite_box)
+    _invite_box.free()
+    _invite_box = null
+    _invite = null
+    _steam = null
+    _status = null
+
+
+## 邀请行按钮同高：固定按令牌取值，手机档位不再二次触控抬升。
+func _invite_button(text: String, node_name: String, style: String) -> Button:
     var button := UIControls.styled_button(
-        text, "ghost", UITheme.stage_metric("lobby-room-invite-height")
+        text, style, UITheme.stage_metric("lobby-room-invite-height")
     )
     button.name = node_name
     button.custom_minimum_size.y = UITheme.stage_metric("lobby-room-invite-height")
     return button
-
-
-func set_room_code(code: String) -> void:
-    _code = code
-    _code_value.text = code
-    _sync_code_visibility()
-
-
-## 复制成功的短暂反馈只改按钮文案，不打断座位列表；两秒后恢复。
-func show_copied() -> void:
-    if _copy == null:
-        return
-    _copy.text = tr("ui.lobby.copied")
-    if _copy_timer != null and _copy_timer.timeout.is_connected(_restore_copy):
-        _copy_timer.timeout.disconnect(_restore_copy)
-    _copy_timer = get_tree().create_timer(COPY_FEEDBACK_SECONDS)
-    _copy_timer.timeout.connect(_restore_copy)
-
-
-func _restore_copy() -> void:
-    if _copy != null:
-        _copy.text = tr("ui.lobby.copy")
 
 
 func set_steam_state(available: bool, hint: String) -> void:
@@ -132,11 +123,10 @@ func set_steam_state(available: bool, hint: String) -> void:
 
 
 func set_status(text: String) -> void:
-    _code_status.text = text
-
-
-func _sync_code_visibility() -> void:
-    _code_box.visible = _host and _code != ""
+    if _status == null:
+        return
+    _status.text = text
+    _status.visible = text != ""
 
 
 func render(players: Array, self_id: String, host: bool, bot_fill: bool, seat_count: int) -> void:
@@ -153,8 +143,6 @@ func render(players: Array, self_id: String, host: bool, bot_fill: bool, seat_co
             _fill_empty_row(row)
 
     _render_invite(seat_count)
-    _host = host
-    _sync_code_visibility()
     _render_fill_hint(host, bot_fill, seat_count)
 
 
@@ -246,21 +234,3 @@ func _ready_dot(player_id: String, ready: bool) -> Panel:
     dot.tooltip_text = tr("ui.room.seat_ready") if ready else tr("ui.room.seat_unready")
     dot.add_theme_stylebox_override("panel", UITheme.ready_dot_style(side, ready))
     return dot
-
-
-## 邀请入口只在有空位时存在：满员时直接移除节点，不留不可见的按钮。
-func _render_invite(seat_count: int) -> void:
-    if seat_count >= SEAT_COUNT:
-        if _invite != null and is_instance_valid(_invite):
-            if _invite.get_parent() != null:
-                _invite.get_parent().remove_child(_invite)
-            _invite.free()
-        _invite = null
-        return
-    if _invite == null:
-        _invite = UIControls.button(tr("ui.lobby.room_invite"))
-        _invite.name = "RoomInviteButton"
-        _invite.custom_minimum_size.y = UITheme.stage_metric("lobby-room-invite-height")
-        _invite.pressed.connect(func() -> void: invite_pressed.emit())
-        _box.add_child(_invite)
-    _box.move_child(_invite, _box.get_child_count() - 1)

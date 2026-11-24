@@ -73,7 +73,7 @@
 | 对局状态模态 | `GameStatusModal`（`client/pages/game/game_status_modal.gd`） | [components/game-status-modal.md](components/game-status-modal.md) |
 | 技能瞄准层 | `GameAimLayer`（`client/pages/game/game_aim_layer.gd`） | [components/aim-layer.md](components/aim-layer.md) |
 | 房间座位矩阵 | `RoomSeatGrid`（`client/pages/room/room_seat_grid.gd`） | [pages/room.md](pages/room.md) |
-| 大厅页组件 | `LobbyPlayerCard`、`LobbyRankCard`、`LobbyQueueCard`、`LobbyQuickActions`、`LobbyLeftActions`、`LobbyHallImage`、`LobbyRoomList`、`LobbyRoomActions`、`LobbyJoinDialog`、`LobbyNoticeDialog`（`client/pages/lobby/`） | [pages/lobby.md](pages/lobby.md) |
+| 大厅页组件 | `LobbyPlayerCard`、`LobbyRankCard`、`LobbyQueueCard`、`LobbyQuickActions`、`LobbyLeftActions`、`LobbyHallImage`、`LobbyRoomList`、`LobbyRoomActions`、`LobbyNoticeDialog`（`client/pages/lobby/`） | [pages/lobby.md](pages/lobby.md) |
 | 房间座位格 | `RoomSeatCell`（`client/pages/room/room_seat_cell.gd`） | [pages/room.md](pages/room.md) |
 | 房间操作栏 | `RoomActionBar`（`client/pages/room/room_action_bar.gd`） | [pages/room.md](pages/room.md) |
 | 选英雄覆盖层 | `HeroPickOverlay`（`client/pages/game/hero_pick_overlay.gd`） | [pages/game.md](pages/game.md) |

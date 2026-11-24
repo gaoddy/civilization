@@ -1668,8 +1668,6 @@ ui.lobby.add_friend_placeholder,6 位玩家编号
 ui.lobby.cancel_match,取消匹配
 ui.lobby.close,关闭
 ui.lobby.connection_lost,与服务器断开连接
-ui.lobby.copied,已复制
-ui.lobby.copy,复制
 ui.lobby.create_room,创建房间
 ui.lobby.decline,拒绝
 ui.lobby.decline_invite,拒绝
@@ -1678,11 +1676,8 @@ ui.lobby.friends_online,%d
 ui.lobby.friends_section,好友
 ui.lobby.incoming_section,好友申请
 ui.lobby.invalid_player_code,请输入 6 位玩家编号
-ui.lobby.invite_text,%s（%s）邀请你加入房间 %s
+ui.lobby.invite_text,%s（%s）邀请你加入房间
 ui.lobby.invite_title,好友邀请
-ui.lobby.join,加入
-ui.lobby.join_room,加入房间
-ui.lobby.join_title,加入房间
 ui.lobby.match_found,匹配成功，正在进入对局…
 ui.lobby.no_friends,还没有好友
 ui.lobby.no_recent,还没有最近对局
@@ -1700,10 +1695,6 @@ ui.lobby.reconnecting,正在重新连接…
 ui.lobby.remove_friend,删除
 ui.lobby.request_incoming,%s（%s）请求加你为好友
 ui.lobby.request_sent,已向编号 %s 发送好友申请
-ui.lobby.room_code,房间码
-ui.lobby.room_code_invalid,请输入 6 位房间码
-ui.lobby.room_code_placeholder,6 位房间码
-ui.lobby.room_code_share,房间码 %s，打开文明战旗加入
 ui.lobby.room_invite,邀请好友
 ui.lobby.start_match,开始匹配
 ui.login.authenticating,正在认证…
@@ -1797,7 +1788,7 @@ ui.room.invite_steam.already_in_room,请先离开当前房间
 ui.room.invite_steam.creating,正在创建邀请…
 ui.room.invite_steam.entry,邀请 Steam 好友
 ui.room.invite_steam.sent,已打开 Steam 好友邀请
-ui.room.invite_steam.unavailable,Steam 邀请不可用，可使用房间码
+ui.room.invite_steam.unavailable,Steam 邀请不可用，请使用好友邀请
 ui.room.kick,移除
 ui.room.kicked_notice,你已被房主移出房间
 ui.room.leave,离开房间
