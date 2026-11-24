@@ -227,6 +227,18 @@ class ClientBuildEnvTest(unittest.TestCase):
         self.assertIn(DEV_URL, line)
         self.assertIn("--require-url", line)
 
+    def test_alias_export_ipad_routes_to_ios_preset(self):
+        cases = (
+            ("local", []),
+            ("dev", []),
+            ("prod", ["CLIENT_PROD_SERVER_URL=wss://civilization.example/ws"]),
+        )
+        for env_name, extra in cases:
+            with self.subTest(env=env_name):
+                proc = self._run_make(["-n", f"export-ipad-{env_name}", *extra])
+                self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+                self.assertIn('--export-release "iOS"', proc.stdout)
+
     def test_alias_platform_overrides_conflicting_argument(self):
         proc = self._run_make(["-n", "export-ios", "PLATFORM=bogus"])
         self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
