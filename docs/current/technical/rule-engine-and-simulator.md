@@ -24,7 +24,7 @@ server/
       src/taxonomy.rs        # 科学分类树：祖先匹配 is_within / 路径 path / 叶子判定
       src/playstyles.rs      # 开局玩法抽取 draw 与 PLAYSTYLES_PER_GAME
       src/effects/           # 结构化效果校验（validate）、解释执行（exec）、光环（auras）；parse 仅保留为 DSL 作者工具
-      src/intent.rs          # 协议十三种意图（含 ChooseDiscover、ChooseTarget、AbandonTarget）与 11 个规则拒绝码（各自映射到对应的协议错误码）
+      src/intent.rs          # 协议十四种意图（含 ChooseDiscover、ChooseTarget、AbandonTarget）与 13 个规则拒绝码（各自映射到对应的协议错误码）
       src/engine.rs          # Engine::new（含玩法参数）/ apply / start_game / start_turn
       src/achievements.rs    # 局内成就标识、成长记账与各阶段奖励结算
       src/recruit.rs         # 商店、买/卖/刷新/冻结/升时代/打出/结束招募
@@ -62,17 +62,20 @@ tests/                       # Python 标准库 unittest
 
 - `Engine::apply(state, seat, intent)` 是唯一的状态变更入口，返回 `Outcome`（本意图产生的事件）；拒绝时返回 `Reject { code, message }` 且不改变状态。
 - 拒绝码与核心规则 §3 一致：`NOT_ENOUGH_GOLD`、`SHOP_SLOT_EMPTY`、`NO_SPACE`、`INVALID_STAGE`、`NO_SUCH_MINION`、`ALREADY_MAX_ERA`、`CARD_NOT_IN_HAND`、`HERO_POWER_LIMIT`、`NOT_ACTIVE_SKILL`、`NO_VALID_TARGET`、`TARGET_NOT_ALLOWED`、`INVALID_CHOICE`、`SEVEN_VOYAGES_ACTIVE`。
-- 协议十三种意图：`BuyMinion`、`SellMinion`、`RerollShop`、`UpgradeEra`、`PlayCard`、`RearrangeBoard`、`FreezeShop`、`UnfreezeShop`、`UseHeroPower`、`EndRecruit`、`ChooseDiscover`、`ChooseTarget`、`AbandonTarget`。`UnfreezeShop` 与 `FreezeShop` 对称：指定槽位解冻该槽位，`None` 解冻全部非空槽位，不重抽、不改实例编号、不消耗随机流。`UnfreezeShop` 要求本回合冻结过商店（`PlayerState::froze_this_turn`，回合开始清零），否则返回 `INVALID_STAGE`；冻结标记本身跨回合保留，只由解冻或重抽（手动刷新、升时代）清除。`ChooseDiscover`、`ChooseTarget` 与 `AbandonTarget` 都用于消费引擎产生的 `PendingChoice`（发现/进化、目标）；`PendingChoice` 本身是引擎内部状态，不直接出现在协议里。`AbandonTarget` 只消费本座位队首的目标待选，撤销本次出牌并把原牌退回原手牌位置；没有待选或队首不是目标待选时返回 `INVALID_CHOICE`。
+- 协议十四种意图：`BuyMinion`、`SellMinion`、`RerollShop`、`UpgradeEra`、`PlayCard`、`RearrangeBoard`、`FreezeShop`、`UnfreezeShop`、`UseHeroPower`、`UseMinionAbility`、`EndRecruit`、`ChooseDiscover`、`ChooseTarget`、`AbandonTarget`。`UnfreezeShop` 与 `FreezeShop` 对称：指定槽位解冻该槽位，`None` 解冻全部非空槽位，不重抽、不改实例编号、不消耗随机流。`UnfreezeShop` 要求本回合冻结过商店（`PlayerState::froze_this_turn`，回合开始清零），否则返回 `INVALID_STAGE`；冻结标记本身跨回合保留，只由解冻或重抽（手动刷新、升时代）清除。`ChooseDiscover`、`ChooseTarget` 与 `AbandonTarget` 都用于消费引擎产生的 `PendingChoice`（发现/进化、目标）；`PendingChoice` 本身是引擎内部状态，不直接出现在协议里。`AbandonTarget` 只消费本座位队首的目标待选，撤销本次出牌并把原牌退回原手牌位置；没有待选或队首不是目标待选时返回 `INVALID_CHOICE`。
 - `PlayCard { hand_index, position, target }`：`position` 只对随从牌生效，是入场后的插入下标，`None` 表示追加到最右；超出当前随从数返回 `INVALID_CHOICE`。效果牌不带落点：目标缺失或不在合法池内时整条意图返回 `NO_VALID_TARGET`，合法池为空时效果落空、意图仍生效。效果牌与主动技能的 `target` 是 `TargetRef { zone, id }`，`zone` 取 `hand` / `shop` / `board`；提交时先校验实例是否属于本人在该区域，再进入合法池校验，不符返回 `NO_VALID_TARGET`。随从牌入场后判定战吼：未带 `target` 且服务端算出候选非空时只推入 `PendingChoice::Target`，由 `ChooseTarget { target }` 指定目标，本次意图内不发金色「三连奖励」、不执行 `check_triple`、不触发入场观察者；候选为空（含被过滤器收窄为空）时战吼直接落空、不产生待选，这些入场副作用照基线顺序立即执行。
 - 阶段不匹配时，`recruit::apply` 对全部招募意图（含 `UpgradeEra`、`RerollShop` 等）统一返回 `INVALID_STAGE`；`EndRecruit` 另有「本座位已结束招募」时仍处于 `Recruit`、返回成功且无副作用。
 - 实例编号 `InstanceId` 由 `state.next_instance_id` 单调分配：商店每次刷新的每个槽位（含效果牌槽）各有一个，冻结保留原编号与冻结标记直到解冻或重抽；买入、入手牌、打出到棋盘都沿用该编号。三连合成时新建一个金色编号，`TripleFormed` 事件携带被合并的三张原始副本编号（实例本身不保存来源记录）。复制品按复制方式分配新编号。
-- `BuyMinion { slot }` 不带目标：买入一律进入手牌，不触战吼；手牌保留随从实例（含成长等状态），不再退回卡面基础值。`PlayCard` 与 `UseHeroPower` 带 `target: Option<TargetRef>`，M0 由 AI 按区域从本人棋盘、手牌、商店依次选择目标。
+- `BuyMinion { slot }` 不带目标：买入一律进入手牌，不触战吼；手牌保留随从实例（含成长等状态），不再退回卡面基础值。`PlayCard`、`UseHeroPower` 与 `UseMinionAbility` 带 `target: Option<TargetRef>`，M0 由 AI 按区域从本人棋盘、手牌、商店依次选择目标。
 - 三连判定见核心规则 §6：合成后金色进入手牌（手牌满时留在棋盘最早副本的位置且不发奖励）；金色成功打出入场时发放一张 `triple-reward` 效果牌，牌上记录**发放时玩家当前时代 +1**（封顶 6），此后升时代不追溯。打出该牌由 `GrantMinion { level: next, to: hand }` 直接随机发放一张命中本局启用玩法、`in_shop_pool: true`、星级等于该记录的池内随从到手牌；不登记发现待选、不扣共享牌池，手牌满或无候选时奖励牌照常消耗。奖励效果牌自身 `in_shop_pool: false`，不进商店、不进任何候选、不扣共享牌池；普通效果牌按商店概率进入商店槽位，但同样不扣共享牌池。
 - 金色效果按「单次结算 + 数值产出 ×2」执行：`Effect::doubled_outputs()` 只翻倍 `Growth.times` / `times_if.times`、`ModifyStats` 的攻防与 `per_*`、`GrantKeyword` 层数、`DealDamage.amount`、`Summon` / `AddShopSlot` / `Salvage` 数量、`Revive` 攻防、`Detonate.amount`、`Convert.count`、`Latent.amount` / `count`；`condition`、`threshold`、`max_count`、`when`、`Devour.value`、`Discover.choose`、`SevenVoyages.turns_max` 保持原值。光环由 `accumulate(..., golden)` 显式 ×2，战斗传染每次叠 2 层，`Decompose` 在 `apply_combat_decompose` 翻倍获得量。
 - `PendingChoice::Target { seat, source, hand_card, hand_index, fire_ally_evolve }`：`hand_card` 是入场前的原手牌（含成长、护盾与金色标记），`hand_index` 是原手牌位置，放弃时按 `min(hand_index, len)` 插回；`fire_ally_evolve` 表示入场观察者是否推迟到目标结算后触发。目标待选期间该座位除 `ChooseTarget` 与 `AbandonTarget` 外一切招募意图（含 `EndRecruit`）返回 `INVALID_STAGE`。`ChooseTarget` 要求队首是目标待选、目标属于本人在对应区域的实体，且通过该牌 `OnPlay` 效果的合法池校验，否则返回 `INVALID_CHOICE` / `NO_VALID_TARGET`；消费后立即按 `OnPlay` 结算该牌效果，再按固定顺序补做被推迟的入场副作用：金色三连奖励 → `check_triple` → `fire_ally_evolve` 为真时触发入场观察者。`AbandonTarget` 要求来源随从仍在本人棋盘（否则 `NO_SUCH_MINION`），移除来源、把原牌插回原手牌位置、移除待选，不发战吼、不补奖励、不执行三连与入场观察者。发现与进化待选允许留到下回合；目标待选若在 `finish_recruit` 进入战斗前仍未选择，按同样规则退牌（来源仍在场时），随后照常推进阶段。
 - `HandCardView.requires_target` 由效果选择器决定：`Selector::Target` 或 `friendly:single`（`Side` + `Pick::Single`）即为需要目标，随从牌恒为 `false`。视图同时下发 `targetCandidates`（引擎 `target_candidates` 的结果，只含本人棋盘/手牌/商店）、`instanceId`、`golden`，以及随从牌的 `attack` / `health`（当前值，含成长等全部层数）；效果牌这两项为 `null`，`golden` 恒为 `false`，奖励牌另带 `rewardLevel`（锁定的发放星级）。`requires_target` 为真且候选为空时 `playable=false`、`disabledReason=NO_VALID_TARGET`。
 - `SelfView.hero_powers` 按英雄卡 `skills` 顺序列出全部主动技能，每项带 `skill_id`、`uses_left`、`requires_target`、`target_candidates`、`can_use`、`disabled_reason`，目标口径与手牌一致；需要目标且候选为空时该技能 `can_use=false`、`disabled_reason=NO_VALID_TARGET`，不影响同一英雄的其他技能。`PendingChoiceView::Target` 同时下发 `candidates`。
+- `SelfView.board[].abilities` 只对本人棋盘填充：按该随从卡 `skills` 顺序列出有 `cost` 的主动技能，每项带 `skill_id`、`cost`、`uses_left`、`requires_target`、`target_candidates`、`can_use`、`disabled_reason`；次数按（实例，技能）读 `minion_uses`，`uses_per_turn` 缺省 1，候选口径与结算同源（`source = Some(instance)`）。门控顺序与英雄技能一致：阶段门 → 需要目标但候选为空（`NO_VALID_TARGET`）→ `check_minion_ability`（技能归属、次数、航程与金币）。对手棋盘不下发该字段。
 - `UseHeroPower { skill_id, target }` 只校验并结算 `skill_id` 自身的 `OnActivate` 效果；同一英雄的其它主动技能不随本次意图结算，也不扣金币与次数。含 `SevenVoyages` 的技能在费用与次数校验后先检查是否已有进行中的航程（有则返回 `SEVEN_VOYAGES_ACTIVE`），通过后先扣金币与次数，再用 `Stream::Effects` 掷出航程回合数。
+- `UseMinionAbility { minion, skill_id, target }` 结算指定棋盘随从卡上的主动技能，校验顺序为：座位存在 → 实例在本人棋盘（`NO_SUCH_MINION`）→ 技能存在且属于该随从卡（`HERO_POWER_LIMIT`）→ 技能是主动技能（`NOT_ACTIVE_SKILL`）→ 本回合次数未用尽（`HERO_POWER_LIMIT`）→ 七下西洋航程门控（`SEVEN_VOYAGES_ACTIVE`）→ 金币足够（`NOT_ENOUGH_GOLD`）→ 目标区域 → 目标池。航程门控与英雄技能共用 `check_voyage_available`；通过后扣金币并把该（随从实例，技能）计数 +1，再按 `OnActivate` 结算该技能。`EffectCtx.source = Some(instance)`，金色随从按 `golden = instance.golden` 沿用既有翻倍口径；一张卡上的多个主动技能各自独立计数。
+- `PlayerState.minion_uses: BTreeMap<(InstanceId, String), u8>` 记录每（随从实例，技能）本回合的使用次数；`initial_state` 初始化为空，`start_turn` 与 `hero_uses.clear()` 同步清空；`hash.rs` 按 `BTreeMap` 顺序把实例 id、技能 id 与次数写入玩家状态哈希。
 - `EndRecruit` 只结束本座位；全员（未出局）结束后才进入 `Combat` 并发出 `PhaseChanged`，重复 `EndRecruit` 成功且无副作用。
 - `settle::finish_recruit` 幂等：`Recruit` 阶段（超时路径）生成配对并切 `Combat`；`Combat` 阶段只补齐一次配对，不重复发事件、不重复配对。
 - 阶段推进由驱动方按固定顺序调用 `finish_recruit` / `resolve_combat` / `resolve_settle` / `start_turn`，引擎不自行推进时间。
@@ -224,7 +227,7 @@ impl Taxonomy {
 
 `sim bot` 只在视图变化时决策；服务端拒绝意图不会带来新视图，因此收到非目标类 `Error` 后每回合最多补发一次 `EndRecruit`（`brain::recover_after_error`），避免整局停在招募阶段等超时。`NO_VALID_TARGET` 走另一条路径：记入本回合阻塞集合后按同一视图立即重决策。
 
-`sim bot` 的意图表同步扩到十三种，不主动发送 `AbandonTarget` 与 `UnfreezeShop`：`pendingChoices` 头部为 `target` 时发 `ChooseTarget { target }`，取 `candidates` 中第一个未被拒绝的 `TargetRef`；`PlayCard` 一律带 `position: None`（追加到最右）；需要目标的随从牌按两段式先不带 `target`，等目标待选后再发 `ChooseTarget`；效果牌读手牌视图 `requiresTarget`，为真时从 `targetCandidates` 预填第一个未被拒绝的目标，候选为空时不填（效果可落空）。被拒目标按 `zone:id` 记入阻塞集合，沿候选列表换下一个。`sim/src/ai.rs`（M0 基线）按 `Selector::Target { zone }` 依次尝试本人三个区域的实例编号。
+`sim bot` 的意图表同步扩到十四种，不主动发送 `AbandonTarget`、`UnfreezeShop` 与 `UseMinionAbility`（当前 AI 取舍，随从主动技能只由真人使用）：`pendingChoices` 头部为 `target` 时发 `ChooseTarget { target }`，取 `candidates` 中第一个未被拒绝的 `TargetRef`；`PlayCard` 一律带 `position: None`（追加到最右）；需要目标的随从牌按两段式先不带 `target`，等目标待选后再发 `ChooseTarget`；效果牌读手牌视图 `requiresTarget`，为真时从 `targetCandidates` 预填第一个未被拒绝的目标，候选为空时不填（效果可落空）。被拒目标按 `zone:id` 记入阻塞集合，沿候选列表换下一个。`sim/src/ai.rs`（M0 基线）按 `Selector::Target { zone }` 依次尝试本人三个区域的实例编号。
 
 M0 确定性 AI（`sim/src/ai.rs`）针对效果牌补充三条规则：
 
@@ -286,7 +289,7 @@ M0 确定性 AI（`sim/src/ai.rs`）针对效果牌补充三条规则：
 | 规则章节 | 用例文件 |
 | --- | --- |
 | 核心规则 §2 阶段状态机、§7 淘汰排名、§8 边界 | `rule-engine/tests/settle.rs`、`recruit.rs` |
-| 核心规则 §3 十三种意图与十三个失败码 | `rule-engine/tests/recruit.rs`、`choices.rs` |
+| 核心规则 §3 十四种意图与十三个失败码 | `rule-engine/tests/recruit.rs`、`choices.rs`、`minion_ability.rs`、`minion_ability_view.rs` |
 | 核心规则 §4 招募细则 | `rule-engine/tests/recruit.rs`、`choices.rs`；商店重试后仍空即空槽，此时 `BuyMinion` 返回 `SHOP_SLOT_EMPTY`（`reroll_with_empty_star_retries_then_leaves_slot_empty`、`reroll_with_exhausted_pool_leaves_empty_slots_and_buy_rejects`） |
 | 核心规则 §5 战斗与伤害公式 | `rule-engine/tests/combat.rs` |
 | 核心规则 §5.6 七下西洋 | `rule-engine/src/settle.rs`、`src/recruit.rs`（内联用例）、`tests/catalog.rs`、`effects_exec.rs`、`combat.rs` |
@@ -349,6 +352,7 @@ M0 确定性 AI（`sim/src/ai.rs`）针对效果牌补充三条规则：
 - 光环只经 `fold_auras` 折叠进克隆：把 `state.auras` 的派生值写入克隆的 `aura` 层并保留「光环失效不致死」的夹紧，持久实例的 `aura` 层始终为 0。
 - `state.auras` 由引擎在固定时机重算：`recompute_auras` 全量扫描全部未出局座位并整体替换，用于开局、回合开始、招募结束（`Engine::finish_recruit`）与结算（`Engine::resolve_settle`）；`recompute_auras_for(seat)` 只重算单个座位，供 `Engine::apply` 在每条意图成功后调用——移除并重建该座位棋盘的条目，同时清理已不在任何未出局玩家棋盘上的陈旧条目，结果与全量重算一致。
 - `hash.rs` 编码 `stats` 各分量（含 `current`）；编码变化会改变状态哈希，同代码重放仍保持确定。
+- 随从主动技能的基线重定：`PlayerState.minion_uses` 进入玩家状态哈希后，`rule-engine/tests/combat.rs` 的金标准由 `f9a835e67bdfbfa7` 重定为 `a6bd26475ba79a27`；`sim/tests/golden/seed-1-games-20.json` 的 20 局 `final_hash` / `hashes` 同步重定，`intents`、`event_hash`、`rankings`、`stats`、`turns` 与旧基线一致——机器人不发送 `UseMinionAbility`，行为路径不变，仅哈希编码变化。
 - 关键词编码：光环关键词存 `KeywordSet` 位图，`hash.rs` 经 `names()` 输出排序后的原文逐条写入；随从的 `granted` 仍按 `(关键词原文, 时长)` 逐条写入。战斗内部的位图判定与层数累加不改变哈希口径，因此关键词位图化不改变既有日志与黄金基线的哈希。
 
 ### 10.1 伤害来源与击杀归属
@@ -425,7 +429,7 @@ pub enum Params {
 ### 10.3 七下西洋（SevenVoyages）
 
 - 数据：`skill-templates/activate-seven-voyages.md` 编译为 `on_activate | SevenVoyages | self | { turns_max }`；`turns_max` 取值 1–7、默认 7，校验要求 `OnActivate` 与 `Selector::SelfCard`。
-- 激活：`recruit::check_hero_power` 在费用与次数校验后检查「技能含 `Op::SevenVoyages` 且 `player.seven_voyages.is_some()`」，命中返回 `SEVEN_VOYAGES_ACTIVE`；通过后先扣金币与次数，再由 `apply_seven_voyages` 以 `state.rng.below(Stream::Effects, turns_max) + 1` 得到 n，写入 `SevenVoyagesState { remaining: n, pending: 0, total: n }`。激活当回合计为第 1 个航行回合，当回合战斗结算即累计第一笔。
+- 激活：`recruit::check_hero_power` 与 `check_minion_ability` 共用 `check_voyage_available`，在费用与次数校验后检查「技能含 `Op::SevenVoyages` 且 `player.seven_voyages.is_some()`」，命中返回 `SEVEN_VOYAGES_ACTIVE`；通过后先扣金币与次数，再由 `apply_seven_voyages` 以 `state.rng.below(Stream::Effects, turns_max) + 1` 得到 n，写入 `SevenVoyagesState { remaining: n, pending: 0, total: n }`。激活当回合计为第 1 个航行回合，当回合战斗结算即累计第一笔。
 - 结算：`resolve_real` 与 `resolve_ghost` 在战斗改变棋盘前截取本方快照（`board_a` / `board_b` / `own_board`），`board_slots` 取 `catalog.config.board_slots`（v0.1 为 7）；占位数 = 快照长度，空位数 = `board_slots - 占位数`。`voyage_result` 以 `seat_winner` 判定：`None`（双方同回合清场或无伤害僵局）为平，胜者为本座位为胜，否则为负；触行动上限的平局仍按 `seat_winner` 的胜/负口径。胜利或平局取 `max(占位数, 空位数)`，失败取 `min`，累计进 `pending`（`u16` 饱和加）并把 `remaining` 减 1；`remaining == 0` 后不再累计。
 - 到账：`Engine::start_turn` 给未出局座位分配当回合正常金币后检查 `seven_voyages`：`remaining == 0` 时把 `pending` 夹到 `u8` 上限并饱和加到 `gold`，随后清除状态，使该技能可再次使用；`remaining > 0` 时原样保留。到账不设上限，也不跨回合保留（未到账前 `pending` 属于航程状态，不计入金币）；航行途中出局或对局结束不会再走 `start_turn`，未到账的累计作废。
 - 状态与视图：`PlayerState.seven_voyages: Option<SevenVoyagesState>` 只在激活后存在；`view::HeroPowerView` 仅对含 `Op::SevenVoyages` 的技能下发 `voyage_remaining` 与 `voyage_pending`，协议字段为 `voyageRemaining`（`null` 或 0–7）与 `voyagePending`（≥0）。

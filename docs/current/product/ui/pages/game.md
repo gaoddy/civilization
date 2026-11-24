@@ -104,6 +104,7 @@
 | 手牌悬停 | 指针进入手牌卡 | 该卡置顶并以底边中点为轴放大 1.12，整张卡可见；邻卡与手牌顺序不动；禁用与战斗阶段同样生效 | 指针移出或开始拖拽后复位 |
 | 战吼目标待选 | `self.pendingChoices` 头部 `kind` 为 `target` | 入场随从留在棋盘，候选卡显示金色角标；不弹列表；购买/刷新/升时代/冻结/结束招募/主动技能/出售/换位/拖拽全部禁用 | 按住拖出箭头命中候选后发出 `ChooseTarget { target }`；落空或 `Esc` 发出 `AbandonTarget`，随从离场、牌回原手牌位置 |
 | 技能瞄准 | 按住需要目标的英雄技能按钮且候选非空 | 弧线从技能按钮指向指针，候选显示金色角标，命中卡加呼吸描边；指针不在候选上时弧线转灰、端点画叉；不显示悬停详情 | 松手命中候选发出 `UseHeroPower { skillId, target }`；落空或 `Esc` 取消，不发意图、不扣金币与次数 |
+| 随从技能 | 点击或按住棋盘随从卡右上角的技能角标 | 角标文本 `◆<费用>×<剩余次数>`，不可用时置灰；需要目标时弧线从角标指向指针，候选显示金色角标，命中卡加呼吸描边 | 无目标点击发出 `UseMinionAbility { minionId, skillId }`；需要目标时按住角标，松手命中候选后补 `target`；落空或 `Esc` 取消，不发意图、不扣金币与次数 |
 | 发现 / 进化待选 | `self.pendingChoices` 队首为发现或进化待选 | 全屏压暗，提示下方横排候选项；发现为与手牌同尺寸的卡面，进化为同尺寸选项块；浮层拦截点击，详情与图鉴收起 | 点击任一卡面或选项块发出 `ChooseDiscover { choice }`；服务端消费待选后随视图关闭 |
 | 战斗动作未到 | 战斗阶段 `last_combat` 为空 | 对手行「等待战斗动作…」，战斗河道只显示回合数 | 收到 `CombatResult` 后自动恢复 |
 | 战斗开场 | 战斗阶段已有本回合 `CombatResult` 且首条动作尚未播放 | 战场压暗，中央独立底板上显示双方头像、名字、英雄名与「VS」「战斗开始」，约 1.2 秒后淡出；显示期间演示暂停，首条动作在淡出后开始 | 开场淡出后进入「战斗演示中」；重连续播已进入战斗中段时不显示 |
@@ -136,7 +137,7 @@
 | --- | --- |
 | 回合、阶段、阶段截止时间 | `view.turn`、`view.phase`、`view.phaseDeadline`；`GameStore.phase`、`GameStore.deadline` 作为空视图或旧视图时的兜底 |
 | 生命、生命上限、时代、金币、英雄、技能次数 | `view.self` 与 `view.hpCap` |
-| 被动技能标记 | `CardDB.hero(heroCardId).skills` 中 `CardDB.skill(id).cost` 为空的技能；主动技能只取 `view.self.heroPowers` |
+| 被动技能标记 | `CardDB.hero(heroCardId).skills` 中 `CardDB.skill(id).cost` 为空的技能；英雄主动技能只取 `view.self.heroPowers`，棋盘随从主动技能取 `view.self.board[*].abilities` |
 | 选英雄候选与截止时间 | `GameStore.hero_pick`：`candidates`、`deadline`、`players[].seat` / `isBot` / `picked` |
 | 本人已确认状态 | `GameStore.hero_pick.players[]` 中本人座位的 `picked`；`GameStore.select_hero(cardId)` 发送成功后本地锁定 |
 | 选英雄候选卡面与详情 | `HeroPickList` / `HeroPickCard`；详情由 `HeroPickDetailLayer` 读取 `CardDB` 的英雄卡面、名字、介绍与技能 |

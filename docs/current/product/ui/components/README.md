@@ -32,6 +32,7 @@
 | 详情层 | `DetailLayer`（`client/ui/detail_layer.gd`） | 本文件 |
 | 首局引导 | `FirstGameGuide`（`client/pages/game/first_game_guide.gd`） | [first-game-guide.md](first-game-guide.md) |
 | 技能瞄准层 | `GameAimLayer`（`client/pages/game/game_aim_layer.gd`） | [aim-layer.md](aim-layer.md) |
+| 棋盘随从技能角标 | `BoardAbilityBadge`（`client/pages/game/board_ability_badge.gd`） | [board-ability-badge.md](board-ability-badge.md) |
 
 - 共享层按 `class_name` 直接实例化：跨两个及以上页面复用的组件放 `client/ui/`，只服务一个页面的组件放 `client/pages/<页面>/`；页面只做骨架与装配，不内联展示区块。
 - 卡牌图鉴与 `Gallery*` 组件由 `client/ui/` 承载，供大厅图鉴页与对局覆盖层共用；它们的卡牌数据仍来自 `CardDB`。

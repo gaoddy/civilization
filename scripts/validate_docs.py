@@ -169,21 +169,9 @@ SKILL_OPTIONAL_FIELDS = {"text", "text_golden", "template", "keyword", "cost",
                          "uses_per_turn", "name"}
 
 # 随从不可达的触发：引擎只在效果牌分支 fire OnPlayEffect，随从落场只 fire
-# OnPlay；主动技能（OnActivate）只能经英雄入口 UseHeroPower 结算。以下 41 张
-# 为卡池差异化开始前就存在的历史卡（shout 等主动技能，或旧的 on_play_effect
-# 文本技能），本波不把它们全部改掉；新增随从命中一律报错，名单条目必须仍然
-# 命中，防止陈旧。2026-11-25 修复鲁班、内燃机后为 49 张，再修复 8 张差异化
-# 回归卡后为 41 张。
-UNREACHABLE_MINION_SKILL_ALLOWLIST = {
-    "adam-smith", "airplane", "artificial-womb", "beethoven", "boxer", "darwin",
-    "davinci", "dianbaoji", "dianhua-jiaohuanji", "dyson-sphere", "edison",
-    "einstein", "famingjia", "faraday", "fleming", "gauss", "gongchangzhu",
-    "gongchengta", "hela-cell", "huochongdui", "huoqiangshou", "jiyin-gaizaoren",
-    "kanzi", "knuth", "koko", "lamarck", "luxun", "mammoth", "mendel", "menghu",
-    "mozi", "muhammad-ali", "nami-fengqun", "neanderthal", "nupao", "phonograph",
-    "quyuan", "tesla", "wright-brothers", "xingji-jianzhang", "zhenghe",
-}
-UNREACHABLE_TRIGGERS = {"OnActivate", "OnPlayEffect"}
+# OnPlay。主动技能（OnActivate）已有英雄与棋盘随从两个入口，不再视为不可达；
+# 随从引用 OnPlayEffect 一律报错，不维护显式名单。
+UNREACHABLE_TRIGGERS = {"OnPlayEffect"}
 # 关键词-文本一致性：技能渲染文本的触发前缀必须登记对应关键词。
 KEYWORD_TEXT_PREFIXES = {"战吼": "battlecry", "亡语": "deathrattle"}
 # 规则落地前就以「文本写战吼/亡语、keyword 为空」形态发布的既有技能，登记会
@@ -1175,9 +1163,8 @@ def keyword_text_errors(skills):
 
 
 def unreachable_minion_skill_errors(minions, skill_map):
-    """随从引用的技能不得依赖只在效果牌/英雄入口结算的触发。"""
+    """随从引用的技能不得依赖只在效果牌入口结算的触发。"""
     errors = []
-    hits = set()
     for card in minions:
         for skill_id in card_skills(card):
             skill = skill_map.get(skill_id)
@@ -1190,13 +1177,8 @@ def unreachable_minion_skill_errors(minions, skill_map):
                           if effect["trigger"] in UNREACHABLE_TRIGGERS})
             if not bad:
                 continue
-            hits.add(card["id"])
-            if card["id"] not in UNREACHABLE_MINION_SKILL_ALLOWLIST:
-                errors.append(
-                    f"{card['_file']}: 随从引用不可达技能 {skill_id}（trigger={bad}）")
-    for card_id in sorted(UNREACHABLE_MINION_SKILL_ALLOWLIST - hits):
-        errors.append(
-            f"不可达技能 allowlist 条目 {card_id} 已不存在或不再命中，请移除")
+            errors.append(
+                f"{card['_file']}: 随从引用不可达技能 {skill_id}（trigger={bad}）")
     return errors
 
 

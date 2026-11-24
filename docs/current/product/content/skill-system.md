@@ -38,7 +38,7 @@
 
 **运行时文本来源**：front matter 的 `name`、`text` 与 `text_golden` 是文本的编辑来源（`text` 缺省时取模板渲染结果，`text_golden` 缺省时取模板的金色渲染结果），构建期由 `scripts/gen_text.py` 汇总到 `client/text/zh_CN.csv`（key 分别为 `skill.<id>.name`、`skill.<id>.text`、`skill.<id>.text.golden`），客户端按 id 取文本；金色键只在金色文案与普通文案不同时生成，缺键回落普通文案；服务端生成数据不含这些展示字段。新增语言需要扩展文本生成工具并补充各语言文本、注册对应翻译，业务代码与技能实体结构不改动。
 
-**主动与触发的判定**：同时具备 `cost` 与 `uses_per_turn` 的技能是**主动技能**，由玩家支付费用后触发，模板展开后的效果以 `OnActivate` 开头；两者都不具备的是**触发式或常驻技能**，按文本前缀在对应时机自动结算。不允许只出现其中一个字段。
+**主动与触发的判定**：同时具备 `cost` 与 `uses_per_turn` 的技能是**主动技能**，由玩家支付费用后触发，模板展开后的效果以 `OnActivate` 开头；主动技能可由英雄（`UseHeroPower`，技能在英雄卡上）或棋盘随从（`UseMinionAbility`，技能在该随从卡上）发动。两者都不具备的是**触发式或常驻技能**，按文本前缀在对应时机自动结算。不允许只出现其中一个字段。
 
 **编码约定**：front matter 一行一个字段；模板调用的参数用 `,`、多个模板用 `；`；模板展开后的 `effects` 段用 `|`、效果用 `;`、参数用 `,`。
 
@@ -235,6 +235,7 @@ python3 scripts/validate_docs.py
 10. 卡牌分类字段按[卡牌规范与数据](card-system.md) §1.1 校验：`categories` 至少 1 条 `play:`、玩法取值不含 `neutral`、条目与顺序合法、`prey:` / `host:` 只允许生物卡；`taxon` 为分类树叶子；英雄与同 id 随从的 `categories` 一致；
 11. 专属关键词按玩法与分类校验：`decompose` 仅 play 命中真菌界/细菌域、`assemble` 仅 play 命中机械（含造物六类工具卡）、`sow` 仅 play 命中植物界、`evolve` 仅生物卡；
 12. 派生小节由 `python3 scripts/render_docs.py --check` 校验：技能 `## 属性` 的派生行、技能与卡牌的 `## 效果` 无漂移；`make data-check` 已包含这一步。
+13. `OnActivate` 有两个可达入口：英雄通过 `UseHeroPower` 结算英雄卡 `skills` 中的主动技能，棋盘随从通过 `UseMinionAbility` 结算该随从卡 `skills` 中的主动技能；随从入口要求技能属于该随从卡且为主动技能。随从引用 `OnPlayEffect`（效果牌入口）仍不可达，校验器直接报错。
 
 期望：输出包含 `随从 332 张、效果牌 100 张、技能 262 个、英雄卡 32 张，校验通过`，退出码 0；否则逐条打印违规并以退出码 1 结束。
 

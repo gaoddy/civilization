@@ -244,45 +244,19 @@ class UnreachableMinionSkillTest(unittest.TestCase):
         return {"id": "test-skill", "_rendered_effects": f"{trigger}|Growth|friendly:single|times=1"}
 
     def test_on_play_effect_on_minion_rejected(self):
-        saved = vd.UNREACHABLE_MINION_SKILL_ALLOWLIST
-        try:
-            vd.UNREACHABLE_MINION_SKILL_ALLOWLIST = set()
-            errors = vd.unreachable_minion_skill_errors(
-                [self._minion()], {"test-skill": self._skill("OnPlayEffect")})
-        finally:
-            vd.UNREACHABLE_MINION_SKILL_ALLOWLIST = saved
+        errors = vd.unreachable_minion_skill_errors(
+            [self._minion()], {"test-skill": self._skill("OnPlayEffect")})
         self.assertTrue(any("OnPlayEffect" in e for e in errors))
 
-    def test_on_activate_on_minion_rejected(self):
-        saved = vd.UNREACHABLE_MINION_SKILL_ALLOWLIST
-        try:
-            vd.UNREACHABLE_MINION_SKILL_ALLOWLIST = set()
-            errors = vd.unreachable_minion_skill_errors(
-                [self._minion()], {"test-skill": self._skill("OnActivate")})
-        finally:
-            vd.UNREACHABLE_MINION_SKILL_ALLOWLIST = saved
-        self.assertTrue(any("OnActivate" in e for e in errors))
-
-    def test_on_play_on_minion_passes(self):
-        saved = vd.UNREACHABLE_MINION_SKILL_ALLOWLIST
-        try:
-            vd.UNREACHABLE_MINION_SKILL_ALLOWLIST = set()
-            errors = vd.unreachable_minion_skill_errors(
-                [self._minion()], {"test-skill": self._skill("OnPlay")})
-        finally:
-            vd.UNREACHABLE_MINION_SKILL_ALLOWLIST = saved
+    def test_on_activate_on_minion_passes(self):
+        errors = vd.unreachable_minion_skill_errors(
+            [self._minion()], {"test-skill": self._skill("OnActivate")})
         self.assertEqual(errors, [])
 
-    def test_allowlisted_card_passes_and_stale_entry_errors(self):
-        saved = vd.UNREACHABLE_MINION_SKILL_ALLOWLIST
-        try:
-            vd.UNREACHABLE_MINION_SKILL_ALLOWLIST = {"test-minion", "gone-card"}
-            errors = vd.unreachable_minion_skill_errors(
-                [self._minion()], {"test-skill": self._skill("OnActivate")})
-        finally:
-            vd.UNREACHABLE_MINION_SKILL_ALLOWLIST = saved
-        self.assertTrue(any("gone-card" in e for e in errors))
-        self.assertFalse(any("test-minion" in e for e in errors))
+    def test_on_play_on_minion_passes(self):
+        errors = vd.unreachable_minion_skill_errors(
+            [self._minion()], {"test-skill": self._skill("OnPlay")})
+        self.assertEqual(errors, [])
 
 
 if __name__ == "__main__":
