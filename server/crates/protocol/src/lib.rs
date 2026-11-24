@@ -21,7 +21,7 @@ pub mod client {
         FriendRemove, FriendRequest, FriendRespond, IntentMessage, InviteToRoom, JoinQueue,
         JoinRoom, KickMember, LeaveQueue, LeaveRoom, Ready, Reconnect, RedeemRoomInvite,
         RequestAccount, RequestLeaderboard, RequestPhoneCode, RequestProfile, RequestSnapshot,
-        RespondInvite, SelectHeroCard,
+        RespondInvite, SelectHeroCard, SetBotFill, StartGame,
     };
 }
 
@@ -31,10 +31,10 @@ pub mod server {
         AccountView, AchievementState, AchievementUnlocked, AuthResult, CombatResult, ErrorMessage,
         FriendInvite, FriendInviteResult, FriendRequestItem, FriendUpdate, FriendUpdateFriendsItem,
         FriendUpdateFriendsItemStatus, FriendUpdateOutgoingItem, FriendUpdateRecentItem,
-        FriendUpdateRecentItemRelation, GameOver, GameStarted, InviteAccepted, Leaderboard,
-        LeaderboardEntriesItem, MatchFound, PhaseChanged, PhoneCodeSent, PlayerProfile,
-        PlayerProfileRecentItem, QueueState, RoomClosed, RoomInviteCode, RoomUpdate, SelfStats,
-        Snapshot, StateUpdate, TimerWarning,
+        FriendUpdateRecentItemRelation, GameOver, GameStarted, HeroPickStarted, InviteAccepted,
+        Leaderboard, LeaderboardEntriesItem, MatchFound, PhaseChanged, PhoneCodeSent,
+        PlayerProfile, PlayerProfileRecentItem, QueueState, RoomClosed, RoomInviteCode, RoomUpdate,
+        SelfStats, Snapshot, StateUpdate, TimerWarning,
     };
 }
 
@@ -79,6 +79,8 @@ pub enum ClientMessage {
     KickMember(KickMember),
     DissolveRoom(DissolveRoom),
     Ready(Ready),
+    StartGame(StartGame),
+    SetBotFill(SetBotFill),
     SelectHeroCard(SelectHeroCard),
     Intent(IntentMessage),
     CombatPlayed(CombatPlayed),
@@ -106,6 +108,7 @@ pub enum ServerMessage {
     RoomClosed(RoomClosed),
     QueueState(QueueState),
     MatchFound(MatchFound),
+    HeroPickStarted(HeroPickStarted),
     GameStarted(GameStarted),
     Snapshot(Snapshot),
     StateUpdate(StateUpdate),
@@ -128,12 +131,13 @@ pub enum ServerMessage {
 }
 
 /// 已知 s2c 消息类型名，与 `messages.json#/directions/s2c` 一致。
-const SERVER_MESSAGE_TYPES: [&str; 24] = [
+const SERVER_MESSAGE_TYPES: [&str; 25] = [
     "AuthResult",
     "RoomUpdate",
     "RoomClosed",
     "QueueState",
     "MatchFound",
+    "HeroPickStarted",
     "GameStarted",
     "Snapshot",
     "StateUpdate",
@@ -175,6 +179,8 @@ impl ClientEnvelope {
             "KickMember" => parse_payload(payload()).map(ClientMessage::KickMember),
             "DissolveRoom" => parse_payload(payload()).map(ClientMessage::DissolveRoom),
             "Ready" => parse_payload(payload()).map(ClientMessage::Ready),
+            "StartGame" => parse_payload(payload()).map(ClientMessage::StartGame),
+            "SetBotFill" => parse_payload(payload()).map(ClientMessage::SetBotFill),
             "SelectHeroCard" => parse_payload(payload()).map(ClientMessage::SelectHeroCard),
             "Intent" => parse_payload(payload()).map(ClientMessage::Intent),
             "CombatPlayed" => parse_payload(payload()).map(ClientMessage::CombatPlayed),
@@ -204,7 +210,7 @@ impl ServerEnvelope {
     /// # Errors
     ///
     /// - `seq == 0`（协议要求从 1 起）返回 `BAD_PAYLOAD`。
-    /// - `kind` 不是 20 种已知 s2c 类型之一返回 `UNKNOWN_TYPE`。
+    /// - `kind` 不是 25 种已知 s2c 类型之一返回 `UNKNOWN_TYPE`。
     pub fn new(
         kind: &str,
         seq: u64,
@@ -255,6 +261,7 @@ impl ServerEnvelope {
             "RoomClosed" => parse_payload(payload()).map(ServerMessage::RoomClosed),
             "QueueState" => parse_payload(payload()).map(ServerMessage::QueueState),
             "MatchFound" => parse_payload(payload()).map(ServerMessage::MatchFound),
+            "HeroPickStarted" => parse_payload(payload()).map(ServerMessage::HeroPickStarted),
             "GameStarted" => parse_payload(payload()).map(ServerMessage::GameStarted),
             "Snapshot" => parse_payload(payload()).map(ServerMessage::Snapshot),
             "StateUpdate" => parse_payload(payload()).map(ServerMessage::StateUpdate),
@@ -277,6 +284,67 @@ impl ServerEnvelope {
             "Leaderboard" => parse_payload(payload()).map(ServerMessage::Leaderboard),
             "PlayerProfile" => parse_payload(payload()).map(ServerMessage::PlayerProfile),
             _ => Err(ProtocolError("UNKNOWN_TYPE")),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{ClientEnvelope, ClientMessage, ServerEnvelope, ServerMessage};
+
+    fn client_envelope(kind: &str, payload: serde_json::Value) -> ClientEnvelope {
+        serde_json::from_value(serde_json::json!({
+            "v": 1,
+            "id": "m_test",
+            "type": kind,
+            "ts": "2026-11-15T10:00:00Z",
+            "payload": payload,
+        }))
+        .expect("构造测试信封")
+    }
+
+    #[test]
+    fn new_message_module_paths_exist() {
+        let _: crate::client::StartGame = crate::client::StartGame {};
+        let _: crate::client::SetBotFill = crate::client::SetBotFill { enabled: true };
+        let _: crate::server::HeroPickStarted = crate::server::HeroPickStarted {
+            deadline: "2026-11-15T10:00:30Z".to_string(),
+            candidates: Vec::new(),
+            players: Vec::new(),
+        };
+    }
+
+    #[test]
+    fn client_envelope_parses_new_messages() {
+        assert!(matches!(
+            client_envelope("StartGame", serde_json::json!({})).parse(),
+            Ok(ClientMessage::StartGame(_))
+        ));
+        match client_envelope("SetBotFill", serde_json::json!({ "enabled": true })).parse() {
+            Ok(ClientMessage::SetBotFill(body)) => assert!(body.enabled),
+            other => panic!("未按 SetBotFill 分派: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn server_envelope_dispatches_hero_pick_started() {
+        let payload = serde_json::json!({
+            "deadline": "2026-11-15T10:00:30Z",
+            "candidates": ["darwin"],
+            "players": [{ "seat": 0, "displayName": "Ada", "isBot": false, "picked": false }],
+        });
+        let envelope = ServerEnvelope::new(
+            "HeroPickStarted",
+            1,
+            payload.as_object().expect("对象载荷").clone(),
+        )
+        .expect("HeroPickStarted 是已知 s2c 类型");
+        match envelope.parse() {
+            Ok(ServerMessage::HeroPickStarted(body)) => {
+                assert_eq!(body.candidates, vec!["darwin".to_string()]);
+                assert_eq!(body.players.len(), 1);
+            }
+            other => panic!("未按 HeroPickStarted 分派: {other:?}"),
         }
     }
 }

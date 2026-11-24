@@ -431,10 +431,8 @@ fn players() -> Vec<PlayerSlot> {
             player_id: format!("p{seat}"),
             display_name: format!("玩家{seat}"),
             ready: true,
-            hero_card_id: Some(HEROES[seat].to_string()),
+            is_bot: false,
             channel: SeatChannel::new(),
-            hero_candidates: Vec::new(),
-            candidate_segment: None,
             connected: true,
             disconnected_at_ms: None,
         })

@@ -3964,6 +3964,129 @@ impl ::std::convert::From<&HandCard> for HandCard {
         value.clone()
     }
 }
+///`HeroPickStarted`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "candidates",
+///    "deadline",
+///    "players"
+///  ],
+///  "properties": {
+///    "candidates": {
+///      "description": "收件人本座位可选的英雄卡 id；该消息按座位逐条下发",
+///      "type": "array",
+///      "items": {
+///        "type": "string"
+///      }
+///    },
+///    "deadline": {
+///      "description": "选英雄截止时刻（RFC3339）",
+///      "type": "string"
+///    },
+///    "players": {
+///      "type": "array",
+///      "items": {
+///        "type": "object",
+///        "required": [
+///          "displayName",
+///          "isBot",
+///          "picked",
+///          "seat"
+///        ],
+///        "properties": {
+///          "displayName": {
+///            "type": "string"
+///          },
+///          "isBot": {
+///            "type": "boolean"
+///          },
+///          "picked": {
+///            "description": "该座位是否已确认英雄",
+///            "type": "boolean"
+///          },
+///          "seat": {
+///            "type": "integer",
+///            "maximum": 7.0,
+///            "minimum": 0.0
+///          }
+///        },
+///        "additionalProperties": false
+///      }
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct HeroPickStarted {
+    ///收件人本座位可选的英雄卡 id；该消息按座位逐条下发
+    pub candidates: ::std::vec::Vec<::std::string::String>,
+    ///选英雄截止时刻（RFC3339）
+    pub deadline: ::std::string::String,
+    pub players: ::std::vec::Vec<HeroPickStartedPlayersItem>,
+}
+impl ::std::convert::From<&HeroPickStarted> for HeroPickStarted {
+    fn from(value: &HeroPickStarted) -> Self {
+        value.clone()
+    }
+}
+///`HeroPickStartedPlayersItem`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "displayName",
+///    "isBot",
+///    "picked",
+///    "seat"
+///  ],
+///  "properties": {
+///    "displayName": {
+///      "type": "string"
+///    },
+///    "isBot": {
+///      "type": "boolean"
+///    },
+///    "picked": {
+///      "description": "该座位是否已确认英雄",
+///      "type": "boolean"
+///    },
+///    "seat": {
+///      "type": "integer",
+///      "maximum": 7.0,
+///      "minimum": 0.0
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct HeroPickStartedPlayersItem {
+    #[serde(rename = "displayName")]
+    pub display_name: ::std::string::String,
+    #[serde(rename = "isBot")]
+    pub is_bot: bool,
+    ///该座位是否已确认英雄
+    pub picked: bool,
+    pub seat: i64,
+}
+impl ::std::convert::From<&HeroPickStartedPlayersItem> for HeroPickStartedPlayersItem {
+    fn from(value: &HeroPickStartedPlayersItem) -> Self {
+        value.clone()
+    }
+}
 ///`HeroPower`
 ///
 /// <details><summary>JSON schema</summary>
@@ -6666,6 +6789,7 @@ impl ::std::convert::From<&RoomInviteCode> for RoomInviteCode {
 ///{
 ///  "type": "object",
 ///  "required": [
+///    "botFill",
 ///    "code",
 ///    "hostId",
 ///    "phase",
@@ -6673,6 +6797,10 @@ impl ::std::convert::From<&RoomInviteCode> for RoomInviteCode {
 ///    "roomId"
 ///  ],
 ///  "properties": {
+///    "botFill": {
+///      "description": "开始时空位是否用机器人补满",
+///      "type": "boolean"
+///    },
 ///    "code": {
 ///      "description": "6 位房间码",
 ///      "type": "string"
@@ -6689,30 +6817,14 @@ impl ::std::convert::From<&RoomInviteCode> for RoomInviteCode {
 ///        "type": "object",
 ///        "required": [
 ///          "displayName",
-///          "heroCardId",
 ///          "isHost",
 ///          "playerId",
-///          "ready"
+///          "ready",
+///          "seat"
 ///        ],
 ///        "properties": {
 ///          "displayName": {
 ///            "type": "string"
-///          },
-///          "heroCandidates": {
-///            "description": "本座位可选的英雄卡 id；只在发给本人的 RoomUpdate 中下发",
-///            "type": [
-///              "array",
-///              "null"
-///            ],
-///            "items": {
-///              "type": "string"
-///            }
-///          },
-///          "heroCardId": {
-///            "type": [
-///              "string",
-///              "null"
-///            ]
 ///          },
 ///          "isHost": {
 ///            "type": "boolean"
@@ -6722,6 +6834,11 @@ impl ::std::convert::From<&RoomInviteCode> for RoomInviteCode {
 ///          },
 ///          "ready": {
 ///            "type": "boolean"
+///          },
+///          "seat": {
+///            "type": "integer",
+///            "maximum": 7.0,
+///            "minimum": 0.0
 ///          }
 ///        },
 ///        "additionalProperties": false
@@ -6738,6 +6855,9 @@ impl ::std::convert::From<&RoomInviteCode> for RoomInviteCode {
 #[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct RoomUpdate {
+    ///开始时空位是否用机器人补满
+    #[serde(rename = "botFill")]
+    pub bot_fill: bool,
     ///6 位房间码
     pub code: ::std::string::String,
     #[serde(rename = "hostId")]
@@ -6761,30 +6881,14 @@ impl ::std::convert::From<&RoomUpdate> for RoomUpdate {
 ///  "type": "object",
 ///  "required": [
 ///    "displayName",
-///    "heroCardId",
 ///    "isHost",
 ///    "playerId",
-///    "ready"
+///    "ready",
+///    "seat"
 ///  ],
 ///  "properties": {
 ///    "displayName": {
 ///      "type": "string"
-///    },
-///    "heroCandidates": {
-///      "description": "本座位可选的英雄卡 id；只在发给本人的 RoomUpdate 中下发",
-///      "type": [
-///        "array",
-///        "null"
-///      ],
-///      "items": {
-///        "type": "string"
-///      }
-///    },
-///    "heroCardId": {
-///      "type": [
-///        "string",
-///        "null"
-///      ]
 ///    },
 ///    "isHost": {
 ///      "type": "boolean"
@@ -6794,6 +6898,11 @@ impl ::std::convert::From<&RoomUpdate> for RoomUpdate {
 ///    },
 ///    "ready": {
 ///      "type": "boolean"
+///    },
+///    "seat": {
+///      "type": "integer",
+///      "maximum": 7.0,
+///      "minimum": 0.0
 ///    }
 ///  },
 ///  "additionalProperties": false
@@ -6805,20 +6914,12 @@ impl ::std::convert::From<&RoomUpdate> for RoomUpdate {
 pub struct RoomUpdatePlayersItem {
     #[serde(rename = "displayName")]
     pub display_name: ::std::string::String,
-    ///本座位可选的英雄卡 id；只在发给本人的 RoomUpdate 中下发
-    #[serde(
-        rename = "heroCandidates",
-        default,
-        skip_serializing_if = "::std::option::Option::is_none"
-    )]
-    pub hero_candidates: ::std::option::Option<::std::vec::Vec<::std::string::String>>,
-    #[serde(rename = "heroCardId")]
-    pub hero_card_id: ::std::option::Option<::std::string::String>,
     #[serde(rename = "isHost")]
     pub is_host: bool,
     #[serde(rename = "playerId")]
     pub player_id: ::std::string::String,
     pub ready: bool,
+    pub seat: i64,
 }
 impl ::std::convert::From<&RoomUpdatePlayersItem> for RoomUpdatePlayersItem {
     fn from(value: &RoomUpdatePlayersItem) -> Self {
@@ -7329,6 +7430,37 @@ impl<'de> ::serde::Deserialize<'de> for ServerEnvelopeType {
             })
     }
 }
+///`SetBotFill`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "enabled"
+///  ],
+///  "properties": {
+///    "enabled": {
+///      "description": "是否在开始时用机器人补满空位",
+///      "type": "boolean"
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct SetBotFill {
+    ///是否在开始时用机器人补满空位
+    pub enabled: bool,
+}
+impl ::std::convert::From<&SetBotFill> for SetBotFill {
+    fn from(value: &SetBotFill) -> Self {
+        value.clone()
+    }
+}
 ///`ShopAffordance`
 ///
 /// <details><summary>JSON schema</summary>
@@ -7467,6 +7599,30 @@ pub struct Snapshot {
 impl ::std::convert::From<&Snapshot> for Snapshot {
     fn from(value: &Snapshot) -> Self {
         value.clone()
+    }
+}
+///`StartGame`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct StartGame {}
+impl ::std::convert::From<&StartGame> for StartGame {
+    fn from(value: &StartGame) -> Self {
+        value.clone()
+    }
+}
+impl ::std::default::Default for StartGame {
+    fn default() -> Self {
+        Self {}
     }
 }
 ///`StateUpdate`

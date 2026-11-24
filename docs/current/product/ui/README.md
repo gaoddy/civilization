@@ -68,8 +68,12 @@
 | 对局工具组 | `GameToolButtons`（`client/pages/game/game_tool_buttons.gd`） | [pages/game.md](pages/game.md) |
 | 对局状态模态 | `GameStatusModal`（`client/pages/game/game_status_modal.gd`） | [components/game-status-modal.md](components/game-status-modal.md) |
 | 技能瞄准层 | `GameAimLayer`（`client/pages/game/game_aim_layer.gd`） | [components/aim-layer.md](components/aim-layer.md) |
-| 房间候选英雄卡 | `RoomHeroCard`（`client/pages/room/room_hero_card.gd`） | [pages/room.md](pages/room.md) |
-| 房间悬停详情层 | `RoomHeroDetailLayer`（`client/pages/room/room_hero_detail_layer.gd`） | [pages/room.md](pages/room.md) |
+| 房间座位矩阵 | `RoomSeatGrid`（`client/pages/room/room_seat_grid.gd`） | [pages/room.md](pages/room.md) |
+| 房间座位格 | `RoomSeatCell`（`client/pages/room/room_seat_cell.gd`） | [pages/room.md](pages/room.md) |
+| 房间操作栏 | `RoomActionBar`（`client/pages/room/room_action_bar.gd`） | [pages/room.md](pages/room.md) |
+| 选英雄覆盖层 | `HeroPickOverlay`（`client/pages/game/hero_pick_overlay.gd`） | [pages/game.md](pages/game.md) |
+| 选英雄候选行 | `HeroPickList` / `HeroPickCard`（`client/pages/game/hero_pick_list.gd`） | [pages/game.md](pages/game.md) |
+| 选英雄悬停详情层 | `HeroPickDetailLayer`（`client/pages/game/hero_pick_detail_layer.gd`） | [pages/game.md](pages/game.md) |
 
 ## 5. 交互约定
 

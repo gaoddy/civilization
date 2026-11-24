@@ -2,7 +2,7 @@
 //!
 //! 第 0 个机器人建房，通过 [`super::client::BotConfig::room_code_sink`] 把房间码
 //! 交回调用方；其余机器人在拿到房间码后并发加入。开发者用桌面客户端作为第 8 人
-//! 入座并准备，服务端满 8 人自动开局。
+//! 入座并准备，房主机器人在全员准备后发送 `StartGame`。
 
 use std::collections::BTreeMap;
 use std::time::Duration;
@@ -118,6 +118,8 @@ pub async fn run(config: DevConfig) -> Result<DevOutcome, String> {
     if let Some(sink) = room_code_sink {
         let _ = sink.send(room_code.clone());
     }
+    // 现在由房主机器人显式开始：开发者加入并准备后，房主观察全员准备再发 `StartGame`。
+    println!("等待房主开始：机器人将在开发者准备后自动发送 StartGame。");
 
     for (index, hero) in heroes.iter().enumerate().skip(1) {
         handles.push(tokio::spawn(client::run(BotConfig {

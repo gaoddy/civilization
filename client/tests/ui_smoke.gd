@@ -1,6 +1,25 @@
 extends "res://tests/smoke_case.gd"
 ## 无头冒烟：实例化各场景，确认脚本、控件与关键展示无错误。
 
+## 记录发送的假连接：离开确认用例需要证明取消后没有任何消息发出。
+class RecordingSocket:
+    extends RefCounted
+
+    var sent: Array = []
+
+    func get_ready_state() -> int:
+        return WebSocketPeer.STATE_OPEN
+
+    func poll() -> void:
+        pass
+
+    func get_available_packet_count() -> int:
+        return 0
+
+    func send_text(text: String) -> int:
+        sent.append(text)
+        return OK
+
 const SCENES := [
     "res://pages/login/login.tscn",
     "res://pages/lobby/lobby.tscn",
@@ -11,8 +30,11 @@ const SCENES := [
 func _ready() -> void:
     for path in SCENES:
         await _check_scene(path, true)
-    await _check_room_null_hero()
-    await _check_room_hero_picker()
+    await _check_room_seat_grid()
+    await _check_room_ready_toggle()
+    await _check_room_start_disabled_reasons()
+    await _check_room_bot_fill_label()
+    await _check_room_leave_confirm()
     await _check_game()
     await _check_minion_detail_dense()
     await _check_minion_detail_unknown_source()
@@ -505,306 +527,280 @@ func _expect_between(
     _expect(passes, "%s：实际顺序 %s" % [message, children])
 
 
-func _check_room_null_hero() -> void:
-    GameStore.player_id = "p0"
+## 房间夹具：写入本人与成员，`seat` 必须与下标一致，`playerId` 与本人一致。
+func _seed_room_players(players: Array, self_id := "p0") -> void:
+    _fake_disconnect()
+    GameStore.player_id = self_id
     GameStore.room_id = "r_test"
     GameStore.room_code = "ABC123"
-    GameStore.phase = "Lobby"
-    GameStore.room_players = [{
-        "playerId": "p0",
-        "displayName": "玩家A",
-        "ready": false,
-        "isHost": true,
-        "heroCardId": null,
-    }]
-    var instance := await _check_scene("res://pages/room/room.tscn", false)
-    if instance == null:
-        return
-    var others = instance.find_child("OtherPlayers", true, false)
-    if others == null:
-        _expect(false, "房间场景缺少 OtherPlayers")
-    else:
-        var text := _node_text(others)
-        _expect(not text.contains("<null>"), "成员行出现 <null>：%s" % text)
-    instance.queue_free()
+    GameStore.phase = Protocol.PHASE_LOBBY
+    GameStore.room_bot_fill = false
+    GameStore.room_players = players
+
+
+func _reset_room_players() -> void:
+    _fake_disconnect()
     GameStore.room_id = ""
     GameStore.room_code = ""
+    GameStore.phase = ""
     GameStore.room_players = []
+    GameStore.room_bot_fill = false
 
 
-## 选英雄页：顶部只显示他人名字与确认状态，底部是本人候选卡，悬停详情与选中框就位。
-func _check_room_hero_picker() -> void:
-    GameStore.player_id = "p0"
-    GameStore.room_id = "r_test"
-    GameStore.room_code = "ABC123"
-    GameStore.phase = "Lobby"
-    GameStore.room_players = [
-        {"playerId": "p0", "displayName": "玩家A", "ready": false, "isHost": true,
-         "heroCardId": null, "heroCandidates": ["gauss", "mozi", "luban", "shenkuo"]},
-        {"playerId": "p1", "displayName": "玩家B", "ready": true, "isHost": false,
-         "heroCardId": "darwin", "heroCandidates": null},
-    ]
+## 8 座位网格：固定 8 格，按 seat 对齐，空位显示等待加入，本人金色描边。
+func _check_room_seat_grid() -> void:
+    _seed_room_players([
+        {"playerId": "p0", "displayName": "玩家A", "seat": 0, "ready": false, "isHost": true},
+        {"playerId": "p1", "displayName": "玩家B", "seat": 1, "ready": true, "isHost": false},
+        {"playerId": "p2", "displayName": "玩家C", "seat": 5, "ready": false, "isHost": false},
+    ])
+    GameStore.room_bot_fill = true
     var instance := await _check_scene("res://pages/room/room.tscn", false)
     if instance == null:
         return
-
-    var others := instance.find_child("OtherPlayers", true, false)
-    _expect(others != null, "缺少 OtherPlayers")
-    var others_text := _node_text(others)
-    _expect(others_text.contains("玩家B"), "顶部应显示其他玩家名字，实际：%s" % others_text)
-    _expect(not others_text.contains("达尔文"), "顶部不得显示他人英雄，实际：%s" % others_text)
-    _expect(
-        others_text.contains(TranslationServer.translate("ui.room.confirmed")),
-        "顶部应显示他人确认状态，实际：%s" % others_text,
-    )
-
-    var candidates := instance.find_child("HeroCandidates", true, false)
-    _expect(candidates != null, "缺少 HeroCandidates")
-    _expect(candidates != null and candidates.get_child_count() == 4,
-        "本人候选应渲染 4 张卡，实际：%d" % (candidates.get_child_count() if candidates != null else 0))
-
-    var selectable := 0
-    if candidates != null:
-        for card in candidates.get_children():
-            if card.has_method("set_selected") and card.get("locked") != true:
-                selectable += 1
-    _expect(selectable == 4, "未确认时 4 张候选卡都应可选，实际：%d" % selectable)
-
-    _expect(instance.find_child("ConfirmButton", true, false) != null, "缺少 ConfirmButton")
-    var detail_layer := instance.find_child("HeroDetailLayer", true, false)
-    _expect(detail_layer != null, "缺少 HeroDetailLayer")
-    _expect(detail_layer != null and not detail_layer.visible, "悬停详情层初始应隐藏")
-    var detail_panel := instance.find_child("RoomHeroDetail", true, false)
-    _expect(detail_panel != null, "缺少 RoomHeroDetail")
-    _expect(detail_panel != null and not detail_panel.visible, "悬停详情卡初始应隐藏")
-    var status := instance.find_child("StatusLabel", true, false)
-    _expect(status != null, "缺少 StatusLabel")
-
-    # 房间码与离开房间入口不得出现在本页。
-    var all_text := _node_text(instance)
-    _expect(not all_text.contains("ABC123"), "选英雄页不得显示房间码，实际：%s" % all_text)
-    _expect(instance.find_child("LeaveButton", true, false) == null, "选英雄页不得有离开房间入口")
-
-    var confirm := instance.find_child("ConfirmButton", true, false)
-    _expect(confirm != null and confirm.disabled, "未选中时确认按钮应禁用")
-
-    # 布局：面板铺满整屏且尺寸固定，内容块在面板内居中；确认键与候选行同轴。
-    var panel := instance.find_child("DraftPanel", true, false)
-    _expect(panel != null, "缺少 DraftPanel")
-    var column := instance.find_child("DraftColumn", true, false)
-    _expect(column != null, "缺少 DraftColumn")
-    if panel != null:
-        var page_rect: Rect2 = instance.get_global_rect()
-        var panel_rect: Rect2 = panel.get_global_rect()
+    var grid = instance.find_child("RoomSeatGrid", true, false)
+    _expect(grid != null, "房间页缺少 RoomSeatGrid")
+    if grid != null:
+        _expect(int(grid.columns) == 4, "座位网格应为 4 列，实际 %s" % str(grid.columns))
+        _expect(grid.get_child_count() == 8, "座位网格应固定 8 格，实际 %d" % grid.get_child_count())
+        var named := 0
+        var empty := 0
+        var self_cell = null
+        for child in grid.get_children():
+            var raw = child.get("player_id")
+            var player_id := "" if raw == null else str(raw)
+            if player_id == "":
+                empty += 1
+            else:
+                named += 1
+            if player_id == "p0":
+                self_cell = child
+        _expect(named == 3, "应显示 3 个已加入座位，实际 %d" % named)
+        _expect(empty == 5, "应显示 5 个空位，实际 %d" % empty)
         _expect(
-            absf(panel_rect.size.x - page_rect.size.x) <= 1.0
-            and absf(panel_rect.size.y - page_rect.size.y) <= 1.0,
-            "面板应铺满整屏，实际 %s，页面 %s" % [panel_rect.size, page_rect.size],
+            _node_text(grid).count(TranslationServer.translate("ui.room.seat_empty")) == 5,
+            "空位应显示「等待加入」：%s" % _node_text(grid),
         )
-        if column != null:
-            var column_rect: Rect2 = column.get_global_rect()
-            _expect(column_rect.size.x < panel_rect.size.x,
-                "内容块不应随面板铺满，实际宽度：%s" % column_rect.size.x)
+        _expect(
+            instance.find_children("SeatEmptyBadge", "Label", true, false).size() == 5,
+            "每个空位都应有「等待加入」胶囊",
+        )
+        _expect(
+            not _node_text(instance).contains(GameStore.room_code),
+            "房间页不应展示房间码 %s：%s" % [GameStore.room_code, _node_text(instance)],
+        )
+        var seat_five = grid.get_child(5)
+        var seat_five_id = seat_five.get("player_id")
+        _expect(seat_five_id != null and str(seat_five_id) == "p2", "座位号应按下标对齐")
+        if self_cell != null:
+            var style = self_cell.get_theme_stylebox("panel")
             _expect(
-                absf(column_rect.get_center().x - page_rect.get_center().x) <= 1.0
-                and absf(column_rect.get_center().y - page_rect.get_center().y) <= 1.0,
-                "内容块应在面板内居中，内容中心 %s，页面中心 %s" % [
-                    column_rect.get_center(), page_rect.get_center(),
-                ],
+                style is StyleBoxFlat
+                and (style as StyleBoxFlat).border_color == UITheme.color("color-accent"),
+                "本人座位应有金色描边",
             )
-    if confirm != null and candidates != null:
+    instance.queue_free()
+    await get_tree().process_frame
+    _reset_room_players()
+
+
+## 准备按钮：未准备显示「准备」，my_ready() 为真时显示「取消准备」。
+func _check_room_ready_toggle() -> void:
+    _seed_room_players([
+        {"playerId": "p0", "displayName": "玩家A", "seat": 0, "ready": false, "isHost": true},
+        {"playerId": "p1", "displayName": "玩家B", "seat": 1, "ready": true, "isHost": false},
+    ])
+    _fake_connect()
+    var instance := await _check_scene("res://pages/room/room.tscn", false)
+    if instance == null:
+        return
+    var ready = instance.find_child("ReadyButton", true, false)
+    _expect(ready != null, "房间页缺少 ReadyButton")
+    if ready != null:
         _expect(
-            absf(confirm.get_global_rect().get_center().x - candidates.get_global_rect().get_center().x) <= 1.0,
-            "确认按钮应与候选行同轴居中，按钮中心 %s，候选行中心 %s" % [
-                confirm.get_global_rect().get_center(), candidates.get_global_rect().get_center(),
-            ],
+            str(ready.text) == TranslationServer.translate("ui.room.ready"),
+            "未准备时应显示「准备」，实际：%s" % str(ready.text),
         )
-
-    # 悬停第一张候选卡：左右外侧显示详情，移出关闭；详情层不得拦截鼠标。
-    if candidates != null and candidates.get_child_count() > 0:
-        var first: Control = candidates.get_child(0)
-        var hover_point := first.get_global_rect().get_center()
-        await _hover(instance, first, first.size * 0.5)
-        _expect(detail_layer != null and detail_layer.visible, "悬停候选卡应显示详情层")
-        _expect(detail_panel != null and detail_panel.visible, "悬停候选卡应显示详情卡")
-        _expect(
-            detail_panel != null and detail_panel.find_child("HeroPortrait", true, false) == null,
-            "悬停详情不应显示图片",
-        )
-        _expect(detail_layer != null and not _blocks_mouse(detail_layer), "悬停详情层及其子节点不得拦截鼠标点击")
-        if detail_panel != null:
-            var row_rect: Rect2 = candidates.get_global_rect()
-            var left_rect: Rect2 = detail_panel.get_global_rect()
-            _expect(not left_rect.intersects(row_rect), "左侧卡片的详情不应遮挡候选行")
-            _expect(left_rect.end.x <= row_rect.position.x + 0.5, "左侧卡片的详情应挂在候选行左侧")
-
-            var fourth: Control = candidates.get_child(candidates.get_child_count() - 1)
-            await _hover(instance, fourth, fourth.size * 0.5)
-            var right_rect: Rect2 = detail_panel.get_global_rect()
-            _expect(not right_rect.intersects(row_rect), "右侧卡片的详情不应遮挡候选行")
-            _expect(right_rect.position.x >= row_rect.end.x - 0.5, "右侧卡片的详情应挂在候选行右侧")
-
-            # 详情卡尺寸必须跟随当前英雄内容收缩：面板不在容器内，只靠最小尺寸不会自动变矮。
-            var heights: Array[float] = []
-            for card in candidates.get_children():
-                var body: Control = card
-                await _hover(instance, body, body.size * 0.5)
-                heights.append(detail_panel.get_combined_minimum_size().y)
-            var shortest := 0
-            for index in heights.size():
-                if heights[index] < heights[shortest]:
-                    shortest = index
-            var short_card: Control = candidates.get_child(shortest)
-            await _hover(instance, short_card, short_card.size * 0.5)
-            _expect(
-                absf(detail_panel.size.y - heights[shortest]) <= 1.0,
-                "详情卡高度应等于当前英雄内容高度，实际 %s，期望 %s" % [
-                    detail_panel.size.y, heights[shortest],
-                ],
-            )
-        await _push_motion(instance, Vector2(4, 4))
-        _expect(detail_panel != null and not detail_panel.visible, "移出候选卡应关闭详情")
-
-        # 点击第一张候选卡：只加选中框，不弹居中浮层。
-        await _push_click(instance, hover_point)
-        var frame := candidates.get_child(0).find_child("SelectedFrame", true, false)
-        _expect(frame != null and frame.is_visible_in_tree(), "点击候选卡应显示选中框")
-        _expect(
-            frame != null
-            and frame.get_global_rect().size.x > candidates.get_child(0).get_global_rect().size.x
-            and frame.get_global_rect().size.y > candidates.get_child(0).get_global_rect().size.y,
-            "选中框应外扩到卡片之外",
-        )
-        await _push_click(instance, hover_point)
-        frame = candidates.get_child(0).find_child("SelectedFrame", true, false)
-        _expect(frame != null and frame.is_visible_in_tree(), "再次点击同一张应保持选中")
-        await _push_click(instance, Vector2(4, 4))
-        frame = candidates.get_child(0).find_child("SelectedFrame", true, false)
-        _expect(frame != null and frame.is_visible_in_tree(), "点空白不应取消选中")
-        _expect(detail_panel != null and not detail_panel.visible, "点空白应关闭悬停详情")
-
-        # 单独验证「空白点击」路径：只推送按下/松开，不推送移动事件。
-        var second_before := candidates.get_child(1)
-        await _hover(instance, second_before, second_before.size * 0.5)
-        _expect(detail_panel != null and detail_panel.visible, "空白点击前应先显示详情")
-        await _push_button(instance, Vector2(4, 4), true)
-        await _push_button(instance, Vector2(4, 4), false)
-        _expect(detail_panel != null and not detail_panel.visible, "空白点击（无移动）应关闭悬停详情")
-
-        # 点击另一张卡：选中框移动到新卡，原卡取消。
-        var other_card: Control = candidates.get_child(2)
-        await _push_click(instance, other_card.get_global_rect().get_center())
-        var moved_frame := candidates.get_child(2).find_child("SelectedFrame", true, false)
-        var old_frame := candidates.get_child(0).find_child("SelectedFrame", true, false)
-        _expect(moved_frame != null and moved_frame.is_visible_in_tree(), "点击另一张卡应移动选中框")
-        _expect(old_frame != null and not old_frame.is_visible_in_tree(), "点击另一张卡后原选中框应取消")
-        await _push_click(instance, hover_point)
-
-        # 候选重排：正在悬停的英雄仍在行内时，重建后应恢复悬停详情。
-        var second: Control = candidates.get_child(1)
-        await _hover(instance, second, second.size * 0.5)
-        _expect(detail_panel != null and detail_panel.visible, "重排前悬停应显示详情")
-        var reordered := GameStore.room_players.duplicate(true)
-        reordered[0]["heroCandidates"] = ["darwin", "mozi", "luban", "shenkuo"]
-        GameStore.room_players = reordered
+        _expect(not ready.disabled, "已连接时准备按钮应可用")
+        GameStore.room_players[0]["ready"] = true
         GameStore.room_changed.emit()
         await get_tree().process_frame
-        await get_tree().process_frame
-        _expect(detail_panel != null and detail_panel.visible, "候选重排后应恢复悬停详情")
+        _expect(GameStore.my_ready(), "服务端状态应同步为已准备")
         _expect(
-            detail_panel != null and detail_panel.find_child("HeroPortrait", true, false) == null,
-            "恢复的悬停详情也不应显示图片",
+            str(ready.text) == TranslationServer.translate("ui.room.unready"),
+            "已准备时应显示「取消准备」，实际：%s" % str(ready.text),
         )
-        var restored := candidates.get_child(1) as RoomHeroCard
-        var restored_style = restored.get_theme_stylebox("panel")
-        _expect(
-            restored_style != null
-            and (restored_style as StyleBoxFlat).border_color == UITheme.color("color-border-strong"),
-            "恢复悬停时卡片也应恢复悬停描边",
-        )
-        await _push_motion(instance, Vector2(4, 4))
-        GameStore.room_players[0]["heroCandidates"] = ["gauss", "mozi", "luban", "shenkuo"]
-
-        # 冒烟环境没有真实连接：确认按钮必须保持禁用，并给出未连接提示。
-        _expect(confirm.disabled, "未连接时确认按钮必须禁用")
-        _expect(
-            str(status.text).contains(TranslationServer.translate("ui.room.not_connected")),
-            "未连接时状态行应提示，实际：%s" % status.text,
-        )
-
     instance.queue_free()
+    await get_tree().process_frame
+    _reset_room_players()
 
-    # 断线要立刻反映到页面上：连接信号不经过 RoomUpdate，页面必须自己订阅。
+
+## 开始按钮禁用原因：未全员准备 → 等待准备；补位关闭且人数不足 → 还差 5 人。
+func _check_room_start_disabled_reasons() -> void:
+    _seed_room_players([
+        {"playerId": "p0", "displayName": "玩家A", "seat": 0, "ready": true, "isHost": true},
+        {"playerId": "p1", "displayName": "玩家B", "seat": 1, "ready": false, "isHost": false},
+        {"playerId": "p2", "displayName": "玩家C", "seat": 2, "ready": true, "isHost": false},
+    ])
     _fake_connect()
-    GameStore.room_players = [
-        {"playerId": "p0", "displayName": "玩家A", "ready": false, "isHost": true,
-         "heroCardId": null, "heroCandidates": ["gauss", "mozi", "luban", "shenkuo"]},
-        {"playerId": "p1", "displayName": "玩家B", "ready": false, "isHost": false,
-         "heroCardId": null, "heroCandidates": null},
-    ]
-    var online := await _check_scene("res://pages/room/room.tscn", false)
-    if online != null:
-        var online_cards := online.find_child("HeroCandidates", true, false)
-        var online_confirm := online.find_child("ConfirmButton", true, false)
-        var online_status := online.find_child("StatusLabel", true, false)
-        if online_cards != null and online_cards.get_child_count() > 0:
-            var online_card: Control = online_cards.get_child(0)
-            await _push_click(online, online_card.get_global_rect().get_center())
-            _expect(online_confirm != null and not online_confirm.disabled,
-                "已连接并选中后可确认")
-            # 断线时 `Net` 先清掉连接再发信号，页面必须据此立刻重算状态。
-            _fake_disconnect()
-            Net.disconnected.emit()
-            await get_tree().process_frame
-            _expect(online_confirm != null and online_confirm.disabled,
-                "断线后确认按钮必须立刻禁用")
-            _expect(online_status != null and str(online_status.text).contains(
-                TranslationServer.translate("ui.room.not_connected")
-            ),
-                "断线后状态行应立刻提示未连接，实际：%s" % (str(online_status.text) if online_status != null else ""))
-        online.queue_free()
-    _fake_disconnect()
+    var instance := await _check_scene("res://pages/room/room.tscn", false)
+    if instance == null:
+        return
+    var start = instance.find_child("StartButton", true, false)
+    var status = instance.find_child("StatusLabel", true, false)
+    _expect(start != null and start.is_visible_in_tree(), "房主应看到开始按钮")
+    _expect(status != null, "房间页缺少状态行 StatusLabel")
+    if start != null and status != null:
+        _expect(start.disabled, "有成员未准备时开始应禁用")
+        _expect(
+            str(status.text) == TranslationServer.translate("ui.room.start_waiting_ready"),
+            "未全员准备时状态行应写明等待准备，实际：%s" % str(status.text),
+        )
+        GameStore.last_error = {"code": "ROOM_NOT_READY"}
+        GameStore.error_received.emit()
+        await get_tree().process_frame
+        _expect(
+            str(status.text) == UIWording.error_text("ROOM_NOT_READY"),
+            "服务端错误应留在状态行，实际：%s" % str(status.text),
+        )
+        _expect(not status.tooltip_text.is_empty(), "服务端错误应保留 tooltip")
+        GameStore.room_changed.emit()
+        await get_tree().process_frame
+        _expect(
+            str(status.text) == TranslationServer.translate("ui.room.start_waiting_ready"),
+            "下一次房间状态变化后状态行应恢复，实际：%s" % str(status.text),
+        )
+        GameStore.room_players[1]["ready"] = true
+        GameStore.room_bot_fill = false
+        GameStore.room_changed.emit()
+        await get_tree().process_frame
+        var need_players: String = TranslationServer.translate("ui.room.start_need_players") % 5
+        _expect(start.disabled, "补位关闭且只有 3 人时开始应禁用")
+        _expect(
+            str(status.text) == need_players,
+            "状态行应写明还差 5 人，实际：%s" % str(status.text),
+        )
+        _expect(not start.tooltip_text.is_empty(), "开始按钮的 tooltip 应保留禁用原因")
+        GameStore.room_bot_fill = true
+        GameStore.room_changed.emit()
+        await get_tree().process_frame
+        _expect(not start.disabled, "补位开启且全员准备时应允许开始")
+        _expect(str(status.text) == "", "可开始时状态行应清空，实际：%s" % str(status.text))
+        _fake_disconnect()
+        Net.disconnected.emit()
+        await get_tree().process_frame
+        _expect(start.disabled, "断线后开始应立即禁用")
+        _expect(
+            str(status.text) == TranslationServer.translate("ui.room.not_connected"),
+            "断线后状态行应立即显示未连接，实际：%s" % str(status.text),
+        )
+    instance.queue_free()
+    await get_tree().process_frame
+    _reset_room_players()
 
-    # 已确认：候选卡锁定且不再响应点击，确认按钮禁用并标「已确认」。
-    GameStore.room_players = [
-        {"playerId": "p0", "displayName": "玩家A", "ready": true, "isHost": true,
-         "heroCardId": "gauss", "heroCandidates": ["gauss", "mozi", "luban", "shenkuo"]},
-        {"playerId": "p1", "displayName": "玩家B", "ready": false, "isHost": false,
-         "heroCardId": null, "heroCandidates": null},
-    ]
-    var locked_instance := await _check_scene("res://pages/room/room.tscn", false)
-    if locked_instance != null:
-        var locked_confirm = locked_instance.find_child("ConfirmButton", true, false)
-        _expect(locked_confirm != null and locked_confirm.disabled, "已确认后确认按钮必须禁用")
-        _expect(locked_confirm != null and str(locked_confirm.text) == TranslationServer.translate("ui.room.confirmed"),
-            "已确认后按钮文字应为「已确认」，实际：%s" % (str(locked_confirm.text) if locked_confirm != null else ""))
-        var locked_cards = locked_instance.find_child("HeroCandidates", true, false)
-        if locked_cards != null and locked_cards.get_child_count() > 0:
-            var all_locked := true
-            var selected_frames := 0
-            for card in locked_cards.get_children():
-                if card.get("locked") != true:
-                    all_locked = false
-                var frame = card.find_child("SelectedFrame", true, false)
-                if frame != null and frame.is_visible_in_tree():
-                    selected_frames += 1
-            _expect(all_locked, "已确认后全部候选卡应锁定")
-            _expect(selected_frames == 1, "已确认后应保留一张选中框，实际：%d" % selected_frames)
 
-            # 已确认后点击其他卡不改变选中，悬停仍可看详情。
-            var locked_first: Control = locked_cards.get_child(0)
-            var locked_second: Control = locked_cards.get_child(1) if locked_cards.get_child_count() > 1 else locked_first
-            await _push_click(locked_instance, locked_second.get_global_rect().get_center())
-            var first_frame = locked_first.find_child("SelectedFrame", true, false)
-            _expect(first_frame != null and first_frame.is_visible_in_tree(), "已确认后点击其他卡不应改变选中")
-            await _hover(locked_instance, locked_second, locked_second.size * 0.5)
-            var locked_detail = locked_instance.find_child("RoomHeroDetail", true, false)
-            _expect(locked_detail != null and locked_detail.visible, "已确认后悬停仍应显示详情")
-        locked_instance.queue_free()
+## 补位开关：房主可点，文案带开/关，提示写明补入人数；非房主禁用。
+func _check_room_bot_fill_label() -> void:
+    _seed_room_players([
+        {"playerId": "p0", "displayName": "玩家A", "seat": 0, "ready": true, "isHost": true},
+        {"playerId": "p1", "displayName": "玩家B", "seat": 1, "ready": true, "isHost": false},
+        {"playerId": "p2", "displayName": "玩家C", "seat": 2, "ready": true, "isHost": false},
+    ])
+    _fake_connect()
+    var instance := await _check_scene("res://pages/room/room.tscn", false)
+    if instance == null:
+        return
+    var button = instance.find_child("BotFillButton", true, false)
+    var hint_label = instance.find_child("BotFillHint", true, false)
+    _expect(button != null, "房间页缺少 BotFillButton")
+    _expect(hint_label != null, "房主应看到座位格下方的补位提示行")
+    if button != null and hint_label != null:
+        var hint: String = TranslationServer.translate("ui.room.bot_fill_hint") % 5
+        _expect(not button.disabled, "房主补位开关应可点")
+        _expect(
+            hint_label.is_visible_in_tree(),
+            "房主应看到补位提示行",
+        )
+        _expect(
+            str(hint_label.text) == hint,
+            "补位提示行应写明补入 5 人，实际：%s" % str(hint_label.text),
+        )
+        _expect(
+            str(button.text).contains(TranslationServer.translate("ui.room.bot_fill")),
+            "补位按钮应显示名称，实际：%s" % str(button.text),
+        )
+        _expect(
+            str(button.text).contains(TranslationServer.translate("ui.room.bot_fill_off")),
+            "关闭时应显示「关」，实际：%s" % str(button.text),
+        )
+        _expect(
+            str(button.tooltip_text).contains(hint),
+            "补位提示应写明补入 5 人，实际：%s" % str(button.tooltip_text),
+        )
+        GameStore.room_bot_fill = true
+        GameStore.room_changed.emit()
+        await get_tree().process_frame
+        _expect(
+            str(button.text).contains(TranslationServer.translate("ui.room.bot_fill_on")),
+            "开启时应显示「开」，实际：%s" % str(button.text),
+        )
+        _expect(
+            not str(button.text).contains(TranslationServer.translate("ui.room.bot_fill_off")),
+            "开启时不应再显示「关」，实际：%s" % str(button.text),
+        )
+        _expect(
+            str(button.tooltip_text).contains(hint),
+            "开启时仍应给出补入人数，实际：%s" % str(button.tooltip_text),
+        )
+        GameStore.room_players[0]["isHost"] = false
+        GameStore.room_players[1]["isHost"] = true
+        GameStore.room_changed.emit()
+        await get_tree().process_frame
+        _expect(not hint_label.is_visible_in_tree(), "非房主不应看到补位提示行")
+        _expect(button.disabled, "非房主不得操作补位开关")
+    instance.queue_free()
+    await get_tree().process_frame
+    _reset_room_players()
 
-    GameStore.room_id = ""
-    GameStore.room_code = ""
-    GameStore.room_players = []
+
+## 离开房间：先弹确认框，取消后不发消息、清空房间或离开页面。
+func _check_room_leave_confirm() -> void:
+    _seed_room_players([
+        {"playerId": "p0", "displayName": "玩家A", "seat": 0, "ready": true, "isHost": true},
+    ])
+    var socket := RecordingSocket.new()
+    Net.socket = socket
+    var instance := await _check_scene("res://pages/room/room.tscn", false)
+    if instance == null:
+        return
+    var leave = instance.find_child("LeaveButton", true, false)
+    _expect(leave != null, "房间页缺少 LeaveButton")
+    if leave != null:
+        leave.pressed.emit()
+        await get_tree().process_frame
+        var dialog = instance.find_child("LeaveConfirm", true, false)
+        _expect(dialog != null, "点离开应出现确认对话框")
+        if dialog != null:
+            _expect(dialog.visible, "离开确认对话框应可见")
+            _expect(
+                str(dialog.dialog_text) == TranslationServer.translate("ui.room.leave_confirm"),
+                "确认文案应为确定离开房间吗？实际：%s" % str(dialog.dialog_text),
+            )
+            var cancel_button = dialog.get_cancel_button()
+            _expect(cancel_button != null, "确认对话框应有取消按钮")
+            if cancel_button != null:
+                cancel_button.pressed.emit()
+                await get_tree().process_frame
+            _expect(not dialog.visible, "取消后对话框应关闭")
+        _expect(socket.sent.is_empty(), "取消离开不应发送任何消息，实际：%s" % [socket.sent])
+        _expect(GameStore.room_id == "r_test", "取消离开不应清空房间")
+        _expect(
+            is_instance_valid(instance) and instance.is_inside_tree(),
+            "取消离开应留在房间页",
+        )
+    instance.queue_free()
+    await get_tree().process_frame
+    _reset_room_players()
 
 
 ## 递归检查控件树里是否有会拦截鼠标（STOP）的节点。

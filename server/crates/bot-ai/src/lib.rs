@@ -17,6 +17,9 @@ use rule_engine::state::{GameState, MinionInstance, PendingChoice, Phase, Player
 /// 手动刷新商店的金币价格：本回合首次刷新免费，之后每次 1 金币（与引擎一致）。
 const REROLL_PRICE: u8 = 1;
 
+/// 单座位在单个回合内最多重规划次数：防止引擎给出与 AI 计划不一致的拒绝后原地打转。
+pub const MAX_REPLANS_PER_SEAT_TURN: usize = 64;
+
 /// 选择下一条意图；座位已出局时返回 `None`。
 ///
 /// 优先级：待选 → 英雄技能 → 打出手牌随从（腾出手牌空位） → 购买 → 升时代 → 刷新 → `EndRecruit`。
@@ -604,11 +607,38 @@ pub fn dominant_playstyle<'a>(
     best.map_or(Playstyle::Neutral, |(playstyle, _)| playstyle)
 }
 
+/// 该座位是否还有未消费的发现 / 进化 / 目标待选。
+pub fn has_pending_choice(state: &GameState, seat: Seat) -> bool {
+    state.pending.iter().any(|pending| match pending {
+        PendingChoice::Discover {
+            seat: pending_seat, ..
+        }
+        | PendingChoice::Evolve {
+            seat: pending_seat, ..
+        }
+        | PendingChoice::Target {
+            seat: pending_seat, ..
+        } => *pending_seat == seat,
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::embedded_catalog;
     use rule_engine::state::{HandCard, PendingChoice, Phase};
+
+    /// 仓库内已提交的 v0.1 数据（编译期嵌入，不依赖当前目录）。
+    #[cfg(test)]
+    fn embedded_catalog() -> Result<rule_engine::data::Catalog, rule_engine::error::EngineError> {
+        rule_engine::data::Catalog::from_json(
+            include_str!("../../../data/v0.1/cards.json"),
+            include_str!("../../../data/v0.1/heroes.json"),
+            include_str!("../../../data/v0.1/skills.json"),
+            include_str!("../../../data/v0.1/config.json"),
+            include_str!("../../../data/v0.1/taxonomy.json"),
+        )
+        .map_err(|err| rule_engine::error::EngineError(format!("加载卡牌目录失败: {err}")))
+    }
 
     /// 棋盘目标。
     fn board_target(id: u64) -> TargetRef {

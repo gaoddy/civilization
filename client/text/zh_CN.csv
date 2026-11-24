@@ -1522,6 +1522,7 @@ ui.gallery.skills,技能
 ui.gallery.stats,%s / %s
 ui.gallery.stats_labeled,攻 %s / 血 %s
 ui.gallery.toc_all,全部
+ui.game.bot_name,机器人 %d
 ui.game.card.freeze_glyph,冻
 ui.game.card.stealth_glyph,潜
 ui.game.combat.ghost_suffix,（幽灵）
@@ -1584,6 +1585,12 @@ ui.game.detail.undetermined,未定
 ui.game.era_format,时代 %s
 ui.game.hand.empty,手牌为空
 ui.game.hand.title,手牌
+ui.game.hero_pick.confirm,确认
+ui.game.hero_pick.confirmed,已确认
+ui.game.hero_pick.progress,已选 %d/8
+ui.game.hero_pick.timeout,时间到，已自动选择
+ui.game.hero_pick.title,选择英雄
+ui.game.hero_pick.waiting,等待其他玩家选择…
 ui.game.overlay.discover_hint,发现：选择一张卡牌
 ui.game.overlay.evolve_hint,进化：选择一项
 ui.game.rail.damage,伤害 %d
@@ -1767,14 +1774,14 @@ ui.result.stat_row,%s：%s
 ui.result.stats_title,本局数据
 ui.result.tier_change,段位 %s → %s
 ui.result.title,对局结束
-ui.room.assigning_hero,正在分配英雄…
-ui.room.candidate_hint,从你的 %d 张候选里选一张，确认后不可更改。
-ui.room.confirm,确认
-ui.room.confirmed,已确认
-ui.room.confirmed_hero,已确认英雄：%s
+ui.room.bot_fill,机器人补位
+ui.room.bot_fill_hint,开始后补入 %d 个机器人
+ui.room.bot_fill_off,关
+ui.room.bot_fill_on,开
 ui.room.dissolve,解散房间
 ui.room.dissolved_notice,房间已解散
 ui.room.exit_game,退出对局
+ui.room.host,房主
 ui.room.invite_accepted,好友已接受邀请
 ui.room.invite_declined,好友没有接受邀请
 ui.room.invite_section,邀请好友
@@ -1786,12 +1793,21 @@ ui.room.invite_steam.sent,已打开 Steam 好友邀请
 ui.room.invite_steam.unavailable,Steam 邀请不可用，可使用房间码
 ui.room.kick,移除
 ui.room.kicked_notice,你已被房主移出房间
+ui.room.leave,离开房间
+ui.room.leave_confirm,确定离开房间吗？
+ui.room.leave_confirm_action,离开
 ui.room.no_friends_to_invite,暂无好友可邀请
 ui.room.not_connected,未连接服务器
-ui.room.select_hero,请选择英雄
-ui.room.submitted_hero,已提交英雄：%s
-ui.room.unconfirmed,未确认
-ui.room.waiting_for_players,等待其他玩家加入
+ui.room.ready,准备
+ui.room.ready_progress,已准备 %d/8
+ui.room.seat_empty,等待加入
+ui.room.seat_ready,已准备
+ui.room.seat_unready,未准备
+ui.room.start,开始
+ui.room.start_need_players,补位已关闭，还差 %d 名玩家
+ui.room.start_waiting_ready,等待所有玩家准备
+ui.room.title,房间 · 等待开局
+ui.room.unready,取消准备
 ui.skill.cost,费用 %d
 ui.skill.empty,暂无技能
 ui.skill.trigger.aura,光环

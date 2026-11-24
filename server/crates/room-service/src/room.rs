@@ -1,7 +1,7 @@
 //! 房间状态机与大堂流程。
 //!
-//! 房间只保存大厅阶段的状态：座位、准备标记、英雄选择。对局状态由 Task 9 的
-//! `GameTask` 持有，本模块只负责判定能否开局并交出英雄表。
+//! 房间只保存大厅阶段的状态：座位、准备标记与补位开关。对局状态与选英雄由
+//! `GameTask` 持有，本模块只负责校验开局条件并交出开局计划。
 //!
 //! 确定性约定：
 //! - 座位从 0 起，0 号座位是房主；`slots` 用 `BTreeMap<Seat, _>` 保持座位顺序。
@@ -63,11 +63,8 @@ pub struct PlayerSlot {
     pub player_id: String,
     pub display_name: String,
     pub ready: bool,
-    pub hero_card_id: Option<String>,
-    /// 该座位可选的英雄卡 id；只在发给本人的 `RoomUpdate` 中下发。
-    pub hero_candidates: Vec<String>,
-    /// 候选取自洗好序列的第几段；座位释放时随之回收，避免候选池被永久占位。
-    pub candidate_segment: Option<usize>,
+    /// 是否是开局时补入的机器人；机器人不参与离开、踢人、断线宽限与房主转移。
+    pub is_bot: bool,
     /// 该座位的下行信封序号分配器。
     pub channel: SeatChannel,
     /// 连接是否在线；大厅断线与重连由连接层维护。
@@ -82,9 +79,20 @@ impl PlayerSlot {
             player_id: session.player_id.clone(),
             display_name: session.display_name.clone(),
             ready: false,
-            hero_card_id: None,
-            hero_candidates: Vec::new(),
-            candidate_segment: None,
+            is_bot: false,
+            channel: SeatChannel::new(),
+            connected: true,
+            disconnected_at_ms: None,
+        }
+    }
+
+    /// 为开局计划构造一个机器人座位；`n` 是机器人按座位升序的序号（1 起）。
+    fn bot(room_id: &str, seat: Seat, n: usize) -> Self {
+        Self {
+            player_id: format!("bot:{room_id}:{seat}"),
+            display_name: format!("机器人 {n}"),
+            ready: true,
+            is_bot: true,
             channel: SeatChannel::new(),
             connected: true,
             disconnected_at_ms: None,
@@ -95,23 +103,41 @@ impl PlayerSlot {
 /// 大厅里的一个房间。
 ///
 /// 阶段为 `Lobby` 时成员集合可变；进入 `Recruit` 后成员集合冻结，加入、准备、
-/// 选英雄与离开都会被拒绝，对局中的断线由 Task 11 的 `Disconnect` 处理。
+/// 开始与离开都会被拒绝。选英雄在 `GameTask` 内部进行，对局中的断线也由
+/// `GameTask` 维护。
 #[derive(Debug, Clone)]
 pub struct Room {
     pub id: RoomId,
     pub code: String,
     pub host_id: String,
     pub phase: Phase,
-    /// 本局种子；创建时由房间码派生，回房重置时由调用方换新。
+    /// 本局种子；创建时由房间码派生。
     pub seed: u64,
-    /// 本局启用的 5 个玩法；创建房间时由本局种子抽取，回房重置时随新种子重抽。
+    /// 本局启用的 5 个玩法；创建房间时由本局种子抽取。
     pub playstyles: [Playstyle; 5],
     /// 是否自动匹配局；房间局为 `false`，匹配局为 `true`，只有匹配局计入天梯。
     pub ranked: bool,
+    /// 开始时空位是否用机器人补满；只在 `Lobby` 阶段可由房主修改。
+    pub bot_fill: bool,
     /// 座位 → 玩家；只保存已占用座位，键即座位号（0 起）。
     slots: BTreeMap<Seat, PlayerSlot>,
+    /// 本局各座位的候选英雄；`prepare_start` 规划、`commit_start` 写入。
+    candidates: BTreeMap<Seat, Vec<String>>,
     /// 一次性邀请 token；只在大厅阶段创建，消费或过期即移除。
     invite_tokens: BTreeMap<String, InviteToken>,
+}
+
+/// 开局计划：`prepare_start` 只读构造，`commit_start` 才是写入点。
+#[derive(Debug, Clone)]
+pub struct StartPlan {
+    pub room_id: RoomId,
+    pub seed: u64,
+    pub playstyles: [Playstyle; 5],
+    pub ranked: bool,
+    /// 8 条，下标即座位号；真人座位为注册表副本，机器人座位为新生成。
+    pub slots: Vec<PlayerSlot>,
+    /// 座位 → 本人候选（8 个座位都有）。
+    pub candidates: BTreeMap<Seat, Vec<String>>,
 }
 
 impl Room {
@@ -138,34 +164,24 @@ impl Room {
         self.slots.values().cloned().collect()
     }
 
-    /// 指定玩家本人的候选；玩家不在房间里返回 `None`。
-    pub fn candidates_of(&self, player_id: &str) -> Option<&[String]> {
-        self.slots
-            .values()
-            .find(|slot| slot.player_id == player_id)
-            .map(|slot| slot.hero_candidates.as_slice())
+    /// 本局各座位的候选英雄；开局前为空表，`commit_start` 后覆盖 8 个座位。
+    pub fn candidates(&self) -> &BTreeMap<Seat, Vec<String>> {
+        &self.candidates
     }
 
-    /// 纯查询：8 个座位全部占用、全部准备且全部选好英雄时返回 `座位 → 英雄卡`。
-    ///
-    /// 只读，不改变阶段；非 `Lobby` 阶段成员集合已冻结，一律返回 `None`。
-    /// 实际开局由 [`RoomRegistry::try_start`] 或 Task 9 驱动执行。
-    pub fn start_ready(&self) -> Option<BTreeMap<Seat, String>> {
-        if self.phase != Phase::Lobby {
-            return None;
-        }
-        if self.slots.len() != SEAT_COUNT {
-            return None;
-        }
-        let mut heroes = BTreeMap::new();
-        for (&seat, slot) in &self.slots {
-            if !slot.ready {
-                return None;
-            }
-            let hero = slot.hero_card_id.as_ref()?;
-            heroes.insert(seat, hero.clone());
-        }
-        Some(heroes)
+    /// 真人座位数；机器人不计入。
+    pub fn human_count(&self) -> usize {
+        self.slots.values().filter(|slot| !slot.is_bot).count()
+    }
+
+    /// 所有真人座位是否都已准备；没有真人时返回 `false`。
+    pub fn all_humans_ready(&self) -> bool {
+        self.human_count() > 0
+            && self
+                .slots
+                .values()
+                .filter(|slot| !slot.is_bot)
+                .all(|slot| slot.ready)
     }
 
     fn slot_mut(&mut self, player_id: &str) -> Option<&mut PlayerSlot> {
@@ -181,74 +197,6 @@ impl Room {
 
     fn is_occupied(&self, player_id: &str) -> bool {
         self.slots.values().any(|slot| slot.player_id == player_id)
-    }
-
-    /// 按 [`Room::seed`] 洗出的英雄序列给一名玩家切出一组候选。
-    ///
-    /// 候选只取 [`card_in_pool`] 通过的英雄；池为空时回退到全部英雄卡。
-    /// 池大小 ≥ 满座总需求时沿用分段、房间内互不重复；池不足时按
-    /// `(segment * 4 + i) % len` 取 `min(4, len)` 张，允许跨玩家重复，
-    /// 且池小于 4 时每人取整个池并至少 1 张。
-    ///
-    /// 洗牌与切段都是确定性的：同一房间、同一批英雄卡表、同一进房顺序，
-    /// 得到同一组候选。
-    fn assign_candidates(&mut self, player_id: &str, catalog: &Catalog) {
-        if self
-            .candidates_of(player_id)
-            .is_some_and(|candidates| !candidates.is_empty())
-        {
-            return;
-        }
-        let enabled: BTreeSet<Playstyle> = self.playstyles.iter().copied().collect();
-        let mut heroes: Vec<String> = catalog
-            .heroes
-            .values()
-            .filter(|hero| hero_in_pool(hero, &enabled))
-            .map(|hero| hero.id.clone())
-            .collect();
-        // 产品兜底：本局玩法过滤后一张英雄都没有时，回退到全部英雄卡。
-        if heroes.is_empty() {
-            heroes = catalog
-                .heroes
-                .values()
-                .map(|hero| hero.id.clone())
-                .collect();
-        }
-        heroes.sort();
-        shuffle(&mut heroes, self.seed);
-        if heroes.is_empty() {
-            return;
-        }
-
-        // 段号取当前座位里最小的未用段：座位释放后段号自动空出，候选池不会被永久占满。
-        let used: Vec<usize> = self
-            .slots
-            .values()
-            .filter_map(|slot| slot.candidate_segment)
-            .collect();
-        let segment = (0..)
-            .find(|index| !used.contains(index))
-            .unwrap_or(used.len());
-        let start = segment * CANDIDATE_COUNT;
-
-        let picked = if heroes.len() >= SEAT_COUNT * CANDIDATE_COUNT {
-            // 池足够满座分段互不重复。
-            if start >= heroes.len() {
-                return;
-            }
-            let end = (start + CANDIDATE_COUNT).min(heroes.len());
-            heroes[start..end].to_vec()
-        } else {
-            // 池不足：允许跨玩家重复；每人最多 4 张，池小于 4 时取整个池。
-            let take = CANDIDATE_COUNT.min(heroes.len());
-            (0..take)
-                .map(|offset| heroes[(start + offset) % heroes.len()].clone())
-                .collect()
-        };
-        if let Some(slot) = self.slot_mut(player_id) {
-            slot.hero_candidates = picked;
-            slot.candidate_segment = Some(segment);
-        }
     }
 }
 
@@ -266,18 +214,12 @@ pub enum RoomError {
     NotHost,
     /// 非 `Lobby` 阶段不允许改变大厅成员或大厅状态。
     WrongPhase,
-    /// 准备前必须已选英雄。
-    HeroNotSelected,
-    /// 人数不足、未全部准备或未全部选英雄，不能开始。
+    /// 人数不足或未全部准备，不能开始。
     RoomNotReady,
-    /// 卡不存在或不是英雄卡。
-    NotAHeroCard,
     /// 玩家不在房间里。
     NotInRoom,
     /// 操作目标非法，例如房主试图移除自己。
     InvalidTarget,
-    /// 所选英雄不在本人的候选里。
-    NotCandidate,
     /// 其他保留原因；字符串是内部说明，不作为协议错误码。
     Unknown(String),
     /// 邀请 token 不存在或已被消费。
@@ -298,12 +240,9 @@ impl RoomError {
             Self::Full => ErrorCode::RoomFull,
             Self::NotHost => ErrorCode::NotHost,
             Self::WrongPhase => ErrorCode::InvalidStage,
-            Self::HeroNotSelected => ErrorCode::HeroNotSelected,
             Self::RoomNotReady => ErrorCode::RoomNotReady,
-            Self::NotAHeroCard => ErrorCode::InvalidChoice,
             Self::NotInRoom => ErrorCode::NotInRoom,
             Self::InvalidTarget => ErrorCode::InvalidChoice,
-            Self::NotCandidate => ErrorCode::InvalidChoice,
             Self::InviteNotFound => ErrorCode::InviteNotFound,
             Self::InviteExpired => ErrorCode::InviteExpired,
             Self::Unknown(_) => ErrorCode::InternalError,
@@ -318,12 +257,9 @@ impl fmt::Display for RoomError {
             Self::Full => f.write_str("房间已满"),
             Self::NotHost => f.write_str("只有房主可以开始对局"),
             Self::WrongPhase => f.write_str("当前阶段不允许该操作"),
-            Self::HeroNotSelected => f.write_str("请先选择英雄"),
             Self::RoomNotReady => f.write_str("人数不足或尚未全部准备"),
-            Self::NotAHeroCard => f.write_str("不是可选的英雄卡"),
             Self::NotInRoom => f.write_str("玩家不在房间内"),
             Self::InvalidTarget => f.write_str("不能移除自己"),
-            Self::NotCandidate => f.write_str("不在可选英雄范围内"),
             Self::InviteNotFound => f.write_str("邀请不存在或已使用"),
             Self::InviteExpired => f.write_str("邀请已过期"),
             Self::Unknown(reason) => f.write_str(reason),
@@ -364,27 +300,29 @@ impl RoomRegistry {
 
     /// 建房：创建者坐 0 号座位并成为房主，阶段为 `Lobby`。
     ///
-    /// 建房时立即给房主切出一组候选英雄，使房主不等其他人也能看到自己的候选。
-    pub fn create(&mut self, host: &Session, catalog: &Catalog) -> Room {
+    /// 等待区不再预先分配英雄候选；候选在房主开始对局时由 `prepare_start`
+    /// 规划，成功后才由 `commit_start` 写入。
+    pub fn create(&mut self, host: &Session, _catalog: &Catalog) -> Room {
         let (id, code) = self.allocate_id();
 
         let mut slots = BTreeMap::new();
         slots.insert(0, PlayerSlot::from_session(host));
         // 本局种子只算一次：玩法抽取与英雄候选分配共用同一个值。
         let seed = seed_for_code(&code);
-        let mut room = Room {
+        let room = Room {
             id: id.clone(),
             code: code.clone(),
             host_id: host.player_id.clone(),
             phase: Phase::Lobby,
             seed,
-            // 玩法在房间创建时确定：必须先于英雄候选分配，之后到本局结束保持不变。
+            // 玩法在房间创建时确定：之后到本局结束保持不变。
             playstyles: rule_engine::playstyles::draw(seed),
             ranked: false,
+            bot_fill: true,
             slots,
+            candidates: BTreeMap::new(),
             invite_tokens: BTreeMap::new(),
         };
-        room.assign_candidates(&host.player_id, catalog);
         // 注册表持有权威副本；返回值供调用者立即广播大厅视图。
         self.rooms.insert(id.clone(), room.clone());
         self.by_code.insert(code, id);
@@ -393,13 +331,13 @@ impl RoomRegistry {
 
     /// 自动匹配建房：跳过大厅准备流程，8 名玩家直接满座并推进到 `Recruit`。
     ///
-    /// 座位按传入顺序分配，`host_id` 记为第一人；每名玩家自动从本人候选中选第一张
-    /// 英雄并置为已准备，再复用 [`Self::start_heroes`] + [`Self::commit_start`]
-    /// 完成阶段推进。匹配局不暴露房主操作（无邀请、无踢人、无解散）。
+    /// 座位按传入顺序分配，`host_id` 记为第一人；不产生机器人，`bot_fill = false`。
+    /// 候选由 [`allocate_candidates`] 按本局种子写入；英雄由对局内的选英雄阶段确定，
+    /// 这里不再自动选择。匹配局不暴露房主操作（无邀请、无踢人、无解散）。
     ///
     /// # Errors
     ///
-    /// 人数不是 8、或英雄池为空导致某人没有候选时返回错误，注册表不留下半成品房间。
+    /// 人数不是 8 时返回 [`RoomError::RoomNotReady`]，注册表不留下半成品房间。
     pub fn create_match(
         &mut self,
         players: &[Session],
@@ -410,52 +348,30 @@ impl RoomRegistry {
         }
         let (id, code) = self.allocate_id();
         let seed = seed_for_code(&code);
+        let playstyles = rule_engine::playstyles::draw(seed);
         let mut slots = BTreeMap::new();
         for (seat, player) in players.iter().enumerate() {
             let mut slot = PlayerSlot::from_session(player);
-            // 匹配局没有大厅确认步骤：座位直接视为已准备，英雄在下面自动选定。
+            // 匹配局没有大厅确认步骤：座位直接视为已准备。
             slot.ready = true;
             slots.insert(seat as Seat, slot);
         }
-        let mut room = Room {
+        let room = Room {
             id: id.clone(),
             code: code.clone(),
             host_id: players[0].player_id.clone(),
-            phase: Phase::Lobby,
+            phase: Phase::Recruit,
             seed,
-            playstyles: rule_engine::playstyles::draw(seed),
+            playstyles,
             ranked: true,
+            bot_fill: false,
             slots,
+            candidates: allocate_candidates(seed, &playstyles, catalog),
             invite_tokens: BTreeMap::new(),
         };
-        for player in players {
-            room.assign_candidates(&player.player_id, catalog);
-            let Some(hero) = room
-                .candidates_of(&player.player_id)
-                .and_then(|candidates| candidates.first().cloned())
-            else {
-                return Err(RoomError::Unknown("匹配局没有可用英雄".to_string()));
-            };
-            if let Some(slot) = room.slot_mut(&player.player_id) {
-                slot.hero_card_id = Some(hero);
-            }
-        }
-
-        self.rooms.insert(id.clone(), room);
-        self.by_code.insert(code, id.clone());
-        // 全员已准备且已选英雄：复用既有开局校验把阶段推进到 `Recruit`。
-        if let Err(error) = self.start_heroes(&id, &players[0].player_id) {
-            self.remove(&id);
-            return Err(error);
-        }
-        if let Err(error) = self.commit_start(&id) {
-            self.remove(&id);
-            return Err(error);
-        }
-        self.rooms
-            .get(&id)
-            .cloned()
-            .ok_or_else(|| RoomError::Unknown("匹配房建好后立即丢失".to_string()))
+        self.rooms.insert(id.clone(), room.clone());
+        self.by_code.insert(code, id);
+        Ok(room)
     }
 
     /// 分配下一个房间标识与房间码；同一进程内单调且不复用。
@@ -486,7 +402,7 @@ impl RoomRegistry {
         &mut self,
         code: &str,
         player: &Session,
-        catalog: &Catalog,
+        _catalog: &Catalog,
     ) -> Result<&mut Room, RoomError> {
         let room_id = self.by_code.get(code).cloned().ok_or(RoomError::NotFound)?;
         let room = self.rooms.get_mut(&room_id).expect("索引与房间表一致");
@@ -503,7 +419,6 @@ impl RoomRegistry {
             .find(|seat| !room.slots.contains_key(seat))
             .ok_or(RoomError::Full)?;
         room.slots.insert(seat, PlayerSlot::from_session(player));
-        room.assign_candidates(&player.player_id, catalog);
         Ok(room)
     }
 
@@ -556,7 +471,7 @@ impl RoomRegistry {
         &mut self,
         token: &str,
         player: &Session,
-        catalog: &Catalog,
+        _catalog: &Catalog,
         now_ms: u64,
     ) -> Result<&mut Room, RoomError> {
         let Some(room_id) = self.token_rooms.get(token).cloned() else {
@@ -589,7 +504,6 @@ impl RoomRegistry {
             .find(|seat| !room.slots.contains_key(seat))
             .ok_or(RoomError::Full)?;
         room.slots.insert(seat, PlayerSlot::from_session(player));
-        room.assign_candidates(&player.player_id, catalog);
         Ok(room)
     }
 
@@ -617,10 +531,11 @@ impl RoomRegistry {
             return;
         }
 
+        // 机器人不能接任房主：只剩机器人时房间直接销毁。
         let next_host = room
             .slots
             .iter()
-            .next()
+            .find(|(_, slot)| !slot.is_bot)
             .map(|(_, slot)| slot.player_id.clone());
         match next_host {
             Some(next_host) => room.host_id = next_host,
@@ -647,13 +562,16 @@ impl RoomRegistry {
             return Err(RoomError::WrongPhase);
         }
         let seat = room.seat_of(player_id).ok_or(RoomError::NotInRoom)?;
+        if room.slot(seat).is_some_and(|slot| slot.is_bot) {
+            return Err(RoomError::NotInRoom);
+        }
         self.remove_slot(room_id, seat);
         Ok(())
     }
 
     /// 房主移除指定成员；座位立即空出且编号不重排，不触发房主转移。
     ///
-    /// 只有 `Lobby` 阶段允许移除；房主不能移除自己。
+    /// 只有 `Lobby` 阶段允许移除；房主不能移除自己，机器人座位不可移除。
     pub fn kick(&mut self, room_id: &str, actor: &str, target: &str) -> Result<(), RoomError> {
         let room = self.rooms.get(room_id).ok_or(RoomError::NotFound)?;
         if room.phase != Phase::Lobby {
@@ -666,6 +584,9 @@ impl RoomRegistry {
             return Err(RoomError::InvalidTarget);
         }
         let seat = room.seat_of(target).ok_or(RoomError::NotInRoom)?;
+        if room.slot(seat).is_some_and(|slot| slot.is_bot) {
+            return Err(RoomError::NotInRoom);
+        }
         self.remove_slot(room_id, seat);
         Ok(())
     }
@@ -690,7 +611,7 @@ impl RoomRegistry {
         Ok(members)
     }
 
-    /// 设置准备状态；准备前必须先选英雄。
+    /// 设置准备状态；等待区不再要求先选英雄。
     ///
     /// 非 `Lobby` 阶段成员集合已冻结，返回 [`RoomError::WrongPhase`]。
     pub fn ready(&mut self, room_id: &str, player_id: &str, ready: bool) -> Result<(), RoomError> {
@@ -699,57 +620,11 @@ impl RoomRegistry {
             return Err(RoomError::WrongPhase);
         }
         let slot = room.slot_mut(player_id).ok_or(RoomError::NotInRoom)?;
-        if ready && slot.hero_card_id.is_none() {
-            return Err(RoomError::HeroNotSelected);
-        }
         slot.ready = ready;
         Ok(())
     }
 
-    /// 选择英雄。卡必须存在于英雄池，且在本人的候选里；确认后不可改选。
-    ///
-    /// 非 `Lobby` 阶段成员集合已冻结，返回 [`RoomError::WrongPhase`]。
-    pub fn select_hero(
-        &mut self,
-        room_id: &str,
-        player_id: &str,
-        card_id: &str,
-        catalog: &Catalog,
-    ) -> Result<(), RoomError> {
-        let room = self.rooms.get_mut(room_id).ok_or(RoomError::NotFound)?;
-        if room.phase != Phase::Lobby {
-            return Err(RoomError::WrongPhase);
-        }
-        if !room.is_occupied(player_id) {
-            return Err(RoomError::NotInRoom);
-        }
-        if !catalog.heroes.contains_key(card_id) {
-            return Err(RoomError::NotAHeroCard);
-        }
-        if room.slot_mut(player_id).is_some_and(|slot| slot.ready) {
-            return Err(RoomError::WrongPhase);
-        }
-        if !room
-            .candidates_of(player_id)
-            .is_some_and(|candidates| candidates.iter().any(|id| id == card_id))
-        {
-            return Err(RoomError::NotCandidate);
-        }
-
-        let slot = room.slot_mut(player_id).expect("上面已确认玩家在房间内");
-        slot.hero_card_id = Some(card_id.to_string());
-        Ok(())
-    }
-
-    /// 指定玩家的候选英雄；房间或玩家不存在返回 `None`。
-    pub fn candidates_of(&self, room_id: &str, player_id: &str) -> Option<Vec<String>> {
-        self.rooms
-            .get(room_id)?
-            .candidates_of(player_id)
-            .map(<[_]>::to_vec)
-    }
-
-    /// 标记座位离线但保留座位与候选，用于大厅断线宽限。
+    /// 标记座位离线但保留座位，用于大厅断线宽限。
     pub fn mark_disconnected(
         &mut self,
         room_id: &str,
@@ -763,7 +638,7 @@ impl RoomRegistry {
         Ok(())
     }
 
-    /// 标记座位重新在线并清除断线时刻；座位与候选保持不变。
+    /// 标记座位重新在线并清除断线时刻；只改在线标记，座位、候选与阶段不变。
     pub fn mark_reconnected(&mut self, room_id: &str, player_id: &str) -> Result<(), RoomError> {
         let room = self.rooms.get_mut(room_id).ok_or(RoomError::NotFound)?;
         let slot = room.slot_mut(player_id).ok_or(RoomError::NotInRoom)?;
@@ -787,8 +662,10 @@ impl RoomRegistry {
             .slots
             .values()
             .filter(|slot| {
-                slot.disconnected_at_ms
-                    .is_some_and(|at| now_ms.saturating_sub(at) >= RECONNECT_GRACE_MS)
+                !slot.is_bot
+                    && slot
+                        .disconnected_at_ms
+                        .is_some_and(|at| now_ms.saturating_sub(at) >= RECONNECT_GRACE_MS)
             })
             .map(|slot| slot.player_id.clone())
             .collect();
@@ -798,58 +675,108 @@ impl RoomRegistry {
             .collect()
     }
 
-    /// 纯查询：房间是否满足开局条件；满足时返回 `座位 → 英雄卡`。
-    ///
-    /// 房间不存在或不满足条件都返回 `None`，不改变任何状态。
-    pub fn start_ready(&self, room_id: &str) -> Option<BTreeMap<Seat, String>> {
-        self.rooms.get(room_id)?.start_ready()
-    }
-
-    /// 房主发起开局：校验房主、阶段、人数与准备状态，成功后把阶段推进到 `Recruit`。
-    ///
-    /// 与纯查询 [`Self::start_ready`] 分开，便于轮询与命令处理各自调用。
-    ///
-    /// 需要「先构造对局、成功后再提交阶段」的调用方（例如 `room-service::net`）
-    /// 应改用 [`Self::start_heroes`] + [`Self::commit_start`]：本方法在构造对局
-    /// 之前就推进阶段，构造失败会把房间卡在 `Recruit`。
-    pub fn try_start(
+    /// 房主切换空位是否用机器人补满；只在 `Lobby` 阶段、只有房主能修改。
+    pub fn set_bot_fill(
         &mut self,
         room_id: &str,
-        player_id: &str,
-    ) -> Result<BTreeMap<Seat, String>, RoomError> {
-        let heroes = self.start_heroes(room_id, player_id)?;
-        self.commit_start(room_id)?;
-        Ok(heroes)
-    }
-
-    /// 开局校验的第一步：只校验房主、阶段、人数与准备状态并返回英雄表，
-    /// **不改变房间阶段**，也不消耗任何资源。
-    ///
-    /// 与 [`Self::commit_start`] 配合使用：调用方先构造对局驱动，成功后再提交阶段，
-    /// 避免构造成本失败时房间已离开 `Lobby`。
-    pub fn start_heroes(
-        &self,
-        room_id: &str,
-        player_id: &str,
-    ) -> Result<BTreeMap<Seat, String>, RoomError> {
-        let room = self.rooms.get(room_id).ok_or(RoomError::NotFound)?;
-        if room.host_id != player_id {
+        actor: &str,
+        enabled: bool,
+    ) -> Result<(), RoomError> {
+        let room = self.rooms.get_mut(room_id).ok_or(RoomError::NotFound)?;
+        if room.host_id != actor {
             return Err(RoomError::NotHost);
         }
         if room.phase != Phase::Lobby {
             return Err(RoomError::WrongPhase);
         }
-        room.start_ready().ok_or(RoomError::RoomNotReady)
+        room.bot_fill = enabled;
+        Ok(())
     }
 
-    /// 开局校验的第二步：把已通过校验的房间从 `Lobby` 推进到 `Recruit`。
+    /// 构造开局计划：校验房主、阶段、真人准备与补位条件，**不修改注册表**。
     ///
-    /// 重复提交返回 [`RoomError::WrongPhase`]，不会回退阶段。
-    pub fn commit_start(&mut self, room_id: &str) -> Result<(), RoomError> {
+    /// 机器人按座位号从小到大补入空位，序号从 1 起连续编号；候选按本局种子在
+    /// 房间副本上分配。调用方应先据此构造对局驱动，成功后再调用
+    /// [`Self::commit_start`] 写入。
+    ///
+    /// # Errors
+    ///
+    /// 房间不存在 [`RoomError::NotFound`]；非房主 [`RoomError::NotHost`]；
+    /// 非 `Lobby` [`RoomError::WrongPhase`]；没有真人、真人未全部准备，
+    /// 或补位关闭但真人不足 8 时返回 [`RoomError::RoomNotReady`]。
+    pub fn prepare_start(
+        &self,
+        room_id: &str,
+        actor: &str,
+        catalog: &Catalog,
+    ) -> Result<StartPlan, RoomError> {
+        let room = self.rooms.get(room_id).ok_or(RoomError::NotFound)?;
+        if room.host_id != actor {
+            return Err(RoomError::NotHost);
+        }
+        if room.phase != Phase::Lobby {
+            return Err(RoomError::WrongPhase);
+        }
+        let humans = room.human_count();
+        if humans == 0 || !room.all_humans_ready() {
+            return Err(RoomError::RoomNotReady);
+        }
+        if !room.bot_fill && humans != SEAT_COUNT {
+            return Err(RoomError::RoomNotReady);
+        }
+
+        let mut slots = Vec::with_capacity(SEAT_COUNT);
+        let mut bot_index = 0;
+        for seat in 0..SEAT_COUNT as Seat {
+            match room.slots.get(&seat) {
+                Some(slot) => slots.push(slot.clone()),
+                None => {
+                    bot_index += 1;
+                    slots.push(PlayerSlot::bot(room_id, seat, bot_index));
+                }
+            }
+        }
+
+        let candidates = if room.candidates.len() == SEAT_COUNT {
+            room.candidates.clone()
+        } else {
+            allocate_candidates(room.seed, &room.playstyles, catalog)
+        };
+
+        Ok(StartPlan {
+            room_id: room.id.clone(),
+            seed: room.seed,
+            playstyles: room.playstyles,
+            ranked: room.ranked,
+            slots,
+            candidates,
+        })
+    }
+
+    /// 提交开局计划：写入机器人座位与候选，并把阶段推进到 `Recruit`。
+    ///
+    /// 计划中的机器人座位若已被占用，返回 [`RoomError::WrongPhase`] 且不写入任何
+    /// 状态；重复提交同样被阶段校验拒绝。
+    pub fn commit_start(&mut self, room_id: &str, plan: StartPlan) -> Result<(), RoomError> {
         let room = self.rooms.get_mut(room_id).ok_or(RoomError::NotFound)?;
         if room.phase != Phase::Lobby {
             return Err(RoomError::WrongPhase);
         }
+        if plan
+            .slots
+            .iter()
+            .enumerate()
+            .any(|(seat, slot)| slot.is_bot && room.slots.contains_key(&(seat as Seat)))
+        {
+            return Err(RoomError::WrongPhase);
+        }
+
+        for (seat, slot) in plan.slots.into_iter().enumerate() {
+            if slot.is_bot {
+                room.slots.insert(seat as Seat, slot);
+            }
+        }
+        room.candidates = plan.candidates;
         room.phase = Phase::Recruit;
         Ok(())
     }
@@ -887,45 +814,31 @@ impl RoomRegistry {
         self.rooms.get_mut(room_id)
     }
 
-    /// 构造大厅下行视图；玩家按座位号升序排列，房间不存在返回 `None`。
+    /// 构造大厅下行视图：真人玩家按座位号升序排列，带 `seat` 与 `botFill`。
+    ///
+    /// 所有观看者共享同一载荷；等待区不再下发英雄字段。机器人座位只在开局后
+    /// 存在，房间已离开大厅，因此这里不列出机器人。
     pub fn room_update(&self, room_id: &str) -> Option<RoomUpdate> {
         let room = self.rooms.get(room_id)?;
         Some(RoomUpdate {
+            bot_fill: room.bot_fill,
             code: room.code.clone(),
             host_id: room.host_id.clone(),
             phase: protocol_phase(room.phase),
             players: room
                 .slots
-                .values()
-                .map(|slot| RoomUpdatePlayersItem {
+                .iter()
+                .filter(|(_, slot)| !slot.is_bot)
+                .map(|(&seat, slot)| RoomUpdatePlayersItem {
                     display_name: slot.display_name.clone(),
-                    hero_card_id: slot.hero_card_id.clone(),
-                    hero_candidates: None,
                     is_host: slot.player_id == room.host_id,
                     player_id: slot.player_id.clone(),
                     ready: slot.ready,
+                    seat: i64::from(seat),
                 })
                 .collect(),
             room_id: room.id.clone(),
         })
-    }
-
-    /// 构造只给 `viewer` 的 `RoomUpdate`：只有该玩家那一项带 `hero_candidates`。
-    ///
-    /// 广播必须逐个座位序列化，否则候选会随共用 payload 泄露给其他玩家。
-    pub fn room_update_for(&self, room_id: &str, viewer: &str) -> Option<RoomUpdate> {
-        let mut update = self.room_update(room_id)?;
-        for item in &mut update.players {
-            item.hero_candidates = if item.player_id == viewer {
-                self.rooms
-                    .get(room_id)?
-                    .candidates_of(viewer)
-                    .map(<[_]>::to_vec)
-            } else {
-                None
-            };
-        }
-        Some(update)
     }
 }
 
@@ -933,6 +846,56 @@ impl Default for RoomRegistry {
     fn default() -> Self {
         Self::new()
     }
+}
+
+/// 按房间种子为 8 个座位分配候选英雄。
+///
+/// 候选只取 [`hero_in_pool`] 通过的英雄；池为空时回退到全部英雄卡。洗牌与切段
+/// 都是确定性的，段号即座位号：
+/// - 池 ≥ 满座总需求时每座位 4 张、房间内互不重复；
+/// - 池不足时按 `(seat * 4 + i) % len` 取 `min(4, len)` 张，允许跨座位重复；
+/// - 池小于 4 时每座位取整个池并至少 1 张。
+fn allocate_candidates(
+    seed: u64,
+    playstyles: &[Playstyle; 5],
+    catalog: &Catalog,
+) -> BTreeMap<Seat, Vec<String>> {
+    let enabled: BTreeSet<Playstyle> = playstyles.iter().copied().collect();
+    let mut heroes: Vec<String> = catalog
+        .heroes
+        .values()
+        .filter(|hero| hero_in_pool(hero, &enabled))
+        .map(|hero| hero.id.clone())
+        .collect();
+    // 产品兜底：本局玩法过滤后一张英雄都没有时，回退到全部英雄卡。
+    if heroes.is_empty() {
+        heroes = catalog.heroes.keys().cloned().collect();
+    }
+    heroes.sort();
+    shuffle(&mut heroes, seed);
+
+    let mut candidates = BTreeMap::new();
+    for seat in 0..SEAT_COUNT as Seat {
+        let picked = if heroes.is_empty() {
+            Vec::new()
+        } else if heroes.len() >= SEAT_COUNT * CANDIDATE_COUNT {
+            let start = usize::from(seat) * CANDIDATE_COUNT;
+            let end = (start + CANDIDATE_COUNT).min(heroes.len());
+            heroes
+                .get(start..end)
+                .map(<[_]>::to_vec)
+                .unwrap_or_default()
+        } else {
+            let take = CANDIDATE_COUNT.min(heroes.len());
+            (0..take)
+                .map(|offset| {
+                    heroes[(usize::from(seat) * CANDIDATE_COUNT + offset) % heroes.len()].clone()
+                })
+                .collect()
+        };
+        candidates.insert(seat, picked);
+    }
+    candidates
 }
 
 /// 房间码派生的确定性种子（FNV-1a 64 位）。

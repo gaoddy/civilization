@@ -11,7 +11,7 @@ use std::time::Duration;
 
 use common::{ClientWs, connect_with_retry, start_server_with_clock};
 use futures_util::{SinkExt, StreamExt};
-use protocol::server::{GameStarted, MatchFound, QueueState};
+use protocol::server::{GameStarted, HeroPickStarted, MatchFound, QueueState};
 use protocol::{ErrorCode, ServerEnvelope, ServerMessage};
 use room_service::clock::FixedClock;
 use serde_json::{Value, json};
@@ -121,6 +121,26 @@ async fn wait_match_found(client: &mut RawClient) -> MatchFound {
     }
 }
 
+/// 读一条 `HeroPickStarted`；匹配房的选英雄阶段先于 `GameStarted`。
+async fn wait_hero_pick_started(client: &mut RawClient) -> HeroPickStarted {
+    loop {
+        match client
+            .recv()
+            .await
+            .expect("等待 HeroPickStarted 时连接关闭")
+        {
+            ServerMessage::HeroPickStarted(pick) => return pick,
+            ServerMessage::GameStarted(_) => {
+                panic!("GameStarted 先于 HeroPickStarted 到达，消息顺序错误")
+            }
+            ServerMessage::Error(error) => {
+                panic!("等待 HeroPickStarted 时收到错误: {error:?}")
+            }
+            _ => {}
+        }
+    }
+}
+
 async fn wait_game_started(client: &mut RawClient) -> GameStarted {
     loop {
         if let ServerMessage::GameStarted(started) =
@@ -160,6 +180,36 @@ async fn eight_players_match_into_one_ranked_room() {
     }
     assert_eq!(room_ids.len(), 1, "8 人应进入同一个匹配房");
     assert_eq!(seats.len(), 8, "8 个座位应全部占用");
+
+    // 匹配房开局后先进入选英雄阶段；FixedClock 不推进时钟，必须由用例显式完成选择，
+    // 不能依赖 30 秒超时自动选。匹配房不补机器人：8 个座位全部是真人。
+    for client in &mut clients {
+        let pick = wait_hero_pick_started(client).await;
+        assert_eq!(
+            pick.candidates.len(),
+            room_service::room::CANDIDATE_COUNT,
+            "每名玩家应有 {} 张候选英雄",
+            room_service::room::CANDIDATE_COUNT
+        );
+        assert_eq!(pick.players.len(), 8, "选英雄阶段应包含 8 个座位");
+        assert!(
+            pick.players.iter().all(|player| !player.is_bot),
+            "匹配房不应出现机器人座位"
+        );
+        let mut pick_seats = BTreeSet::new();
+        for player in &pick.players {
+            assert!((0..8).contains(&player.seat), "选英雄座位号应在 0..8");
+            assert!(pick_seats.insert(player.seat), "选英雄座位号不能重复");
+        }
+        let hero = pick
+            .candidates
+            .first()
+            .expect("每名玩家的候选英雄不应为空")
+            .clone();
+        client
+            .send("SelectHeroCard", json!({ "cardId": hero }))
+            .await;
+    }
 
     for client in &mut clients {
         let started = wait_game_started(client).await;

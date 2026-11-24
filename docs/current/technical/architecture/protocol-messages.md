@@ -163,6 +163,17 @@
 | --- | --- | --- | --- |
 | `cardId` | string | 是 |  |
 
+### SetBotFill
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `enabled` | boolean | 是 | 是否在开始时用机器人补满空位 |
+
+### StartGame
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+
 ## 下行消息（S→C）
 
 ### AccountView
@@ -303,6 +314,18 @@
 | --- | --- | --- | --- |
 | `view` | PlayerView | 是 |  |
 
+### HeroPickStarted
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `deadline` | string | 是 | 选英雄截止时刻（RFC3339） |
+| `candidates` | array<string> | 是 | 收件人本座位可选的英雄卡 id；该消息按座位逐条下发 |
+| `players` | array<object> | 是 |  |
+| `players[].seat` | integer | 是 |  |
+| `players[].displayName` | string | 是 |  |
+| `players[].isBot` | boolean | 是 |  |
+| `players[].picked` | boolean | 是 | 该座位是否已确认英雄 |
+
 ### InviteAccepted
 
 | 字段 | 类型 | 必填 | 说明 |
@@ -389,13 +412,13 @@
 | `code` | string | 是 | 6 位房间码 |
 | `hostId` | string | 是 |  |
 | `phase` | Phase | 是 |  |
+| `botFill` | boolean | 是 | 开始时空位是否用机器人补满 |
 | `players` | array<object> | 是 |  |
 | `players[].playerId` | string | 是 |  |
 | `players[].displayName` | string | 是 |  |
 | `players[].ready` | boolean | 是 |  |
 | `players[].isHost` | boolean | 是 |  |
-| `players[].heroCardId` | string | null | 是 |  |
-| `players[].heroCandidates` | array | null | 否 | 本座位可选的英雄卡 id；只在发给本人的 RoomUpdate 中下发 |
+| `players[].seat` | integer | 是 |  |
 
 ### Snapshot
 

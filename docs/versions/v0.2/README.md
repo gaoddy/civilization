@@ -22,7 +22,7 @@
 ## 文档导航
 
 - 产品增量：[product/README.md](product/README.md)
-- 技术增量：[客户端技术基线](technical/architecture/client-stack.md)、[Steam 接入技术现状](../../current/technical/steam-integration.md)、[服务端部署与接入](../../current/technical/deployment/README.md)
+- 技术增量：[客户端技术基线](technical/architecture/client-stack.md)、[房间等待区与对局内选英雄](technical/room-waiting-and-hero-pick.md)、[Steam 接入技术现状](../../current/technical/steam-integration.md)、[服务端部署与接入](../../current/technical/deployment/README.md)
 - Steam 上线操作：[Steam 上线操作清单](technical/steam-onboarding.md)
 - 未确认事项：[open-questions.md](open-questions.md)
 - 跨版本路线：[版本路线与风险](../../version-roadmap.md)

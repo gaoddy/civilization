@@ -10,6 +10,10 @@ use std::collections::BTreeMap;
 use std::sync::Arc;
 use std::time::Duration;
 
+use common::{
+    RawClient, authenticate, authenticate_with_token, first_candidate, start_and_pick_all,
+    wait_all_ready, wait_hero_pick, wait_room_update,
+};
 use futures_util::{SinkExt, StreamExt};
 use protocol::intents::Intent as ProtocolIntent;
 use protocol::server::Snapshot;
@@ -71,10 +75,8 @@ fn players() -> Vec<PlayerSlot> {
             player_id: format!("p{seat}"),
             display_name: format!("玩家{seat}"),
             ready: true,
-            hero_card_id: Some(HEROES[seat].to_string()),
+            is_bot: false,
             channel: SeatChannel::new(),
-            hero_candidates: Vec::new(),
-            candidate_segment: None,
             connected: true,
             disconnected_at_ms: None,
         })
@@ -628,4 +630,152 @@ async fn reconnect_after_game_over_finds_room_destroyed() {
         error.code
     );
     println!("reconnect after game over rejected as {:?}", error.code);
+}
+
+// ---------------------------------------------------------------------------
+// 真实 WebSocket：选英雄阶段重连与开局后重连。
+// ---------------------------------------------------------------------------
+
+struct RawRoom {
+    room_id: String,
+    /// `(player_id, token)`，按座位顺序。
+    identities: Vec<(String, String)>,
+    clients: Vec<RawClient>,
+}
+
+/// 8 名真人建房、入房并全部准备；尚未 `StartGame`。
+async fn join_eight_ready(addr: std::net::SocketAddr, prefix: &str) -> RawRoom {
+    let mut clients = Vec::with_capacity(8);
+    let mut identities = Vec::with_capacity(8);
+
+    let mut host = RawClient::connect(addr).await;
+    let (player_id, token) = authenticate(&mut host, &format!("{prefix}0")).await;
+    host.send("CreateRoom", json!({})).await;
+    let room = wait_room_update(&mut host).await;
+    let room_id = room.room_id.clone();
+    let room_code = room.code.clone();
+    host.send("Ready", json!({ "ready": true })).await;
+    clients.push(host);
+    identities.push((player_id, token));
+
+    for index in 1..8 {
+        let mut client = RawClient::connect(addr).await;
+        let (player_id, token) = authenticate(&mut client, &format!("{prefix}{index}")).await;
+        client.send("JoinRoom", json!({ "code": room_code })).await;
+        let joined = wait_room_update(&mut client).await;
+        assert!(
+            joined
+                .players
+                .iter()
+                .any(|player| player.player_id == player_id),
+            "入房后本人应出现在 RoomUpdate 里"
+        );
+        client.send("Ready", json!({ "ready": true })).await;
+        clients.push(client);
+        identities.push((player_id, token));
+    }
+
+    wait_all_ready(&mut clients[0], 8).await;
+    RawRoom {
+        room_id,
+        identities,
+        clients,
+    }
+}
+
+/// 选英雄阶段重连必须回 `HeroPickStarted`，本人已选状态与候选保持一致。
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn reconnect_during_pick_returns_hero_pick() {
+    let addr = common::start_server().await;
+    let mut room = join_eight_ready(addr, "pick-recon-").await;
+
+    room.clients[0].send("StartGame", json!({})).await;
+    let mut picks = Vec::with_capacity(8);
+    for client in room.clients.iter_mut() {
+        picks.push(wait_hero_pick(client).await);
+    }
+
+    // 只让房主先选：保持选英雄阶段未完成，避免重连落进 Playing。
+    let host_hero = first_candidate(&picks[0]);
+    room.clients[0]
+        .send("SelectHeroCard", json!({ "cardId": host_hero }))
+        .await;
+
+    let (target_id, target_token) = room.identities[7].clone();
+    let expected_candidates = picks[7].candidates.clone();
+    drop(room.clients.pop().expect("应有第 8 条连接"));
+
+    let mut back = RawClient::connect(addr).await;
+    let back_id = authenticate_with_token(&mut back, &target_token).await;
+    assert_eq!(back_id, target_id, "重连应复用同一 player_id");
+    back.send("Reconnect", json!({ "roomId": room.room_id, "lastSeq": 0 }))
+        .await;
+
+    let pick = wait_hero_pick(&mut back).await;
+    assert_eq!(pick.players.len(), 8, "重连视图应含 8 个座位");
+    let own = pick
+        .players
+        .iter()
+        .find(|player| player.seat == 7)
+        .expect("应能按座位找到本人");
+    assert!(!own.picked, "未选英雄的座位重连后 picked 仍为 false");
+    assert!(!own.is_bot, "真人座位不是机器人");
+    let host = pick
+        .players
+        .iter()
+        .find(|player| player.seat == 0)
+        .expect("应能找到房主座位");
+    assert!(host.picked, "已选英雄的座位在重连视图里 picked 为 true");
+    assert_eq!(
+        pick.candidates, expected_candidates,
+        "重连应取回同一组本人候选"
+    );
+    assert!(!pick.deadline.is_empty(), "重连视图应带截止时刻");
+    assert_eq!(
+        pick.deadline, picks[7].deadline,
+        "重连不应重置选英雄截止时刻"
+    );
+    println!("reconnect during pick returned HeroPickStarted");
+}
+
+/// 进入 `Playing` 后重连仍走 `Snapshot`，不再回 `HeroPickStarted`。
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn reconnect_after_start_returns_snapshot() {
+    let addr = common::start_server().await;
+    let mut room = join_eight_ready(addr, "started-recon-").await;
+
+    let (started, _picks) = start_and_pick_all(&mut room.clients).await;
+    assert_eq!(started.len(), 8, "8 名真人选完英雄后都应开局");
+
+    let (target_id, target_token) = room.identities[7].clone();
+    drop(room.clients.pop().expect("应有第 8 条连接"));
+
+    let mut back = RawClient::connect(addr).await;
+    let back_id = authenticate_with_token(&mut back, &target_token).await;
+    assert_eq!(back_id, target_id, "重连应复用同一 player_id");
+    back.send("Reconnect", json!({ "roomId": room.room_id, "lastSeq": 0 }))
+        .await;
+
+    let snapshot = tokio::time::timeout(Duration::from_secs(10), async {
+        loop {
+            let (_, message) = back.recv_room().await.expect("等待 Snapshot 时连接关闭");
+            match message {
+                ServerMessage::Snapshot(snapshot) => return snapshot,
+                ServerMessage::HeroPickStarted(_) => {
+                    panic!("选英雄已结束，重连不应再回 HeroPickStarted")
+                }
+                ServerMessage::Error(error) => {
+                    panic!("重连收到错误 {}: {}", error.code, error.message)
+                }
+                _ => {}
+            }
+        }
+    })
+    .await
+    .expect("10 秒内应收到 Snapshot");
+
+    assert_eq!(snapshot.view.self_.player_id, target_id, "快照应属于本人");
+    assert_eq!(snapshot.view.room_id, room.room_id, "快照应带上房间 id");
+    assert_eq!(snapshot.view.turn.get(), 1, "选完英雄后应进入第 1 回合");
+    println!("reconnect after start returned Snapshot");
 }

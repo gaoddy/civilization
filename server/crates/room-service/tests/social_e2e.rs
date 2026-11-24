@@ -137,9 +137,10 @@ impl RawClient {
         let player_id = self.player_id.clone();
         self.wait_for("入房更新", |message| match message {
             ServerMessage::RoomUpdate(update)
-                if update.players.iter().any(|player| {
-                    player.player_id == player_id && player.hero_candidates.is_some()
-                }) =>
+                if update
+                    .players
+                    .iter()
+                    .any(|player| player.player_id == player_id) =>
             {
                 Some(update.clone())
             }
@@ -148,17 +149,8 @@ impl RawClient {
         .await
     }
 
-    /// 取本人候选第一张并确认准备。
-    async fn select_hero_and_ready(&mut self, update: &RoomUpdate) {
-        let hero = update
-            .players
-            .iter()
-            .find(|player| player.player_id == self.player_id)
-            .and_then(|player| player.hero_candidates.as_ref())
-            .and_then(|list| list.first())
-            .expect("应拿到本人候选")
-            .clone();
-        self.send("SelectHeroCard", json!({ "cardId": hero })).await;
+    /// 确认准备；选英雄改到房主开始后的选英雄阶段。
+    async fn ready(&mut self) {
         self.send("Ready", json!({ "ready": true })).await;
     }
 
@@ -168,6 +160,37 @@ impl RawClient {
             _ => None,
         })
         .await
+    }
+
+    /// 等注册表确认全员准备，避免 `StartGame` 撞上 `ROOM_NOT_READY`。
+    async fn wait_all_ready(&mut self, count: usize) -> RoomUpdate {
+        self.wait_room_update(|update| {
+            update.players.len() == count && update.players.iter().all(|player| player.ready)
+        })
+        .await
+    }
+
+    async fn start_game(&mut self) {
+        self.send("StartGame", json!({})).await;
+    }
+
+    /// 等选英雄阶段下发，返回本人候选；证明对局已从大厅进入选英雄。
+    async fn wait_hero_candidates(&mut self) -> Vec<String> {
+        self.wait_for("选英雄", |message| match message {
+            ServerMessage::HeroPickStarted(pick) => Some(pick.candidates.clone()),
+            _ => None,
+        })
+        .await
+    }
+
+    /// 等选英雄阶段并确认本人候选第一张。
+    async fn pick_hero(&mut self) {
+        let candidates = self.wait_hero_candidates().await;
+        let hero = candidates
+            .first()
+            .cloned()
+            .expect("选英雄阶段应下发本人候选");
+        self.send("SelectHeroCard", json!({ "cardId": hero })).await;
     }
 
     async fn wait_game_started(&mut self) {
@@ -219,7 +242,7 @@ async fn befriend(from: &mut RawClient, to: &mut RawClient) {
     .await;
 }
 
-/// 让 `n` 名新玩家入房、选英雄并准备；返回需要保持存活的客户端。
+/// 让 `n` 名新玩家入房并准备；返回需要保持存活的客户端。
 async fn fill_room(
     addr: std::net::SocketAddr,
     code: &str,
@@ -229,11 +252,24 @@ async fn fill_room(
     let mut clients = Vec::with_capacity(players);
     for index in 0..players {
         let mut client = RawClient::connect(addr, &format!("{prefix}{index}")).await;
-        let update = client.join_room(code).await;
-        client.select_hero_and_ready(&update).await;
+        client.join_room(code).await;
+        client.ready().await;
         clients.push(client);
     }
     clients
+}
+
+/// 房主开始并完成选英雄：所有客户端选完后返回。
+async fn start_and_pick(host: &mut RawClient, fillers: &mut [RawClient]) {
+    host.start_game().await;
+    host.pick_hero().await;
+    for filler in fillers.iter_mut() {
+        filler.pick_hero().await;
+    }
+    host.wait_game_started().await;
+    for filler in fillers.iter_mut() {
+        filler.wait_game_started().await;
+    }
 }
 
 fn room_is_full(update: &RoomUpdate) -> bool {
@@ -454,16 +490,17 @@ async fn invite_rejects_started_room() {
     let friend_id = friend.player_id.clone();
     befriend(&mut host, &mut friend).await;
     let room = host.create_room().await;
-    host.select_hero_and_ready(&room).await;
+    host.ready().await;
 
-    let fillers = fill_room(
+    let mut fillers = fill_room(
         addr,
         &room.code,
         room_service::SEAT_COUNT - 1,
         "start-filler",
     )
     .await;
-    host.wait_game_started().await;
+    host.wait_all_ready(room_service::SEAT_COUNT).await;
+    start_and_pick(&mut host, &mut fillers).await;
 
     host.send("InviteToRoom", json!({ "friendId": friend_id }))
         .await;
@@ -476,7 +513,7 @@ async fn invite_rejects_started_room() {
 // 接受侧拒绝分支
 // ---------------------------------------------------------------------------
 
-/// 房主建 1 人房间并邀请好友，返回邀请 id 与房主侧的房间更新（含自身候选）。
+/// 房主建 1 人房间并邀请好友，返回邀请 id 与房主侧的房间更新。
 async fn invite_into_fresh_room(
     host: &mut RawClient,
     guest: &mut RawClient,
@@ -502,16 +539,17 @@ async fn accept_rejects_room_started_after_invite() {
     befriend(&mut host, &mut guest).await;
     let (invite_id, room) = invite_into_fresh_room(&mut host, &mut guest).await;
 
-    // 房主创建房间时已在房内，直接用创建返回的更新准备，不能重复 JoinRoom。
-    host.select_hero_and_ready(&room).await;
-    let fillers = fill_room(
+    // 房主创建房间时已在房内，直接准备，不能重复 JoinRoom。
+    host.ready().await;
+    let mut fillers = fill_room(
         addr,
         &room.code,
         room_service::SEAT_COUNT - 1,
         "late-filler",
     )
     .await;
-    host.wait_game_started().await;
+    host.wait_all_ready(room_service::SEAT_COUNT).await;
+    start_and_pick(&mut host, &mut fillers).await;
 
     guest
         .send(

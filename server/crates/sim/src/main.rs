@@ -21,7 +21,7 @@ const USAGE: &str = "用法：
   sim bot    --connect ws://HOST:PORT/ws --name NAME --hero CARD_ID
              [--room CODE] [--create] [--intent-seed N]
   sim dev    --connect ws://HOST:PORT/ws [--intent-seed N]
-             起 7 个机器人建房并加入，打印房间码后等第 8 人（开发者）
+             起 7 个机器人建房并加入，打印房间码后等开发者入房准备
   sim load   --serve-room-service PATH | --connect ws://HOST:PORT/ws
              --scenario steady|ramp --rooms N [--rooms-max M --step K --step-ms T]
              [--duration-ms T] [--start-timeout-ms T] [--sample-ms T]
@@ -212,7 +212,9 @@ fn run_dev(args: &[String]) -> Result<(), String> {
         }
     };
     println!("ROOM_CODE={code}");
-    println!("在客户端大厅输入房间码 {code}，选英雄并准备后自动开局。");
+    println!(
+        "在客户端大厅输入房间码 {code}，加入并准备；全员准备后房主机器人自动开始，随后进入选英雄阶段。"
+    );
 
     let outcome = runtime
         .block_on(handle)

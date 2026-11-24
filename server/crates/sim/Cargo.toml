@@ -12,6 +12,7 @@ name = "sim"
 path = "src/main.rs"
 
 [dependencies]
+bot-ai = { path = "../bot-ai" }
 futures-util = "0.3"
 protocol = { version = "0.1.0", path = "../protocol" }
 rule-engine = { path = "../rule-engine" }

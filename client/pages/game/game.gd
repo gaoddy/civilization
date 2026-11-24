@@ -79,18 +79,54 @@ var _gallery: CardGallery
 # 首局引导：由顶部「提示」打开的非阻塞覆盖层，步骤随阶段变化。
 var _guide: FirstGameGuide
 
+# 选英雄覆盖层：对局开始前盖住整页完成选择；释放后进入正常对局视图。
+var _hero_pick: HeroPickOverlay
+
 
 func _ready() -> void:
 	UILayout.safe_area(self, _page_texture())
 	_build()
+	GameStore.hero_pick_started.connect(_on_hero_pick_started)
 	GameStore.view_changed.connect(_refresh)
 	GameStore.events_received.connect(_on_game_events)
 	GameStore.error_received.connect(_on_error)
 	GameStore.game_over.connect(_on_game_over)
 	Net.connected.connect(_refresh_connection)
 	Net.disconnected.connect(_refresh_connection)
+	# 房间页在收到 `HeroPickStarted` 后立刻导航过来，`_ready` 时载荷可能已经就位。
+	_bind_hero_pick()
 	_refresh()
 	_update_timer()
+
+
+# ── 选英雄 ────────────────────────────────────────────────────────────────
+
+func _on_hero_pick_started() -> void:
+	_bind_hero_pick()
+
+
+## 选英雄载荷变化：已存在覆盖层就原地刷新，否则创建并挂在页面最上层。
+func _bind_hero_pick() -> void:
+	if GameStore.hero_pick.is_empty():
+		return
+	if _hero_pick != null and is_instance_valid(_hero_pick):
+		_hero_pick.setup(GameStore.hero_pick, GameStore.player_id)
+		return
+	_hero_pick = HeroPickOverlay.new()
+	add_child(_hero_pick)
+	_hero_pick.setup(GameStore.hero_pick, GameStore.player_id)
+	_hero_pick.hero_confirmed.connect(_on_hero_confirmed)
+
+
+## 确认英雄：连接可用才发送并锁定；断线时留在覆盖层内提示，保持可重试。
+func _on_hero_confirmed(card_id: String) -> void:
+	if not Net.is_open():
+		if _hero_pick != null and is_instance_valid(_hero_pick):
+			_hero_pick.show_offline_notice()
+		return
+	GameStore.select_hero(card_id)
+	if _hero_pick != null and is_instance_valid(_hero_pick):
+		_hero_pick.set_confirmed(card_id)
 
 
 # ── 构建 ──────────────────────────────────────────────────────────────────
@@ -299,6 +335,13 @@ func _hide_notice() -> void:
 
 func _refresh() -> void:
 	_detail.reset()
+	# 选英雄阶段尚未进入对局视图：只刷新覆盖层，不构建首局引导或招募提示。
+	if not GameStore.hero_pick.is_empty():
+		_bind_hero_pick()
+		return
+	if _hero_pick != null:
+		_hero_pick.queue_free()
+		_hero_pick = null
 	if (
 		_notice_kind == "error"
 		and (
@@ -562,6 +605,9 @@ func _show_connection_notice() -> void:
 ## 倒计时由招募河道维护；页面按「是否存在截止时间」决定清零，避免把已过期
 ## （秒数为 0）误判成没有截止时间。
 func _update_timer() -> void:
+	# 选英雄阶段还没有招募视图：倒计时由覆盖层自己的截止时刻维护。
+	if _hero_pick != null:
+		return
 	if _recruit_view == null:
 		return
 	if not _recruit_view.has_deadline():

@@ -8,6 +8,8 @@ signal view_changed
 signal events_received(events: Array)
 signal game_started
 signal game_over
+## 选英雄阶段开始或刷新；载荷已写入 `hero_pick`，页面据此导航到对局页。
+signal hero_pick_started
 ## 房间被解散或本人被移出；页面据此提示原因并回大厅。
 signal room_closed
 signal error_received
@@ -51,6 +53,10 @@ var unlocked_achievements: Dictionary = {}
 var room_id := ""
 var room_code := ""
 var room_players: Array = []
+## 开始时空位是否用机器人补满；以 `RoomUpdate` 下发的 `botFill` 为准。
+var room_bot_fill := false
+## 最近一次 `HeroPickStarted` 的载荷；不在选英雄阶段时为空字典。
+var hero_pick: Dictionary = {}
 
 ## 本次结算的实际积分变化与段位前后；房间局四项为 null/空串。
 var rating_delta = null
@@ -153,8 +159,13 @@ func handle(type: String, payload: Dictionary) -> void:
             room_id = str(payload.get("roomId", ""))
             room_code = str(payload.get("code", ""))
             room_players = payload.get("players", [])
+            room_bot_fill = bool(payload.get("botFill", false))
             phase = str(payload.get("phase", Protocol.PHASE_LOBBY))
             room_changed.emit()
+        Protocol.MSG_HERO_PICK_STARTED:
+            # 选英雄阶段还没进入对局视图：只保存载荷并发信号，不改 `view` 与 `phase`。
+            hero_pick = payload
+            hero_pick_started.emit()
         Protocol.MSG_QUEUE_STATE:
             queue_state = payload
             queueing = true
@@ -168,6 +179,7 @@ func handle(type: String, payload: Dictionary) -> void:
             match_found.emit(match_seat)
         Protocol.MSG_GAME_STARTED:
             _apply_view(payload.get("view", {}))
+            clear_hero_pick()
             game_started.emit()
             view_changed.emit()
         Protocol.MSG_STATE_UPDATE:
@@ -199,6 +211,7 @@ func handle(type: String, payload: Dictionary) -> void:
             tier_before = str(payload.get("tierBefore", "") if payload.get("tierBefore") != null else "")
             tier_after = str(payload.get("tierAfter", "") if payload.get("tierAfter") != null else "")
             phase = Protocol.PHASE_GAME_OVER
+            clear_hero_pick()
             game_over.emit()
         Protocol.MSG_LEADERBOARD:
             leaderboard = payload.get("entries", [])
@@ -209,6 +222,7 @@ func handle(type: String, payload: Dictionary) -> void:
         Protocol.MSG_ROOM_CLOSED:
             # `reset_room` 会清空关闭原因，先暂存再在清空后写回，页面才能区分提示文案。
             var reason := str(payload.get("reason", ""))
+            clear_hero_pick()
             reset_room()
             room_closed_reason = reason
             Net.send(Protocol.MSG_LEAVE_ROOM, {})
@@ -249,6 +263,8 @@ func reset_room() -> void:
     room_id = ""
     room_code = ""
     room_players = []
+    room_bot_fill = false
+    hero_pick = {}
     phase = ""
     turn = 1
     deadline = ""
@@ -273,8 +289,10 @@ func reset_room() -> void:
         Platform.leave_lobby()
 
 
-## 结算页返回等待区：只清本局视图，保留房间信息与社交列表。
+## 结算页返回等待区：清本局视图与选英雄状态，保留房间成员与社交列表。
 func clear_game_view() -> void:
+    room_bot_fill = false
+    hero_pick = {}
     phase = ""
     turn = 1
     deadline = ""
@@ -290,30 +308,38 @@ func clear_game_view() -> void:
     timer_seconds = -1
 
 
-## 本人的英雄候选；服务端未下发时返回空数组。
-func my_hero_candidates() -> Array:
-    for player in room_players:
-        if str(player.get("playerId", "")) == player_id:
-            var list = player.get("heroCandidates")
-            return list if list is Array else []
-    return []
+## 清空选英雄载荷；离开选英雄阶段或回到等待区时调用。
+func clear_hero_pick() -> void:
+    hero_pick = {}
 
 
-## 本人座位是否已确认（准备）。
-func my_ready() -> bool:
+## 本人座位号；不在房间时为 -1。
+func my_seat() -> int:
     for player in room_players:
         if str(player.get("playerId", "")) == player_id:
-            return bool(player.get("ready", false))
+            var seat = player.get("seat")
+            return -1 if seat == null else int(seat)
+    return -1
+
+
+## 本人是否房主；以服务端下发的 `isHost` 为准。
+func am_host() -> bool:
+    for player in room_players:
+        if str(player.get("playerId", "")) == player_id:
+            return bool(player.get("isHost", false))
     return false
 
 
-## 本人已选的英雄卡 id；未选返回空串。
-func my_hero_id() -> String:
+## 本人座位是否已确认（准备）；按座位查找，不依赖成员顺序。
+func my_ready() -> bool:
+    var seat := my_seat()
+    if seat < 0:
+        return false
     for player in room_players:
-        if str(player.get("playerId", "")) == player_id:
-            var hero = player.get("heroCardId")
-            return "" if hero == null else str(hero)
-    return ""
+        var value = player.get("seat")
+        if value != null and int(value) == seat:
+            return bool(player.get("ready", false))
+    return false
 
 
 ## 战报是否属于当前回合。
@@ -430,6 +456,21 @@ func bind_phone(phone: String, code: String) -> void:
         Protocol.MSG_BIND_PHONE,
         {"phone": phone.strip_edges(), "code": code.strip_edges()},
     )
+
+
+## 房主开始游戏；房主、阶段与准备情况由服务端校验。
+func request_start() -> void:
+    Net.send(Protocol.MSG_START_GAME, {})
+
+
+## 房主切换机器人补位；房主与阶段由服务端校验。
+func set_bot_fill(enabled: bool) -> void:
+    Net.send(Protocol.MSG_SET_BOT_FILL, {"enabled": enabled})
+
+
+## 选英雄阶段确认本人英雄；候选范围由服务端校验。
+func select_hero(card_id: String) -> void:
+    Net.send(Protocol.MSG_SELECT_HERO_CARD, {"cardId": card_id})
 
 
 func create_room_invite() -> void:

@@ -484,7 +484,6 @@ func _ready() -> void:
 
     await _check_hero_skill_list()
     await _check_skill_trigger_labels()
-    await _check_room_skill_list()
 
     var missing_detail := _classification_text({"playstyle": "", "taxon": "does-not-exist"})
     _expect(
@@ -848,73 +847,6 @@ func _check_skill_trigger_labels() -> void:
     )
     invalid_box.queue_free()
     await get_tree().process_frame
-
-
-## 选英雄页悬停详情：与图鉴共用技能列表，主动技能显示费用与次数。
-func _check_room_skill_list() -> void:
-    GameStore.player_id = "p0"
-    GameStore.room_id = "r_test"
-    GameStore.room_code = "ABC123"
-    GameStore.phase = Protocol.PHASE_LOBBY
-    GameStore.room_players = [
-        {"playerId": "p0", "displayName": "玩家A", "ready": false, "isHost": true,
-         "heroCardId": null, "heroCandidates": ["gauss", "mozi", "luban", "shenkuo"]},
-    ]
-    var instance := await _check_scene("res://pages/room/room.tscn", false)
-    if instance != null:
-        var candidates := instance.find_child("HeroCandidates", true, false)
-        _expect(candidates != null and candidates.get_child_count() > 0, "选英雄页应渲染候选英雄")
-        if candidates != null and candidates.get_child_count() > 0:
-            var card: Control = candidates.get_child(0)
-            _expect(
-                card.custom_minimum_size == Vector2(160, 209),
-                "候选英雄卡应为 160×209，实际 %s" % card.custom_minimum_size,
-            )
-            await _hover(instance, card, card.size * 0.5)
-            var panel := instance.find_child("RoomHeroDetail", true, false)
-            _expect(panel != null and panel.visible, "悬停候选卡应显示详情卡")
-            if panel != null:
-                var text := _node_text(panel)
-                var info := CardDB.skill_info("activate-friendly-growth-twice")
-                _expect(
-                    text.contains(CardDB.hero_introduction("gauss")),
-                    "悬停详情应显示英雄介绍：%s" % text,
-                )
-                _expect(
-                    text.contains(TranslationServer.translate("ui.skill.trigger.on_activate")),
-                    "悬停详情应出现主动标签：%s" % text,
-                )
-                _expect(
-                    text.contains(TranslationServer.translate("ui.skill.cost") % int(info.get("cost", -1))),
-                    "悬停详情应显示费用：%s" % text,
-                )
-                _expect(
-                    text.contains(TranslationServer.translate("ui.skill.uses") % int(info.get("uses", -1))),
-                    "悬停详情应显示每回合次数：%s" % text,
-                )
-                _expect(
-                    panel.find_children("*", "TextureRect", true, false).is_empty(),
-                    "悬停详情不应显示任何图片",
-                )
-                # 中间候选卡：详情贴着该卡外侧，不再挂候选行外侧。
-                var third: Control = candidates.get_child(2)
-                await _hover(instance, third, third.size * 0.5)
-                var panel_rect: Rect2 = panel.get_global_rect()
-                var card_rect: Rect2 = third.get_global_rect()
-                _expect(not panel_rect.intersects(card_rect), "详情卡不得压住悬停的候选卡")
-                var gap := maxf(
-                    card_rect.position.x - panel_rect.end.x,
-                    panel_rect.position.x - card_rect.end.x,
-                )
-                _expect(
-                    gap <= UITheme.space("space-md"),
-                    "详情卡应贴着悬停卡外侧，实际间隙 %s" % gap,
-                )
-        instance.queue_free()
-        await get_tree().process_frame
-    GameStore.room_id = ""
-    GameStore.room_code = ""
-    GameStore.room_players = []
 
 
 ## 商店/手牌详情正文：直接走详情渲染，避免依赖具体页面的悬停时机。

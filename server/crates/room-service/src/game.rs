@@ -24,11 +24,13 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
 
 use protocol::server::{
-    AchievementUnlocked, CombatResult, ErrorMessage, GameOver, GameStarted, Snapshot, StateUpdate,
+    AchievementUnlocked, CombatResult, ErrorMessage, GameOver, GameStarted, HeroPickStarted,
+    Snapshot, StateUpdate,
 };
 use protocol::view::{CombatLogEntry, GameEvent as ProtocolGameEvent};
 use protocol::{
-    ErrorCode, GameOverRankingItem, ProtocolError, SelfStats, SelfStatsBoardItem, ServerEnvelope,
+    ErrorCode, GameOverRankingItem, HeroPickStartedPlayersItem, ProtocolError, SelfStats,
+    SelfStatsBoardItem, ServerEnvelope,
 };
 use rule_engine::achievements::Achievement;
 use rule_engine::data::{Catalog, Playstyle};
@@ -98,6 +100,18 @@ pub const TIMER_WARNING_SECONDS: u64 = 10;
 /// 断线后座位的保留时长（毫秒）。超过该时长座位被标记离线，但不释放座位、不结束对局。
 pub const RECONNECT_GRACE_MS: u64 = 30_000;
 
+/// 选英雄阶段时长（秒）。
+const HERO_PICK_SECONDS: u64 = 30;
+
+/// 对局驱动的内部阶段：先选英雄，选完或到点后才启动规则引擎的对局。
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum GameStage {
+    /// 选英雄阶段：引擎状态尚未 `start_game`，不产生视图与快照。
+    HeroPick,
+    /// 对局进行中：沿用原招募 / 战斗 / 结算流程。
+    Playing,
+}
+
 /// 单个座位本局的增量统计；由引擎事件累计，结束时与终局状态合成 `SelfStats`。
 #[derive(Debug, Default)]
 struct SeatStats {
@@ -122,6 +136,10 @@ pub enum RoomCommand {
     Ready { player_id: String, ready: bool },
     /// 大厅选英雄；对局开始后到达即视为当前阶段不允许。
     SelectHero { player_id: String, card_id: String },
+    /// 房主开始对局；由连接层在大厅阶段处理，到达 `GameTask` 即为重复开始。
+    StartGame { player_id: String },
+    /// 房主切换机器人补位；由连接层在大厅阶段处理。
+    SetBotFill { player_id: String, enabled: bool },
     /// 招募意图；`client_intent_id` 用于幂等去重。
     Intent {
         player_id: String,
@@ -181,6 +199,10 @@ pub enum UpdateKind {
     /// 全量快照；载荷在编码时由 [`GameTask::player_view`] 生成，`Snapshot.seq`
     /// 与该条信封的 `seq` 一致。
     Snapshot,
+    /// 选英雄阶段的全量状态（逐座位载荷）。
+    HeroPick,
+    /// 开局视图（逐座位载荷）；选英雄完成后下发。
+    GameStarted,
     /// 一场战斗的逐座位回放。
     CombatResult(Box<CombatResult>),
     /// 对局结束：排名与公开种子。
@@ -261,7 +283,7 @@ pub struct GameTask {
     /// 只存在 `GameTask` 上，不写入 [`GameState`]，因此不影响 `state_hash` 与
     /// 确定性重放；重连快照从当前视图自然带出。
     combat_log: Vec<CombatLogEntry>,
-    /// 本局主动弃权的玩家；座位保留到本局结束，仅用于停止推送与回房重置。
+    /// 本局主动弃权的玩家；座位保留到本局结束，仅用于停止推送。
     departed: BTreeSet<String>,
     /// 每个座位当前连接的下行发送端；首次建连经 [`GameTask::bind_sender`] 注册，
     /// 重连时被替换。所有权只在这里，连接层通过 [`GameTask::sender`] 借用投递。
@@ -272,6 +294,18 @@ pub struct GameTask {
     connected: [bool; SEAT_COUNT],
     /// 断线起始时刻（Unix epoch 毫秒）；`None` 表示当前未处于断线宽限期。
     disconnected_at_ms: [Option<u64>; SEAT_COUNT],
+    /// 当前内部阶段：先选英雄，再进入引擎对局。
+    stage: GameStage,
+    /// 座位 → 本人候选；选英雄阶段只读。
+    candidates: BTreeMap<Seat, Vec<String>>,
+    /// 各座位已确认的英雄；全员 `Some` 后启动对局。
+    picks: [Option<String>; SEAT_COUNT],
+    /// 机器人座位；自动选英雄、自动招募、跳过断线宽限与成就。
+    bot_seats: BTreeSet<Seat>,
+    /// 选英雄截止时刻（Unix epoch 毫秒）。
+    pick_deadline_ms: u64,
+    /// 选英雄阶段已弃权、等开局后统一结算的座位。
+    pending_forfeits: BTreeSet<Seat>,
 }
 
 impl GameTask {
@@ -324,6 +358,15 @@ impl GameTask {
             .now_ms()
             .saturating_add(recruit_seconds(state.turn).saturating_mul(1000));
         let started_at_ms = clock.now_ms();
+        // 单测入口直接用已确定的英雄表开局：反推每座位已选英雄，机器人座位照常记录。
+        let picks: [Option<String>; SEAT_COUNT] =
+            std::array::from_fn(|seat| heroes.get(&(seat as Seat)).cloned());
+        let bot_seats: BTreeSet<Seat> = players
+            .iter()
+            .enumerate()
+            .filter(|(_, slot)| slot.is_bot)
+            .map(|(seat, _)| seat as Seat)
+            .collect();
 
         Ok(Self {
             engine,
@@ -355,7 +398,125 @@ impl GameTask {
             senders: BTreeMap::new(),
             connected: [true; SEAT_COUNT],
             disconnected_at_ms: [None; SEAT_COUNT],
+            stage: GameStage::Playing,
+            candidates: BTreeMap::new(),
+            picks,
+            bot_seats,
+            pick_deadline_ms: 0,
+            pending_forfeits: BTreeSet::new(),
         })
+    }
+
+    /// 构造选英雄阶段的对局驱动：尚未调用 `Engine::start_game`。
+    ///
+    /// `candidates` 与 `players` 来自 [`crate::room::StartPlan`]；机器人座位立即从
+    /// 本人候选中确定性地选第一张，真人等待 `SelectHero` 或截止自动选。
+    ///
+    /// # Errors
+    ///
+    /// 座位数不是 8、或任一可见座位没有候选时返回 [`EngineError`]。
+    pub fn new_picking(
+        catalog: Catalog,
+        seed: u64,
+        playstyles: [Playstyle; 5],
+        candidates: BTreeMap<Seat, Vec<String>>,
+        players: Vec<PlayerSlot>,
+        clock: Arc<dyn Clock>,
+        achievements: Arc<AchievementCatalog>,
+    ) -> Result<Self, EngineError> {
+        if players.len() != SEAT_COUNT {
+            return Err(EngineError(format!(
+                "对局需要 {SEAT_COUNT} 个座位，实际为 {}",
+                players.len()
+            )));
+        }
+        for seat in 0..SEAT_COUNT as Seat {
+            if candidates.get(&seat).is_none_or(Vec::is_empty) {
+                return Err(EngineError(format!("座位 {seat} 没有可用英雄候选")));
+            }
+        }
+
+        let (engine, state) = Engine::new(catalog, seed_from_u64(seed), playstyles);
+        let seats: [SeatInfo; SEAT_COUNT] = std::array::from_fn(|index| SeatInfo {
+            player_id: players[index].player_id.clone(),
+            display_name: players[index].display_name.clone(),
+        });
+        let seat_of = seats
+            .iter()
+            .enumerate()
+            .map(|(seat, info)| (info.player_id.clone(), seat as Seat))
+            .collect();
+        let channels = players
+            .iter()
+            .enumerate()
+            .map(|(seat, slot)| (seat as Seat, slot.channel.clone()))
+            .collect();
+        let bot_seats: BTreeSet<Seat> = players
+            .iter()
+            .enumerate()
+            .filter(|(_, slot)| slot.is_bot)
+            .map(|(seat, _)| seat as Seat)
+            .collect();
+
+        let mut picks: [Option<String>; SEAT_COUNT] = std::array::from_fn(|_| None);
+        for &seat in &bot_seats {
+            picks[usize::from(seat)] = candidates.get(&seat).and_then(|list| list.first().cloned());
+        }
+
+        let now = clock.now_ms();
+        let pick_deadline_ms = now.saturating_add(HERO_PICK_SECONDS.saturating_mul(1000));
+        Ok(Self {
+            engine,
+            state,
+            achievements,
+            achievement_seen: std::array::from_fn(|_| BTreeSet::new()),
+            seat_of,
+            seats,
+            channels,
+            clock,
+            dedup: BTreeMap::new(),
+            seat_stats: std::array::from_fn(|_| SeatStats::default()),
+            hero_uses_baseline: [0; SEAT_COUNT],
+            seed,
+            room_id: String::new(),
+            ranked: false,
+            started_at_ms: now,
+            intent_counts: [0; SEAT_COUNT],
+            rejection_counts: [0; SEAT_COUNT],
+            game_over_logged: false,
+            phase_deadline_ms: pick_deadline_ms,
+            combat_reports: None,
+            combat_ranks: None,
+            combat_started_at_ms: None,
+            combat_acks: [false; SEAT_COUNT],
+            combat_participants: [false; SEAT_COUNT],
+            combat_log: Vec::new(),
+            departed: BTreeSet::new(),
+            senders: BTreeMap::new(),
+            connected: [true; SEAT_COUNT],
+            disconnected_at_ms: [None; SEAT_COUNT],
+            stage: GameStage::HeroPick,
+            candidates,
+            picks,
+            bot_seats,
+            pick_deadline_ms,
+            pending_forfeits: BTreeSet::new(),
+        })
+    }
+
+    /// 当前内部阶段。
+    pub fn stage(&self) -> GameStage {
+        self.stage
+    }
+
+    /// 指定座位已确认的英雄卡 id；尚未选择时返回 `None`。
+    pub fn seat_pick(&self, seat: Seat) -> Option<&str> {
+        self.picks.get(usize::from(seat)).and_then(Option::as_deref)
+    }
+
+    /// 指定座位是否是机器人。
+    pub fn is_bot_seat(&self, seat: Seat) -> bool {
+        self.bot_seats.contains(&seat)
     }
 
     /// 设置房间标识，供 `PlayerView.roomId` 与下行信封使用。
@@ -506,22 +667,63 @@ impl GameTask {
         }
     }
 
-    /// 构造该座位的 `GameStarted` 下行信封。
+    /// 构造该座位的 `HeroPickStarted` 下行信封。
     ///
-    /// 大厅 → 对局交接时使用：载荷是开局瞬间的 `PlayerView`，`seq` 继续沿用该座位
-    /// 在大厅阶段已经推进过的通道，保证同一连接的序号单调递增。
+    /// 大厅 → 对局交接时使用：`seq` 继续沿用该座位在大厅阶段已经推进过的通道，
+    /// 保证同一连接的序号单调递增。
     ///
-    /// 座位不存在或视图/载荷无法编码时返回 `None`。
-    pub fn game_started_for(&mut self, seat: Seat) -> Option<ServerEnvelope> {
-        let view = self.player_view(seat)?;
-        let payload = payload_map(&GameStarted { view }).ok()?;
+    /// 座位不存在或载荷无法编码时返回 `None`。
+    pub fn hero_pick_started_for(&mut self, seat: Seat) -> Option<ServerEnvelope> {
+        let payload = self.hero_pick_payload(seat).ok()?;
         let channel = self.channels.get_mut(&seat)?;
-        let mut envelope = channel.bind("GameStarted", payload).ok()?;
+        let mut envelope = channel.bind("HeroPickStarted", payload).ok()?;
         envelope.player_id = Some(self.seats[usize::from(seat)].player_id.clone());
         if !self.room_id.is_empty() {
             envelope.room_id = Some(self.room_id.clone());
         }
         Some(envelope)
+    }
+
+    /// 构造该座位的选英雄载荷：只填本人候选，`players` 按座位升序。
+    fn hero_pick_payload(&self, seat: Seat) -> Result<Map<String, Value>, ProtocolError> {
+        let candidates = self.candidates.get(&seat).cloned().unwrap_or_default();
+        let players = (0..SEAT_COUNT)
+            .map(|index| HeroPickStartedPlayersItem {
+                display_name: self.seats[index].display_name.clone(),
+                is_bot: self.bot_seats.contains(&(index as Seat)),
+                picked: self.picks[index].is_some(),
+                seat: i64::try_from(index).unwrap_or(i64::MAX),
+            })
+            .collect();
+        payload_map(&HeroPickStarted {
+            candidates,
+            deadline: rfc3339_from_ms(self.pick_deadline_ms),
+            players,
+        })
+    }
+
+    /// 选英雄阶段的全量更新：每个未弃权座位一条 `HeroPick`。
+    fn hero_pick_updates(&self) -> Vec<SeatUpdate> {
+        (0..SEAT_COUNT as Seat)
+            .filter(|seat| !self.is_departed(*seat))
+            .map(|seat| SeatUpdate {
+                player_id: self.seats[usize::from(seat)].player_id.clone(),
+                kind: UpdateKind::HeroPick,
+            })
+            .collect()
+    }
+
+    fn hero_pick_update_for(&self, player_id: &str) -> Vec<SeatUpdate> {
+        if self.departed.contains(player_id) {
+            return Vec::new();
+        }
+        match self.seat_of.get(player_id).copied() {
+            Some(_) => vec![SeatUpdate {
+                player_id: player_id.to_string(),
+                kind: UpdateKind::HeroPick,
+            }],
+            None => Vec::new(),
+        }
     }
 
     /// 把一条更新编码成该座位自己的下行信封，并按座位递增 `seq`。
@@ -561,6 +763,13 @@ impl GameTask {
                 };
                 ("Snapshot", payload_map(&snapshot)?)
             }
+            UpdateKind::HeroPick => ("HeroPickStarted", self.hero_pick_payload(seat)?),
+            UpdateKind::GameStarted => (
+                "GameStarted",
+                payload_map(&GameStarted {
+                    view: self.player_view(seat).ok_or(ProtocolError("BAD_PAYLOAD"))?,
+                })?,
+            ),
             UpdateKind::GameOver(game_over) => ("GameOver", payload_map(game_over)?),
             UpdateKind::AchievementUnlocked {
                 achievement_id,
@@ -598,8 +807,15 @@ impl GameTask {
 
     fn handle_command(&mut self, cmd: RoomCommand) -> Vec<SeatUpdate> {
         match cmd {
-            RoomCommand::Ready { player_id, .. } | RoomCommand::SelectHero { player_id, .. } => {
+            RoomCommand::Ready { player_id, .. } => {
                 // 对局开始后大厅操作一律属于当前阶段不允许。
+                self.player_error(&player_id, None, ErrorCode::InvalidStage, "对局已开始")
+            }
+            RoomCommand::SelectHero { player_id, card_id } => {
+                self.select_hero(&player_id, &card_id)
+            }
+            RoomCommand::StartGame { player_id } | RoomCommand::SetBotFill { player_id, .. } => {
+                // 已进入对局，开始与补位开关都只在大厅阶段有效。
                 self.player_error(&player_id, None, ErrorCode::InvalidStage, "对局已开始")
             }
             RoomCommand::RequestSnapshot { player_id } => self.snapshot_for_player(&player_id),
@@ -631,6 +847,211 @@ impl GameTask {
         }
     }
 
+    /// 选英雄阶段确认本人英雄。
+    ///
+    /// 非选英雄阶段返回 `INVALID_STAGE`；不在房间、已确认或不在本人候选内返回
+    /// `INVALID_CHOICE`。全员确认后立即启动对局并进入机器人驱动。
+    fn select_hero(&mut self, player_id: &str, card_id: &str) -> Vec<SeatUpdate> {
+        if self.stage != GameStage::HeroPick {
+            return self.player_error(
+                player_id,
+                None,
+                ErrorCode::InvalidStage,
+                "当前不在选英雄阶段",
+            );
+        }
+        let Some(seat) = self.seat_of.get(player_id).copied() else {
+            return self.player_error(player_id, None, ErrorCode::NotInRoom, "玩家不在房间内");
+        };
+        if self.departed.contains(player_id) {
+            return Vec::new();
+        }
+        let index = usize::from(seat);
+        if self.picks[index].is_some() {
+            return self.player_error(player_id, None, ErrorCode::InvalidChoice, "已选择英雄");
+        }
+        if !self
+            .candidates
+            .get(&seat)
+            .is_some_and(|list| list.iter().any(|id| id == card_id))
+        {
+            return self.player_error(
+                player_id,
+                None,
+                ErrorCode::InvalidChoice,
+                "不在可选英雄范围内",
+            );
+        }
+        self.picks[index] = Some(card_id.to_string());
+        if self.all_picked() {
+            return self.finish_pick();
+        }
+        self.hero_pick_updates()
+    }
+
+    /// 是否 8 个座位都已确认英雄。
+    fn all_picked(&self) -> bool {
+        self.picks.iter().all(Option::is_some)
+    }
+
+    /// 按「房间种子 + 座位」确定性地取一张本人候选；没有候选时返回 `None`。
+    fn auto_pick(&self, seat: Seat) -> Option<String> {
+        let list = self.candidates.get(&seat)?;
+        if list.is_empty() {
+            return None;
+        }
+        let hash = self.seed ^ u64::from(seat).wrapping_mul(0x9E37_79B9_7F4A_7C15);
+        let index = usize::try_from(hash % list.len() as u64).unwrap_or(0);
+        list.get(index).cloned()
+    }
+
+    /// 选英雄到点：未确认座位确定性自动选，随后启动对局。
+    fn resolve_pick_timeout(&mut self) -> Vec<SeatUpdate> {
+        for seat in 0..SEAT_COUNT as Seat {
+            let index = usize::from(seat);
+            if self.picks[index].is_some() {
+                continue;
+            }
+            if let Some(hero) = self.auto_pick(seat) {
+                println!(
+                    "room-service: hero-pick timeout room={} seat={} reason=timeout",
+                    self.room_id, seat
+                );
+                self.picks[index] = Some(hero);
+            }
+        }
+        if self.all_picked() {
+            self.finish_pick()
+        } else {
+            Vec::new()
+        }
+    }
+
+    /// 选英雄完成：启动规则引擎对局、下发 `GameStarted`、处理待结算弃权并驱动机器人。
+    ///
+    /// 只执行一次：`stage` 离开 `HeroPick` 后重复调用直接返回空更新。
+    fn finish_pick(&mut self) -> Vec<SeatUpdate> {
+        if self.stage != GameStage::HeroPick {
+            return Vec::new();
+        }
+        let heroes: BTreeMap<Seat, String> = (0..SEAT_COUNT as Seat)
+            .filter_map(|seat| {
+                self.picks[usize::from(seat)]
+                    .clone()
+                    .map(|hero| (seat, hero))
+            })
+            .collect();
+        if heroes.len() != SEAT_COUNT {
+            return Vec::new();
+        }
+        let events = match self.engine.start_game(&mut self.state, &heroes) {
+            Ok(events) => events,
+            Err(error) => {
+                println!(
+                    "room-service: start_game failed room={} error={}",
+                    self.room_id, error.0
+                );
+                return Vec::new();
+            }
+        };
+        self.record_events(&events);
+        self.stage = GameStage::Playing;
+        let now = self.clock.now_ms();
+        self.phase_deadline_ms =
+            now.saturating_add(recruit_seconds(self.state.turn).saturating_mul(1000));
+
+        let mut updates = Vec::new();
+        for seat in 0..SEAT_COUNT as Seat {
+            if self.is_departed(seat) {
+                continue;
+            }
+            updates.push(SeatUpdate {
+                player_id: self.seats[usize::from(seat)].player_id.clone(),
+                kind: UpdateKind::GameStarted,
+            });
+        }
+
+        let pending: Vec<Seat> = self.pending_forfeits.iter().copied().collect();
+        for seat in pending {
+            let player_id = self.seats[usize::from(seat)].player_id.clone();
+            updates.extend(self.forfeit(&player_id));
+        }
+        self.pending_forfeits.clear();
+
+        if self.state.phase != Phase::GameOver {
+            updates.extend(self.drive_bots());
+        }
+        updates
+    }
+
+    /// 驱动机器人完成当前招募回合；返回需要广播的更新。
+    ///
+    /// 与模拟器的 `run_turn` 同一循环：`plan` → `apply`，成功清空 `blocked` 并记录
+    /// 事件，被拒时若属可重规划则累加并换下一条，否则记录日志并跳过该机器人本回合
+    /// 剩余动作。回合进入 `Combat` 时调用 [`GameTask::enter_combat`]。
+    fn drive_bots(&mut self) -> Vec<SeatUpdate> {
+        if self.stage != GameStage::Playing || self.state.phase != Phase::Recruit {
+            return Vec::new();
+        }
+        let bot_seats: Vec<Seat> = self.bot_seats.iter().copied().collect();
+        let mut acted = false;
+        for seat in bot_seats {
+            let index = usize::from(seat);
+            if self.state.players[index].eliminated || self.state.players[index].recruit_done {
+                continue;
+            }
+            let mut blocked: Vec<EngineIntent> = Vec::new();
+            let mut replans = 0usize;
+            loop {
+                let Some(intent) = bot_ai::plan(&self.state, seat, &self.engine, &blocked) else {
+                    break;
+                };
+                let ends = matches!(intent, EngineIntent::EndRecruit);
+                if ends && bot_ai::has_pending_choice(&self.state, seat) {
+                    break;
+                }
+                match self.engine.apply(&mut self.state, seat, intent.clone()) {
+                    Ok(outcome) => {
+                        blocked.clear();
+                        replans = 0;
+                        acted = true;
+                        self.record_events(&outcome.events);
+                        if ends {
+                            break;
+                        }
+                    }
+                    Err(reject) => {
+                        if bot_ai::planning_reject(reject.code) {
+                            replans += 1;
+                            if replans > bot_ai::MAX_REPLANS_PER_SEAT_TURN {
+                                break;
+                            }
+                            blocked.push(intent);
+                        } else {
+                            println!(
+                                "room-service: bot intent rejected room={} seat={} intent={:?} code={}",
+                                self.room_id,
+                                seat,
+                                intent,
+                                reject.code.as_str()
+                            );
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        if !acted {
+            return Vec::new();
+        }
+        let all_seats: Vec<Seat> = (0..SEAT_COUNT as Seat).collect();
+        if self.state.phase == Phase::Combat {
+            self.enter_combat(Vec::new()).unwrap_or_default()
+        } else {
+            self.view_updates(&[], &all_seats)
+        }
+    }
+
     /// 计时检查：未到点返回空；到点推进当前阶段。
     ///
     /// 招募到点进入战斗演示（[`GameTask::enter_combat`]）。战斗演示在全部参战
@@ -647,13 +1068,24 @@ impl GameTask {
     }
 
     fn tick_inner(&mut self) -> Vec<SeatUpdate> {
+        let now = self.clock.now_ms();
         let mut updates = Vec::new();
-        if self.clock.now_ms() >= self.phase_deadline_ms {
+        if self.stage == GameStage::HeroPick {
+            if now >= self.pick_deadline_ms {
+                updates = self.resolve_pick_timeout();
+            }
+            self.expire_disconnects();
+            return updates;
+        }
+        if now >= self.phase_deadline_ms {
             updates = match self.state.phase {
                 Phase::Recruit => self.enter_combat(Vec::new()).unwrap_or_default(),
                 Phase::Combat => self.finish_combat().unwrap_or_default(),
                 Phase::Lobby | Phase::Settle | Phase::GameOver => Vec::new(),
             };
+        }
+        if self.state.phase == Phase::Recruit {
+            updates.extend(self.drive_bots());
         }
         self.expire_disconnects();
         updates
@@ -665,6 +1097,10 @@ impl GameTask {
     /// 同一座位内按成就顺序追加，保持确定性。未知成就没有 Steam 映射时跳过。
     fn append_achievement_updates(&mut self, updates: &mut Vec<SeatUpdate>) {
         for (seat, player) in self.state.players.iter().enumerate() {
+            // 机器人不参与成就系统。
+            if self.bot_seats.contains(&(seat as Seat)) {
+                continue;
+            }
             let seen = &mut self.achievement_seen[seat];
             let new: Vec<Achievement> = player
                 .achievements
@@ -695,13 +1131,22 @@ impl GameTask {
 
     /// 记录一个参战座位已播完本场演示；全部参战座位回报后立即结算。
     ///
-    /// 非 `Combat` 阶段、非参战座位或重复回报都只回当前视图，不产生错误。
+    /// 选英雄阶段返回 `INVALID_STAGE`；其余非 `Combat` 阶段、非参战座位或重复
+    /// 回报都只回当前视图，不产生错误。
     fn mark_combat_played(&mut self, player_id: &str) -> Vec<SeatUpdate> {
         let Some(seat) = self.seat_of.get(player_id).copied() else {
             return Vec::new();
         };
         if self.is_departed(seat) {
             return Vec::new();
+        }
+        if self.stage == GameStage::HeroPick {
+            return self.player_error(
+                player_id,
+                None,
+                ErrorCode::InvalidStage,
+                "选英雄阶段不接受战斗演示",
+            );
         }
         if self.state.phase != Phase::Combat || !self.combat_participants[usize::from(seat)] {
             return vec![self.view_update(seat)];
@@ -716,15 +1161,29 @@ impl GameTask {
     /// 对局内主动退出：按规则引擎弃权结算，并把该座位从后续推送中移除。
     ///
     /// 未知玩家、已淘汰座位与 `GameOver` 阶段都返回空更新。弃权座位记录在
-    /// `departed` 中，直到回房重置才统一移除；本局内它的座位与名次仍保留在
+    /// `departed` 中，本局内它的座位与名次仍保留在
     /// 其他人的视图与终局排名里。
     fn forfeit(&mut self, player_id: &str) -> Vec<SeatUpdate> {
         let Some(seat) = self.seat_of.get(player_id).copied() else {
             return Vec::new();
         };
-        // 离开必须登记，无论座位是否已淘汰或本局是否已终局：回房重置只按
-        // `departed` 移除座位，漏记会让该座位（乃至房主身份）永久残留。
+        // 离开必须登记，无论座位是否已淘汰或本局是否已终局：后续投递按
+        // `departed` 跳过该座位，漏记会让已离开的座位继续收到下行消息。
         self.departed.insert(player_id.to_string());
+
+        if self.stage == GameStage::HeroPick {
+            // 选英雄阶段弃权只登记：自动补一张英雄避免阻塞其他人，待开局后统一结算。
+            let index = usize::from(seat);
+            if self.picks[index].is_none() {
+                self.picks[index] = self.auto_pick(seat);
+            }
+            self.pending_forfeits.insert(seat);
+            if self.all_picked() {
+                return self.finish_pick();
+            }
+            return self.hero_pick_updates();
+        }
+
         if self.state.phase == Phase::GameOver || self.state.players[usize::from(seat)].eliminated {
             return Vec::new();
         }
@@ -869,7 +1328,9 @@ impl GameTask {
                 // 推送视图；事件仍按座位过滤，其他人的 `events` 为空。
                 self.record_events(&outcome.events);
                 let all_seats: Vec<Seat> = (0..SEAT_COUNT as Seat).collect();
-                self.view_updates(&outcome.events, &all_seats)
+                let mut updates = self.view_updates(&outcome.events, &all_seats);
+                updates.extend(self.drive_bots());
+                updates
             }
             Err(reject) => {
                 let code = error_code_of(reject.code);
@@ -1139,6 +1600,10 @@ impl GameTask {
         for &seat in outcome.reports.keys() {
             self.combat_participants[usize::from(seat)] = true;
         }
+        // 机器人即时回报战斗演示，等待人类座位回报后立即结算。
+        for &seat in &self.bot_seats {
+            self.combat_acks[usize::from(seat)] = true;
+        }
         self.combat_reports = Some(outcome.reports);
 
         let mut updates = Vec::with_capacity(SEAT_COUNT * 2);
@@ -1196,6 +1661,9 @@ impl GameTask {
                     kind: UpdateKind::GameOver(self.game_over_payload(seat)),
                 });
             }
+        }
+        if self.state.phase == Phase::Recruit {
+            updates.extend(self.drive_bots());
         }
         Ok(updates)
     }
@@ -1388,6 +1856,9 @@ impl GameTask {
     /// 不依赖是否发生过断线。未知玩家不产出更新：`envelope_for` 无法为不存在的
     /// 座位编码，返回错误更新只会制造无法投递的消息。
     fn snapshot_for_player(&self, player_id: &str) -> Vec<SeatUpdate> {
+        if self.stage == GameStage::HeroPick {
+            return self.hero_pick_update_for(player_id);
+        }
         if self.departed.contains(player_id) {
             return Vec::new();
         }
@@ -1425,6 +1896,9 @@ impl GameTask {
         let Some(seat) = self.seat_of.get(player_id).copied() else {
             return Vec::new();
         };
+        if self.stage == GameStage::HeroPick {
+            return self.hero_pick_update_for(player_id);
+        }
         let mut updates = vec![self.snapshot_update(seat)];
 
         if self.state.phase == Phase::Combat
@@ -1476,6 +1950,10 @@ impl GameTask {
     fn expire_disconnects(&mut self) {
         let now = self.clock.now_ms();
         for seat in 0..SEAT_COUNT as Seat {
+            // 机器人不参与断线宽限。
+            if self.bot_seats.contains(&seat) {
+                continue;
+            }
             let index = usize::from(seat);
             let Some(since) = self.disconnected_at_ms[index] else {
                 continue;
@@ -1530,12 +2008,15 @@ impl GameTask {
 
     /// 当前截止时刻的 RFC3339 文本；由毫秒值直接派生，必然可被重新解析。
     fn deadline_rfc3339(&self) -> String {
-        chrono::DateTime::<chrono::Utc>::from_timestamp_millis(
-            i64::try_from(self.phase_deadline_ms).unwrap_or(i64::MAX),
-        )
+        rfc3339_from_ms(self.phase_deadline_ms)
+    }
+}
+
+/// 把 Unix 毫秒时间转成 RFC3339 文本；越界值退化为空串。
+fn rfc3339_from_ms(ms: u64) -> String {
+    chrono::DateTime::<chrono::Utc>::from_timestamp_millis(i64::try_from(ms).unwrap_or(i64::MAX))
         .map(|time| time.to_rfc3339())
         .unwrap_or_default()
-    }
 }
 
 /// 把协议目标解析为引擎目标（区域 + 实例 id）；id 解析失败返回 `NO_SUCH_MINION`。
@@ -1709,6 +2190,31 @@ mod tests {
         assert!(updates.is_empty(), "同一解锁不应重复推送");
     }
 
+    /// 机器人座位从不产生 `AchievementUnlocked`，即使引擎侧解锁了同名成就。
+    #[test]
+    fn bot_seat_never_emits_achievement_unlocked() {
+        let mut task = task();
+        task.bot_seats.insert(1);
+        for seat in [0_usize, 1] {
+            task.state.players[seat]
+                .achievements
+                .unlocked
+                .insert(Achievement::BiologicalEvolution);
+        }
+
+        let mut updates = Vec::new();
+        task.append_achievement_updates(&mut updates);
+
+        assert_eq!(updates.len(), 1, "只有真人座位应产生成就更新");
+        assert_eq!(updates[0].player_id, task.seats[0].player_id);
+        assert!(
+            updates
+                .iter()
+                .all(|update| update.player_id != task.seats[1].player_id),
+            "机器人座位不得产生 AchievementUnlocked"
+        );
+    }
+
     /// 测试固定玩法：覆盖各级随从，保证商店不至于因池过小而全空。
     fn playstyles() -> [Playstyle; 5] {
         [
@@ -1739,9 +2245,7 @@ mod tests {
                 player_id: format!("p{seat}"),
                 display_name: format!("玩家{seat}"),
                 ready: true,
-                hero_card_id: Some(HEROES[seat].to_string()),
-                hero_candidates: vec![HEROES[seat].to_string()],
-                candidate_segment: None,
+                is_bot: false,
                 channel: SeatChannel::new(),
                 connected: true,
                 disconnected_at_ms: None,

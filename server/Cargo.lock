@@ -130,6 +130,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "bot-ai"
+version = "0.1.0"
+dependencies = [
+ "rule-engine",
+]
+
+[[package]]
 name = "bumpalo"
 version = "3.20.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1421,6 +1428,7 @@ name = "room-service"
 version = "0.1.0"
 dependencies = [
  "axum",
+ "bot-ai",
  "chrono",
  "futures-util",
  "protocol",
@@ -1698,6 +1706,7 @@ dependencies = [
 name = "sim"
 version = "0.1.0"
 dependencies = [
+ "bot-ai",
  "futures-util",
  "protocol",
  "rule-engine",

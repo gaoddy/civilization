@@ -4,7 +4,7 @@
 //! 不读环境变量，不使用浮点参与任何判定。例外是 [`load`]：它管理本机服务端进程、
 //! 采样资源并驱动真实网络机器人，只用于压测，不参与规则计算。
 
-pub mod ai;
+pub use bot_ai as ai;
 pub mod bot;
 pub mod load;
 pub mod report;
@@ -17,7 +17,7 @@ use rule_engine::error::EngineError;
 use rule_engine::hash::{EventHasher, state_hash};
 use rule_engine::intent::Intent;
 use rule_engine::playstyles;
-use rule_engine::state::{GameState, PendingChoice, Phase, Seat};
+use rule_engine::state::{GameState, Phase, Seat};
 
 /// 引擎 32 字节种子与日志 64 位种子之间的对应，实现已迁至
 /// [`rule_engine::rng::seed_from_u64`]，此处保持 `sim` 对外 API 不变。
@@ -28,9 +28,6 @@ pub const PLAYER_COUNT: Seat = 8;
 
 /// 单局最大驱动步数上限：防止 AI 缺陷导致死循环。正常对局远低于此值。
 pub const MAX_STEPS_PER_GAME: usize = 200_000;
-
-/// 单座位在单个回合内最多重规划次数：防止引擎给出与 AI 计划不一致的拒绝后原地打转。
-const MAX_REPLANS_PER_SEAT_TURN: usize = 64;
 
 /// 一局中按顺序执行的一条意图。
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -290,21 +287,6 @@ fn alive_count(state: &GameState) -> u8 {
     .unwrap_or(u8::MAX)
 }
 
-/// 该座位是否还有未消费的发现 / 进化 / 目标待选。
-fn seat_has_pending(state: &GameState, seat: Seat) -> bool {
-    state.pending.iter().any(|pending| match pending {
-        PendingChoice::Discover {
-            seat: pending_seat, ..
-        }
-        | PendingChoice::Evolve {
-            seat: pending_seat, ..
-        }
-        | PendingChoice::Target {
-            seat: pending_seat, ..
-        } => *pending_seat == seat,
-    })
-}
-
 fn finish_stats(engine: &Engine, state: &GameState, stats: &mut GameStats) {
     let winner = state.ranking.first().copied().unwrap_or(0);
     stats.winner = winner;
@@ -349,7 +331,7 @@ fn run_turn(
                 )));
             };
             let ends = matches!(intent, Intent::EndRecruit);
-            if ends && seat_has_pending(state, seat) {
+            if ends && ai::has_pending_choice(state, seat) {
                 // AI 已没有可消费的待选：按超时视为放弃。不记录 `EndRecruit`，
                 // 由本回合的 `finish_recruit` 统一清空待选并进入战斗。
                 break;
@@ -384,7 +366,7 @@ fn run_turn(
                         )));
                     }
                     replans += 1;
-                    if replans > MAX_REPLANS_PER_SEAT_TURN {
+                    if replans > ai::MAX_REPLANS_PER_SEAT_TURN {
                         return Err(EngineError(format!(
                             "座位 {seat} 在回合 {turn} 重规划次数超限，最后拒绝: {} {}",
                             reject.code.as_str(),
