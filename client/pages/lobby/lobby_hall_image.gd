@@ -10,7 +10,10 @@ const HALL_PATH := "res://assets/ui/lobby/lobby_hall.png"
 func _init() -> void:
     name = "LobbyHallImage"
     clip_contents = true
-    add_theme_stylebox_override("panel", UITheme.panel_style("sunken"))
+    var panel := UITheme.panel_style("sunken")
+    # 主视觉铺满整块左栏，面板只留凹陷底色与圆角，不留内容边距。
+    panel.set_content_margin_all(0)
+    add_theme_stylebox_override("panel", panel)
     if not ResourceLoader.exists(HALL_PATH):
         return
     var texture := ResourceLoader.load(HALL_PATH) as Texture2D
