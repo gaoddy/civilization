@@ -2,7 +2,7 @@
 
 > 状态：已实现（v0.1 M1a–M2 房间服务与联网，含断线重连一致性用例与对局观察日志）
 > 代码：`server/crates/room-service`、`server/crates/protocol`、`server/crates/protocol-gen`、`server/migrations`、`protocol/schema/v1`、`protocol/generated`
-> 验收：`make m1-check`、`make db-test`
+> 验收：`make check`、`make db-test`
 
 本文记录 v0.1 已实现的房间服务现状：crate 边界、WebSocket 接入、下行序号、去重、逐座位过滤、计时与断线处理、好友与邀请、房间生命周期、赛后结果、PostgreSQL 持久化、`sim bot` 用法与验收方式；不描述 M1b 的 Godot 客户端，也不描述产品规则（规则见[规则引擎与模拟器](../rule-engine-and-simulator.md)）。
 
@@ -245,11 +245,11 @@ sim load --serve-room-service PATH | --connect ws://HOST:PORT/ws
 
 ## 13. 命令与验收证据
 
-`make m1-check` 汇总 M1a 验收，目标体为：
+`make check` 汇总全量验收，目标体为：
 
 ```make
-m1-check:
-	$(PYTHON) scripts/run_parallel.py \
+check:
+	$(PYTHON) scripts/run_parallel.py $(if $(JOBS),--jobs $(JOBS),) \
 		"$(MAKE) --no-print-directory protocol-rs-check" \
 		"$(MAKE) --no-print-directory protocol-check" \
 		"$(MAKE) --no-print-directory data-check" \
@@ -260,9 +260,9 @@ m1-check:
 
 六项互不依赖，默认按 CPU 数（上限 8）并行执行；`JOBS=<n>` 覆盖并行度，`JOBS=1` 退回串行。任一目标失败时其余目标仍执行完毕，整体非 0 退出并汇总失败命令。
 
-**e2e 由 `make test` 覆盖**：`make test` 的 `cargo test --workspace` 已包含 `room-service/tests/e2e.rs`（真实 WebSocket 起 8 个 bot 打完一局），因此 `m1-check` 不单独再跑一次 e2e，避免重复起 8 个 bot。
+**e2e 由 `make test` 覆盖**：`make test` 的 `cargo test --workspace` 已包含 `room-service/tests/e2e.rs`（真实 WebSocket 起 8 个 bot 打完一局），因此 `check` 不单独再跑一次 e2e，避免重复起 8 个 bot。
 
-下表为 `make m1-check` 一次实际运行的结果（整体退出码 0）：
+下表为 `make check` 一次实际运行的结果（整体退出码 0）：
 
 | 步骤 | 命令 | 结果摘要 | 退出码 |
 | --- | --- | --- | --- |

@@ -6,7 +6,7 @@
 | --- | --- | --- |
 | [架构约束](architecture/README.md) | 联网与技术架构、通信协议与协议字段表、客户端与服务端技术基线；遗留项见 [v0.1 待确认事项](../../versions/v0.1/open-questions.md) | `server/crates/protocol`、`protocol/`、`client/` |
 | [规则引擎与模拟器](rule-engine-and-simulator.md) | `rule-engine` 与 `sim` 两个 crate 的边界、卡牌数据生成、构建与验证命令、报告字段口径、规则用例清单 | `server/`、`scripts/`、`Makefile` |
-| [房间服务与联网](room-service/README.md) | `room-service` 与 `protocol` 的边界、`/ws` 接入与信封、下行序号与去重、逐座位过滤、计时与断线、好友与邀请、PostgreSQL 持久化、`sim bot` 用法、`make m1-check` 验收证据 | `server/crates/room-service`、`server/crates/protocol`、`server/migrations`、`protocol/`、`Makefile` |
+| [房间服务与联网](room-service/README.md) | `room-service` 与 `protocol` 的边界、`/ws` 接入与信封、下行序号与去重、逐座位过滤、计时与断线、好友与邀请、PostgreSQL 持久化、`sim bot` 用法、`make check` 验收证据 | `server/crates/room-service`、`server/crates/protocol`、`server/migrations`、`protocol/`、`Makefile` |
 | [Godot 客户端](client.md) | Godot 工程结构、`GameStore`/`Net`/`CardDB` 职责、六场景、生成物与运行方式、客户端验收、桌面端导出（`make client-export`） | `client/`、`Makefile` |
 | [Steam 接入](steam-integration.md) | 渠道抽象、Steam 登录与邀请、账号与绑定、成就契约、导出/签名/公证/上传入口 | `client/autoload/platform.gd`、`client/platform/`、`server/crates/room-service/src/{steam,phone_code,account,room,net}.rs`、`deploy/steam` |
 | [卡片封面美术生成](card-cover-art.md) | 已落盘卡面素材的风格基线、prompt 模板、主题符号映射与去水印约束 | `scripts/process_assets.py`、`client/assets/` |
