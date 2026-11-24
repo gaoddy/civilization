@@ -7,7 +7,7 @@ era: future
 categories: [play:mammal, play:machine]
 taxon: physics
 cost: 3
-skills: [trigger-friendly-single-plus-2-plus-2]
+skills: [trigger-all-friendly-plus-0-plus-1]
 ---
 
 # 广义相对论
@@ -22,13 +22,13 @@ skills: [trigger-friendly-single-plus-2-plus-2]
 | 星级 | 5 |
 | 时代 | 未来 |
 | 玩法 | 哺乳纲、机械 |
-| 技能 | trigger-friendly-single-plus-2-plus-2 |
+| 技能 | trigger-all-friendly-plus-0-plus-1 |
 | 费用 | 3 |
 | 科学分类 | 科学 › 物理学 |
 
 ## 效果
 
-使一个友方随从获得 +2/+2
+使你的随从获得 +0/+1
 
 ## 出处
 

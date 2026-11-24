@@ -3021,7 +3021,7 @@
     "in_shop_pool": true,
     "level": 5,
     "skills": [
-      "trigger-friendly-single-plus-2-plus-2"
+      "trigger-all-friendly-plus-0-plus-1"
     ],
     "subtype": null,
     "taxon": "physics"
