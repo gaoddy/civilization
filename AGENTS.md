@@ -71,6 +71,7 @@
 - 固定路径只由 `make` 目标写入，不手改：`ios/`、`desktop/`、`desktop-local/`、`steam/`、`android/`、`wireframes/`、`ui_smoke_*.log`、`ui_preview.log`、`loadtest-*.json`、`sim-batch.json`、`sim-report.log`。
 - 一次性探针、截图与临时数据统一放 `output/scratch/<日期>-<主题>/`；任务结束前要么迁到真源位置，要么删除。
 - 效果牌封面源按需临时放到 `output/effect-covers/generated/`（`ASSET_COVERS` 默认值），`make assets-covers` 处理完即可删除。
+- `make font-subset` 自动把源字体下载到 `output/fonts/`，并在缺少 fontTools 时创建 `output/fonttools-venv/`；两者都是缓存，删掉后重跑目标即可恢复。
 - 服务端发布记录写到 `docs/current/technical/deployment/releases/<日期>-<env>-<提交>.md`，不写进 `output/`。
 
 ### 文档
