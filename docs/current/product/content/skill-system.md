@@ -191,8 +191,8 @@ OnAllyKill|Decompose|self|basis=pre_kill,duration=permanent
 
 | 筛选键 | 取值示例 | 使用技能数 |
 | --- | --- | --- |
-| `taxon` | `taxon=animalia`、`taxon=canidae` | 22 |
-| `playstyle` | `playstyle=machine`、`playstyle=plant`、`playstyle=virus` | 72 |
+| `taxon` | `taxon=animalia`、`taxon=canidae` | 14 |
+| `playstyle` | `playstyle=machine`、`playstyle=plant`、`playstyle=virus` | 71 |
 | `keyword` | `keyword=breed`、`keyword=taunt`、`keyword=poison` | 0 |
 | `type` | `type=minion` | 3 |
 | `id` | `id=gongjianshou` | 1 |
@@ -205,7 +205,7 @@ OnAllyKill|Decompose|self|basis=pre_kill,duration=permanent
 
 | 技能 | 引用数 |
 | --- | --- |
-| `shout` 战吼 | 24 |
+| `shout` 战吼 | 22 |
 | `keyword-taunt` 嘲讽 | 22 |
 | `keyword-contagion` 传染 | 16 |
 | `keyword-sow` 播种 | 16 |
