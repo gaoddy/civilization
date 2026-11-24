@@ -7,8 +7,8 @@ taxon: ammonitidae
 subtype: mollusk
 level: 7
 era: prehistoric
-attack: 12
-health: 17
+attack: 10
+health: 15
 skills: [deathrattle-summon-2-ammonites, mimic-1]
 ---
 
@@ -25,8 +25,8 @@ skills: [deathrattle-summon-2-ammonites, mimic-1]
 | 子类 | 软体 |
 | 星级 | 7 |
 | 时代 | 史前 |
-| 攻击力 | 12 |
-| 生命值 | 17 |
+| 攻击力 | 10 |
+| 生命值 | 15 |
 | 关键词 | 亡语 |
 | 技能 | deathrattle-summon-2-ammonites；mimic-1 |
 | 科学分类 | 动物界 › 软体动物门 › 头足纲 › 菊石目 › 菊石科 |
@@ -38,7 +38,7 @@ skills: [deathrattle-summon-2-ammonites, mimic-1]
 ## 设计说明
 
 定位：头足纲的终局分裂单位，死亡后留下两个 5/5 的菊石幼体。
-平衡边界：7 星 12/17；攻击力取该星级偏下，生命值取该星级中位；关键词折算 4 点，合计 33，等于 33 上限。
+平衡边界：7 星 10/15；攻击力取该星级下限，生命值取该星级偏下；关键词折算 4 点，合计 29，低于 33 上限 4 点。
 使用建议：作为后期核心站场，逼迫敌方交出单体解牌。
 
 ## 出处

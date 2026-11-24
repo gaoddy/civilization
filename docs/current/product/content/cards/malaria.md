@@ -7,8 +7,8 @@ taxon: plasmodiidae
 subtype: parasite
 level: 3
 era: primitive
-attack: 3
-health: 5
+attack: 6
+health: 4
 skills: [combatstart-random-enemy-contagion-1]
 ---
 
@@ -25,8 +25,8 @@ skills: [combatstart-random-enemy-contagion-1]
 | 子类 | 寄生虫 |
 | 星级 | 3 |
 | 时代 | 原始 |
-| 攻击力 | 3 |
-| 生命值 | 5 |
+| 攻击力 | 6 |
+| 生命值 | 4 |
 | 关键词 | 无 |
 | 技能 | combatstart-random-enemy-contagion-1 |
 | 科学分类 | 原生生物界 › 顶复门 › 无腔纲 › 血孢子虫目 › 疟原虫科 |

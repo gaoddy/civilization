@@ -7,7 +7,7 @@ taxon: drosophilidae
 subtype: insect
 level: 1
 era: prehistoric
-attack: 3
+attack: 2
 health: 3
 skills: [keyword-breed-1]
 ---
@@ -25,7 +25,7 @@ skills: [keyword-breed-1]
 | 子类 | 昆虫 |
 | 星级 | 1 |
 | 时代 | 史前 |
-| 攻击力 | 3 |
+| 攻击力 | 2 |
 | 生命值 | 3 |
 | 关键词 | 繁衍 1 |
 | 技能 | keyword-breed-1 |

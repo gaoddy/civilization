@@ -7,8 +7,8 @@ taxon: transport
 subtype: spaceflight
 level: 7
 era: future
-attack: 11
-health: 14
+attack: 12
+health: 15
 skills: [keyword-ignore-taunt]
 ---
 
@@ -25,8 +25,8 @@ skills: [keyword-ignore-taunt]
 | 子类 | 航天 |
 | 星级 | 7 |
 | 时代 | 未来 |
-| 攻击力 | 11 |
-| 生命值 | 14 |
+| 攻击力 | 12 |
+| 生命值 | 15 |
 | 关键词 | 无视嘲讽 |
 | 技能 | keyword-ignore-taunt |
 | 科学分类 | 造物 › 交通与运载 |

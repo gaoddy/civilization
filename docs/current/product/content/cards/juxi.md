@@ -8,7 +8,7 @@ subtype: reptile
 level: 2
 era: primitive
 attack: 2
-health: 4
+health: 5
 skills: [keyword-evolve]
 ---
 
@@ -26,7 +26,7 @@ skills: [keyword-evolve]
 | 星级 | 2 |
 | 时代 | 原始 |
 | 攻击力 | 2 |
-| 生命值 | 4 |
+| 生命值 | 5 |
 | 关键词 | 进化 |
 | 技能 | keyword-evolve |
 | 科学分类 | 动物界 › 脊索动物门 › 爬行纲 › 有鳞目 › 巨蜥科 |

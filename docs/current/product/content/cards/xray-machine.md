@@ -7,8 +7,8 @@ taxon: life-medical
 subtype: medical
 level: 4
 era: modern
-attack: 4
-health: 6
+attack: 7
+health: 7
 skills: [keyword-ignore-taunt]
 ---
 
@@ -25,8 +25,8 @@ skills: [keyword-ignore-taunt]
 | 子类 | 医疗 |
 | 星级 | 4 |
 | 时代 | 现代 |
-| 攻击力 | 4 |
-| 生命值 | 6 |
+| 攻击力 | 7 |
+| 生命值 | 7 |
 | 关键词 | 无视嘲讽 |
 | 技能 | keyword-ignore-taunt |
 | 科学分类 | 造物 › 生活与医疗 |

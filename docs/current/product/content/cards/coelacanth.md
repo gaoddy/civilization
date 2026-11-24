@@ -7,7 +7,7 @@ taxon: coelacanthidae
 subtype: fish
 level: 5
 era: modern
-attack: 7
+attack: 9
 health: 8
 skills: [keyword-reborn, aura-school-fish-1]
 ---
@@ -25,7 +25,7 @@ skills: [keyword-reborn, aura-school-fish-1]
 | 子类 | 鱼类 |
 | 星级 | 5 |
 | 时代 | 现代 |
-| 攻击力 | 7 |
+| 攻击力 | 9 |
 | 生命值 | 8 |
 | 关键词 | 复生 |
 | 技能 | keyword-reborn；aura-school-fish-1 |
@@ -38,7 +38,7 @@ skills: [keyword-reborn, aura-school-fish-1]
 ## 设计说明
 
 定位：鱼纲的高攻复生单位，为鱼群提供第二次站场。
-平衡边界：5 星 7/8；攻击力取该星级偏下，生命值取该星级下限；关键词折算 3 点，合计 18，低于 22 上限 4 点。
+平衡边界：5 星 9/8；攻击力取该星级上限，生命值取该星级下限；关键词折算 3 点，合计 20，低于 22 上限 2 点。
 使用建议：放在承受伤害的位置，复生后仍可享受群聚光环。
 
 ## 出处

@@ -7,8 +7,8 @@ taxon: elephantidae
 subtype: beast
 level: 6
 era: prehistoric
-attack: 11
-health: 14
+attack: 12
+health: 10
 skills: [aura-school-mammal, shout]
 ---
 
@@ -25,8 +25,8 @@ skills: [aura-school-mammal, shout]
 | 子类 | 猛兽 |
 | 星级 | 6 |
 | 时代 | 史前 |
-| 攻击力 | 11 |
-| 生命值 | 14 |
+| 攻击力 | 12 |
+| 生命值 | 10 |
 | 关键词 | 无 |
 | 技能 | aura-school-mammal；shout |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 长鼻目 › 象科 |

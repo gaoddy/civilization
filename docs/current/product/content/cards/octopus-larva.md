@@ -7,8 +7,8 @@ taxon: octopodidae
 subtype: mollusk
 level: 1
 era: prehistoric
-attack: 2
-health: 2
+attack: 1
+health: 3
 skills: [deathrattle-summon-octopus-larva-1]
 ---
 
@@ -25,8 +25,8 @@ skills: [deathrattle-summon-octopus-larva-1]
 | 子类 | 软体 |
 | 星级 | 1 |
 | 时代 | 史前 |
-| 攻击力 | 2 |
-| 生命值 | 2 |
+| 攻击力 | 1 |
+| 生命值 | 3 |
 | 关键词 | 亡语 |
 | 技能 | deathrattle-summon-octopus-larva-1 |
 | 科学分类 | 动物界 › 软体动物门 › 头足纲 › 八腕目 › 章鱼科 |
@@ -38,7 +38,7 @@ skills: [deathrattle-summon-octopus-larva-1]
 ## 设计说明
 
 定位：头足纲的早期分裂单位，用低费场面换取持续站场。
-平衡边界：1 星 2/2，攻击力取该星级中位，生命值取该星级下限，靠分裂补充铺场。
+平衡边界：1 星 1/3，生命值取该星级上限，靠分裂补充铺场。
 使用建议：适合前期交换，死亡后留下的幼体能继续吸收伤害。
 
 ## 出处

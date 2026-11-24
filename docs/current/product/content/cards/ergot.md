@@ -7,8 +7,8 @@ taxon: clavicipitaceae
 subtype: fungus
 level: 5
 era: feudal
-attack: 7
-health: 11
+attack: 6
+health: 12
 skills: [decompose-ally-kill-pre-kill, deathrattle-summon-2-spores-2-2]
 ---
 
@@ -25,8 +25,8 @@ skills: [decompose-ally-kill-pre-kill, deathrattle-summon-2-spores-2-2]
 | 子类 | 真菌 |
 | 星级 | 5 |
 | 时代 | 封建 |
-| 攻击力 | 7 |
-| 生命值 | 11 |
+| 攻击力 | 6 |
+| 生命值 | 12 |
 | 关键词 | 分解；亡语 |
 | 技能 | decompose-ally-kill-pre-kill；deathrattle-summon-2-spores-2-2 |
 | 科学分类 | 真菌界 › 子囊菌门 › 粪壳菌纲 › 肉座菌目 › 麦角科 |

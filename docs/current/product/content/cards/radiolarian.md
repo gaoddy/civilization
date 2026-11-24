@@ -7,8 +7,8 @@ taxon: spongodiscidae
 subtype: protozoa
 level: 5
 era: prehistoric
-attack: 9
-health: 11
+attack: 7
+health: 10
 skills: [deathrattle-all-enemies-damage-2, aura-other-protozoa-plus-1-attack]
 ---
 
@@ -25,8 +25,8 @@ skills: [deathrattle-all-enemies-damage-2, aura-other-protozoa-plus-1-attack]
 | 子类 | 原生生物 |
 | 星级 | 5 |
 | 时代 | 史前 |
-| 攻击力 | 9 |
-| 生命值 | 11 |
+| 攻击力 | 7 |
+| 生命值 | 10 |
 | 关键词 | 亡语 |
 | 技能 | deathrattle-all-enemies-damage-2；aura-other-protozoa-plus-1-attack |
 | 科学分类 | 原生生物界 › 放射虫门 › 多囊纲 › 泡沫虫目 › 海绵盘虫科 |
@@ -38,7 +38,7 @@ skills: [deathrattle-all-enemies-damage-2, aura-other-protozoa-plus-1-attack]
 ## 设计说明
 
 定位：原生生物界 5 星群体亡语伤害单位，负责清扫残血。
-平衡边界：5 星 9/11；攻击力取该星级偏上，生命值取该星级偏上；关键词折算 2 点，合计 22，等于 22 上限。
+平衡边界：5 星 7/10；攻击力取该星级偏下，生命值取该星级中位；关键词折算 2 点，合计 19，低于 22 上限 3 点。
 使用建议：在敌方完成铺场后交换，用亡语压低全体生命。
 
 ## 出处

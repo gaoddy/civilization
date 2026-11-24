@@ -7,8 +7,8 @@ taxon: euglenaceae
 subtype: protozoa
 level: 3
 era: classical
-attack: 4
-health: 5
+attack: 3
+health: 6
 skills: [aura-other-protozoa-plus-1-attack, deathrattle-summon-amoeba-larva-1]
 ---
 
@@ -25,8 +25,8 @@ skills: [aura-other-protozoa-plus-1-attack, deathrattle-summon-amoeba-larva-1]
 | 子类 | 原生生物 |
 | 星级 | 3 |
 | 时代 | 古典 |
-| 攻击力 | 4 |
-| 生命值 | 5 |
+| 攻击力 | 3 |
+| 生命值 | 6 |
 | 关键词 | 亡语 |
 | 技能 | aura-other-protozoa-plus-1-attack；deathrattle-summon-amoeba-larva-1 |
 | 科学分类 | 原生生物界 › 眼虫门 › 眼虫纲 › 眼虫目 › 眼虫科 |

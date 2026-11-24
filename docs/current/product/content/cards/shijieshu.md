@@ -8,7 +8,7 @@ subtype: tree
 level: 6
 era: future
 attack: 8
-health: 16
+health: 14
 skills: [keyword-sow, aura-plant-plus-1-plus-1]
 ---
 
@@ -26,7 +26,7 @@ skills: [keyword-sow, aura-plant-plus-1-plus-1]
 | 星级 | 6 |
 | 时代 | 未来 |
 | 攻击力 | 8 |
-| 生命值 | 16 |
+| 生命值 | 14 |
 | 关键词 | 播种 |
 | 技能 | keyword-sow；aura-plant-plus-1-plus-1 |
 | 科学分类 | 植物界 › 未定科 |

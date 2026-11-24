@@ -8,7 +8,7 @@ subtype: tree
 level: 3
 era: feudal
 attack: 3
-health: 7
+health: 4
 skills: [keyword-sow, keyword-taunt]
 ---
 
@@ -26,7 +26,7 @@ skills: [keyword-sow, keyword-taunt]
 | 星级 | 3 |
 | 时代 | 封建 |
 | 攻击力 | 3 |
-| 生命值 | 7 |
+| 生命值 | 4 |
 | 关键词 | 播种；嘲讽 |
 | 技能 | keyword-sow；keyword-taunt |
 | 科学分类 | 植物界 › 被子植物门 › 单子叶植物纲 › 禾本目 › 禾本科 |

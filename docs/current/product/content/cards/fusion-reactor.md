@@ -7,8 +7,8 @@ taxon: power-energy
 subtype: power
 level: 6
 era: future
-attack: 8
-health: 10
+attack: 9
+health: 12
 skills: [aura-mech-plus-2-plus-2]
 ---
 
@@ -25,8 +25,8 @@ skills: [aura-mech-plus-2-plus-2]
 | 子类 | 动力 |
 | 星级 | 6 |
 | 时代 | 未来 |
-| 攻击力 | 8 |
-| 生命值 | 10 |
+| 攻击力 | 9 |
+| 生命值 | 12 |
 | 关键词 | 无 |
 | 技能 | aura-mech-plus-2-plus-2 |
 | 科学分类 | 造物 › 动力与能源 |

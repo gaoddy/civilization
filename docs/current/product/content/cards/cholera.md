@@ -7,8 +7,8 @@ taxon: vibrionaceae
 subtype: bacteria
 level: 4
 era: feudal
-attack: 4
-health: 7
+attack: 5
+health: 8
 skills: [combatstart-random-enemy-contagion-1, keyword-contagion]
 ---
 
@@ -25,8 +25,8 @@ skills: [combatstart-random-enemy-contagion-1, keyword-contagion]
 | 子类 | 细菌 |
 | 星级 | 4 |
 | 时代 | 封建 |
-| 攻击力 | 4 |
-| 生命值 | 7 |
+| 攻击力 | 5 |
+| 生命值 | 8 |
 | 关键词 | 传染 |
 | 技能 | combatstart-random-enemy-contagion-1；keyword-contagion |
 | 科学分类 | 细菌域 › 变形菌门 › γ-变形菌纲 › 肠杆菌目 › 弧菌科 |

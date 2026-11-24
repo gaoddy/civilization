@@ -7,7 +7,7 @@ taxon: hominidae
 subtype: modification
 level: 7
 era: future
-attack: 11
+attack: 15
 health: 14
 skills: [keyword-evolve, shout]
 ---
@@ -25,7 +25,7 @@ skills: [keyword-evolve, shout]
 | 子类 | 改造 |
 | 星级 | 7 |
 | 时代 | 未来 |
-| 攻击力 | 11 |
+| 攻击力 | 15 |
 | 生命值 | 14 |
 | 关键词 | 进化 |
 | 技能 | keyword-evolve；shout |

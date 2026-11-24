@@ -7,7 +7,7 @@ taxon: elephantidae
 subtype: beast
 level: 3
 era: classical
-attack: 5
+attack: 4
 health: 7
 skills: [keyword-taunt]
 ---
@@ -25,7 +25,7 @@ skills: [keyword-taunt]
 | 子类 | 猛兽 |
 | 星级 | 3 |
 | 时代 | 古典 |
-| 攻击力 | 5 |
+| 攻击力 | 4 |
 | 生命值 | 7 |
 | 关键词 | 嘲讽 |
 | 技能 | keyword-taunt |

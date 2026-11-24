@@ -7,7 +7,7 @@ taxon: argonautidae
 subtype: mollusk
 level: 4
 era: classical
-attack: 6
+attack: 5
 health: 8
 skills: [keyword-stealth, mimic-1]
 ---
@@ -25,7 +25,7 @@ skills: [keyword-stealth, mimic-1]
 | 子类 | 软体 |
 | 星级 | 4 |
 | 时代 | 古典 |
-| 攻击力 | 6 |
+| 攻击力 | 5 |
 | 生命值 | 8 |
 | 关键词 | 潜行 |
 | 技能 | keyword-stealth；mimic-1 |
@@ -38,7 +38,7 @@ skills: [keyword-stealth, mimic-1]
 ## 设计说明
 
 定位：头足纲的潜行站场单位，负责稳定站场。
-平衡边界：4 星 6/8；攻击力取该星级中位，生命值取该星级中位；关键词折算 3 点，合计 17，等于 17 上限。
+平衡边界：4 星 5/8；攻击力取该星级偏下，生命值取该星级中位；关键词折算 3 点，合计 16，低于 17 上限 1 点。
 使用建议：先手站场吸收全体伤害，再寻找机会打破潜行换血。
 
 ## 出处

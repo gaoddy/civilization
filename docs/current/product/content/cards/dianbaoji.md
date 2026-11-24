@@ -7,8 +7,8 @@ taxon: information-computing
 subtype: communication
 level: 3
 era: industrial
-attack: 4
-health: 4
+attack: 3
+health: 8
 skills: [combatstart-leftmost-damage-3, shout]
 ---
 
@@ -25,8 +25,8 @@ skills: [combatstart-leftmost-damage-3, shout]
 | 子类 | 通信 |
 | 星级 | 3 |
 | 时代 | 工业 |
-| 攻击力 | 4 |
-| 生命值 | 4 |
+| 攻击力 | 3 |
+| 生命值 | 8 |
 | 关键词 | 无 |
 | 技能 | combatstart-leftmost-damage-3；shout |
 | 科学分类 | 造物 › 信息与计算 |

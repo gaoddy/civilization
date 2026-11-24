@@ -7,8 +7,8 @@ taxon: hominidae
 subtype: unit
 level: 3
 era: feudal
-attack: 4
-health: 5
+attack: 3
+health: 4
 skills: [keyword-taunt, shout]
 ---
 
@@ -25,8 +25,8 @@ skills: [keyword-taunt, shout]
 | 子类 | 兵种 |
 | 星级 | 3 |
 | 时代 | 封建 |
-| 攻击力 | 4 |
-| 生命值 | 5 |
+| 攻击力 | 3 |
+| 生命值 | 4 |
 | 关键词 | 嘲讽 |
 | 技能 | keyword-taunt；shout |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |

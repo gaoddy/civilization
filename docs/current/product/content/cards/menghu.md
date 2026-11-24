@@ -7,7 +7,7 @@ taxon: felidae
 subtype: mammal
 level: 3
 era: primitive
-attack: 4
+attack: 3
 health: 6
 skills: [keyword-evolve, shout]
 ---
@@ -25,7 +25,7 @@ skills: [keyword-evolve, shout]
 | 子类 | 哺乳 |
 | 星级 | 3 |
 | 时代 | 原始 |
-| 攻击力 | 4 |
+| 攻击力 | 3 |
 | 生命值 | 6 |
 | 关键词 | 进化 |
 | 技能 | keyword-evolve；shout |

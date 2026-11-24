@@ -7,7 +7,7 @@ taxon: poaceae
 subtype: crop
 level: 4
 era: feudal
-attack: 4
+attack: 5
 health: 8
 skills: [keyword-sow, keyword-breed-1]
 ---
@@ -25,7 +25,7 @@ skills: [keyword-sow, keyword-breed-1]
 | 子类 | 作物 |
 | 星级 | 4 |
 | 时代 | 封建 |
-| 攻击力 | 4 |
+| 攻击力 | 5 |
 | 生命值 | 8 |
 | 关键词 | 播种；繁衍 1 |
 | 技能 | keyword-sow；keyword-breed-1 |

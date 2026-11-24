@@ -8,7 +8,7 @@ subtype: mammal
 level: 2
 era: primitive
 attack: 2
-health: 3
+health: 6
 skills: [aura-other-biology-plus-1-attack]
 ---
 
@@ -26,7 +26,7 @@ skills: [aura-other-biology-plus-1-attack]
 | 星级 | 2 |
 | 时代 | 原始 |
 | 攻击力 | 2 |
-| 生命值 | 3 |
+| 生命值 | 6 |
 | 关键词 | 无 |
 | 技能 | aura-other-biology-plus-1-attack |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 食肉目 › 犬科 |

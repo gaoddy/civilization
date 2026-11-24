@@ -7,7 +7,7 @@ taxon: elephantidae
 subtype: mammal
 level: 2
 era: prehistoric
-attack: 4
+attack: 2
 health: 6
 skills: [deathrattle-all-friendly-plus-0-plus-1]
 ---
@@ -25,7 +25,7 @@ skills: [deathrattle-all-friendly-plus-0-plus-1]
 | 子类 | 哺乳 |
 | 星级 | 2 |
 | 时代 | 史前 |
-| 攻击力 | 4 |
+| 攻击力 | 2 |
 | 生命值 | 6 |
 | 关键词 | 无 |
 | 技能 | deathrattle-all-friendly-plus-0-plus-1 |

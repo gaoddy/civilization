@@ -7,8 +7,8 @@ taxon: production-construction
 subtype: architecture
 level: 6
 era: future
-attack: 10
-health: 12
+attack: 9
+health: 13
 skills: [keyword-divine-shield, keyword-assemble-1]
 ---
 
@@ -25,8 +25,8 @@ skills: [keyword-divine-shield, keyword-assemble-1]
 | 子类 | 建筑 |
 | 星级 | 6 |
 | 时代 | 未来 |
-| 攻击力 | 10 |
-| 生命值 | 12 |
+| 攻击力 | 9 |
+| 生命值 | 13 |
 | 关键词 | 护盾；装配 1 |
 | 技能 | keyword-divine-shield；keyword-assemble-1 |
 | 科学分类 | 造物 › 生产与建筑 |

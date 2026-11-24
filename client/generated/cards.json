@@ -11,7 +11,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "industrial",
-    "health": 7,
+    "health": 6,
     "id": "adam-smith",
     "in_shop_pool": true,
     "level": 4,
@@ -59,7 +59,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "modern",
-    "health": 11,
+    "health": 9,
     "id": "airplane",
     "in_shop_pool": true,
     "level": 5,
@@ -116,7 +116,7 @@
     "taxon": "diomedeidae"
   },
   {
-    "attack": 12,
+    "attack": 10,
     "card_type": "minion",
     "categories": [
       {
@@ -127,7 +127,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "prehistoric",
-    "health": 17,
+    "health": 15,
     "id": "ammonite",
     "in_shop_pool": true,
     "level": 7,
@@ -159,7 +159,7 @@
     "taxon": "ammonitidae"
   },
   {
-    "attack": 2,
+    "attack": 1,
     "card_type": "minion",
     "categories": [
       {
@@ -170,7 +170,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "prehistoric",
-    "health": 2,
+    "health": 3,
     "id": "amoeba",
     "in_shop_pool": true,
     "level": 1,
@@ -241,7 +241,7 @@
     "taxon": "amoebidae"
   },
   {
-    "attack": 4,
+    "attack": 3,
     "card_type": "minion",
     "categories": [
       {
@@ -360,7 +360,7 @@
     "taxon": "teratornithidae"
   },
   {
-    "attack": 6,
+    "attack": 5,
     "card_type": "minion",
     "categories": [
       {
@@ -405,7 +405,7 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 6,
+    "attack": 8,
     "card_type": "minion",
     "categories": [
       {
@@ -416,7 +416,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "future",
-    "health": 8,
+    "health": 10,
     "id": "artificial-womb",
     "in_shop_pool": true,
     "level": 5,
@@ -439,7 +439,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "industrial",
-    "health": 5,
+    "health": 7,
     "id": "aspergillus",
     "in_shop_pool": true,
     "level": 3,
@@ -537,7 +537,7 @@
     "taxon": "myoviridae"
   },
   {
-    "attack": 3,
+    "attack": 2,
     "card_type": "minion",
     "categories": [
       {
@@ -552,7 +552,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "prehistoric",
-    "health": 3,
+    "health": 2,
     "id": "baiyi",
     "in_shop_pool": true,
     "level": 1,
@@ -585,7 +585,7 @@
     "taxon": "biology"
   },
   {
-    "attack": 3,
+    "attack": 2,
     "card_type": "minion",
     "categories": [
       {
@@ -607,7 +607,7 @@
     "taxon": "apidae"
   },
   {
-    "attack": 7,
+    "attack": 4,
     "card_type": "minion",
     "categories": [
       {
@@ -618,7 +618,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "industrial",
-    "health": 9,
+    "health": 8,
     "id": "beethoven",
     "in_shop_pool": true,
     "level": 4,
@@ -629,7 +629,7 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 8,
+    "attack": 7,
     "card_type": "minion",
     "categories": [
       {
@@ -640,7 +640,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "primitive",
-    "health": 6,
+    "health": 7,
     "id": "beetle",
     "in_shop_pool": true,
     "level": 4,
@@ -696,7 +696,7 @@
     "taxon": "biology"
   },
   {
-    "attack": 2,
+    "attack": 3,
     "card_type": "minion",
     "categories": [
       {
@@ -740,7 +740,7 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 5,
+    "attack": 4,
     "card_type": "minion",
     "categories": [
       {
@@ -804,7 +804,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "modern",
-    "health": 6,
+    "health": 5,
     "id": "blue-ringed-octopus",
     "in_shop_pool": true,
     "level": 3,
@@ -850,7 +850,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "modern",
-    "health": 6,
+    "health": 10,
     "id": "boxer",
     "in_shop_pool": true,
     "level": 4,
@@ -895,7 +895,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "modern",
-    "health": 8,
+    "health": 7,
     "id": "bruce-lee",
     "in_shop_pool": true,
     "level": 4,
@@ -1000,7 +1000,7 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 3,
+    "attack": 2,
     "card_type": "minion",
     "categories": [
       {
@@ -1011,7 +1011,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "primitive",
-    "health": 4,
+    "health": 3,
     "id": "carp",
     "in_shop_pool": true,
     "level": 1,
@@ -1033,7 +1033,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "primitive",
-    "health": 4,
+    "health": 3,
     "id": "changmaoshou",
     "in_shop_pool": true,
     "level": 2,
@@ -1088,7 +1088,7 @@
     "taxon": "politics"
   },
   {
-    "attack": 3,
+    "attack": 1,
     "card_type": "minion",
     "categories": [
       {
@@ -1110,7 +1110,7 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 4,
+    "attack": 5,
     "card_type": "minion",
     "categories": [
       {
@@ -1125,7 +1125,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "feudal",
-    "health": 7,
+    "health": 8,
     "id": "cholera",
     "in_shop_pool": true,
     "level": 4,
@@ -1214,7 +1214,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "industrial",
-    "health": 6,
+    "health": 8,
     "id": "clostridium-tetani",
     "in_shop_pool": true,
     "level": 3,
@@ -1271,7 +1271,7 @@
     "taxon": "elapidae"
   },
   {
-    "attack": 7,
+    "attack": 9,
     "card_type": "minion",
     "categories": [
       {
@@ -1305,7 +1305,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "modern",
-    "health": 11,
+    "health": 13,
     "id": "colossal-squid",
     "in_shop_pool": true,
     "level": 6,
@@ -1425,7 +1425,7 @@
     "taxon": "crocodylidae"
   },
   {
-    "attack": 6,
+    "attack": 5,
     "card_type": "minion",
     "categories": [
       {
@@ -1489,7 +1489,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "primitive",
-    "health": 4,
+    "health": 3,
     "id": "cuttlefish",
     "in_shop_pool": true,
     "level": 2,
@@ -1595,7 +1595,7 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 5,
+    "attack": 4,
     "card_type": "minion",
     "categories": [
       {
@@ -1618,7 +1618,7 @@
     "taxon": "flaviviridae"
   },
   {
-    "attack": 4,
+    "attack": 3,
     "card_type": "minion",
     "categories": [
       {
@@ -1629,7 +1629,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "industrial",
-    "health": 4,
+    "health": 8,
     "id": "dianbaoji",
     "in_shop_pool": true,
     "level": 3,
@@ -1641,7 +1641,7 @@
     "taxon": "information-computing"
   },
   {
-    "attack": 8,
+    "attack": 6,
     "card_type": "minion",
     "categories": [
       {
@@ -1652,7 +1652,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "industrial",
-    "health": 10,
+    "health": 12,
     "id": "dianhua-jiaohuanji",
     "in_shop_pool": true,
     "level": 5,
@@ -1664,7 +1664,7 @@
     "taxon": "information-computing"
   },
   {
-    "attack": 9,
+    "attack": 10,
     "card_type": "minion",
     "categories": [
       {
@@ -1675,7 +1675,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "industrial",
-    "health": 11,
+    "health": 12,
     "id": "difference-engine",
     "in_shop_pool": true,
     "level": 6,
@@ -1735,7 +1735,7 @@
     "taxon": "biology"
   },
   {
-    "attack": 5,
+    "attack": 4,
     "card_type": "minion",
     "categories": [
       {
@@ -1750,7 +1750,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "future",
-    "health": 7,
+    "health": 9,
     "id": "dolly",
     "in_shop_pool": true,
     "level": 4,
@@ -1762,7 +1762,7 @@
     "taxon": "bovidae"
   },
   {
-    "attack": 2,
+    "attack": 1,
     "card_type": "minion",
     "categories": [
       {
@@ -1784,7 +1784,7 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 3,
+    "attack": 2,
     "card_type": "minion",
     "categories": [
       {
@@ -1799,7 +1799,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "classical",
-    "health": 4,
+    "health": 5,
     "id": "doushouchang-shizi",
     "in_shop_pool": true,
     "level": 2,
@@ -1833,7 +1833,7 @@
     "taxon": "libellulidae"
   },
   {
-    "attack": 12,
+    "attack": 15,
     "card_type": "minion",
     "categories": [
       {
@@ -1900,7 +1900,7 @@
     "taxon": "biology"
   },
   {
-    "attack": 12,
+    "attack": 13,
     "card_type": "minion",
     "categories": [
       {
@@ -1923,7 +1923,7 @@
     "taxon": "power-energy"
   },
   {
-    "attack": 2,
+    "attack": 1,
     "card_type": "minion",
     "categories": [
       {
@@ -1934,7 +1934,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "modern",
-    "health": 4,
+    "health": 5,
     "id": "e-coli",
     "in_shop_pool": true,
     "level": 1,
@@ -1945,7 +1945,7 @@
     "taxon": "enterobacteriaceae"
   },
   {
-    "attack": 7,
+    "attack": 6,
     "card_type": "minion",
     "categories": [
       {
@@ -1960,7 +1960,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "modern",
-    "health": 13,
+    "health": 12,
     "id": "ebola",
     "in_shop_pool": true,
     "level": 5,
@@ -1972,7 +1972,7 @@
     "taxon": "filoviridae"
   },
   {
-    "attack": 7,
+    "attack": 10,
     "card_type": "minion",
     "categories": [
       {
@@ -1983,7 +1983,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "industrial",
-    "health": 9,
+    "health": 8,
     "id": "edison",
     "in_shop_pool": true,
     "level": 5,
@@ -2055,7 +2055,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "modern",
-    "health": 4,
+    "health": 5,
     "id": "einstein-fridge",
     "in_shop_pool": true,
     "level": 3,
@@ -2075,7 +2075,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "future",
-    "health": 14,
+    "health": 15,
     "id": "engineered-virus",
     "in_shop_pool": true,
     "level": 6,
@@ -2113,7 +2113,7 @@
     "taxon": "mathematics"
   },
   {
-    "attack": 7,
+    "attack": 6,
     "card_type": "minion",
     "categories": [
       {
@@ -2124,7 +2124,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "feudal",
-    "health": 11,
+    "health": 12,
     "id": "ergot",
     "in_shop_pool": true,
     "level": 5,
@@ -2158,7 +2158,7 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 4,
+    "attack": 3,
     "card_type": "minion",
     "categories": [
       {
@@ -2169,7 +2169,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "classical",
-    "health": 5,
+    "health": 6,
     "id": "euglena",
     "in_shop_pool": true,
     "level": 3,
@@ -2181,7 +2181,7 @@
     "taxon": "euglenaceae"
   },
   {
-    "attack": 7,
+    "attack": 6,
     "card_type": "minion",
     "categories": [
       {
@@ -2230,7 +2230,7 @@
     "taxon": "military"
   },
   {
-    "attack": 3,
+    "attack": 2,
     "card_type": "minion",
     "categories": [
       {
@@ -2391,7 +2391,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "feudal",
-    "health": 5,
+    "health": 6,
     "id": "fengche",
     "in_shop_pool": true,
     "level": 3,
@@ -2471,7 +2471,7 @@
     "taxon": "actinopterygii-incertae-sedis"
   },
   {
-    "attack": 4,
+    "attack": 5,
     "card_type": "minion",
     "categories": [
       {
@@ -2482,7 +2482,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "modern",
-    "health": 8,
+    "health": 7,
     "id": "fleming",
     "in_shop_pool": true,
     "level": 4,
@@ -2504,7 +2504,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "classical",
-    "health": 5,
+    "health": 4,
     "id": "fly-agaric",
     "in_shop_pool": true,
     "level": 2,
@@ -2515,7 +2515,7 @@
     "taxon": "amanitaceae"
   },
   {
-    "attack": 5,
+    "attack": 4,
     "card_type": "minion",
     "categories": [
       {
@@ -2526,7 +2526,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "classical",
-    "health": 6,
+    "health": 5,
     "id": "flying-fish",
     "in_shop_pool": true,
     "level": 3,
@@ -2538,7 +2538,7 @@
     "taxon": "exocoetidae"
   },
   {
-    "attack": 8,
+    "attack": 7,
     "card_type": "minion",
     "categories": [
       {
@@ -2549,7 +2549,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "prehistoric",
-    "health": 10,
+    "health": 9,
     "id": "foraminifera",
     "in_shop_pool": true,
     "level": 5,
@@ -2609,7 +2609,7 @@
     "taxon": "biology"
   },
   {
-    "attack": 8,
+    "attack": 9,
     "card_type": "minion",
     "categories": [
       {
@@ -2620,7 +2620,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "future",
-    "health": 10,
+    "health": 12,
     "id": "fusion-reactor",
     "in_shop_pool": true,
     "level": 6,
@@ -2716,7 +2716,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "classical",
-    "health": 6,
+    "health": 4,
     "id": "ganlanshu",
     "in_shop_pool": true,
     "level": 2,
@@ -2749,7 +2749,7 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 1,
+    "attack": 2,
     "card_type": "minion",
     "categories": [
       {
@@ -2760,7 +2760,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "prehistoric",
-    "health": 2,
+    "health": 3,
     "id": "gear",
     "in_shop_pool": true,
     "level": 1,
@@ -2782,7 +2782,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "primitive",
-    "health": 5,
+    "health": 4,
     "id": "gecko",
     "in_shop_pool": true,
     "level": 2,
@@ -2804,7 +2804,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "modern",
-    "health": 10,
+    "health": 13,
     "id": "giant-amoeba",
     "in_shop_pool": true,
     "level": 6,
@@ -2839,7 +2839,7 @@
     "taxon": "rhizostomatidae"
   },
   {
-    "attack": 7,
+    "attack": 8,
     "card_type": "minion",
     "categories": [
       {
@@ -2850,7 +2850,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "modern",
-    "health": 10,
+    "health": 11,
     "id": "giant-squid",
     "in_shop_pool": true,
     "level": 5,
@@ -2862,7 +2862,7 @@
     "taxon": "architeuthidae"
   },
   {
-    "attack": 7,
+    "attack": 6,
     "card_type": "minion",
     "categories": [
       {
@@ -2873,7 +2873,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "classical",
-    "health": 9,
+    "health": 7,
     "id": "giardia",
     "in_shop_pool": true,
     "level": 4,
@@ -2930,7 +2930,7 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 10,
+    "attack": 9,
     "card_type": "minion",
     "categories": [
       {
@@ -2964,7 +2964,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "industrial",
-    "health": 9,
+    "health": 11,
     "id": "gongchangzhu",
     "in_shop_pool": true,
     "level": 5,
@@ -2998,7 +2998,7 @@
     "taxon": "weapon-siege"
   },
   {
-    "attack": 5,
+    "attack": 6,
     "card_type": "minion",
     "categories": [
       {
@@ -3043,7 +3043,7 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 8,
+    "attack": 9,
     "card_type": "minion",
     "categories": [
       {
@@ -3054,7 +3054,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "modern",
-    "health": 10,
+    "health": 9,
     "id": "gongyegongren",
     "in_shop_pool": true,
     "level": 5,
@@ -3066,7 +3066,7 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 8,
+    "attack": 9,
     "card_type": "minion",
     "categories": [
       {
@@ -3077,7 +3077,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "modern",
-    "health": 10,
+    "health": 9,
     "id": "great-white-shark",
     "in_shop_pool": true,
     "level": 5,
@@ -3178,7 +3178,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "modern",
-    "health": 13,
+    "health": 14,
     "id": "guanzhuangbingdu",
     "in_shop_pool": true,
     "level": 6,
@@ -3190,7 +3190,7 @@
     "taxon": "coronaviridae"
   },
   {
-    "attack": 3,
+    "attack": 2,
     "card_type": "minion",
     "categories": [
       {
@@ -3291,7 +3291,7 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 4,
+    "attack": 5,
     "card_type": "minion",
     "categories": [
       {
@@ -3302,7 +3302,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "modern",
-    "health": 6,
+    "health": 8,
     "id": "hela-cell",
     "in_shop_pool": true,
     "level": 4,
@@ -3375,7 +3375,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "modern",
-    "health": 6,
+    "health": 10,
     "id": "hiv",
     "in_shop_pool": true,
     "level": 4,
@@ -3503,7 +3503,7 @@
     "taxon": "military"
   },
   {
-    "attack": 5,
+    "attack": 4,
     "card_type": "minion",
     "categories": [
       {
@@ -3518,7 +3518,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "industrial",
-    "health": 10,
+    "health": 7,
     "id": "huangrebing",
     "in_shop_pool": true,
     "level": 4,
@@ -3529,7 +3529,7 @@
     "taxon": "flaviviridae"
   },
   {
-    "attack": 6,
+    "attack": 7,
     "card_type": "minion",
     "categories": [
       {
@@ -3552,7 +3552,7 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 6,
+    "attack": 3,
     "card_type": "minion",
     "categories": [
       {
@@ -3635,7 +3635,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "prehistoric",
-    "health": 5,
+    "health": 3,
     "id": "hydra",
     "in_shop_pool": true,
     "level": 1,
@@ -3646,7 +3646,7 @@
     "taxon": "hydridae"
   },
   {
-    "attack": 4,
+    "attack": 3,
     "card_type": "minion",
     "categories": [
       {
@@ -3694,7 +3694,7 @@
     "taxon": "medicine"
   },
   {
-    "attack": 4,
+    "attack": 3,
     "card_type": "minion",
     "categories": [
       {
@@ -3898,7 +3898,7 @@
     "taxon": "biology"
   },
   {
-    "attack": 11,
+    "attack": 15,
     "card_type": "minion",
     "categories": [
       {
@@ -3947,7 +3947,7 @@
     "taxon": "biology"
   },
   {
-    "attack": 2,
+    "attack": 3,
     "card_type": "minion",
     "categories": [
       {
@@ -3958,7 +3958,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "prehistoric",
-    "health": 5,
+    "health": 3,
     "id": "juelei",
     "in_shop_pool": true,
     "level": 2,
@@ -3980,7 +3980,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "primitive",
-    "health": 6,
+    "health": 5,
     "id": "juhua",
     "in_shop_pool": true,
     "level": 3,
@@ -4029,7 +4029,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "primitive",
-    "health": 4,
+    "health": 5,
     "id": "juxi",
     "in_shop_pool": true,
     "level": 2,
@@ -4040,7 +4040,7 @@
     "taxon": "varanidae"
   },
   {
-    "attack": 4,
+    "attack": 3,
     "card_type": "minion",
     "categories": [
       {
@@ -4055,7 +4055,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "prehistoric",
-    "health": 3,
+    "health": 4,
     "id": "juying",
     "in_shop_pool": true,
     "level": 2,
@@ -4077,7 +4077,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "prehistoric",
-    "health": 5,
+    "health": 4,
     "id": "juzi",
     "in_shop_pool": true,
     "level": 1,
@@ -4154,7 +4154,7 @@
     "taxon": "earth-science"
   },
   {
-    "attack": 3,
+    "attack": 4,
     "card_type": "minion",
     "categories": [
       {
@@ -4165,7 +4165,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "modern",
-    "health": 4,
+    "health": 6,
     "id": "kanzi",
     "in_shop_pool": true,
     "level": 3,
@@ -4199,7 +4199,7 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 9,
+    "attack": 6,
     "card_type": "minion",
     "categories": [
       {
@@ -4210,7 +4210,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "modern",
-    "health": 11,
+    "health": 12,
     "id": "koko",
     "in_shop_pool": true,
     "level": 5,
@@ -4286,7 +4286,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "primitive",
-    "health": 3,
+    "health": 6,
     "id": "kuangquanbing",
     "in_shop_pool": true,
     "level": 2,
@@ -4330,7 +4330,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "prehistoric",
-    "health": 2,
+    "health": 4,
     "id": "lactobacillus",
     "in_shop_pool": true,
     "level": 1,
@@ -4402,7 +4402,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "primitive",
-    "health": 3,
+    "health": 6,
     "id": "langqunshouling",
     "in_shop_pool": true,
     "level": 2,
@@ -4505,7 +4505,7 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 4,
+    "attack": 5,
     "card_type": "minion",
     "categories": [
       {
@@ -4520,7 +4520,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "modern",
-    "health": 7,
+    "health": 5,
     "id": "likeciti",
     "in_shop_pool": true,
     "level": 3,
@@ -4658,7 +4658,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "prehistoric",
-    "health": 5,
+    "health": 4,
     "id": "lizard",
     "in_shop_pool": true,
     "level": 1,
@@ -4669,7 +4669,7 @@
     "taxon": "lacertidae"
   },
   {
-    "attack": 4,
+    "attack": 5,
     "card_type": "minion",
     "categories": [
       {
@@ -4691,7 +4691,7 @@
     "taxon": "acrididae"
   },
   {
-    "attack": 5,
+    "attack": 3,
     "card_type": "minion",
     "categories": [
       {
@@ -4702,7 +4702,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "classical",
-    "health": 6,
+    "health": 7,
     "id": "luban",
     "in_shop_pool": true,
     "level": 3,
@@ -4713,7 +4713,7 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 4,
+    "attack": 3,
     "card_type": "minion",
     "categories": [
       {
@@ -4724,7 +4724,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "feudal",
-    "health": 5,
+    "health": 4,
     "id": "luomajuntuanbing",
     "in_shop_pool": true,
     "level": 3,
@@ -4758,7 +4758,7 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 4,
+    "attack": 5,
     "card_type": "minion",
     "categories": [
       {
@@ -4781,7 +4781,7 @@
     "taxon": "poaceae"
   },
   {
-    "attack": 3,
+    "attack": 4,
     "card_type": "minion",
     "categories": [
       {
@@ -4792,7 +4792,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "classical",
-    "health": 4,
+    "health": 3,
     "id": "majidun-changqiangbing",
     "in_shop_pool": true,
     "level": 2,
@@ -4803,7 +4803,7 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 3,
+    "attack": 6,
     "card_type": "minion",
     "categories": [
       {
@@ -4818,7 +4818,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "primitive",
-    "health": 5,
+    "health": 4,
     "id": "malaria",
     "in_shop_pool": true,
     "level": 3,
@@ -4829,7 +4829,7 @@
     "taxon": "plasmodiidae"
   },
   {
-    "attack": 11,
+    "attack": 12,
     "card_type": "minion",
     "categories": [
       {
@@ -4840,7 +4840,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "prehistoric",
-    "health": 14,
+    "health": 10,
     "id": "mammoth",
     "in_shop_pool": true,
     "level": 6,
@@ -4924,7 +4924,7 @@
     "taxon": "meganeuridae"
   },
   {
-    "attack": 4,
+    "attack": 3,
     "card_type": "minion",
     "categories": [
       {
@@ -4935,7 +4935,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "industrial",
-    "health": 4,
+    "health": 3,
     "id": "meikuang-jinsique",
     "in_shop_pool": true,
     "level": 2,
@@ -4969,7 +4969,7 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 4,
+    "attack": 3,
     "card_type": "minion",
     "categories": [
       {
@@ -5022,7 +5022,7 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 4,
+    "attack": 2,
     "card_type": "minion",
     "categories": [
       {
@@ -5055,7 +5055,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "industrial",
-    "health": 6,
+    "health": 5,
     "id": "mianhua",
     "in_shop_pool": true,
     "level": 2,
@@ -5088,7 +5088,7 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 7,
+    "attack": 6,
     "card_type": "minion",
     "categories": [
       {
@@ -5099,7 +5099,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "modern",
-    "health": 10,
+    "health": 7,
     "id": "mimic-octopus",
     "in_shop_pool": true,
     "level": 4,
@@ -5252,7 +5252,7 @@
     "taxon": "biology"
   },
   {
-    "attack": 7,
+    "attack": 6,
     "card_type": "minion",
     "categories": [
       {
@@ -5263,7 +5263,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "classical",
-    "health": 10,
+    "health": 9,
     "id": "mozi",
     "in_shop_pool": true,
     "level": 4,
@@ -5285,7 +5285,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "modern",
-    "health": 13,
+    "health": 11,
     "id": "muhammad-ali",
     "in_shop_pool": true,
     "level": 6,
@@ -5330,7 +5330,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "industrial",
-    "health": 8,
+    "health": 9,
     "id": "mycobacterium-tuberculosis",
     "in_shop_pool": true,
     "level": 4,
@@ -5368,7 +5368,7 @@
     "taxon": "literature"
   },
   {
-    "attack": 11,
+    "attack": 10,
     "card_type": "minion",
     "categories": [
       {
@@ -5379,7 +5379,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "future",
-    "health": 19,
+    "health": 20,
     "id": "nami-bingdu",
     "in_shop_pool": true,
     "level": 7,
@@ -5391,7 +5391,7 @@
     "taxon": "virus-incertae-sedis"
   },
   {
-    "attack": 13,
+    "attack": 12,
     "card_type": "minion",
     "categories": [
       {
@@ -5414,7 +5414,7 @@
     "taxon": "automation"
   },
   {
-    "attack": 7,
+    "attack": 8,
     "card_type": "minion",
     "categories": [
       {
@@ -5425,7 +5425,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "future",
-    "health": 8,
+    "health": 10,
     "id": "nanobot",
     "in_shop_pool": true,
     "level": 5,
@@ -5448,7 +5448,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "primitive",
-    "health": 3,
+    "health": 4,
     "id": "nautilus",
     "in_shop_pool": true,
     "level": 2,
@@ -5459,7 +5459,7 @@
     "taxon": "nautilidae"
   },
   {
-    "attack": 8,
+    "attack": 4,
     "card_type": "minion",
     "categories": [
       {
@@ -5470,7 +5470,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "prehistoric",
-    "health": 9,
+    "health": 7,
     "id": "neanderthal",
     "in_shop_pool": true,
     "level": 4,
@@ -5493,7 +5493,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "industrial",
-    "health": 8,
+    "health": 7,
     "id": "neiranji",
     "in_shop_pool": true,
     "level": 4,
@@ -5564,7 +5564,7 @@
     "taxon": "biology"
   },
   {
-    "attack": 4,
+    "attack": 2,
     "card_type": "minion",
     "categories": [
       {
@@ -5579,7 +5579,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "prehistoric",
-    "health": 6,
+    "health": 3,
     "id": "nitaizhangyu",
     "in_shop_pool": true,
     "level": 2,
@@ -5628,7 +5628,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "modern",
-    "health": 12,
+    "health": 11,
     "id": "niuwen",
     "in_shop_pool": true,
     "level": 5,
@@ -5662,7 +5662,7 @@
     "taxon": "caliciviridae"
   },
   {
-    "attack": 5,
+    "attack": 3,
     "card_type": "minion",
     "categories": [
       {
@@ -5673,7 +5673,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "classical",
-    "health": 7,
+    "health": 4,
     "id": "nupao",
     "in_shop_pool": true,
     "level": 3,
@@ -5685,7 +5685,7 @@
     "taxon": "weapon-siege"
   },
   {
-    "attack": 4,
+    "attack": 3,
     "card_type": "minion",
     "categories": [
       {
@@ -5696,7 +5696,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "feudal",
-    "health": 4,
+    "health": 3,
     "id": "nushou",
     "in_shop_pool": true,
     "level": 2,
@@ -5707,7 +5707,7 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 2,
+    "attack": 1,
     "card_type": "minion",
     "categories": [
       {
@@ -5718,7 +5718,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "prehistoric",
-    "health": 2,
+    "health": 3,
     "id": "octopus-larva",
     "in_shop_pool": true,
     "level": 1,
@@ -5749,7 +5749,7 @@
     "taxon": "octopodidae"
   },
   {
-    "attack": 3,
+    "attack": 4,
     "card_type": "minion",
     "categories": [
       {
@@ -5760,7 +5760,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "classical",
-    "health": 6,
+    "health": 4,
     "id": "orchid",
     "in_shop_pool": true,
     "level": 3,
@@ -5832,7 +5832,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "prehistoric",
-    "health": 3,
+    "health": 2,
     "id": "paramecium",
     "in_shop_pool": true,
     "level": 1,
@@ -5876,7 +5876,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "industrial",
-    "health": 11,
+    "health": 13,
     "id": "pasteur",
     "in_shop_pool": true,
     "level": 5,
@@ -5887,7 +5887,7 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 6,
+    "attack": 7,
     "card_type": "minion",
     "categories": [
       {
@@ -5898,7 +5898,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "modern",
-    "health": 8,
+    "health": 11,
     "id": "patrol-mech",
     "in_shop_pool": true,
     "level": 5,
@@ -5921,7 +5921,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "classical",
-    "health": 8,
+    "health": 9,
     "id": "peafowl",
     "in_shop_pool": true,
     "level": 5,
@@ -5955,7 +5955,7 @@
     "taxon": "biology"
   },
   {
-    "attack": 8,
+    "attack": 7,
     "card_type": "minion",
     "categories": [
       {
@@ -5966,7 +5966,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "modern",
-    "health": 6,
+    "health": 7,
     "id": "penguin",
     "in_shop_pool": true,
     "level": 4,
@@ -6022,7 +6022,7 @@
     "taxon": "information-computing"
   },
   {
-    "attack": 6,
+    "attack": 4,
     "card_type": "minion",
     "categories": [
       {
@@ -6033,7 +6033,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "modern",
-    "health": 9,
+    "health": 10,
     "id": "pink-ape",
     "in_shop_pool": true,
     "level": 4,
@@ -6055,7 +6055,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "primitive",
-    "health": 6,
+    "health": 8,
     "id": "plasmodium",
     "in_shop_pool": true,
     "level": 4,
@@ -6111,7 +6111,7 @@
     "taxon": "physaliidae"
   },
   {
-    "attack": 11,
+    "attack": 10,
     "card_type": "minion",
     "categories": [
       {
@@ -6122,7 +6122,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "prehistoric",
-    "health": 18,
+    "health": 15,
     "id": "prototaxites",
     "in_shop_pool": true,
     "level": 7,
@@ -6134,7 +6134,7 @@
     "taxon": "prototaxitaceae"
   },
   {
-    "attack": 7,
+    "attack": 6,
     "card_type": "minion",
     "categories": [
       {
@@ -6145,7 +6145,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "primitive",
-    "health": 12,
+    "health": 11,
     "id": "puffball",
     "in_shop_pool": true,
     "level": 5,
@@ -6157,7 +6157,7 @@
     "taxon": "agaricaceae"
   },
   {
-    "attack": 4,
+    "attack": 6,
     "card_type": "minion",
     "categories": [
       {
@@ -6168,7 +6168,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "feudal",
-    "health": 5,
+    "health": 4,
     "id": "pufferfish",
     "in_shop_pool": true,
     "level": 3,
@@ -6294,7 +6294,7 @@
     "taxon": "military"
   },
   {
-    "attack": 5,
+    "attack": 4,
     "card_type": "minion",
     "categories": [
       {
@@ -6305,7 +6305,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "modern",
-    "health": 9,
+    "health": 8,
     "id": "qinghao",
     "in_shop_pool": true,
     "level": 4,
@@ -6343,7 +6343,7 @@
     "taxon": "medicine"
   },
   {
-    "attack": 3,
+    "attack": 2,
     "card_type": "minion",
     "categories": [
       {
@@ -6354,7 +6354,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "feudal",
-    "health": 5,
+    "health": 3,
     "id": "qishi",
     "in_shop_pool": true,
     "level": 2,
@@ -6391,7 +6391,7 @@
     "taxon": "physics"
   },
   {
-    "attack": 6,
+    "attack": 8,
     "card_type": "minion",
     "categories": [
       {
@@ -6402,7 +6402,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "future",
-    "health": 9,
+    "health": 8,
     "id": "quantum-computer",
     "in_shop_pool": true,
     "level": 5,
@@ -6437,7 +6437,7 @@
     "taxon": "apidae"
   },
   {
-    "attack": 11,
+    "attack": 12,
     "card_type": "minion",
     "categories": [
       {
@@ -6448,7 +6448,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "future",
-    "health": 14,
+    "health": 15,
     "id": "qulv-feichuan",
     "in_shop_pool": true,
     "level": 7,
@@ -6503,7 +6503,7 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 9,
+    "attack": 7,
     "card_type": "minion",
     "categories": [
       {
@@ -6514,7 +6514,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "prehistoric",
-    "health": 11,
+    "health": 10,
     "id": "radiolarian",
     "in_shop_pool": true,
     "level": 5,
@@ -6537,7 +6537,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "feudal",
-    "health": 13,
+    "health": 12,
     "id": "red-coral",
     "in_shop_pool": true,
     "level": 5,
@@ -6593,7 +6593,7 @@
     "taxon": "physics"
   },
   {
-    "attack": 4,
+    "attack": 5,
     "card_type": "minion",
     "categories": [
       {
@@ -6615,7 +6615,7 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 8,
+    "attack": 11,
     "card_type": "minion",
     "categories": [
       {
@@ -6638,7 +6638,7 @@
     "taxon": "elephantidae"
   },
   {
-    "attack": 3,
+    "attack": 4,
     "card_type": "minion",
     "categories": [
       {
@@ -6664,7 +6664,7 @@
     "taxon": "life-medical"
   },
   {
-    "attack": 4,
+    "attack": 6,
     "card_type": "minion",
     "categories": [
       {
@@ -6675,7 +6675,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "modern",
-    "health": 6,
+    "health": 4,
     "id": "robot-dog",
     "in_shop_pool": true,
     "level": 3,
@@ -6749,7 +6749,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "industrial",
-    "health": 7,
+    "health": 6,
     "id": "salmon",
     "in_shop_pool": true,
     "level": 4,
@@ -6783,7 +6783,7 @@
     "taxon": "crocodylidae"
   },
   {
-    "attack": 4,
+    "attack": 2,
     "card_type": "minion",
     "categories": [
       {
@@ -6794,7 +6794,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "primitive",
-    "health": 3,
+    "health": 4,
     "id": "saman",
     "in_shop_pool": true,
     "level": 2,
@@ -6886,7 +6886,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "primitive",
-    "health": 6,
+    "health": 5,
     "id": "sea-anemone",
     "in_shop_pool": true,
     "level": 2,
@@ -6960,7 +6960,7 @@
     "taxon": "plantae-incertae-sedis"
   },
   {
-    "attack": 6,
+    "attack": 5,
     "card_type": "minion",
     "categories": [
       {
@@ -7141,7 +7141,7 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 5,
+    "attack": 3,
     "card_type": "minion",
     "categories": [
       {
@@ -7152,7 +7152,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "feudal",
-    "health": 8,
+    "health": 6,
     "id": "shiitake",
     "in_shop_pool": true,
     "level": 3,
@@ -7174,7 +7174,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "future",
-    "health": 16,
+    "health": 14,
     "id": "shijieshu",
     "in_shop_pool": true,
     "level": 6,
@@ -7201,7 +7201,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "prehistoric",
-    "health": 2,
+    "health": 4,
     "id": "shijunti",
     "in_shop_pool": true,
     "level": 1,
@@ -7212,7 +7212,7 @@
     "taxon": "virus-incertae-sedis"
   },
   {
-    "attack": 2,
+    "attack": 1,
     "card_type": "minion",
     "categories": [
       {
@@ -7223,7 +7223,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "primitive",
-    "health": 3,
+    "health": 4,
     "id": "shilunche",
     "in_shop_pool": true,
     "level": 1,
@@ -7234,7 +7234,7 @@
     "taxon": "transport"
   },
   {
-    "attack": 1,
+    "attack": 2,
     "card_type": "minion",
     "categories": [
       {
@@ -7256,7 +7256,7 @@
     "taxon": "muridae"
   },
   {
-    "attack": 9,
+    "attack": 10,
     "card_type": "minion",
     "categories": [
       {
@@ -7267,7 +7267,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "feudal",
-    "health": 12,
+    "health": 8,
     "id": "shizijun",
     "in_shop_pool": true,
     "level": 5,
@@ -7290,7 +7290,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "prehistoric",
-    "health": 2,
+    "health": 3,
     "id": "shizuniao",
     "in_shop_pool": true,
     "level": 1,
@@ -7301,7 +7301,7 @@
     "taxon": "archaeopterygidae"
   },
   {
-    "attack": 5,
+    "attack": 4,
     "card_type": "minion",
     "categories": [
       {
@@ -7312,7 +7312,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "primitive",
-    "health": 6,
+    "health": 8,
     "id": "shizushou",
     "in_shop_pool": true,
     "level": 3,
@@ -7334,7 +7334,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "primitive",
-    "health": 5,
+    "health": 4,
     "id": "shoupijiang",
     "in_shop_pool": true,
     "level": 2,
@@ -7393,7 +7393,7 @@
     "taxon": "economics"
   },
   {
-    "attack": 4,
+    "attack": 3,
     "card_type": "minion",
     "categories": [
       {
@@ -7426,7 +7426,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "prehistoric",
-    "health": 4,
+    "health": 3,
     "id": "shuishengjue",
     "in_shop_pool": true,
     "level": 2,
@@ -7437,7 +7437,7 @@
     "taxon": "salviniaceae"
   },
   {
-    "attack": 2,
+    "attack": 3,
     "card_type": "minion",
     "categories": [
       {
@@ -7481,7 +7481,7 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 5,
+    "attack": 6,
     "card_type": "minion",
     "categories": [
       {
@@ -7492,7 +7492,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "feudal",
-    "health": 8,
+    "health": 10,
     "id": "simaqian",
     "in_shop_pool": true,
     "level": 4,
@@ -7503,7 +7503,7 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 2,
+    "attack": 4,
     "card_type": "minion",
     "categories": [
       {
@@ -7518,7 +7518,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "primitive",
-    "health": 5,
+    "health": 4,
     "id": "smallpox",
     "in_shop_pool": true,
     "level": 2,
@@ -7540,7 +7540,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "classical",
-    "health": 10,
+    "health": 8,
     "id": "soft-coral",
     "in_shop_pool": true,
     "level": 4,
@@ -7552,7 +7552,7 @@
     "taxon": "alcyoniidae"
   },
   {
-    "attack": 10,
+    "attack": 9,
     "card_type": "minion",
     "categories": [
       {
@@ -7563,7 +7563,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "future",
-    "health": 12,
+    "health": 13,
     "id": "space-elevator",
     "in_shop_pool": true,
     "level": 6,
@@ -7658,7 +7658,7 @@
     "taxon": "fungi-incertae-sedis"
   },
   {
-    "attack": 3,
+    "attack": 5,
     "card_type": "minion",
     "categories": [
       {
@@ -7702,7 +7702,7 @@
     "taxon": "acroporidae"
   },
   {
-    "attack": 3,
+    "attack": 2,
     "card_type": "minion",
     "categories": [
       {
@@ -7724,7 +7724,7 @@
     "taxon": "staphylococcaceae"
   },
   {
-    "attack": 5,
+    "attack": 4,
     "card_type": "minion",
     "categories": [
       {
@@ -7735,7 +7735,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "modern",
-    "health": 7,
+    "health": 8,
     "id": "steam-engine",
     "in_shop_pool": true,
     "level": 4,
@@ -7746,7 +7746,7 @@
     "taxon": "power-energy"
   },
   {
-    "attack": 4,
+    "attack": 2,
     "card_type": "minion",
     "categories": [
       {
@@ -7757,7 +7757,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "primitive",
-    "health": 5,
+    "health": 3,
     "id": "stentor",
     "in_shop_pool": true,
     "level": 2,
@@ -7768,7 +7768,7 @@
     "taxon": "stentoridae"
   },
   {
-    "attack": 10,
+    "attack": 8,
     "card_type": "minion",
     "categories": [
       {
@@ -7779,7 +7779,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "industrial",
-    "health": 11,
+    "health": 9,
     "id": "stephenson",
     "in_shop_pool": true,
     "level": 5,
@@ -7801,7 +7801,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "prehistoric",
-    "health": 4,
+    "health": 5,
     "id": "streptococcus",
     "in_shop_pool": true,
     "level": 2,
@@ -7845,7 +7845,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "prehistoric",
-    "health": 4,
+    "health": 3,
     "id": "suishimaobing",
     "in_shop_pool": true,
     "level": 1,
@@ -7922,7 +7922,7 @@
     "taxon": "bacteria-incertae-sedis"
   },
   {
-    "attack": 1,
+    "attack": 2,
     "card_type": "minion",
     "categories": [
       {
@@ -7933,7 +7933,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "primitive",
-    "health": 4,
+    "health": 3,
     "id": "tai",
     "in_shop_pool": true,
     "level": 1,
@@ -7955,7 +7955,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "future",
-    "health": 11,
+    "health": 12,
     "id": "taikongziminzhe",
     "in_shop_pool": true,
     "level": 6,
@@ -7982,7 +7982,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "modern",
-    "health": 10,
+    "health": 11,
     "id": "tanju",
     "in_shop_pool": true,
     "level": 5,
@@ -8005,7 +8005,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "modern",
-    "health": 8,
+    "health": 6,
     "id": "telephone",
     "in_shop_pool": true,
     "level": 4,
@@ -8027,7 +8027,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "primitive",
-    "health": 4,
+    "health": 3,
     "id": "tengman",
     "in_shop_pool": true,
     "level": 1,
@@ -8038,7 +8038,7 @@
     "taxon": "plantae-incertae-sedis"
   },
   {
-    "attack": 10,
+    "attack": 8,
     "card_type": "minion",
     "categories": [
       {
@@ -8155,7 +8155,7 @@
     "taxon": "military"
   },
   {
-    "attack": 4,
+    "attack": 3,
     "card_type": "minion",
     "categories": [
       {
@@ -8188,7 +8188,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "primitive",
-    "health": 8,
+    "health": 7,
     "id": "tortoise",
     "in_shop_pool": true,
     "level": 3,
@@ -8199,7 +8199,7 @@
     "taxon": "testudinidae"
   },
   {
-    "attack": 5,
+    "attack": 3,
     "card_type": "minion",
     "categories": [
       {
@@ -8210,7 +8210,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "feudal",
-    "health": 4,
+    "health": 6,
     "id": "toushiji",
     "in_shop_pool": true,
     "level": 3,
@@ -8247,7 +8247,7 @@
     "taxon": "economics"
   },
   {
-    "attack": 4,
+    "attack": 6,
     "card_type": "minion",
     "categories": [
       {
@@ -8269,7 +8269,7 @@
     "taxon": "tuberaceae"
   },
   {
-    "attack": 3,
+    "attack": 4,
     "card_type": "minion",
     "categories": [
       {
@@ -8280,7 +8280,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "modern",
-    "health": 4,
+    "health": 5,
     "id": "trypanosome",
     "in_shop_pool": true,
     "level": 3,
@@ -8291,7 +8291,7 @@
     "taxon": "trypanosomatidae"
   },
   {
-    "attack": 2,
+    "attack": 3,
     "card_type": "minion",
     "categories": [
       {
@@ -8306,7 +8306,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "prehistoric",
-    "health": 6,
+    "health": 4,
     "id": "tufu",
     "in_shop_pool": true,
     "level": 2,
@@ -8339,7 +8339,7 @@
     "taxon": "biology"
   },
   {
-    "attack": 3,
+    "attack": 5,
     "card_type": "minion",
     "categories": [
       {
@@ -8383,7 +8383,7 @@
     "taxon": "biology"
   },
   {
-    "attack": 8,
+    "attack": 7,
     "card_type": "minion",
     "categories": [
       {
@@ -8394,7 +8394,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "modern",
-    "health": 8,
+    "health": 9,
     "id": "turing-machine",
     "in_shop_pool": true,
     "level": 5,
@@ -8406,7 +8406,7 @@
     "taxon": "information-computing"
   },
   {
-    "attack": 3,
+    "attack": 4,
     "card_type": "minion",
     "categories": [
       {
@@ -8417,7 +8417,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "modern",
-    "health": 8,
+    "health": 5,
     "id": "turritopsis",
     "in_shop_pool": true,
     "level": 3,
@@ -8428,7 +8428,7 @@
     "taxon": "oceaniidae"
   },
   {
-    "attack": 9,
+    "attack": 8,
     "card_type": "minion",
     "categories": [
       {
@@ -8439,7 +8439,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "modern",
-    "health": 13,
+    "health": 10,
     "id": "vampire-squid",
     "in_shop_pool": true,
     "level": 5,
@@ -8462,7 +8462,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "future",
-    "health": 14,
+    "health": 13,
     "id": "vertical-farm",
     "in_shop_pool": true,
     "level": 6,
@@ -8474,7 +8474,7 @@
     "taxon": "plantae-incertae-sedis"
   },
   {
-    "attack": 4,
+    "attack": 3,
     "card_type": "minion",
     "categories": [
       {
@@ -8485,7 +8485,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "industrial",
-    "health": 8,
+    "health": 7,
     "id": "vibrio-cholerae",
     "in_shop_pool": true,
     "level": 3,
@@ -8497,7 +8497,7 @@
     "taxon": "vibrionaceae"
   },
   {
-    "attack": 12,
+    "attack": 15,
     "card_type": "minion",
     "categories": [
       {
@@ -8508,7 +8508,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "prehistoric",
-    "health": 15,
+    "health": 14,
     "id": "volvox",
     "in_shop_pool": true,
     "level": 7,
@@ -8566,7 +8566,7 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 3,
+    "attack": 2,
     "card_type": "minion",
     "categories": [
       {
@@ -8658,7 +8658,7 @@
     "taxon": "physics"
   },
   {
-    "attack": 8,
+    "attack": 5,
     "card_type": "minion",
     "categories": [
       {
@@ -8669,7 +8669,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "feudal",
-    "health": 8,
+    "health": 7,
     "id": "weijingzhanshi",
     "in_shop_pool": true,
     "level": 4,
@@ -8750,7 +8750,7 @@
     "taxon": "medicine"
   },
   {
-    "attack": 8,
+    "attack": 12,
     "card_type": "minion",
     "categories": [
       {
@@ -8773,7 +8773,7 @@
     "taxon": "rhincodontidae"
   },
   {
-    "attack": 9,
+    "attack": 11,
     "card_type": "minion",
     "categories": [
       {
@@ -8784,7 +8784,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "modern",
-    "health": 12,
+    "health": 11,
     "id": "wireless-telegraph",
     "in_shop_pool": true,
     "level": 6,
@@ -8836,7 +8836,7 @@
     "taxon": "apidae"
   },
   {
-    "attack": 9,
+    "attack": 7,
     "card_type": "minion",
     "categories": [
       {
@@ -8847,7 +8847,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "modern",
-    "health": 13,
+    "health": 10,
     "id": "wright-brothers",
     "in_shop_pool": true,
     "level": 5,
@@ -8858,7 +8858,7 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 4,
+    "attack": 3,
     "card_type": "minion",
     "categories": [
       {
@@ -8869,7 +8869,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "primitive",
-    "health": 3,
+    "health": 4,
     "id": "wuyi",
     "in_shop_pool": true,
     "level": 2,
@@ -8913,7 +8913,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "prehistoric",
-    "health": 5,
+    "health": 6,
     "id": "xiangrikui",
     "in_shop_pool": true,
     "level": 2,
@@ -8994,7 +8994,7 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 3,
+    "attack": 2,
     "card_type": "minion",
     "categories": [
       {
@@ -9016,7 +9016,7 @@
     "taxon": "columbidae"
   },
   {
-    "attack": 14,
+    "attack": 15,
     "card_type": "minion",
     "categories": [
       {
@@ -9027,7 +9027,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "future",
-    "health": 18,
+    "health": 16,
     "id": "xingji-jianzhang",
     "in_shop_pool": true,
     "level": 7,
@@ -9039,7 +9039,7 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 4,
+    "attack": 7,
     "card_type": "minion",
     "categories": [
       {
@@ -9050,7 +9050,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "modern",
-    "health": 6,
+    "health": 7,
     "id": "xray-machine",
     "in_shop_pool": true,
     "level": 4,
@@ -9061,7 +9061,7 @@
     "taxon": "life-medical"
   },
   {
-    "attack": 4,
+    "attack": 2,
     "card_type": "minion",
     "categories": [
       {
@@ -9072,7 +9072,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "prehistoric",
-    "health": 4,
+    "health": 5,
     "id": "xunhuozhe",
     "in_shop_pool": true,
     "level": 2,
@@ -9109,7 +9109,7 @@
     "taxon": "military"
   },
   {
-    "attack": 5,
+    "attack": 3,
     "card_type": "minion",
     "categories": [
       {
@@ -9186,7 +9186,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "prehistoric",
-    "health": 2,
+    "health": 3,
     "id": "yeast",
     "in_shop_pool": true,
     "level": 1,
@@ -9212,7 +9212,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "prehistoric",
-    "health": 3,
+    "health": 6,
     "id": "yelang",
     "in_shop_pool": true,
     "level": 2,
@@ -9223,7 +9223,7 @@
     "taxon": "canidae"
   },
   {
-    "attack": 5,
+    "attack": 4,
     "card_type": "minion",
     "categories": [
       {
@@ -9246,7 +9246,7 @@
     "taxon": "yersiniaceae"
   },
   {
-    "attack": 2,
+    "attack": 1,
     "card_type": "minion",
     "categories": [
       {
@@ -9483,7 +9483,7 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 4,
+    "attack": 5,
     "card_type": "minion",
     "categories": [
       {
@@ -9494,7 +9494,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "primitive",
-    "health": 7,
+    "health": 4,
     "id": "yuanshijixiekuilei",
     "in_shop_pool": true,
     "level": 3,
@@ -9516,7 +9516,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "prehistoric",
-    "health": 3,
+    "health": 2,
     "id": "yuanshizhenjun",
     "in_shop_pool": true,
     "level": 1,
@@ -9641,7 +9641,7 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 4,
+    "attack": 8,
     "card_type": "minion",
     "categories": [
       {
@@ -9652,7 +9652,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "feudal",
-    "health": 7,
+    "health": 6,
     "id": "zhangzhongjing",
     "in_shop_pool": true,
     "level": 4,
@@ -9685,7 +9685,7 @@
     "taxon": "equidae"
   },
   {
-    "attack": 5,
+    "attack": 4,
     "card_type": "minion",
     "categories": [
       {
@@ -9755,7 +9755,7 @@
     "taxon": "military"
   },
   {
-    "attack": 8,
+    "attack": 6,
     "card_type": "minion",
     "categories": [
       {
@@ -9803,7 +9803,7 @@
     "taxon": "power-energy"
   },
   {
-    "attack": 6,
+    "attack": 4,
     "card_type": "minion",
     "categories": [
       {
@@ -9814,7 +9814,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "industrial",
-    "health": 6,
+    "health": 7,
     "id": "zhengqi-jiche",
     "in_shop_pool": true,
     "level": 3,
@@ -9847,7 +9847,7 @@
     "taxon": "power-energy"
   },
   {
-    "attack": 12,
+    "attack": 15,
     "card_type": "minion",
     "categories": [
       {
@@ -9939,7 +9939,7 @@
     "taxon": "economics"
   },
   {
-    "attack": 5,
+    "attack": 6,
     "card_type": "minion",
     "categories": [
       {
@@ -9972,7 +9972,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "feudal",
-    "health": 7,
+    "health": 4,
     "id": "zhulin",
     "in_shop_pool": true,
     "level": 3,

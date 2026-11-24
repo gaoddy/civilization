@@ -7,7 +7,7 @@ taxon: virus-incertae-sedis
 subtype: plague
 level: 3
 era: classical
-attack: 5
+attack: 3
 health: 8
 skills: [combatstart-random-enemy-contagion-1]
 ---
@@ -25,7 +25,7 @@ skills: [combatstart-random-enemy-contagion-1]
 | 子类 | 瘟疫 |
 | 星级 | 3 |
 | 时代 | 古典 |
-| 攻击力 | 5 |
+| 攻击力 | 3 |
 | 生命值 | 8 |
 | 关键词 | 无 |
 | 技能 | combatstart-random-enemy-contagion-1 |

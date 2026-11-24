@@ -7,7 +7,7 @@ taxon: rhincodontidae
 subtype: fish
 level: 6
 era: modern
-attack: 8
+attack: 12
 health: 10
 skills: [aura-school-fish-2, deathrattle-summon-fish-fry-2]
 ---
@@ -25,7 +25,7 @@ skills: [aura-school-fish-2, deathrattle-summon-fish-fry-2]
 | 子类 | 鱼类 |
 | 星级 | 6 |
 | 时代 | 现代 |
-| 攻击力 | 8 |
+| 攻击力 | 12 |
 | 生命值 | 10 |
 | 关键词 | 亡语 |
 | 技能 | aura-school-fish-2；deathrattle-summon-fish-fry-2 |

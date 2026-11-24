@@ -7,7 +7,7 @@ taxon: termitidae
 subtype: insect
 level: 6
 era: modern
-attack: 10
+attack: 8
 health: 10
 skills: [deathrattle-summon-3-termites, keyword-breed-3]
 ---
@@ -25,7 +25,7 @@ skills: [deathrattle-summon-3-termites, keyword-breed-3]
 | 子类 | 昆虫 |
 | 星级 | 6 |
 | 时代 | 现代 |
-| 攻击力 | 10 |
+| 攻击力 | 8 |
 | 生命值 | 10 |
 | 关键词 | 亡语；繁衍 3 |
 | 技能 | deathrattle-summon-3-termites；keyword-breed-3 |
@@ -38,7 +38,7 @@ skills: [deathrattle-summon-3-termites, keyword-breed-3]
 ## 设计说明
 
 定位：6 星分裂与繁衍单位，死亡后留下三个白蚁。
-平衡边界：6 星 10/10；攻击力取该星级中位，生命值取该星级下限；关键词折算 6 点，合计 26，等于 26 上限。
+平衡边界：6 星 8/10；攻击力取该星级下限，生命值取该星级下限；关键词折算 6 点，合计 24，低于 26 上限 2 点。
 使用建议：作为终局场面延续，配合繁衍持续堆高生命。
 
 ## 出处

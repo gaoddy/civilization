@@ -8,7 +8,7 @@ subtype: colonist
 level: 6
 era: future
 attack: 9
-health: 11
+health: 12
 skills: [keyword-divine-shield, shout]
 ---
 
@@ -26,7 +26,7 @@ skills: [keyword-divine-shield, shout]
 | 星级 | 6 |
 | 时代 | 未来 |
 | 攻击力 | 9 |
-| 生命值 | 11 |
+| 生命值 | 12 |
 | 关键词 | 护盾 |
 | 技能 | keyword-divine-shield；shout |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |

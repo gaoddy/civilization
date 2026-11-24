@@ -8,7 +8,7 @@ subtype: mollusk
 level: 6
 era: modern
 attack: 8
-health: 11
+health: 13
 skills: [keyword-stealth, mimic-2]
 ---
 
@@ -26,7 +26,7 @@ skills: [keyword-stealth, mimic-2]
 | 星级 | 6 |
 | 时代 | 现代 |
 | 攻击力 | 8 |
-| 生命值 | 11 |
+| 生命值 | 13 |
 | 关键词 | 潜行 |
 | 技能 | keyword-stealth；mimic-2 |
 | 科学分类 | 动物界 › 软体动物门 › 头足纲 › 开眼目 › 小头鱿科 |

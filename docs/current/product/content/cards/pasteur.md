@@ -8,7 +8,7 @@ subtype: microbiology
 level: 5
 era: industrial
 attack: 6
-health: 11
+health: 13
 skills: [microbiology]
 ---
 
@@ -26,7 +26,7 @@ skills: [microbiology]
 | 星级 | 5 |
 | 时代 | 工业 |
 | 攻击力 | 6 |
-| 生命值 | 11 |
+| 生命值 | 13 |
 | 关键词 | 无 |
 | 技能 | microbiology |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |

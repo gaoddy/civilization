@@ -7,7 +7,7 @@ taxon: weapon-siege
 subtype: siege
 level: 4
 era: feudal
-attack: 5
+attack: 6
 health: 6
 skills: [keyword-assemble-2, shout]
 ---
@@ -25,7 +25,7 @@ skills: [keyword-assemble-2, shout]
 | 子类 | 攻城 |
 | 星级 | 4 |
 | 时代 | 封建 |
-| 攻击力 | 5 |
+| 攻击力 | 6 |
 | 生命值 | 6 |
 | 关键词 | 装配 2 |
 | 技能 | keyword-assemble-2；shout |

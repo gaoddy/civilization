@@ -7,8 +7,8 @@ taxon: power-energy
 subtype: power
 level: 4
 era: modern
-attack: 5
-health: 7
+attack: 4
+health: 8
 skills: [keyword-assemble-2]
 ---
 
@@ -25,8 +25,8 @@ skills: [keyword-assemble-2]
 | 子类 | 动力 |
 | 星级 | 4 |
 | 时代 | 现代 |
-| 攻击力 | 5 |
-| 生命值 | 7 |
+| 攻击力 | 4 |
+| 生命值 | 8 |
 | 关键词 | 装配 2 |
 | 技能 | keyword-assemble-2 |
 | 科学分类 | 造物 › 动力与能源 |

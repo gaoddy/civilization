@@ -7,7 +7,7 @@ taxon: columbidae
 subtype: communication
 level: 1
 era: classical
-attack: 3
+attack: 2
 health: 2
 skills: [battlecry-friendly-growth-once]
 ---
@@ -25,7 +25,7 @@ skills: [battlecry-friendly-growth-once]
 | 子类 | 通信 |
 | 星级 | 1 |
 | 时代 | 古典 |
-| 攻击力 | 3 |
+| 攻击力 | 2 |
 | 生命值 | 2 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-growth-once |

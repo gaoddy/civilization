@@ -7,8 +7,8 @@ taxon: hominidae
 subtype: aviation
 level: 5
 era: modern
-attack: 9
-health: 13
+attack: 7
+health: 10
 skills: [combat-optimal-attack]
 ---
 
@@ -25,8 +25,8 @@ skills: [combat-optimal-attack]
 | 子类 | 航空 |
 | 星级 | 5 |
 | 时代 | 现代 |
-| 攻击力 | 9 |
-| 生命值 | 13 |
+| 攻击力 | 7 |
+| 生命值 | 10 |
 | 关键词 | 无 |
 | 技能 | combat-optimal-attack |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |

@@ -8,7 +8,7 @@ subtype: bacteria
 level: 5
 era: modern
 attack: 6
-health: 10
+health: 11
 skills: [keyword-contagion, combatstart-random-enemy-contagion-1]
 ---
 
@@ -26,7 +26,7 @@ skills: [keyword-contagion, combatstart-random-enemy-contagion-1]
 | 星级 | 5 |
 | 时代 | 现代 |
 | 攻击力 | 6 |
-| 生命值 | 10 |
+| 生命值 | 11 |
 | 关键词 | 传染 |
 | 技能 | keyword-contagion；combatstart-random-enemy-contagion-1 |
 | 科学分类 | 细菌域 › 厚壁菌门 › 芽孢杆菌纲 › 芽孢杆菌目 › 芽孢杆菌科 |

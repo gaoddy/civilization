@@ -7,8 +7,8 @@ taxon: bovidae
 subtype: clone
 level: 4
 era: future
-attack: 5
-health: 7
+attack: 4
+health: 9
 skills: [keyword-reborn, shout]
 ---
 
@@ -25,8 +25,8 @@ skills: [keyword-reborn, shout]
 | 子类 | 克隆 |
 | 星级 | 4 |
 | 时代 | 未来 |
-| 攻击力 | 5 |
-| 生命值 | 7 |
+| 攻击力 | 4 |
+| 生命值 | 9 |
 | 关键词 | 复生 |
 | 技能 | keyword-reborn；shout |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 偶蹄目 › 牛科 |

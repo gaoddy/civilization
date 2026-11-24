@@ -7,8 +7,8 @@ taxon: accipitridae
 subtype: bird
 level: 2
 era: prehistoric
-attack: 4
-health: 3
+attack: 3
+health: 4
 skills: [trigger-friendly-death-self-plus-1-attack]
 ---
 
@@ -25,8 +25,8 @@ skills: [trigger-friendly-death-self-plus-1-attack]
 | 子类 | 鸟类 |
 | 星级 | 2 |
 | 时代 | 史前 |
-| 攻击力 | 4 |
-| 生命值 | 3 |
+| 攻击力 | 3 |
+| 生命值 | 4 |
 | 关键词 | 无 |
 | 技能 | trigger-friendly-death-self-plus-1-attack |
 | 科学分类 | 动物界 › 脊索动物门 › 鸟纲 › 鹰形目 › 鹰科 |

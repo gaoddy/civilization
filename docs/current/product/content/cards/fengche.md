@@ -8,7 +8,7 @@ subtype: vehicle
 level: 3
 era: feudal
 attack: 4
-health: 5
+health: 6
 skills: [keyword-assemble-1, trigger-turn-start-self-plus-0-plus-1]
 ---
 
@@ -26,7 +26,7 @@ skills: [keyword-assemble-1, trigger-turn-start-self-plus-0-plus-1]
 | 星级 | 3 |
 | 时代 | 封建 |
 | 攻击力 | 4 |
-| 生命值 | 5 |
+| 生命值 | 6 |
 | 关键词 | 装配 1 |
 | 技能 | keyword-assemble-1；trigger-turn-start-self-plus-0-plus-1 |
 | 科学分类 | 造物 › 动力与能源 |

@@ -7,8 +7,8 @@ taxon: hominidae
 subtype: primate
 level: 4
 era: prehistoric
-attack: 8
-health: 9
+attack: 4
+health: 7
 skills: [aura-adjacent-mammal, shout]
 ---
 
@@ -25,8 +25,8 @@ skills: [aura-adjacent-mammal, shout]
 | 子类 | 灵长 |
 | 星级 | 4 |
 | 时代 | 史前 |
-| 攻击力 | 8 |
-| 生命值 | 9 |
+| 攻击力 | 4 |
+| 生命值 | 7 |
 | 关键词 | 无 |
 | 技能 | aura-adjacent-mammal；shout |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
@@ -38,7 +38,7 @@ skills: [aura-adjacent-mammal, shout]
 ## 设计说明
 
 定位：哺乳纲的相邻光环单位，放大站位两侧的同玩法随从。
-平衡边界：4 星 8/9；攻击力取该星级上限，生命值取该星级偏上；无关键词折算，合计 17，等于 17 上限。
+平衡边界：4 星 4/7；攻击力取该星级下限，生命值取该星级偏下；无关键词折算，合计 11，低于 17 上限 6 点。
 使用建议：把尼安德特人夹在两个哺乳纲随从之间，让两侧同时吃到 +2/+2。
 
 ## 出处

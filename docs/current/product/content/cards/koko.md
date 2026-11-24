@@ -7,8 +7,8 @@ taxon: hominidae
 subtype: primate
 level: 5
 era: modern
-attack: 9
-health: 11
+attack: 6
+health: 12
 skills: [battlecry-friendly-growth-once, shout]
 ---
 
@@ -25,8 +25,8 @@ skills: [battlecry-friendly-growth-once, shout]
 | 子类 | 灵长 |
 | 星级 | 5 |
 | 时代 | 现代 |
-| 攻击力 | 9 |
-| 生命值 | 11 |
+| 攻击力 | 6 |
+| 生命值 | 12 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-growth-once；shout |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |

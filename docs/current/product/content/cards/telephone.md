@@ -8,7 +8,7 @@ subtype: telecommunication
 level: 4
 era: modern
 attack: 7
-health: 8
+health: 6
 skills: [keyword-assemble-1]
 ---
 
@@ -26,7 +26,7 @@ skills: [keyword-assemble-1]
 | 星级 | 4 |
 | 时代 | 现代 |
 | 攻击力 | 7 |
-| 生命值 | 8 |
+| 生命值 | 6 |
 | 关键词 | 装配 1 |
 | 技能 | keyword-assemble-1 |
 | 科学分类 | 造物 › 信息与计算 |

@@ -7,7 +7,7 @@ taxon: dunkleosteidae
 subtype: fish
 level: 7
 era: prehistoric
-attack: 12
+attack: 15
 health: 14
 skills: [deathrattle-summon-fish-fry-3, aura-school-fish-1]
 ---
@@ -25,7 +25,7 @@ skills: [deathrattle-summon-fish-fry-3, aura-school-fish-1]
 | 子类 | 鱼类 |
 | 星级 | 7 |
 | 时代 | 史前 |
-| 攻击力 | 12 |
+| 攻击力 | 15 |
 | 生命值 | 14 |
 | 关键词 | 亡语 |
 | 技能 | deathrattle-summon-fish-fry-3；aura-school-fish-1 |
@@ -38,7 +38,7 @@ skills: [deathrattle-summon-fish-fry-3, aura-school-fish-1]
 ## 设计说明
 
 定位：鱼纲 7 星大随从，死亡后留下三个鱼苗维持铺场。
-平衡边界：7 星 12/14；攻击力取该星级偏下，生命值取该星级下限；关键词折算 4 点，合计 30，低于 33 上限 3 点。
+平衡边界：7 星 15/14；攻击力取该星级上限，生命值取该星级下限；关键词折算 4 点，合计 33，等于 33 上限。
 使用建议：用于终局交换，鱼苗可继续承接群聚与成长。
 
 ## 出处

@@ -7,8 +7,8 @@ taxon: automation
 subtype: robot
 level: 1
 era: prehistoric
-attack: 1
-health: 2
+attack: 2
+health: 3
 skills: [keyword-assemble-1]
 ---
 
@@ -25,8 +25,8 @@ skills: [keyword-assemble-1]
 | 子类 | 机器人 |
 | 星级 | 1 |
 | 时代 | 史前 |
-| 攻击力 | 1 |
-| 生命值 | 2 |
+| 攻击力 | 2 |
+| 生命值 | 3 |
 | 关键词 | 装配 1 |
 | 技能 | keyword-assemble-1 |
 | 科学分类 | 造物 › 自动机械 |
@@ -38,7 +38,7 @@ skills: [keyword-assemble-1]
 ## 设计说明
 
 定位：1 星装配单位，机械成长链的起点。
-平衡边界：1 星 1/2；攻击力取该星级下限，生命值取该星级下限；关键词折算 2 点，合计 5，低于 8 上限 3 点。
+平衡边界：1 星 2/3；攻击力取该星级中位，生命值取该星级偏下；关键词折算 2 点，合计 7，低于 8 上限 1 点。
 使用建议：早入场，让后续机械随从吃到装配成长。
 
 ## 出处

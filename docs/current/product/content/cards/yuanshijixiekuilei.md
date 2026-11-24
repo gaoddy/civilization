@@ -7,8 +7,8 @@ taxon: automation
 subtype: puppet
 level: 3
 era: primitive
-attack: 4
-health: 7
+attack: 5
+health: 4
 skills: [keyword-assemble-1]
 ---
 
@@ -25,8 +25,8 @@ skills: [keyword-assemble-1]
 | 子类 | 傀儡 |
 | 星级 | 3 |
 | 时代 | 原始 |
-| 攻击力 | 4 |
-| 生命值 | 7 |
+| 攻击力 | 5 |
+| 生命值 | 4 |
 | 关键词 | 装配 1 |
 | 技能 | keyword-assemble-1 |
 | 科学分类 | 造物 › 自动机械 |

@@ -7,7 +7,7 @@ taxon: hominidae
 subtype: unit
 level: 4
 era: feudal
-attack: 6
+attack: 7
 health: 6
 skills: [keyword-windfury, shout]
 ---
@@ -25,7 +25,7 @@ skills: [keyword-windfury, shout]
 | 子类 | 兵种 |
 | 星级 | 4 |
 | 时代 | 封建 |
-| 攻击力 | 6 |
+| 攻击力 | 7 |
 | 生命值 | 6 |
 | 关键词 | 连击 |
 | 技能 | keyword-windfury；shout |

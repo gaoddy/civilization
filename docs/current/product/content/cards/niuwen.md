@@ -8,7 +8,7 @@ subtype: virus
 level: 5
 era: modern
 attack: 7
-health: 12
+health: 11
 skills: [keyword-contagion, combatstart-random-enemy-contagion-1]
 ---
 
@@ -26,7 +26,7 @@ skills: [keyword-contagion, combatstart-random-enemy-contagion-1]
 | 星级 | 5 |
 | 时代 | 现代 |
 | 攻击力 | 7 |
-| 生命值 | 12 |
+| 生命值 | 11 |
 | 关键词 | 传染 |
 | 技能 | keyword-contagion；combatstart-random-enemy-contagion-1 |
 | 科学分类 | 病毒 › 核糖病毒门 › 单股负链病毒纲 › 单股负链病毒目 › 副黏病毒科 |

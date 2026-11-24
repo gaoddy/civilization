@@ -7,8 +7,8 @@ taxon: rickettsiaceae
 subtype: bacteria
 level: 3
 era: modern
-attack: 4
-health: 7
+attack: 5
+health: 5
 skills: [keyword-contagion]
 ---
 
@@ -25,8 +25,8 @@ skills: [keyword-contagion]
 | 子类 | 细菌 |
 | 星级 | 3 |
 | 时代 | 现代 |
-| 攻击力 | 4 |
-| 生命值 | 7 |
+| 攻击力 | 5 |
+| 生命值 | 5 |
 | 关键词 | 传染 |
 | 技能 | keyword-contagion |
 | 科学分类 | 细菌域 › 变形菌门 › α-变形菌纲 › 立克次体目 › 立克次体科 |

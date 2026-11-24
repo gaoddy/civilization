@@ -7,7 +7,7 @@ taxon: hominidae
 subtype: strategist
 level: 3
 era: feudal
-attack: 5
+attack: 6
 health: 4
 skills: [battlecry-friendly-archers-plus-2-attack]
 ---
@@ -25,7 +25,7 @@ skills: [battlecry-friendly-archers-plus-2-attack]
 | 子类 | 军师 |
 | 星级 | 3 |
 | 时代 | 封建 |
-| 攻击力 | 5 |
+| 攻击力 | 6 |
 | 生命值 | 4 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-archers-plus-2-attack |

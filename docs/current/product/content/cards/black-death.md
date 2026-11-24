@@ -7,7 +7,7 @@ taxon: yersiniaceae
 subtype: plague
 level: 4
 era: feudal
-attack: 5
+attack: 4
 health: 9
 skills: [deathrattle-all-enemies-humans-minus-2-health, combatstart-random-enemy-contagion-1]
 ---
@@ -25,7 +25,7 @@ skills: [deathrattle-all-enemies-humans-minus-2-health, combatstart-random-enemy
 | 子类 | 瘟疫 |
 | 星级 | 4 |
 | 时代 | 封建 |
-| 攻击力 | 5 |
+| 攻击力 | 4 |
 | 生命值 | 9 |
 | 关键词 | 亡语 |
 | 技能 | deathrattle-all-enemies-humans-minus-2-health；combatstart-random-enemy-contagion-1 |

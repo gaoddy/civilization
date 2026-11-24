@@ -7,7 +7,7 @@ taxon: elephantidae
 subtype: clone
 level: 6
 era: future
-attack: 8
+attack: 11
 health: 10
 skills: [keyword-evolve, aura-school-mammal]
 ---
@@ -25,7 +25,7 @@ skills: [keyword-evolve, aura-school-mammal]
 | 子类 | 克隆 |
 | 星级 | 6 |
 | 时代 | 未来 |
-| 攻击力 | 8 |
+| 攻击力 | 11 |
 | 生命值 | 10 |
 | 关键词 | 进化 |
 | 技能 | keyword-evolve；aura-school-mammal |

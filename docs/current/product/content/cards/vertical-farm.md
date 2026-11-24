@@ -8,7 +8,7 @@ subtype: architecture
 level: 6
 era: future
 attack: 8
-health: 14
+health: 13
 skills: [keyword-sow, keyword-breed-3]
 ---
 
@@ -26,7 +26,7 @@ skills: [keyword-sow, keyword-breed-3]
 | 星级 | 6 |
 | 时代 | 未来 |
 | 攻击力 | 8 |
-| 生命值 | 14 |
+| 生命值 | 13 |
 | 关键词 | 播种；繁衍 3 |
 | 技能 | keyword-sow；keyword-breed-3 |
 | 科学分类 | 植物界 › 未定科 |

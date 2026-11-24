@@ -7,8 +7,8 @@ taxon: asteraceae
 subtype: medicinal
 level: 4
 era: modern
-attack: 5
-health: 9
+attack: 4
+health: 8
 skills: [keyword-sow, keyword-taunt]
 ---
 
@@ -25,8 +25,8 @@ skills: [keyword-sow, keyword-taunt]
 | 子类 | 药用 |
 | 星级 | 4 |
 | 时代 | 现代 |
-| 攻击力 | 5 |
-| 生命值 | 9 |
+| 攻击力 | 4 |
+| 生命值 | 8 |
 | 关键词 | 播种；嘲讽 |
 | 技能 | keyword-sow；keyword-taunt |
 | 科学分类 | 植物界 › 被子植物门 › 双子叶植物纲 › 菊目 › 菊科 |

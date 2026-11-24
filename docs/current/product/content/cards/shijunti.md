@@ -8,7 +8,7 @@ subtype: microorganism
 level: 1
 era: prehistoric
 attack: 2
-health: 2
+health: 4
 skills: [deathrattle-random-enemy-hp-minus-1]
 ---
 
@@ -26,7 +26,7 @@ skills: [deathrattle-random-enemy-hp-minus-1]
 | 星级 | 1 |
 | 时代 | 史前 |
 | 攻击力 | 2 |
-| 生命值 | 2 |
+| 生命值 | 4 |
 | 关键词 | 亡语 |
 | 技能 | deathrattle-random-enemy-hp-minus-1 |
 | 科学分类 | 病毒 › 未定科 |

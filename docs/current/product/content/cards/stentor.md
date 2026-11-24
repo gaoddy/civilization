@@ -7,8 +7,8 @@ taxon: stentoridae
 subtype: protozoa
 level: 2
 era: primitive
-attack: 4
-health: 5
+attack: 2
+health: 3
 skills: [devour-1]
 ---
 
@@ -25,8 +25,8 @@ skills: [devour-1]
 | 子类 | 原生生物 |
 | 星级 | 2 |
 | 时代 | 原始 |
-| 攻击力 | 4 |
-| 生命值 | 5 |
+| 攻击力 | 2 |
+| 生命值 | 3 |
 | 关键词 | 无 |
 | 技能 | devour-1 |
 | 科学分类 | 原生生物界 › 纤毛门 › 异毛纲 › 异毛目 › 喇叭虫科 |

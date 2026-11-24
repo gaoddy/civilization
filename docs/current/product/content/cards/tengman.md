@@ -8,7 +8,7 @@ subtype: vine
 level: 1
 era: primitive
 attack: 1
-health: 4
+health: 3
 skills: [keyword-sow]
 ---
 
@@ -26,7 +26,7 @@ skills: [keyword-sow]
 | 星级 | 1 |
 | 时代 | 原始 |
 | 攻击力 | 1 |
-| 生命值 | 4 |
+| 生命值 | 3 |
 | 关键词 | 播种 |
 | 技能 | keyword-sow |
 | 科学分类 | 植物界 › 未定科 |

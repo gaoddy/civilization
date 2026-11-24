@@ -7,8 +7,8 @@ taxon: octopodidae
 subtype: mollusk
 level: 4
 era: modern
-attack: 7
-health: 10
+attack: 6
+health: 7
 skills: [mimic-3]
 ---
 
@@ -25,8 +25,8 @@ skills: [mimic-3]
 | 子类 | 软体 |
 | 星级 | 4 |
 | 时代 | 现代 |
-| 攻击力 | 7 |
-| 生命值 | 10 |
+| 攻击力 | 6 |
+| 生命值 | 7 |
 | 关键词 | 无 |
 | 技能 | mimic-3 |
 | 科学分类 | 动物界 › 软体动物门 › 头足纲 › 八腕目 › 章鱼科 |

@@ -8,7 +8,7 @@ subtype: protozoa
 level: 4
 era: primitive
 attack: 5
-health: 6
+health: 8
 skills: [deathrattle-summon-schizont]
 ---
 
@@ -26,7 +26,7 @@ skills: [deathrattle-summon-schizont]
 | 星级 | 4 |
 | 时代 | 原始 |
 | 攻击力 | 5 |
-| 生命值 | 6 |
+| 生命值 | 8 |
 | 关键词 | 亡语 |
 | 技能 | deathrattle-summon-schizont |
 | 科学分类 | 原生生物界 › 顶复门 › 无腔纲 › 血孢子虫目 › 疟原虫科 |
@@ -38,7 +38,7 @@ skills: [deathrattle-summon-schizont]
 ## 设计说明
 
 定位：原生生物界 4 星分裂单位，死亡后留下 3/3 裂殖体。
-平衡边界：4 星 5/6；攻击力取该星级偏下，生命值取该星级下限；关键词折算 4 点，合计 15，低于 17 上限 2 点。
+平衡边界：4 星 5/8；攻击力取该星级偏下，生命值取该星级中位；关键词折算 4 点，合计 17，等于 17 上限。
 使用建议：作为可交换的分裂载体，裂殖体继续承接吞噬收益。
 
 ## 出处

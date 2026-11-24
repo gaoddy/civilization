@@ -7,7 +7,7 @@ taxon: power-energy
 subtype: megastructure
 level: 7
 era: future
-attack: 12
+attack: 13
 health: 15
 skills: [keyword-divine-shield, shout]
 ---
@@ -25,7 +25,7 @@ skills: [keyword-divine-shield, shout]
 | 子类 | 巨构 |
 | 星级 | 7 |
 | 时代 | 未来 |
-| 攻击力 | 12 |
+| 攻击力 | 13 |
 | 生命值 | 15 |
 | 关键词 | 护盾 |
 | 技能 | keyword-divine-shield；shout |

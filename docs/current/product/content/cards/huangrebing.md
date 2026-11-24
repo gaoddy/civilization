@@ -7,8 +7,8 @@ taxon: flaviviridae
 subtype: disease
 level: 4
 era: industrial
-attack: 5
-health: 10
+attack: 4
+health: 7
 skills: [combatstart-random-enemy-contagion-2]
 ---
 
@@ -25,8 +25,8 @@ skills: [combatstart-random-enemy-contagion-2]
 | 子类 | 疾病 |
 | 星级 | 4 |
 | 时代 | 工业 |
-| 攻击力 | 5 |
-| 生命值 | 10 |
+| 攻击力 | 4 |
+| 生命值 | 7 |
 | 关键词 | 无 |
 | 技能 | combatstart-random-enemy-contagion-2 |
 | 科学分类 | 病毒 › 核糖病毒门 › 黄病毒纲 › 黄病毒目 › 黄病毒科 |

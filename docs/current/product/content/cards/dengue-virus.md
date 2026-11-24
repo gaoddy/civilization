@@ -7,7 +7,7 @@ taxon: flaviviridae
 subtype: virus
 level: 4
 era: modern
-attack: 5
+attack: 4
 health: 8
 skills: [keyword-contagion, latent-3]
 ---
@@ -25,7 +25,7 @@ skills: [keyword-contagion, latent-3]
 | 子类 | 病毒 |
 | 星级 | 4 |
 | 时代 | 现代 |
-| 攻击力 | 5 |
+| 攻击力 | 4 |
 | 生命值 | 8 |
 | 关键词 | 传染 |
 | 技能 | keyword-contagion；latent-3 |
