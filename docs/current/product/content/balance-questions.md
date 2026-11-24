@@ -17,13 +17,13 @@
 | 「无视嘲讽」按约 2 点折算，16 张原最优攻击卡迁移后强度下降，平衡是否可接受 | 平衡 | 16 张卡已改用「无视嘲讽」，按实际对局复核 | [关键词与机制](../rules/keywords-and-mechanics.md) |
 | 七下西洋 50% 胜率下任意阵容每回合约 3.5 金，7 回合毛收益 14 金（净 11 金）；若航程全程覆盖，一局约 +50 金，是否挤压其他经济路线 | 经济 | 按用户方案保留公式与不设上限，真人局观察金币曲线与阵容强度 | [技能索引](skills/seven-voyages.md) |
 | 七下西洋平局取 max：双方空场平局各得 7 金/回合，是否存在互刷平局的退化策略 | 平衡 | 空场必输的一侧收益为 0，但互清平局仍可稳定获取；真人局观察是否出现协商平局，必要时在下一版加限制 | [技能索引](skills/seven-voyages.md) |
-| 哺乳纲 2 星身材组合用满上限 | 平衡 | 17 张攻 > 0 卡摊 12 种身材，同玩法同星级同身材 ≤ 2 恰好用满；当前分布校验为 0，但后续新增 2 星哺乳纲卡会立即触发违规，需同时重排既有卡 | [平衡测算](balance-analysis.md) §3；本需求验收 #1 |
+| 哺乳纲 2 星身材组合接近上限 | 平衡 | 19 张进池 2 星哺乳纲随从中 17 张攻 > 0，实际占 9 种合法身材：8 种各 2 张（2/3–2/6、3/3–3/6），`majidun-changqiangbing` 独占 4/3；2 星合法形状空间 12 种，4/4、4/5、4/6 仍空闲。已有 8 种形状达到同玩法同星级同身材 ≤ 2 的上限，后续新增 2 星哺乳纲攻 > 0 卡需避开这 8 种形状或重排既有卡；当前分布校验为 0，空间尚未用满 | [平衡测算](balance-analysis.md) §3；本需求验收 #1 |
 | 永久嘲讽授予的强度 | 平衡 | 4 张承载卡（海龟、红珊瑚、红树林、莱特兄弟）提供永久嘲讽；引擎无随从主动入口，均为 OnPlay 或光环；模拟无法隔离单卡影响，真人局观察嘲讽密度、战斗时长与爬行纲/水螅纲胜率 | [技能系统](skill-system.md) §5；[平衡测算](balance-analysis.md) §5 |
 | 炭疽触发时机 | 平衡 | 2026-11-24 将「引爆」改为亡语：`deathrattle-all-enemies-contagion-1`，保留自身传染；观察传染铺场速度，必要时回落 `detonate-1` | [技能索引](skills/deathrattle-all-enemies-contagion-1.md) |
-| 拟态章鱼 `mimic-3` | 平衡 | 单引用、侧向偏强（拟态 3 档）；观察是否成为头足纲唯一解，必要时回落 `mimic-2` | [技能索引](skills/mimic-3.md) |
+| 拟态章鱼 `mimic-3` | 平衡 | `mimic-3` 被 `nitaizhangyu`（2 星 2/3）与 `mimic-octopus`（4 星 6/7，拟态章鱼（大型））两张卡引用；4 星版本侧向偏强（拟态 3 档），观察是否成为头足纲唯一解，必要时回落 `mimic-2` | [技能索引](skills/mimic-3.md) |
 | 链球菌传染 1→2 层 | 平衡 | `combatstart-random-enemy-contagion-2` 在 2 星单卡铺 2 层；观察早期传染滚雪球，必要时回到 1 层 | [技能索引](skills/combatstart-random-enemy-contagion-2.md) |
 | 鱼纲群聚光环 +1/+1 | 平衡 | `aura-school-fish-2` 被 3 张鱼纲卡引用；鱼纲 1000 局夺冠 61‰，观察群聚成长叠加是否超线 | [平衡测算](balance-analysis.md) §5 |
-| 蒸汽动力费用档 | 经济 / 平衡 | 4 星 2 费「你的机械随从获得最优攻击直到回合结束」，费用档未量化；观察与同类 1 费卡的取舍 | [技能索引](skills/trigger-mech-optimal-attack-this-turn.md) |
+| 蒸汽动力与人工智能同效果 | 经济 / 平衡 | 蒸汽动力（4 星 2 费）与人工智能（5 星 3 费）都引用 `trigger-mech-optimal-attack-this-turn`，效果为「你的机械随从获得无视嘲讽直到回合结束」。同一效果出现在更高星级、更高费用的效果牌上，5 星版本缺少对应强度补偿；待确认是给人工智能换更高档效果，还是调整其星级/费用 | [技能索引](skills/trigger-mech-optimal-attack-this-turn.md)；[蒸汽动力](cards/zhengqidongli.md)；[人工智能](cards/rengongzhineng.md) |
 | 广义相对论新效果 | 平衡 | 改为 `combatstart-all-enemies-damage-2`（5 星 3 费，哺乳纲/机械）后同槽无严格支配；观察与 6 星 3 费「腐殖爆发」的档位差是否合理 | [技能索引](skills/combatstart-all-enemies-damage-2.md) |
 | 内燃机战吼成长 | 平衡 | 2026-11-25 修复：内燃机由不可达的主动技能 `activate-friendly-growth-twice` 改为 `battlecry-friendly-mech-growth-once`（战吼：使一个友方机械随从获得一次成长），作为随从可正常触发；原「金币效率」问题随之消失，改为观察 4 星 6/7 带无视嘲讽 + 战吼成长的强度 | [技能索引](skills/battlecry-friendly-mech-growth-once.md)；[卡牌](cards/neiranji.md) |
 | 非英雄随从引用主动技能不可达 | 机制 / 平衡 | 主动技能只能经英雄入口 `UseHeroPower` 结算，`check_hero_power` 要求技能属于该座位英雄。2026-11-25 修复鲁班与内燃机后，仍有 41 张非英雄随从卡引用主动技能：`shout` 22 张、`activate-friendly-growth-twice` 1 张（高斯），其余 18 张分布在 16 个主动技能上（`human-growth-twice` 与 `invention-factory` 各被 2 张卡引用）。这些效果在该卡作为随从时不可达，属于既有缺陷；此前报告的 24 张只统计了 `shout` 与 `activate-friendly-growth-twice`，并非全部主动技能。`mechanism-art` 已不再被随从卡引用，仅被英雄卡 `heroes/luban.md` 引用，作为英雄可用 `UseHeroPower` 结算，非死技能。待产品层决定改为战吼/光环或补随从主动入口 | [技能索引](skills/README.md)；`server/crates/rule-engine/src/recruit.rs` 的 `check_hero_power` |
