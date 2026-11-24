@@ -1,5 +1,25 @@
 extends Node
-## 只读卡牌展示表：卡名、技能文本与展示费用，不参与任何规则判定。
+## 只读卡牌展示表：启动时从服务端下载并按内容版本缓存，不参与任何规则判定。
+##
+## 数据来自服务端 `GET /content`；文本（卡名、技能文案、时代名）仍由本地文本表提供。
+## 未取得数据时查询回退为空字典，界面按 id 展示；页面可监听 `content_changed` 重建。
+
+## 内容可用或更新后发出；页面据此重建依赖卡牌数据的列表。
+signal content_changed
+## 无缓存且请求失败时发出，参数为失败原因。
+signal content_failed(reason: String)
+
+const WsClientScript = preload("res://autoload/ws_client.gd")
+
+## 本地调试、冒烟、预览与线框图用：直接读该目录下的内容文件，不发请求。
+const CONTENT_DIR_ENV := "CIVILIZATION_CONTENT_DIR"
+const CONTENT_FILE := "client-content.json"
+const CACHE_PATH := "user://content_cache.json"
+const CACHE_NAME := "content_cache.json"
+const CACHE_TMP_NAME := "content_cache.json.tmp"
+const REQUEST_TIMEOUT_SECONDS := 8.0
+
+enum State { LOADING, READY, FAILED }
 
 var cards: Dictionary = {}
 ## 英雄展示表：只含身份与技能；与 `cards` 中的同名随从卡分属两个集合。
@@ -12,6 +32,15 @@ var taxonomy: Dictionary = {}
 var playstyles: Array = []
 ## 美术资源清单：card_id → {portrait, avatar, card_face, display}。缺图时回退程序化绘制。
 var art: Dictionary = {}
+
+var _state := State.LOADING
+var _version := ""
+## 缓存可用但刷新失败：保留缓存内容继续展示。
+var _stale := false
+var _error := ""
+var _http: HTTPRequest = null
+var _in_flight := false
+var _net_hooked := false
 
 ## 时代序号到文本 id，与服务端 `Era` 枚举一致（1–7）。
 const ERA_IDS := {
@@ -26,44 +55,198 @@ const ERA_IDS := {
 
 
 func _ready() -> void:
-    _load_table("res://generated/cards.json", cards)
-    _load_table("res://generated/heroes.json", heroes)
-    _load_table("res://generated/skills.json", skills)
-    _load_taxonomy("res://generated/taxonomy.json")
     _load_art("res://assets/asset_manifest.json")
+    var override_dir := OS.get_environment(CONTENT_DIR_ENV).strip_edges()
+    if override_dir != "":
+        _load_from_dir(override_dir)
+        return
+    _load_cache()
+    _setup_http()
+    call_deferred("_hook_net")
+    fetch()
 
 
-func _load_table(path: String, target: Dictionary) -> void:
+## 数据是否可用（来自网络或缓存）。
+func is_loaded() -> bool:
+    return _state == State.READY
+
+
+## 无任何可用数据且请求失败。
+func has_failed() -> bool:
+    return _state == State.FAILED
+
+
+## 当前展示的是缓存，最近一次刷新失败。
+func is_stale() -> bool:
+    return _stale
+
+
+func last_error() -> String:
+    return _error
+
+
+func content_version() -> String:
+    return _version
+
+
+## 请求最新内容；已有请求在途或使用本地目录时忽略。
+func fetch() -> void:
+    if _http == null or _in_flight:
+        return
+    var headers := PackedStringArray(["Accept: application/json"])
+    if _version != "":
+        headers.append("If-None-Match: \"%s\"" % _version)
+    _in_flight = true
+    var err := _http.request(content_url(), headers, HTTPClient.METHOD_GET)
+    if err != OK:
+        _in_flight = false
+        _fail("request_failed:%d" % err)
+
+
+## 内容地址：由 WebSocket 地址推导，`ws://` → `http://`、`wss://` → `https://`。
+static func content_url_for(ws_url: String) -> String:
+    var base := ws_url.strip_edges()
+    if base.ends_with("/ws"):
+        base = base.substr(0, base.length() - 3)
+    if base.begins_with("wss://"):
+        base = "https://" + base.substr(6)
+    elif base.begins_with("ws://"):
+        base = "http://" + base.substr(5)
+    return base.trim_suffix("/") + "/content"
+
+
+func content_url() -> String:
+    return content_url_for(WsClientScript.default_url())
+
+
+func _load_from_dir(dir: String) -> void:
+    var path := dir.trim_suffix("/") + "/" + CONTENT_FILE
     var file := FileAccess.open(path, FileAccess.READ)
     if file == null:
-        push_error("无法读取展示表 %s" % path)
+        _fail("content_read_failed:%s" % path)
         return
-    var parsed = JSON.parse_string(file.get_as_text())
-    if not (parsed is Array):
-        push_error("展示表格式错误 %s" % path)
-        return
-    for entry in parsed:
-        if entry is Dictionary:
-            target[str(entry.get("id", ""))] = entry
+    if not _apply(file.get_as_text()):
+        _fail("content_format_error:%s" % path)
 
 
-## 分类树为单对象 `{nodes, playstyles}`；按节点 id 建索引，展示名仍走文本表。
-func _load_taxonomy(path: String) -> void:
-    var file := FileAccess.open(path, FileAccess.READ)
-    if file == null:
-        push_error("无法读取分类树 %s" % path)
+func _load_cache() -> void:
+    if not FileAccess.file_exists(CACHE_PATH):
         return
-    var parsed = JSON.parse_string(file.get_as_text())
+    var text := FileAccess.get_file_as_string(CACHE_PATH)
+    if text == "" or not _apply(text):
+        _error = "cache_corrupt"
+
+
+func _setup_http() -> void:
+    _http = HTTPRequest.new()
+    _http.timeout = REQUEST_TIMEOUT_SECONDS
+    _http.request_completed.connect(_on_request_completed)
+    add_child(_http)
+
+
+## 连接建立后补拉一次：启动时服务端未就绪或请求失败时由这里恢复。
+func _hook_net() -> void:
+    if _net_hooked:
+        return
+    var net := get_node_or_null("/root/Net")
+    if net == null or not net.has_signal("connected"):
+        return
+    net.connected.connect(_on_net_connected)
+    _net_hooked = true
+
+
+func _on_net_connected() -> void:
+    if _state != State.READY or _stale:
+        fetch()
+
+
+func _on_request_completed(
+    result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray
+) -> void:
+    _in_flight = false
+    if result != HTTPRequest.RESULT_SUCCESS:
+        _fail("connect_failed:%d" % result)
+        return
+    if response_code == HTTPClient.RESPONSE_NOT_MODIFIED:
+        _state = State.READY
+        _stale = false
+        _error = ""
+        content_changed.emit()
+        return
+    if response_code != HTTPClient.RESPONSE_OK:
+        _fail("HTTP %d" % response_code)
+        return
+    var text := body.get_string_from_utf8()
+    if not _apply(text):
+        _fail("content_format_error")
+        return
+    _write_cache(text)
+
+
+## 应用下发内容；格式不完整时返回 false 且不改动已有数据。
+func _apply(text: String) -> bool:
+    var parsed = JSON.parse_string(text)
     if not (parsed is Dictionary):
-        push_error("分类树格式错误 %s" % path)
-        return
-    for node in parsed.get("nodes", []):
+        return false
+    var bundle: Dictionary = parsed
+    var card_list = bundle.get("cards")
+    var hero_list = bundle.get("heroes")
+    var skill_list = bundle.get("skills")
+    var taxonomy_data = bundle.get("taxonomy")
+    if not (card_list is Array and hero_list is Array and skill_list is Array):
+        return false
+    if not (taxonomy_data is Dictionary):
+        return false
+
+    cards.clear()
+    for entry in card_list:
+        if entry is Dictionary:
+            cards[str(entry.get("id", ""))] = entry
+    heroes.clear()
+    for entry in hero_list:
+        if entry is Dictionary:
+            heroes[str(entry.get("id", ""))] = entry
+    skills.clear()
+    for entry in skill_list:
+        if entry is Dictionary:
+            skills[str(entry.get("id", ""))] = entry
+    taxonomy.clear()
+    for node in taxonomy_data.get("nodes", []):
         if node is Dictionary:
             taxonomy[str(node.get("id", ""))] = node
     playstyles.clear()
-    for entry in parsed.get("playstyles", []):
+    for entry in taxonomy_data.get("playstyles", []):
         if entry is String:
             playstyles.append(entry)
+
+    _version = str(bundle.get("version", ""))
+    _state = State.READY
+    _stale = false
+    _error = ""
+    content_changed.emit()
+    return true
+
+
+func _write_cache(text: String) -> void:
+    var file := FileAccess.open(CACHE_TMP_NAME, FileAccess.WRITE)
+    if file == null:
+        return
+    file.store_string(text)
+    file.close()
+    var dir := DirAccess.open("user://")
+    if dir == null:
+        return
+    dir.remove(CACHE_NAME)
+    dir.rename(CACHE_TMP_NAME, CACHE_NAME)
+
+
+func _fail(reason: String) -> void:
+    _error = reason
+    _stale = _state == State.READY
+    if _state != State.READY:
+        _state = State.FAILED
+    push_warning("卡牌内容不可用：%s" % reason)
+    content_failed.emit(reason)
 
 
 ## 美术清单是单对象 `{version, assets}`；按 card_id 建索引。文件缺失不报错，

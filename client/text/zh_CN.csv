@@ -1500,6 +1500,10 @@ ui.account.sending_code,发送中…
 ui.account.title,账号
 ui.common.got_it,知道了
 ui.common.no_hero,未选英雄
+ui.content.failed,内容加载失败
+ui.content.loading,内容加载中…
+ui.content.retry,重试
+ui.content.unavailable,内容未就绪，请检查网络后重试
 ui.gallery.back_lobby,返回大厅
 ui.gallery.back_match,返回对局
 ui.gallery.chapter_all,全部

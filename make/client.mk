@@ -2,6 +2,9 @@
 # 依赖根 Makefile 的 PYTHON、JOBS、CURDIR，以及 make/server.mk 的 server-build 目标。
 
 GODOT ?= $(shell command -v godot 2>/dev/null || echo /Applications/Godot.app/Contents/MacOS/Godot)
+# 冒烟、预览与线框图直接读仓库内生成的下发内容，不依赖真实服务端。
+CONTENT_DIR := $(CURDIR)/server/data/v0.1
+CLIENT_CONTENT_ENV := CIVILIZATION_CONTENT_DIR="$(CONTENT_DIR)"
 # 补丁版本固定，导出模板目录与之精确一致；本机引擎不符时由 client-godot-check 拒绝执行。
 GODOT_VERSION := 4.7.2
 GODOT_INSTALLED_VERSION = $(shell "$(GODOT)" --version 2>/dev/null | head -n 1 | cut -d. -f1-3)
@@ -104,14 +107,14 @@ client-smoke: client-import
 	  for name in $$(echo "$(SMOKE)" | tr ',' ' '); do \
 	    scene="client/tests/ui_smoke_$$name.tscn"; \
 	    [ -f "$$scene" ] || { echo "未找到冒烟场景：$$scene" >&2; exit 1; }; \
-	    $(GODOT) --headless --path client res://tests/ui_smoke_$$name.tscn 2>&1 | tee output/ui_smoke_$$name.log; \
+	    $(CLIENT_CONTENT_ENV) $(GODOT) --headless --path client res://tests/ui_smoke_$$name.tscn 2>&1 | tee output/ui_smoke_$$name.log; \
 	    grep -q "UI_SMOKE_OK" output/ui_smoke_$$name.log || exit 1; \
 	    ! grep -q "SCRIPT ERROR" output/ui_smoke_$$name.log || exit 1; \
 	  done; \
 	else \
 	  for scene in client/tests/ui_smoke*.tscn; do \
 	    name=$$(basename $$scene .tscn); \
-	    $(GODOT) --headless --path client res://tests/$$name.tscn 2>&1 | tee output/$$name.log; \
+	    $(CLIENT_CONTENT_ENV) $(GODOT) --headless --path client res://tests/$$name.tscn 2>&1 | tee output/$$name.log; \
 	    grep -q "UI_SMOKE_OK" output/$$name.log || exit 1; \
 	    ! grep -q "SCRIPT ERROR" output/$$name.log || exit 1; \
 	  done; \
@@ -207,7 +210,7 @@ ui-wireframe: client-import
 	  echo "用法：make ui-wireframe PAGE=gallery [DEVICE=phone]，或 make ui-wireframe ALL=1" >&2; \
 	  exit 1; \
 	fi
-	$(PYTHON) scripts/ui_wireframe.py --godot "$(GODOT)" \
+	$(CLIENT_CONTENT_ENV) $(PYTHON) scripts/ui_wireframe.py --godot "$(GODOT)" \
 		$(if $(PAGE),--page $(PAGE),) $(if $(ALL),--all,) $(if $(DEVICE),--device $(DEVICE),)
 
 # 运行态视图预览：真实窗口装载页面/场景并注入夹具；不截图，窗口保持打开。
@@ -228,7 +231,7 @@ ui-preview: client-import
 	  echo "      make ui-preview SCENE=res://pages/game/game.tscn；组件用 SETUP=res://tests/previews/xxx.gd" >&2; \
 	  exit 1; \
 	fi
-	$(GODOT) --path client res://tests/view_preview.tscn -- \
+	$(CLIENT_CONTENT_ENV) $(GODOT) --path client res://tests/view_preview.tscn -- \
 		$(if $(PAGE),--preview-page=$(PAGE),) \
 		$(if $(SCENE),--preview-scene=$(SCENE),) \
 		$(if $(FOCUS),--preview-focus=$(FOCUS),) \
@@ -246,7 +249,7 @@ ui-preview-check: client-import
 	  exit 1; \
 	fi
 	@mkdir -p output
-	@$(GODOT) --path client --quit-after 900 res://tests/view_preview.tscn -- \
+	@$(CLIENT_CONTENT_ENV) $(GODOT) --path client --quit-after 900 res://tests/view_preview.tscn -- \
 		$(if $(PAGE),--preview-page=$(PAGE),) \
 		$(if $(SCENE),--preview-scene=$(SCENE),) \
 		$(if $(FOCUS),--preview-focus=$(FOCUS),) \

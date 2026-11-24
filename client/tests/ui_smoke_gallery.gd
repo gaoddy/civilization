@@ -3,6 +3,7 @@ extends "res://tests/smoke_case.gd"
 
 
 func _ready() -> void:
+    await _check_content_source()
     await _check_lobby_page()
     await _check_filters()
     await _check_categories_and_kinds()
@@ -21,6 +22,28 @@ func _ready() -> void:
     await _check_lobby_entry()
     await _check_match_overlay()
     _finish()
+
+
+## 内容来源：本地内容目录已装载，图鉴直接展示；地址由 WebSocket 地址推导。
+func _check_content_source() -> void:
+    _expect(CardDB.is_loaded(), "冒烟应通过 CIVILIZATION_CONTENT_DIR 装载卡牌内容")
+    _expect(CardDB.cards.size() > 0, "卡牌内容不应为空")
+    _expect(
+        CardDB.content_url_for("ws://127.0.0.1:8080/ws") == "http://127.0.0.1:8080/content",
+        "ws 地址应推导为 http 内容地址",
+    )
+    _expect(
+        CardDB.content_url_for("wss://civilization.satori.host/ws")
+        == "https://civilization.satori.host/content",
+        "wss 地址应推导为 https 内容地址",
+    )
+    var instance := await _mount_gallery()
+    if instance == null:
+        return
+    var status := instance.find_child("GalleryContentStatus", true, false) as Control
+    _expect(status != null and not status.is_visible_in_tree(), "内容就绪时不应显示加载提示")
+    var grid := instance.find_child("GalleryGrid", true, false) as Control
+    _expect(grid != null and grid.is_visible_in_tree(), "内容就绪时应展示卡牌网格")
 
 
 ## 页面骨架：没有标题与左栏，头部是视图分段 + 三个筛选下拉 + 计数 + 返回。
