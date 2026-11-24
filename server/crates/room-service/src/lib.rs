@@ -8,6 +8,7 @@
 pub mod account;
 pub mod auth;
 pub mod clock;
+pub mod content;
 pub mod db;
 pub mod envelope;
 pub mod error;
