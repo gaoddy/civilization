@@ -65,6 +65,14 @@
 - 数据库：`make db-up`、`make db-test`、`make db-reset`。
 - 慢命令阈值：`120s`；预计超过该时长的命令放后台执行，读末尾输出与退出状态。
 
+### 本地产物目录 output/
+
+- `output/` 是纯缓存目录：任何内容都可随时整体删除，不保证下次还在。真源（素材源、发布记录、实验结论）一律不放这里。
+- 固定路径只由 `make` 目标写入，不手改：`ios/`、`desktop/`、`desktop-local/`、`steam/`、`android/`、`wireframes/`、`ui_smoke_*.log`、`ui_preview.log`、`loadtest-*.json`、`sim-batch.json`、`sim-report.log`。
+- 一次性探针、截图与临时数据统一放 `output/scratch/<日期>-<主题>/`；任务结束前要么迁到真源位置，要么删除。
+- 效果牌封面源按需临时放到 `output/effect-covers/generated/`（`ASSET_COVERS` 默认值），`make assets-covers` 处理完即可删除。
+- 服务端发布记录写到 `docs/current/technical/deployment/releases/<日期>-<env>-<提交>.md`，不写进 `output/`。
+
 ### 文档
 
 - `docs/` 骨架：`current/` 写已实现状态，`versions/<版本>/` 写未实现或规划中的版本，`docs/plan/` 放实施计划（本地忽略、不提交）。

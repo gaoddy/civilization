@@ -264,7 +264,7 @@ client/
 | `make data` | 生成服务端数据（含 `taxonomy.json`）、客户端下发内容 `server/data/v0.1/client-content.json` 与文本表 `client/text/zh_CN.csv` |
 | `make data-check` | 比对服务端与客户端生成数据、文本表漂移，运行效果审计 |
 | `make assets` | 按 `ASSET_MAP` 对源立绘去水印，派生头像与卡面并更新 `client/assets/asset_manifest.json`（保留清单内其它条目）；需安装 Pillow，见 §10 |
-| `make assets-covers` | 对 `ASSET_COVERS`（默认 `output/effect-covers/generated`）下 `<card_id>/*.png` 去水印，缩放到 448×584 写入 `client/assets/cards/faces/`，只登记 `card_face` 与 `display.card_face`；需安装 Pillow，见 §10 |
+| `make assets-covers` | 对 `ASSET_COVERS`（默认 `output/effect-covers/generated`，临时素材目录，处理完可删）下 `<card_id>/*.png` 去水印，缩放到 448×584 写入 `client/assets/cards/faces/`，只登记 `card_face` 与 `display.card_face`；需安装 Pillow，见 §10 |
 | `make sfx` | 生成 9 个默认合成占位音效到 `client/assets/audio/`；逐卡覆盖见 §11 |
 | `make font-subset` | 由文本表 + ASCII + GB2312 生成内置中文字体子集 `client/assets/fonts/NotoSansSC-Regular-subset.ttf`；见 §6 |
 | `make client-import` | 导入客户端工程，默认用 `godot --headless --path client --import`（CPU 压缩）；`CLIENT_IMPORT_GPU=1` 改走非无头导入（仅 S3TC/HDR 纹理能用 GPU 压缩），`auto` 按图形会话自动判断。PNG 纹理导入本身走线程池，见 §10 |
