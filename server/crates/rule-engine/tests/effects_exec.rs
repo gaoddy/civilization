@@ -156,7 +156,7 @@ fn growth_applies_attack_and_health_to_zero_attack_minion() {
     );
     assert_eq!(minion.stats.health.growth, 1, "成长同时加生命");
     assert_eq!(combat::effective_attack(&engine.catalog, minion), 1);
-    assert_eq!(combat::effective_health(&engine.catalog, minion), 10);
+    assert_eq!(combat::effective_health(&engine.catalog, minion), 11);
 }
 
 #[test]
@@ -359,7 +359,7 @@ fn deal_damage_cannot_kill_floors_health_at_one() {
     params.can_kill = Some(false);
     let events = engine.apply_op(&mut state, &damage, &ctx(0), None);
 
-    assert_eq!(events, vec![GameEvent::DamageTaken { seat: 1, amount: 4 }]);
+    assert_eq!(events, vec![GameEvent::DamageTaken { seat: 1, amount: 6 }]);
     let victim = board_minion(&state, 1, 0);
     assert_eq!(combat::effective_health(&engine.catalog, victim), 1);
 }

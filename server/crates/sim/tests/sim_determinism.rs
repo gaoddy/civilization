@@ -225,6 +225,10 @@ fn same_seed_reproduces_event_sequence_hash() {
 /// 随机流消耗改变，本批次 20 局哈希、事件流与排名全部改变。随后的评审修正
 /// 把战斗内成长与蒸汽机入场改为写回后统一结算，再改变 17 局排名。本次只同步
 /// 基线，不涉及卡牌或规则数值的其他调整；天梯与匹配相关提交不改变本批次输出。
+///
+/// 2026-11-24 第二十八次重定：卡池差异化放宽 1–5 星数值区间，重排 309 张进池
+/// 随从的身材并替换大量技能引用，另新增 4 个永久嘲讽授予实例；参战数值与技能
+/// 组合全面变化，本批次 20 局哈希全部改变。本次只同步数据与基线，不改规则引擎。
 #[test]
 fn batch_final_hashes_match_golden_baseline() {
     let golden: Value = serde_json::from_str(include_str!("golden/seed-1-games-20.json"))
