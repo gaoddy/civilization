@@ -49,3 +49,23 @@ deploy-smoke: deploy-check-env
 	ssh $(SERVER) "curl -fsS https://$(DEPLOY_HOST)/healthz && curl -fsS https://$(DEPLOY_HOST)/readyz"
 
 deploy: deploy-check-env deploy-image deploy-load deploy-preflight deploy-apply deploy-rollout deploy-smoke
+
+# 快捷别名：deploy-<环境> = deploy ENV=<环境>；deploy-<步骤>-<环境> = deploy-<步骤> ENV=<环境>。
+# deploy-lint 同时校验两套 values、deploy-check-env 是内部校验，都与环境无关，不生成别名。
+DEPLOY_ALIAS_STEPS := render image load preflight apply rollout status smoke
+DEPLOY_ALIAS_ENVS := dev prod
+
+define deploy_step_alias
+.PHONY: deploy-$(1)-$(2)
+deploy-$(1)-$(2):
+	@$$(MAKE) --no-print-directory deploy-$(1) ENV=$(2)
+endef
+
+define deploy_env_alias
+.PHONY: deploy-$(1)
+deploy-$(1):
+	@$$(MAKE) --no-print-directory deploy ENV=$(1)
+endef
+
+$(foreach env,$(DEPLOY_ALIAS_ENVS),$(foreach step,$(DEPLOY_ALIAS_STEPS),$(eval $(call deploy_step_alias,$(step),$(env)))))
+$(foreach env,$(DEPLOY_ALIAS_ENVS),$(eval $(call deploy_env_alias,$(env))))

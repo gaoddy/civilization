@@ -56,11 +56,13 @@ Civilization 仓库：
 ```bash
 make deploy-lint                 # Helm lint + 两环境渲染
 make deploy ENV=dev SERVER=<ssh-target>
+make deploy-dev                  # 等价于 make deploy ENV=dev
+make deploy-prod                 # 等价于 make deploy ENV=prod
 ```
 
 `make deploy` 依次执行：构建镜像 → 导入节点 → server-side dry-run → apply → `rollout restart` 与等待 → 通过 Gateway 请求 `/healthz`、`/readyz`。
 
-单独步骤：`deploy-render`、`deploy-preflight`、`deploy-apply`、`deploy-rollout`、`deploy-status`、`deploy-smoke`。
+单独步骤：`deploy-render`、`deploy-image`、`deploy-load`、`deploy-preflight`、`deploy-apply`、`deploy-rollout`、`deploy-status`、`deploy-smoke`；每步都有固定环境的别名 `deploy-<步骤>-<dev|prod>`（如 `make deploy-status-prod`、`make deploy-smoke-dev`），等价于 `make deploy-<步骤> ENV=<环境>`，`SERVER` 等参数照常透传。`deploy-lint` 同时校验两套 values、`deploy-check-env` 是内部校验，两者没有别名。
 
 dev 节点没有 `*.platform.internal` 的 DNS，也不信任 dev 自签证书，`make deploy-smoke` 在 dev 会停在 curl 解析或证书校验；用 `curl --resolve civilization.dev.platform.internal:443:192.168.31.5 -k` 验证，见 §5。
 
