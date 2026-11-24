@@ -154,8 +154,8 @@ ACHIEVEMENT_FIELDS = ["id", "name", "event", "condition", "count", "reward",
                       "steam_api_name", "affects_power"]
 # Steamworks 成就 API 名：ASCII 大写字母开头，后接大写字母、数字或下划线。
 STEAM_API_NAME_RE = re.compile(r"^[A-Z][A-Z0-9_]{2,63}$")
-RANGE = {1: (1, 2, 2, 4), 2: (2, 3, 3, 5), 3: (3, 5, 4, 7),
-         4: (4, 7, 6, 9), 5: (6, 9, 8, 12), 6: (8, 12, 10, 16),
+RANGE = {1: (1, 3, 2, 5), 2: (2, 4, 3, 6), 3: (3, 6, 4, 8),
+         4: (4, 8, 6, 10), 5: (6, 10, 8, 13), 6: (8, 12, 10, 16),
          7: (10, 15, 14, 20)}
 CAP = {1: 8, 2: 10, 3: 13, 4: 17, 5: 22, 6: 26, 7: 33}
 KW_UNLOCK = {"breed": 1, "taunt": 2, "windfury": 3, "ignore_taunt": 3,
@@ -1332,6 +1332,80 @@ def skill_ref_errors(doc, skill_map):
             for sid in card_skills(doc) if sid not in skill_map]
 
 
+def effect_skill_set(card):
+    """随从的效果技能：剔除 keyword- 前缀的条目，保留原顺序。"""
+    return tuple(skill for skill in card_skills(card)
+                 if not skill.startswith("keyword-"))
+
+
+def _distribution_cards(minions):
+    """参与分布统计的商店随从；缺数值字段的卡由其他校验负责报告。"""
+    return [card for card in minions
+            if card.get("card_type") == "minion"
+            and card.get("in_shop_pool", True)
+            and all(field in card for field in ("level", "attack", "health"))]
+
+
+def _rule_violations(cards, key_of, limit, enabled=lambda card: True):
+    """按 (玩法, 星级, key) 计数，返回计数超过 limit 的组与卡数。"""
+    counts = collections.Counter()
+    for card in cards:
+        if not enabled(card):
+            continue
+        for play in effective_playstyles(card):
+            counts[(play, *key_of(card))] += 1
+    return [(key, count) for key, count in counts.items() if count > limit]
+
+
+def _distribution_groups(minions):
+    """四条分布规则的违例组，键为规则名，值为 [(组键, 卡数)]。"""
+    cards = _distribution_cards(minions)
+    return {
+        "身材": _rule_violations(
+            cards, lambda c: (c["level"], c["attack"], c["health"]), 2,
+            lambda c: c["attack"] != 0),
+        "效果技能": _rule_violations(
+            cards, lambda c: (c["level"], effect_skill_set(c)), 1,
+            lambda c: bool(effect_skill_set(c))),
+        "只带关键词": _rule_violations(
+            cards, lambda c: (c["level"], c["attack"], c["health"],
+                              tuple(card_skills(c))), 1,
+            lambda c: bool(card_skills(c)) and not effect_skill_set(c)),
+        "攻 0": _rule_violations(
+            cards, lambda c: (c["level"], tuple(card_skills(c))), 1,
+            lambda c: c["attack"] == 0),
+    }
+
+
+def distribution_errors(minions):
+    """四条卡池分布规则：身材、效果技能、只带关键词、攻 0。"""
+    messages = []
+    groups = _distribution_groups(minions)
+    for (play, level, attack, health), count in sorted(groups["身材"]):
+        messages.append(
+            f"play:{play} {level} 星身材 {attack}/{health} 重复 {count} 张")
+    for (play, level, skills), count in sorted(groups["效果技能"]):
+        messages.append(
+            f"play:{play} {level} 星效果技能 {list(skills)} 重复 {count} 张")
+    for (play, level, attack, health, skills), count in sorted(groups["只带关键词"]):
+        messages.append(
+            f"play:{play} {level} 星只带关键词 {attack}/{health} "
+            f"{list(skills)} 重复 {count} 张")
+    for (play, level, skills), count in sorted(groups["攻 0"]):
+        messages.append(
+            f"play:{play} {level} 星攻 0 技能 {list(skills)} 重复 {count} 张")
+    return messages
+
+
+def distribution_stats(minions):
+    """四条分布规则的违规组数与涉及卡数，用于逐项清零。"""
+    stats = {}
+    for name, groups in _distribution_groups(minions).items():
+        stats[f"{name}组"] = len(groups)
+        stats[f"{name}卡"] = sum(count for _, count in groups)
+    return stats
+
+
 def check_cards(skill_map):
     raw = load("cards", ["id", "name", "card_type", "level", "taxon"])
     for doc in raw:
@@ -1448,6 +1522,9 @@ def check_cards(skill_map):
     actual_level = collections.Counter(c["level"] for c in minions)
     if dict(actual_level) != EXPECT_LEVEL:
         fail(f"随从星级分布不符: {dict(actual_level)}")
+    for message in distribution_errors(minions):
+        fail(message)
+    print("分布", distribution_stats(minions))
     return raw, minions, effects
 
 
