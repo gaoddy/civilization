@@ -6305,19 +6305,10 @@ impl ::std::convert::From<&PlayerViewSelf> for PlayerViewSelf {
 ///{
 ///  "type": "object",
 ///  "required": [
-///    "ratingWindow",
 ///    "waitingMs",
 ///    "waitingPlayers"
 ///  ],
 ///  "properties": {
-///    "ratingWindow": {
-///      "description": "当前匹配积分半径；null 表示不限积分",
-///      "type": [
-///        "integer",
-///        "null"
-///      ],
-///      "minimum": 0.0
-///    },
 ///    "waitingMs": {
 ///      "description": "本人已等待时长（毫秒）",
 ///      "type": "integer",
@@ -6337,9 +6328,6 @@ impl ::std::convert::From<&PlayerViewSelf> for PlayerViewSelf {
 #[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct QueueState {
-    ///当前匹配积分半径；null 表示不限积分
-    #[serde(rename = "ratingWindow")]
-    pub rating_window: ::std::option::Option<u64>,
     ///本人已等待时长（毫秒）
     #[serde(rename = "waitingMs")]
     pub waiting_ms: u64,

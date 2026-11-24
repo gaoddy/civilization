@@ -389,7 +389,6 @@
 | --- | --- | --- | --- |
 | `waitingMs` | integer | 是 | 本人已等待时长（毫秒） |
 | `waitingPlayers` | integer | 是 | 当前队列里的玩家数，客户端显示为「已凑 X/8」 |
-| `ratingWindow` | integer | null | 是 | 当前匹配积分半径；null 表示不限积分 |
 
 ### RoomClosed
 

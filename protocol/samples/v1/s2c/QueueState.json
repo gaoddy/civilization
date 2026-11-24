@@ -6,7 +6,6 @@
   "seq": 12,
   "payload": {
     "waitingMs": 30000,
-    "waitingPlayers": 4,
-    "ratingWindow": 300
+    "waitingPlayers": 4
   }
 }

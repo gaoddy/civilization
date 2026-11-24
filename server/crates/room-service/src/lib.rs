@@ -115,7 +115,7 @@ pub struct AppState {
     pub rooms: Arc<Mutex<RoomRegistry>>,
     /// 自动匹配队列；单实例内存队列，成局后直接建房。
     pub queue: Arc<Mutex<queue::MatchQueue>>,
-    /// 天梯参数：K、匹配窗口、段位区间与宗师名次上限。
+    /// 天梯参数：K、最近对手放宽时长、段位区间与宗师名次上限。
     pub ranked: Arc<rating::RankedConfig>,
     /// 天梯积分、最近战绩与宗师快照；未配置数据库时只存在进程内。
     pub ratings: Arc<Mutex<rating::RatingStore>>,

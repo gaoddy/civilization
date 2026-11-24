@@ -15,7 +15,7 @@ const USAGE: &str = "用法：room-service [--listen ADDR]
   DATABASE_URL   设置后启用持久化（账号、好友、邀请等）；未设置时使用内存存储。
   STEAM_WEB_API_KEY  Steam Web API 密钥；未设置时 Steam 登录返回 STEAM_DISABLED。
   STEAM_APP_ID    Steam App ID；与 STEAM_WEB_API_KEY 同时设置后才启用验票。
-  RANKED_CONFIG   天梯参数 JSON（K、匹配窗口、段位区间、宗师名次上限）；
+  RANKED_CONFIG   天梯参数 JSON（K、最近对手放宽时长、段位区间、宗师名次上限）；
                   未设置时使用代码默认值，解析失败直接启动失败。";
 
 #[tokio::main]
