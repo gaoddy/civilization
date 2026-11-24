@@ -691,6 +691,7 @@ mod tests {
             candidates: candidates.iter().map(|card| (*card).to_string()).collect(),
             deadline: "2026-01-01T00:00:00Z".to_string(),
             players: vec![HeroPickStartedPlayersItem {
+                player_id: "bot0".to_string(),
                 display_name: "bot0".to_string(),
                 is_bot: false,
                 picked: false,

@@ -321,6 +321,7 @@
 | `deadline` | string | 是 | 选英雄截止时刻（RFC3339） |
 | `candidates` | array<string> | 是 | 收件人本座位可选的英雄卡 id；该消息按座位逐条下发 |
 | `players` | array<object> | 是 |  |
+| `players[].playerId` | string | 是 | 该座位玩家 id；客户端据此识别本人座位 |
 | `players[].seat` | integer | 是 |  |
 | `players[].displayName` | string | 是 |  |
 | `players[].isBot` | boolean | 是 |  |

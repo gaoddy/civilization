@@ -5,7 +5,8 @@ extends "res://tests/smoke_case.gd"
 func _ready() -> void:
     await _check_overlay_renders_candidates()
     await _check_overlay_seat_dots()
-    await _check_match_seat_resolves_self()
+    await _check_match_room_broadcast_unlocks()
+    await _check_payload_player_id_resolves_self()
     await _check_confirm_locks()
     await _check_offline_confirm()
     await _check_timeout_hint()
@@ -22,13 +23,21 @@ func _deadline_in(seconds: int) -> String:
 
 
 ## HeroPickStarted 载荷：4 名候选取样自卡牌数据；players 固定 8 个座位。
-func _payload(candidates: Array, picked_seats: Array, deadline := "") -> Dictionary:
+## `self_seat` 是本人（`p0`）所在的座位，其余座位按 `p<seat>` 填 playerId。
+func _payload(candidates: Array, picked_seats: Array, deadline := "", self_seat := 0) -> Dictionary:
     var players: Array = []
     for seat in range(8):
+        # 本人固定叫 `p0`；本人不在 0 号位时用 `p_other` 占住 0 号位，避免 id 重复。
+        var player_id := "p%d" % seat
+        if seat == self_seat:
+            player_id = "p0"
+        elif seat == 0:
+            player_id = "p_other"
         players.append({
             "seat": seat,
+            "playerId": player_id,
             "displayName": "玩家%d" % seat,
-            "isBot": seat > 0,
+            "isBot": seat != self_seat and seat > 0,
             "picked": picked_seats.has(seat),
         })
     return {
@@ -180,16 +189,17 @@ func _check_overlay_seat_dots() -> void:
     await _unmount(instance)
 
 
-## 匹配局不下发 `RoomUpdate`：本人座位必须回退 `match_seat`，并按服务端 picked 回填锁定态。
-func _check_match_seat_resolves_self() -> void:
+## 匹配局不下发 `RoomUpdate`：本人座位由载荷 `players[].playerId` 定位，并按服务端 picked 回填锁定态；
+## 后续广播把本座位 picked 改回 false 时必须解除锁定。
+func _check_match_room_broadcast_unlocks() -> void:
     _fake_connect()
     GameStore.player_id = "p0"
     GameStore.room_players = []
-    GameStore.match_seat = 2
+    GameStore.match_seat = -1
     GameStore.phase = ""
     GameStore.turn = 1
     GameStore.view = {}
-    GameStore.hero_pick = _payload(_candidates(), [2])
+    GameStore.hero_pick = _payload(_candidates(), [2], "", 2)
     var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         GameStore.match_seat = -1
@@ -230,7 +240,7 @@ func _check_match_seat_resolves_self() -> void:
             _expect(card.locked, "匹配局服务端本人已选时候选应锁定")
 
     # 后续广播把本座位 picked 改回 false：锁定态必须按服务端权威解除。
-    GameStore.hero_pick = _payload(_candidates(), [0, 1])
+    GameStore.hero_pick = _payload(_candidates(), [0, 1], "", 2)
     GameStore.hero_pick_started.emit()
     await get_tree().process_frame
 
@@ -249,6 +259,56 @@ func _check_match_seat_resolves_self() -> void:
             _expect(not first.locked, "广播解锁后候选应解除锁定")
             await _push_click(instance, first.get_global_rect().get_center())
             _expect(not refreshed_confirm.disabled, "广播解锁后选中候选应可确认")
+
+    await _unmount(instance)
+
+
+## 全新进程重连：`room_players` 为空且 `match_seat` 未重放，本人座位只能由载荷 playerId 解析。
+func _check_payload_player_id_resolves_self() -> void:
+    _fake_connect()
+    GameStore.player_id = "p0"
+    GameStore.room_players = []
+    GameStore.match_seat = -1
+    GameStore.phase = ""
+    GameStore.turn = 1
+    GameStore.view = {}
+    GameStore.hero_pick = _payload(_candidates(), [5], "", 5)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
+    if instance == null:
+        GameStore.hero_pick = {}
+        _fake_disconnect()
+        return
+    await get_tree().process_frame
+
+    var overlay := _overlay_of(instance)
+    _expect(overlay != null, "重连后应挂载 HeroPickOverlay")
+    if overlay == null:
+        await _unmount(instance)
+        return
+
+    var seats := overlay.find_child("HeroPickSeats", true, false) as HBoxContainer
+    var self_dot: Control = null
+    if seats != null:
+        for child in seats.get_children():
+            var dot := child as Control
+            if bool(dot.get_meta("is_self", false)):
+                self_dot = dot
+    _expect(self_dot != null, "重连后本人座位点应可识别")
+    if self_dot != null:
+        _expect(int(self_dot.get_meta("seat", -1)) == 5, "重连后本人应为载荷中的座位 5")
+        var ring := self_dot.find_child("SeatRing", true, false) as Control
+        _expect(ring != null and ring.visible, "重连后本人座位点应显示金色外圈")
+
+    var confirm := overlay.find_child("HeroPickConfirm", true, false) as Button
+    _expect(
+        confirm != null and confirm.disabled
+            and confirm.text == TranslationServer.translate("ui.game.hero_pick.confirmed"),
+        "重连后服务端本人已选时确认按钮应为已确认并禁用",
+    )
+    var list := overlay.find_child("HeroPickCandidates", true, false) as HeroPickList
+    if list != null:
+        for card in list.cards():
+            _expect(card.locked, "重连后服务端本人已选时候选应锁定")
 
     await _unmount(instance)
 
