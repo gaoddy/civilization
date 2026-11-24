@@ -212,6 +212,44 @@ class ClientBuildEnvTest(unittest.TestCase):
         self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
         self.assertIn('--export-release "iOS"', proc.stdout)
 
+    def test_env_alias_dev_uses_dev_url(self):
+        for platform in ("macos", "ios", "android"):
+            with self.subTest(platform=platform):
+                proc = self._run_make(["-n", f"export-{platform}-dev"])
+                self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+                line = self._gen_line(proc)
+                self.assertIn(DEV_URL, line)
+                self.assertIn("--require-url", line)
+
+    def test_env_alias_local_uses_empty_config(self):
+        for platform in ("macos", "ios", "android"):
+            with self.subTest(platform=platform):
+                proc = self._run_make(["-n", f"export-{platform}-local"])
+                self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+                line = self._gen_line(proc)
+                self.assertIn('SERVER_URL=""', line)
+                self.assertNotIn("--require", line)
+
+    def test_env_alias_prod_requires_url(self):
+        for platform in ("macos", "ios", "android"):
+            with self.subTest(platform=platform):
+                proc = self._run_make(["-n", f"export-{platform}-prod"])
+                self.assertNotEqual(proc.returncode, 0)
+                self.assertIn("CLIENT_PROD_SERVER_URL", proc.stdout + proc.stderr)
+
+    def test_env_alias_prod_with_url(self):
+        proc = self._run_make(
+            [
+                "-n",
+                "export-android-prod",
+                "CLIENT_PROD_SERVER_URL=wss://civilization.example/ws",
+            ]
+        )
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        line = self._gen_line(proc)
+        self.assertIn("wss://civilization.example/ws", line)
+        self.assertIn("--require-server", line)
+
     def test_generator_dev_allows_ws_url(self):
         with tempfile.TemporaryDirectory() as tmp:
             output = pathlib.Path(tmp) / "build_config.gd"
