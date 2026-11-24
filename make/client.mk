@@ -11,7 +11,7 @@ GODOT_TEMPLATE_DIR := $(HOME)/Library/Application Support/Godot/export_templates
 CLIENT_IMPORT_GPU ?= 0
 
 .PHONY: client-godot-check client-import client-cache-copy client-check client-smoke \
-	client-run client-run-platform-check client-run-check _client-run-macos _client-run-ios _client-run-invalid \
+	client-run client-run-platform-check client-run-check client-run-ios-check _client-run-macos _client-run-ios _client-run-invalid \
 	client-env-check client-export-templates client-export client-export-platform-check \
 	_client-export-macos _client-export-local _client-export-steam _client-export-ios \
 	_client-export-android _client-export-invalid client-export-android-check client-notarize steam-upload \
@@ -146,6 +146,7 @@ CLIENT_EXPORT_TARGET := _client-export-$(if $(filter $(CLIENT_EXPORT_PLATFORMS),
 #   make client-run DEVICE=ipad LOCAL_SERVER=0       # 平板尺寸，不启本地服务
 #   make client-run WIDTH=960 HEIGHT=540             # 自定义窗口
 #   make client-run PLATFORM=ios                     # 真机安装运行
+#   make run-ios-ipad-dev                            # 导出并安装到 iPad，连开发服
 client-run: client-run-platform-check client-run-check $(CLIENT_RUN_TARGET)
 
 client-run-platform-check:
@@ -171,8 +172,12 @@ _client-run-macos: client-import $(if $(filter 1,$(LOCAL_SERVER)),m1b-build)
 	fi
 
 # 真机联调默认走 local：空配置，客户端按移动端回落开发机局域网地址。
-_client-run-ios: client-export
-	IOS_DEVICE="$(IOS_DEVICE)" IOS_LAUNCH="$(IOS_LAUNCH)" bash scripts/ios_run.sh
+# 环境由 ENV 指定；设备类型交给 ios_run.sh 自动选已连接的同类型设备。
+client-run-ios-check:
+	@$(if $(filter iphone ipad,$(IOS_DEVICE_TYPE)),,$(error IOS_DEVICE_TYPE 只能是 iphone / ipad，收到：$(IOS_DEVICE_TYPE)))
+
+_client-run-ios: client-run-ios-check client-export
+	IOS_DEVICE="$(IOS_DEVICE)" IOS_DEVICE_TYPE="$(IOS_DEVICE_TYPE)" IOS_LAUNCH="$(IOS_LAUNCH)" bash scripts/ios_run.sh
 
 _client-run-invalid:
 	@exit 2
@@ -411,9 +416,11 @@ _client-export-ios: client-env-check client-export-templates client-import
 	test -f output/ios/Civilization-ios.ipa; \
 	echo "iOS 产物：output/ios/Civilization-ios.ipa"
 
-# iOS 真机开发运行：导出并签名后安装到 iPhone 并启动。
-# 默认取第一台已连接的 iPhone；IOS_DEVICE 用设备名或 UDID 指定，IOS_LAUNCH=0 只安装。
+# iOS 真机开发运行：导出并签名后安装到设备并启动。
+# 默认取第一台已连接的 iPhone；IOS_DEVICE_TYPE 取 iphone / ipad 切换设备类型，
+# IOS_DEVICE 用设备名或 UDID 指定具体设备，IOS_LAUNCH=0 只安装。
 IOS_DEVICE ?=
+IOS_DEVICE_TYPE ?= iphone
 IOS_LAUNCH ?= 1
 
 # Android 签名参数只从环境变量读取：keystore 与口令不入库，也不写进命令行。
@@ -516,3 +523,16 @@ export-android-dev:
 
 export-android-prod:
 	@$(MAKE) --no-print-directory client-export PLATFORM=android ENV=prod
+
+# iOS 运行别名：run-ios-<设备>-<环境>，设备取 iphone / ipad，环境取 local / dev / prod。
+# 同时固定 PLATFORM=ios、设备类型与 ENV；IOS_DEVICE 仍可指定具体设备并覆盖自动选择。
+CLIENT_RUN_IOS_DEVICES := iphone ipad
+CLIENT_RUN_IOS_ENVS := local dev prod
+
+define client_run_ios_alias
+.PHONY: run-ios-$(1)-$(2)
+run-ios-$(1)-$(2):
+	@$$(MAKE) --no-print-directory client-run PLATFORM=ios IOS_DEVICE_TYPE=$(1) ENV=$(2)
+endef
+
+$(foreach device,$(CLIENT_RUN_IOS_DEVICES),$(foreach env,$(CLIENT_RUN_IOS_ENVS),$(eval $(call client_run_ios_alias,$(device),$(env)))))

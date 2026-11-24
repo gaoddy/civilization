@@ -23,6 +23,7 @@ CLEARED = (
     "LOCAL_SERVER",
     "AAB",
     "IOS_DEVICE",
+    "IOS_DEVICE_TYPE",
     "IOS_LAUNCH",
 )
 DEV_URL = "wss://civilization.satori.host/ws"
@@ -130,6 +131,25 @@ class ClientBuildEnvTest(unittest.TestCase):
         line = self._gen_line(proc)
         self.assertIn('SERVER_URL=""', line)
         self.assertNotIn("cooter.local", line)
+
+    def test_run_ios_rejects_unknown_device_type(self):
+        proc = self._run_make(["-n", "client-run", "PLATFORM=ios", "IOS_DEVICE_TYPE=bogus"])
+        self.assertNotEqual(proc.returncode, 0)
+        self.assertIn("IOS_DEVICE_TYPE 只能是", proc.stdout + proc.stderr)
+
+    def test_ios_device_env_alias_selects_device_and_env(self):
+        proc = self._run_make(["-n", "run-ios-ipad-dev"])
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        line = self._gen_line(proc)
+        self.assertIn(DEV_URL, line)
+        self.assertIn('--require-url', line)
+        self.assertIn('IOS_DEVICE_TYPE="ipad"', proc.stdout)
+
+    def test_ios_device_env_alias_local_keeps_empty_config(self):
+        proc = self._run_make(["-n", "run-ios-iphone-local"])
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        self.assertIn('SERVER_URL=""', self._gen_line(proc))
+        self.assertIn('IOS_DEVICE_TYPE="iphone"', proc.stdout)
 
     def test_android_dry_run_bakes_dev_url(self):
         proc = self._run_make(["-n", "client-export", "PLATFORM=android", "ENV=dev"])

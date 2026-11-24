@@ -275,9 +275,10 @@ client/
 | `make client-import` | 导入客户端工程，默认用 `godot --headless --path client --import`（CPU 压缩）；`CLIENT_IMPORT_GPU=1` 改走非无头导入（仅 S3TC/HDR 纹理能用 GPU 压缩），`auto` 按图形会话自动判断。PNG 纹理导入本身走线程池，见 §10 |
 | `make client-cache-copy` | 从主检出复制 `client/.godot/imported` 与全部 `*.import` 旁车到当前 worktree，跳过纹理冷编码；随后照常 `make client-import` 只补增量产物。在主检出执行时为空跑；主检出缺缓存时失败并提示先执行 `client-import`，见 §10 |
 | `make client-run` | 先导入再启动桌面客户端；新增或改名 `class_name` 脚本后必须走这个入口，否则沿用旧全局类缓存。`DEVICE` 取 `phone`、`tablet`、`desktop` 时按该设备档位运行，取 `iphone`、`ipad` 时同时套用验收机横屏尺寸；同时传 `WIDTH=<宽> HEIGHT=<高>` 时按指定像素开窗并覆盖预设尺寸。显式传入 `DEVICE` 时默认内嵌启动本机服务端与 7 个机器人（`LOCAL_SERVER=1`），不传 `DEVICE` 时保持关闭；也可用 `LOCAL_SERVER=0/1` 显式覆盖。`PLATFORM=ios` 改为导出并安装到真机，见 §5、§9 |
-| `make client-run PLATFORM=ios` | 导出 iOS 签名包后用 `xcrun devicectl` 安装到 iPhone 并启动，默认第一台已连接的 iPhone；`IOS_DEVICE` 指定设备，`IOS_LAUNCH=0` 只安装 |
+| `make client-run PLATFORM=ios` | 导出 iOS 签名包后用 `xcrun devicectl` 安装到真机并启动；默认第一台已连接的 iPhone，`IOS_DEVICE_TYPE=ipad` 改选第一台已连接的 iPad，`IOS_DEVICE` 指定具体设备（设备名或 UDID），`IOS_LAUNCH=0` 只安装 |
 | `make run-iphone` / `run-ipad` / `run-desktop` / `run-phone` / `run-tablet` | `client-run` 的常用设备别名，分别固定 `DEVICE=`；`run-iphone` 与 `run-ipad` 同时套用验收机尺寸，显式 `DEVICE` 默认带本地服务。`make run` 等价于不带参数的 `client-run` |
 | `make run-ios` | 等价于 `make client-run PLATFORM=ios` |
+| `make run-ios-<设备>-<环境>` | 同时固定 `PLATFORM=ios`、设备类型与 `ENV`：设备取 `iphone` / `ipad`，环境取 `local` / `dev` / `prod`，共 6 个（如 `run-ios-ipad-dev`）。设备类型交给脚本自动选已连接的同类型设备，`IOS_DEVICE` 仍可覆盖具体设备；`local` 写空配置，`dev` 写开发公网入口，`prod` 需要先配置 `CLIENT_PROD_SERVER_URL` |
 | `make export-macos` / `export-local` / `export-steam` / `export-ios` / `export-android` / `export-aab` | `client-export` 的平台别名，分别固定 `PLATFORM=`；`export-aab` 同时设 `AAB=1`。`make export` 等价于默认 `client-export`（macOS）。`ENV`、`SERVER_URL`、`STEAM_APP_ID` 等参数照常透传 |
 | `make export-<平台>-<环境>` | 同时固定 `PLATFORM` 与 `ENV`：平台取 `macos` / `ios` / `android`，环境取 `local` / `dev` / `prod`，共 9 个（如 `export-ios-dev`、`export-android-prod`）。`local` 写空配置，`dev` 写开发公网入口，`prod` 需要先配置 `CLIENT_PROD_SERVER_URL`。Android AAB 仍用 `make export-aab ENV=…` |
 | `make client-check` | 协议/数据/文本表漂移 + 客户端边界断言 + 国际化断言 + 工程导入 |
