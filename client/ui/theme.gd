@@ -141,6 +141,9 @@ const SEMANTIC_OPACITY := {
 	"scrim-alpha-choice": 0.72,
 	# 页面容器统一语义面板：略透，配合圆角与描边把设计画布从软件背景上分出来。
 	"page-surface-alpha": 0.92,
+	# 段位卡淡金环与座位准备圆点的光晕：只在装饰层使用，不承载状态。
+	"lobby-rank-ring-alpha": 0.08,
+	"lobby-room-ready-dot-halo": 0.12,
 }
 
 # ── 组件与场景层 ──────────────────────────────────────────────────────────
@@ -245,12 +248,17 @@ const SCENARIO := {
 	"lobby-rank-score-size-compact": 13,
 	"lobby-rank-ring-size": 220,
 	"lobby-rank-ring-size-compact": 160,
+	"lobby-rank-ring-width": 1,
 	"lobby-room-row-height": 36,
 	"lobby-room-row-height-compact": 28,
 	"lobby-room-pill-height": 18,
 	"lobby-room-pill-height-compact": 16,
 	"lobby-room-ready-dot": 8,
 	"lobby-room-ready-dot-compact": 7,
+	"lobby-room-ready-dot-border": 1,
+	"lobby-room-ready-dot-halo-size": 2,
+	"lobby-room-kick-height": 24,
+	"lobby-room-kick-height-compact": 22,
 	"lobby-room-invite-height": 32,
 	"lobby-room-invite-height-compact": 34,
 	"lobby-room-action-height": 40,
@@ -463,6 +471,22 @@ static func pill_style(variant: String) -> StyleBoxFlat:
 			box.border_color = Color(0, 0, 0, 0)
 		_:
 			pass
+	return box
+
+
+## 座位准备圆点：已准备为成功色实心并带淡光晕，未准备为空心的强描边圆环。
+static func ready_dot_style(side: int, ready: bool) -> StyleBoxFlat:
+	var box := StyleBoxFlat.new()
+	box.set_corner_radius_all(int(side / 2.0))
+	box.set_border_width_all(metric("lobby-room-ready-dot-border"))
+	if ready:
+		box.bg_color = color("color-success")
+		box.border_color = color("color-success")
+		box.shadow_color = alpha("color-success", opacity("lobby-room-ready-dot-halo"))
+		box.shadow_size = metric("lobby-room-ready-dot-halo-size")
+	else:
+		box.bg_color = alpha("color-surface", 0.0)
+		box.border_color = color("color-border-strong")
 	return box
 
 

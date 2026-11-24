@@ -29,6 +29,10 @@ var _matched := false
 ## 已经发出过一次离开大厅的导航；避免选英雄与开局两个信号重复切场景。
 var _leaving := false
 
+## Steam 邀请请求进行中与大厅创建失败后保持置灰：与房间等待区同一套流程。
+var _steam_invite_busy := false
+var _steam_invite_blocked := false
+
 
 func _ready() -> void:
     UILayout.safe_area(self)
@@ -138,6 +142,8 @@ func _connect_signals() -> void:
     _left_actions.leaderboard_pressed.connect(_on_leaderboard_pressed)
     _room_list.invite_pressed.connect(_on_room_invite_pressed)
     _room_list.kick_requested.connect(_on_kick_pressed)
+    _room_list.copy_code_pressed.connect(_on_copy_code_pressed)
+    _room_list.steam_invite_pressed.connect(_on_steam_invite_pressed)
     _room_actions.start_pressed.connect(_on_start_pressed)
     _room_actions.dissolve_pressed.connect(_on_dissolve_pressed)
 
@@ -149,6 +155,8 @@ func _connect_signals() -> void:
     GameStore.social_changed.connect(_render_friends)
     GameStore.queue_changed.connect(_apply_mode)
     GameStore.match_found.connect(_on_match_found)
+    GameStore.room_invite_received.connect(_on_room_invite_received)
+    GameStore.steam_invite_rejected.connect(_on_steam_invite_rejected)
     GameStore.hero_pick_started.connect(_on_hero_pick_started)
     GameStore.game_started.connect(_on_game_started)
     Net.disconnected.connect(_on_disconnected)
@@ -211,6 +219,7 @@ func _render_room() -> void:
     _room_list.render(
         players, GameStore.player_id, is_host, GameStore.room_bot_fill, players.size()
     )
+    _room_list.set_room_code(GameStore.room_code)
     var ready_count := 0
     for player in players:
         if bool(player.get("ready", false)):
@@ -229,6 +238,7 @@ func _render_room() -> void:
             "start_reason": start_reason,
         }
     )
+    _sync_steam_invite()
 
 
 func _on_match_toggled(was_queueing: bool) -> void:
@@ -303,6 +313,7 @@ func _on_disconnected() -> void:
     _join_dialog.set_joining(false)
     _join_dialog.close_layer()
     GameStore.abandon_queue()
+    _reset_steam_invite()
     _connection.show_disconnected()
     _apply_mode()
 
@@ -336,6 +347,7 @@ func _on_room_closed() -> void:
     _creating = false
     _joining = false
     _matched = false
+    _reset_steam_invite()
     _apply_mode()
     _show_room_closed_reason()
 
@@ -354,6 +366,78 @@ func _on_kick_pressed(player_id: String) -> void:
 
 func _on_room_invite_pressed() -> void:
     _friends.open_invite()
+
+
+## 复制内容带房间码与打开方式；各渠道一致，Steam 另有大厅邀请入口。
+func _share_text(code: String) -> String:
+    return tr("ui.lobby.room_code_share") % code
+
+
+func _on_copy_code_pressed() -> void:
+    if GameStore.room_code == "":
+        return
+    DisplayServer.clipboard_set(_share_text(GameStore.room_code))
+    _room_list.show_copied()
+
+
+## Steam 邀请入口与房间等待区同一套流程：先向服务端请求 token，再创建大厅并打开好友邀请。
+func _sync_steam_invite() -> void:
+    var available := (
+        not _steam_invite_busy
+        and not _steam_invite_blocked
+        and Platform.lobby_available()
+        and Net.is_open()
+        and GameStore.phase == Protocol.PHASE_LOBBY
+    )
+    _room_list.set_steam_state(
+        available,
+        tr("ui.room.invite_steam.unavailable") if not available else "",
+    )
+
+
+func _on_steam_invite_pressed() -> void:
+    if _steam_invite_busy or not _host_room_mode():
+        return
+    _steam_invite_busy = true
+    _room_list.set_status(tr("ui.room.invite_steam.creating"))
+    _sync_steam_invite()
+    GameStore.create_room_invite()
+
+
+func _on_room_invite_received() -> void:
+    if not _host_room_mode():
+        return
+    var token := str(GameStore.room_invite.get("token", ""))
+    var room_code := str(GameStore.room_invite.get("roomCode", GameStore.room_code))
+    var expires_at := str(GameStore.room_invite.get("expiresAt", ""))
+    if token == "":
+        _steam_invite_busy = false
+        _sync_steam_invite()
+        return
+    var created: bool = await Platform.create_lobby(room_code, token, expires_at)
+    if not is_inside_tree():
+        return
+    _steam_invite_busy = false
+    if created:
+        Platform.invite_friends()
+        _room_list.set_status(tr("ui.room.invite_steam.sent"))
+    else:
+        _steam_invite_blocked = true
+        _room_list.set_status(tr("ui.room.invite_steam.unavailable"))
+    _sync_steam_invite()
+
+
+func _on_steam_invite_rejected(_reason: String) -> void:
+    if not _host_room_mode():
+        return
+    _room_list.set_status(tr("ui.room.invite_steam.already_in_room"))
+
+
+## 离开创建模式时清空邀请状态：token 已失效，状态行也不再延续。
+func _reset_steam_invite() -> void:
+    _steam_invite_busy = false
+    _steam_invite_blocked = false
+    _room_list.set_status("")
 
 
 ## 自动匹配局没有房间等待页：`HeroPickStarted` 先到，由大厅直接进入对局页的选英雄阶段；
@@ -392,6 +476,10 @@ func _on_error() -> void:
         _join_dialog.set_joining(false)
         _join_dialog.show_error(code)
         _apply_mode()
+        return
+    # 好友抽屉打开时错误回填到抽屉状态行，不再叠一层提示弹窗。
+    if _friends.visible:
+        _friends.show_error(code)
         return
     _creating = false
     if UINavigation.error_route(code) == UINavigation.ROUTE_LOBBY:

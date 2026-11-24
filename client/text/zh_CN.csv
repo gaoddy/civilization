@@ -1664,6 +1664,8 @@ ui.lobby.add_friend_placeholder,6 位玩家编号
 ui.lobby.cancel_match,取消匹配
 ui.lobby.close,关闭
 ui.lobby.connection_lost,与服务器断开连接
+ui.lobby.copied,已复制
+ui.lobby.copy,复制
 ui.lobby.create_room,创建房间
 ui.lobby.decline,拒绝
 ui.lobby.decline_invite,拒绝
@@ -1694,8 +1696,10 @@ ui.lobby.reconnecting,正在重新连接…
 ui.lobby.remove_friend,删除
 ui.lobby.request_incoming,%s（%s）请求加你为好友
 ui.lobby.request_sent,已向编号 %s 发送好友申请
+ui.lobby.room_code,房间码
 ui.lobby.room_code_invalid,请输入 6 位房间码
 ui.lobby.room_code_placeholder,6 位房间码
+ui.lobby.room_code_share,房间码 %s，打开文明战旗加入
 ui.lobby.room_invite,邀请好友
 ui.lobby.start_match,开始匹配
 ui.login.authenticating,正在认证…
@@ -1775,6 +1779,7 @@ ui.result.title,对局结束
 ui.room.bot_fill,机器人补位
 ui.room.bot_fill_hint,开始后补入 %d 个机器人
 ui.room.bot_fill_off,关
+ui.room.bot_fill_off_hint,机器人补位已关闭，还差 %d 名玩家
 ui.room.bot_fill_on,开
 ui.room.dissolve,解散房间
 ui.room.dissolved_notice,房间已解散

@@ -74,6 +74,7 @@ func _init() -> void:
     add_row.add_child(add)
 
     _status = UIControls.label("", UITheme.font_size("font-body-sm"))
+    _status.name = "FriendsStatus"
     body.add_child(_status)
 
     _outgoing = UIControls.label("", UITheme.font_size("font-body-sm"))

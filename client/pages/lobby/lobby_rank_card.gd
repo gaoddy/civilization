@@ -46,7 +46,7 @@ func _draw() -> void:
         0.0,
         TAU,
         64,
-        UITheme.alpha("color-accent", 0.08),
-        1.0,
+        UITheme.alpha("color-accent", UITheme.opacity("lobby-rank-ring-alpha")),
+        UITheme.metric("lobby-rank-ring-width"),
         true,
     )

@@ -3,17 +3,29 @@ extends PanelContainer
 ## 创建房间模式的中部座位列表：8 行座位、准备圆点、房主标记与踢人入口。
 ##
 ## 列表不写标题、不写准备计数与准备文字；准备状态只用圆点表达，
-## 圆点 tooltip 给读屏与悬停保留说明。邀请入口只在有空位时存在。
+## 圆点 tooltip 给读屏与悬停保留说明。列表底部的固定区依次是房间码行与邀请入口：
+## 房间码行给出复制与（Steam 构建）邀请入口，滚动只发生在座位行上。
 
 signal kick_requested(player_id: String)
 signal invite_pressed
+signal copy_code_pressed
+signal steam_invite_pressed
 
 const SEAT_COUNT := 8
+const COPY_FEEDBACK_SECONDS := 2.0
 
 var _box: VBoxContainer
 var _rows: VBoxContainer
 var _invite: Button
 var _fill_hint: Label
+var _code_box: VBoxContainer
+var _code_value: Label
+var _copy: Button
+var _steam: Button
+var _code_status: Label
+var _code := ""
+var _host := false
+var _copy_timer: SceneTreeTimer
 
 
 func _init() -> void:
@@ -44,6 +56,88 @@ func _init() -> void:
     _fill_hint.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
     _box.add_child(_fill_hint)
 
+    _code_box = VBoxContainer.new()
+    _code_box.name = "RoomCodeBox"
+    _code_box.add_theme_constant_override("separation", UITheme.space("space-2xs"))
+    _code_box.visible = false
+    _box.add_child(_code_box)
+
+    var code_row := HBoxContainer.new()
+    code_row.name = "RoomCodeRow"
+    code_row.add_theme_constant_override("separation", UITheme.space("space-sm"))
+    _code_box.add_child(code_row)
+    code_row.add_child(
+        UIControls.label(tr("ui.lobby.room_code"), UITheme.font_size("font-caption"), false)
+    )
+    _code_value = UIControls.label("", UITheme.font_size("font-title"), false)
+    _code_value.name = "RoomCodeValue"
+    _code_value.add_theme_color_override("font_color", UITheme.color("color-accent"))
+    code_row.add_child(_code_value)
+    var spacer := Control.new()
+    spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    code_row.add_child(spacer)
+    _copy = _code_button(tr("ui.lobby.copy"), "CopyCodeButton")
+    _copy.pressed.connect(func() -> void: copy_code_pressed.emit())
+    code_row.add_child(_copy)
+    # Steam 构建多一个邀请入口；其余构建整页不出现 Steam 文案。
+    if Platform.is_steam():
+        _steam = _code_button(tr("ui.room.invite_steam.entry"), "SteamInviteButton")
+        _steam.tooltip_text = tr("ui.room.invite_steam.unavailable")
+        _steam.pressed.connect(func() -> void: steam_invite_pressed.emit())
+        code_row.add_child(_steam)
+
+    _code_status = UIControls.label("", UITheme.font_size("font-caption"), false)
+    _code_status.name = "RoomCodeStatus"
+    _code_status.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
+    _code_box.add_child(_code_status)
+
+
+## 房间码行按钮与邀请入口同高：固定按令牌取值，手机档位不再二次触控抬升。
+func _code_button(text: String, node_name: String) -> Button:
+    var button := UIControls.styled_button(
+        text, "ghost", UITheme.stage_metric("lobby-room-invite-height")
+    )
+    button.name = node_name
+    button.custom_minimum_size.y = UITheme.stage_metric("lobby-room-invite-height")
+    return button
+
+
+func set_room_code(code: String) -> void:
+    _code = code
+    _code_value.text = code
+    _sync_code_visibility()
+
+
+## 复制成功的短暂反馈只改按钮文案，不打断座位列表；两秒后恢复。
+func show_copied() -> void:
+    if _copy == null:
+        return
+    _copy.text = tr("ui.lobby.copied")
+    if _copy_timer != null and _copy_timer.timeout.is_connected(_restore_copy):
+        _copy_timer.timeout.disconnect(_restore_copy)
+    _copy_timer = get_tree().create_timer(COPY_FEEDBACK_SECONDS)
+    _copy_timer.timeout.connect(_restore_copy)
+
+
+func _restore_copy() -> void:
+    if _copy != null:
+        _copy.text = tr("ui.lobby.copy")
+
+
+func set_steam_state(available: bool, hint: String) -> void:
+    if _steam == null:
+        return
+    _steam.disabled = not available
+    _steam.tooltip_text = hint
+
+
+func set_status(text: String) -> void:
+    _code_status.text = text
+
+
+func _sync_code_visibility() -> void:
+    _code_box.visible = _host and _code != ""
+
 
 func render(players: Array, self_id: String, host: bool, bot_fill: bool, seat_count: int) -> void:
     UIControls.clear(_rows)
@@ -59,10 +153,20 @@ func render(players: Array, self_id: String, host: bool, bot_fill: bool, seat_co
             _fill_empty_row(row)
 
     _render_invite(seat_count)
-    _fill_hint.visible = host
-    _fill_hint.text = tr("ui.room.bot_fill_hint") % maxi(0, SEAT_COUNT - int(seat_count))
-    if not host:
+    _host = host
+    _sync_code_visibility()
+    _render_fill_hint(host, bot_fill, seat_count)
+
+
+## 补位提示按开关给不同文案；满员或宾客视角不占高度。
+func _render_fill_hint(host: bool, bot_fill: bool, seat_count: int) -> void:
+    var empty := maxi(0, SEAT_COUNT - int(seat_count))
+    _fill_hint.visible = host and empty > 0
+    if not _fill_hint.visible:
         _fill_hint.text = ""
+        return
+    var template := "ui.room.bot_fill_hint" if bot_fill else "ui.room.bot_fill_off_hint"
+    _fill_hint.text = tr(template) % empty
 
 
 func _row(seat: int) -> PanelContainer:
@@ -116,16 +220,12 @@ func _fill_player_row(row: PanelContainer, player: Dictionary, self_id: String, 
     line.add_child(dot)
 
     if host and not self_row:
-        var kick := UIControls.label(tr("ui.room.kick"), UITheme.font_size("font-caption"), false)
+        var kick := UIControls.styled_button(tr("ui.room.kick"), "micro")
         kick.name = "RoomKick_%s" % player_id
-        kick.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
-        kick.mouse_filter = Control.MOUSE_FILTER_STOP
-        kick.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-        kick.gui_input.connect(
-            func(event: InputEvent) -> void:
-                if event is InputEventMouseButton and event.pressed:
-                    kick_requested.emit(player_id)
-        )
+        # 座位行高度固定，移除入口按令牌固定高度，不按触控命中抬升撑高整行。
+        kick.custom_minimum_size.y = UITheme.stage_metric("lobby-room-kick-height")
+        kick.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+        kick.pressed.connect(func() -> void: kick_requested.emit(player_id))
         line.add_child(kick)
 
 
@@ -144,16 +244,7 @@ func _ready_dot(player_id: String, ready: bool) -> Panel:
     dot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
     dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
     dot.tooltip_text = tr("ui.room.seat_ready") if ready else tr("ui.room.seat_unready")
-    var style := StyleBoxFlat.new()
-    style.set_corner_radius_all(int(side / 2.0))
-    style.set_border_width_all(1)
-    if ready:
-        style.bg_color = UITheme.color("color-success")
-        style.border_color = UITheme.color("color-success")
-    else:
-        style.bg_color = UITheme.alpha("color-surface", 0.0)
-        style.border_color = UITheme.color("color-border-strong")
-    dot.add_theme_stylebox_override("panel", style)
+    dot.add_theme_stylebox_override("panel", UITheme.ready_dot_style(side, ready))
     return dot
 
 
@@ -172,4 +263,4 @@ func _render_invite(seat_count: int) -> void:
         _invite.custom_minimum_size.y = UITheme.stage_metric("lobby-room-invite-height")
         _invite.pressed.connect(func() -> void: invite_pressed.emit())
         _box.add_child(_invite)
-    _box.move_child(_invite, maxi(0, _box.get_child_count() - 2))
+    _box.move_child(_invite, _box.get_child_count() - 1)

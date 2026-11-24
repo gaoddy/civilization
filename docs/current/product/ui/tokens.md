@@ -69,7 +69,7 @@
 | `space-2xl` | 24 | | | |
 | `space-3xl` | 32 | | | |
 
-语义透明度：`opacity-dim` = 0.45，用于被淘汰的座位行、幽灵身份块与禁用图标，经 `UIControls.apply_dim` 或 `alpha("color-white", ...)` 应用；`freeze-overlay-alpha` = 0.22，用于冻结蒙层自身，经 `self_modulate.a` 应用，不向下压暗冰晶与「冻」字；`preview-dim` = 0.7，用于卡面预览压暗；遮罩透明度 `scrim-alpha` = 0.55、`scrim-alpha-friends` = 0.58、`scrim-alpha-strong` = 0.6、`scrim-alpha-gallery` = 0.62、`scrim-alpha-choice` = 0.72，按弹层场景取值；页面容器语义面板 `page-surface-alpha` = 0.92，经 `alpha("color-surface", opacity("page-surface-alpha"))` 应用。
+语义透明度：`opacity-dim` = 0.45，用于被淘汰的座位行、幽灵身份块与禁用图标，经 `UIControls.apply_dim` 或 `alpha("color-white", ...)` 应用；`freeze-overlay-alpha` = 0.22，用于冻结蒙层自身，经 `self_modulate.a` 应用，不向下压暗冰晶与「冻」字；`preview-dim` = 0.7，用于卡面预览压暗；遮罩透明度 `scrim-alpha` = 0.55、`scrim-alpha-friends` = 0.58、`scrim-alpha-strong` = 0.6、`scrim-alpha-gallery` = 0.62、`scrim-alpha-choice` = 0.72，按弹层场景取值；页面容器语义面板 `page-surface-alpha` = 0.92，经 `alpha("color-surface", opacity("page-surface-alpha"))` 应用；大厅装饰透明度 `lobby-rank-ring-alpha` = 0.08（段位卡淡金环）、`lobby-room-ready-dot-halo` = 0.12（已准备圆点光晕），只作装饰，不承载状态。
 
 ## 5. 组件与场景度量
 
@@ -121,10 +121,14 @@
 | `lobby-rank-tier-size` | 38 | 段位卡段位名字号；手机 30 |
 | `lobby-rank-score-size` | 15 | 段位卡积分字号；手机 13 |
 | `lobby-rank-ring-size` | 220 | 段位卡背景淡金环直径；手机 160 |
+| `lobby-rank-ring-width` | 1 | 段位卡背景淡金环线宽 |
 | `lobby-room-row-height` | 36 | 创建房间座位行高度；手机 28 |
 | `lobby-room-pill-height` | 18 | 座位行房主标记胶囊高度；手机 16 |
 | `lobby-room-ready-dot` | 8 | 座位行准备圆点直径；手机 7 |
-| `lobby-room-invite-height` | 32 | 座位列表「邀请好友」按钮高度；手机 34 |
+| `lobby-room-ready-dot-border` | 1 | 准备圆点描边宽度，未准备为空心圆环 |
+| `lobby-room-ready-dot-halo-size` | 2 | 已准备圆点的成功色光晕扩散半径 |
+| `lobby-room-kick-height` | 24 | 座位行「移除」微按钮高度，按令牌固定、不按触控命中抬升；手机 22 |
+| `lobby-room-invite-height` | 32 | 座位列表「邀请好友」与房间码行按钮高度；手机 34 |
 | `lobby-room-action-height` | 40 | 创建房间操作按钮高度，按令牌固定、不再按触控命中抬升；手机 44 |
 | `lobby-page-margin` | 24 | 大厅页面四边内边距，被安全区包裹在内；手机 14 |
 | `aim-arc-width` | 2.5 | 选目标弧线与角标的线宽 |
@@ -181,7 +185,8 @@ iPhone 以 960×540 为宽度基准（高度随窗口扩展），对局页通过
 | `lobby-room-row-height-compact` | 28 | iPhone 创建房间座位行高度 |
 | `lobby-room-pill-height-compact` | 16 | iPhone 座位行房主标记胶囊高度 |
 | `lobby-room-ready-dot-compact` | 7 | iPhone 座位行准备圆点直径 |
-| `lobby-room-invite-height-compact` | 34 | iPhone 座位列表「邀请好友」按钮高度 |
+| `lobby-room-kick-height-compact` | 22 | iPhone 座位行「移除」微按钮高度 |
+| `lobby-room-invite-height-compact` | 34 | iPhone 座位列表「邀请好友」与房间码行按钮高度 |
 | `lobby-room-action-height-compact` | 44 | iPhone 创建房间操作按钮高度，按令牌固定 |
 | `lobby-page-margin-compact` | 14 | iPhone 大厅页面四边内边距 |
 
