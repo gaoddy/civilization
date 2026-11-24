@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# iOS 真机开发运行：把 client-export-ios 的产物装到 iPhone 并启动。
+# iOS 真机开发运行：把 client-export PLATFORM=ios 的产物装到 iPhone 并启动。
 # 默认选第一台已连接的 iPhone；IOS_DEVICE 用设备名或 UDID 指定其他设备，
 # IOS_LAUNCH=0 只安装不启动（设备锁屏时启动会失败，安装不受影响）。
 set -euo pipefail
@@ -9,7 +9,7 @@ APP="$ROOT/output/ios/build/Build/Products/Release-iphoneos/Civilization.app"
 BUNDLE_ID=com.civilization.banner
 
 if [ ! -d "$APP" ]; then
-  echo "缺少 ${APP}，先执行 make client-export-ios" >&2
+  echo "缺少 ${APP}，先执行 make client-export PLATFORM=ios" >&2
   exit 1
 fi
 

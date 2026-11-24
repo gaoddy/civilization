@@ -40,7 +40,7 @@
 ## 5. 导出与分发
 
 - `client/export_presets.cfg` 新增两个预设：`Android`（APK，`gradle_build/export_format=0`，沿用导出模板的 SDK 版本）与 `Android AAB`（`gradle_build/export_format=1`，走 Gradle 构建，`minSdk 24`、`targetSdk 35`）。两者共用包名 `com.civilization.banner`、应用名 `Civilization`、arm64-v8a、沉浸式与 edge-to-edge 屏幕、`package/signed=true`。
-- `make client-export-android` 产出 `output/android/Civilization.apk`；`make client-export-android-aab` 产出 `output/android/Civilization.aab`。
+- `make client-export PLATFORM=android` 产出 `output/android/Civilization.apk`；`make client-export PLATFORM=android AAB=1` 产出 `output/android/Civilization.aab`。
 - 签名参数只从环境变量读取：`ANDROID_KEYSTORE_PATH`、`ANDROID_KEYSTORE_USER`（alias）、`ANDROID_KEYSTORE_PASSWORD`；任一缺失或 keystore 文件不存在时目标直接失败，不产出未签名包。口令不写入仓库或命令行。
 - Godot 只从工程内的 `export_presets.cfg` 读取签名配置，`scripts/android_export.sh` 在导出期间把环境变量临时写入预设，退出时（含失败）用备份恢复，仓库文件不保留口令。AAB 首次导出时临时安装 Gradle 构建模板，导出后清理生成的 `client/android/`。
 - 两种产物使用同一自管理 keystore 签名，跨渠道安装同一应用；keystore 与签名口令不进入仓库。

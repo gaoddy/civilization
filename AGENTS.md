@@ -37,7 +37,7 @@
 
 - 服务端：`server/`，Rust workspace（`protocol`、`protocol-gen`、`rule-engine`、`room-service`、`sim`），房间服务入口 `server/crates/room-service/src/main.rs`，默认监听 `127.0.0.1:8080`。
 - 客户端：`client/`，Godot 4.7.2 + GDScript，入口场景 `client/pages/login/login.tscn`。
-- 客户端引擎补丁版本固定 `4.7.2`（`Makefile` 的 `GODOT_VERSION`）；`make client-import` 与导出目标先校验本机引擎，版本不符直接失败。
+- 客户端引擎补丁版本固定 `4.7.2`（`make/client.mk` 的 `GODOT_VERSION`）；`make client-import` 与导出目标先校验本机引擎，版本不符直接失败。
 - 规则引擎：`server/crates/rule-engine`，纯库，不依赖网络、数据库、时钟或文件 I/O；所有对局结算只在这里。
 - 卡牌数据：唯一数据源在 `docs/current/product/content/`，生成到 `server/data/v0.1/` 与客户端生成物；生成物随源提交。
 - 协议契约：唯一来源 `protocol/schema/v1/`；生成物 `protocol/generated/protocol.rs`、`protocol/generated/protocol.gd` 与 `client/generated/protocol.gd` 随源提交。
@@ -47,7 +47,7 @@
 
 ### 命令与验证
 
-- 顶层入口统一走根目录 `Makefile`，不手写等效命令。
+- 顶层入口统一走根目录 `Makefile`，不手写等效命令。根 `Makefile` 只保留共享变量与验收入口，目标分册在 `make/`：`client.mk`（客户端构建、运行、检查、导出）、`content.mk`（内容、协议、资产、文档）、`server.mk`（服务端测试、模拟器、压测、联调）、`deploy.mk`（部署）。
 - 全量检查：`make m1-check`（协议生成物、文档数据、测试、静态检查、确定性）；客户端另有 `make client-check`、`make client-smoke`（`TESTS=<模块>`、`SMOKE=<场景>` 只跑单项，逗号分隔可多选）。
 - 页面线框图：`make ui-wireframe PAGE=gallery`（`ALL=1` 出全部页面，`DEVICE=phone` 出手机档位），无头解算真实布局后写到 `output/wireframes/`（忽略目录）。
 - 运行态视图预览：`make ui-preview PAGE=game FIXTURE=game FOCUS=PlayersPanel`（`SCENE=` 任意场景、`SETUP=` 组件脚本、`DEVICE=phone` 手机档位），真实窗口直接查看；自检用 `make ui-preview-check ... EXPECT=SeatRow=8`。
@@ -60,7 +60,7 @@
   - 客户端到服务端：`make m1b-e2e`。
 - 模拟器基线：`make m0-determinism`、`make m0-batch`、`make m0-report`。
 - 并发容量压测：`make load-build` 后 `make loadtest`（稳态，默认 10 局/30s）、`make loadtest-ramp`（爬坡找上限）、`make loadtest-smoke`（2 局/5s 冒烟）；报告写 `output/loadtest-*.json`。
-- 本地联调：`make dev-bots` 起服务端与 7 个机器人；客户端用 `make client-run`，桌面端产物用 `make client-export`，iOS 真机用 `make client-run-ios`（默认第一台已连接的 iPhone）。
+- 本地联调：`make dev-bots` 起服务端与 7 个机器人；客户端用 `make client-run`，桌面端产物用 `make client-export`，iOS 真机用 `make client-run PLATFORM=ios`（默认第一台已连接的 iPhone）。
 - 数据库：`make db-up`、`make db-test`、`make db-reset`。
 - 慢命令阈值：`120s`；预计超过该时长的命令放后台执行，读末尾输出与退出状态。
 

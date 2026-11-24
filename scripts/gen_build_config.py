@@ -4,9 +4,9 @@
 三档用法：
 
 - 编辑器运行、`local` 档与本地调试包不传参数，生成空配置，客户端按平台回落到本机调试地址；
-- `make client-export ENV=dev|prod` / `client-export-ios ENV=dev|prod` 要求 `SERVER_URL` 非空：
+- `make client-export ENV=dev|prod` / `make client-export PLATFORM=ios ENV=dev|prod` 要求 `SERVER_URL` 非空：
   `dev` 传 `--require-url`，允许 `ws://` 局域网地址；`prod` 传 `--require-server`，必须是 `wss://`；
-- `make client-export-steam` 传 `--require`，在地址之外还要求 `STEAM_APP_ID`。
+- `make client-export PLATFORM=steam` 传 `--require`，在地址之外还要求 `STEAM_APP_ID`。
 """
 
 from __future__ import annotations
