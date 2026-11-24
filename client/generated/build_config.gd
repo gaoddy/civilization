@@ -3,3 +3,7 @@ class_name BuildConfig
 
 const SERVER_URL := ""
 const STEAM_APP_ID := 0
+const BUILD_ENV := "local"
+const GIT_COMMIT := ""
+const GIT_DIRTY := false
+const BUILD_TIME := ""

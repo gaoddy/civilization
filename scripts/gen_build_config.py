@@ -7,13 +7,21 @@
 - `make client-export ENV=dev|prod` / `make client-export PLATFORM=ios ENV=dev|prod` 要求 `SERVER_URL` 非空：
   `dev` 传 `--require-url`，允许 `ws://` 局域网地址；`prod` 传 `--require-server`，必须是 `wss://`；
 - `make client-export PLATFORM=steam` 传 `--require`，在地址之外还要求 `STEAM_APP_ID`。
+
+除服务端地址外，配置里还写入构建环境与 git 版本，供产物与日志识别：
+
+- `BUILD_ENV` 取同环境变量，缺省 `local`；`local` 调试包写 `local`，Steam 包写 `steam`；
+- `GIT_COMMIT` / `GIT_DIRTY` 缺省由脚本读取 `git rev-parse` 与 `git status -- client`，可用同名环境变量覆盖；
+- `BUILD_TIME` 缺省取生成时刻（UTC），批量构建时由 Make 传入同一时间戳。
 """
 
 from __future__ import annotations
 
 import argparse
+import datetime
 import os
 import pathlib
+import subprocess
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -24,7 +32,36 @@ TEMPLATE = """class_name BuildConfig
 
 const SERVER_URL := "{server_url}"
 const STEAM_APP_ID := {steam_app_id}
+const BUILD_ENV := "{build_env}"
+const GIT_COMMIT := "{git_commit}"
+const GIT_DIRTY := {git_dirty}
+const BUILD_TIME := "{build_time}"
 """
+
+
+def _git(args: list[str]) -> str:
+    try:
+        done = subprocess.run(
+            ["git", *args], cwd=ROOT, capture_output=True, text=True, check=False
+        )
+    except FileNotFoundError:
+        return ""
+    return done.stdout if done.returncode == 0 else ""
+
+
+def git_state() -> tuple[str, bool]:
+    """返回（提交短号，工作区是否有未提交改动）；非 git 环境返回空提交。"""
+    commit = _git(["rev-parse", "--short", "HEAD"]).strip()
+    status = _git(["status", "--porcelain", "--untracked-files=normal", "--", "client"])
+    return commit, bool(status.strip())
+
+
+def _utc_now() -> str:
+    return datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _gd_string(value: str) -> str:
+    return value.replace("\\", "\\\\").replace('"', '\\"')
 
 
 def _parse_app_id(raw: str) -> int:
@@ -37,8 +74,22 @@ def _parse_app_id(raw: str) -> int:
     return value
 
 
-def render(server_url: str, steam_app_id: int) -> str:
-    return TEMPLATE.format(server_url=server_url, steam_app_id=steam_app_id)
+def render(
+    server_url: str,
+    steam_app_id: int,
+    build_env: str,
+    git_commit: str,
+    git_dirty: bool,
+    build_time: str,
+) -> str:
+    return TEMPLATE.format(
+        server_url=_gd_string(server_url),
+        steam_app_id=steam_app_id,
+        build_env=_gd_string(build_env),
+        git_commit=_gd_string(git_commit),
+        git_dirty="true" if git_dirty else "false",
+        build_time=_gd_string(build_time),
+    )
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -63,6 +114,16 @@ def main(argv: list[str] | None = None) -> int:
 
     server_url = os.environ.get("SERVER_URL", "").strip()
     raw_app_id = os.environ.get("STEAM_APP_ID", "").strip()
+    build_env = os.environ.get("BUILD_ENV", "").strip() or "local"
+    build_time = os.environ.get("BUILD_TIME", "").strip() or _utc_now()
+    git_commit = os.environ.get("GIT_COMMIT", "").strip()
+    raw_dirty = os.environ.get("GIT_DIRTY", "").strip()
+    if not git_commit or raw_dirty == "":
+        detected_commit, detected_dirty = git_state()
+        git_commit = git_commit or detected_commit
+        git_dirty = raw_dirty == "1" or (raw_dirty == "" and detected_dirty)
+    else:
+        git_dirty = raw_dirty == "1"
 
     try:
         if args.require or args.require_server or args.require_url:
@@ -79,7 +140,10 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(render(server_url, steam_app_id), encoding="utf-8")
+    args.output.write_text(
+        render(server_url, steam_app_id, build_env, git_commit, git_dirty, build_time),
+        encoding="utf-8",
+    )
     try:
         shown = args.output.relative_to(ROOT)
     except ValueError:

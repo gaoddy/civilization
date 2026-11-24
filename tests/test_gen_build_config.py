@@ -36,6 +36,40 @@ class GenBuildConfigTest(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertIn('const SERVER_URL := ""', text)
         self.assertIn("const STEAM_APP_ID := 0", text)
+        self.assertIn('const BUILD_ENV := "local"', text)
+        self.assertRegex(text, r"const GIT_DIRTY := (true|false)")
+
+    def test_build_metadata_is_written(self):
+        """构建环境与 git 版本写进配置，供产物与日志识别。"""
+        code, _, text = self._run(
+            {
+                "SERVER_URL": "wss://civilization.satori.host/ws",
+                "BUILD_ENV": "dev",
+                "BUILD_TIME": "2026-11-25T00:00:00Z",
+                "GIT_COMMIT": "63a1f2e",
+                "GIT_DIRTY": "1",
+            }
+        )
+        self.assertEqual(code, 0)
+        self.assertIn('const BUILD_ENV := "dev"', text)
+        self.assertIn('const GIT_COMMIT := "63a1f2e"', text)
+        self.assertIn("const GIT_DIRTY := true", text)
+        self.assertIn('const BUILD_TIME := "2026-11-25T00:00:00Z"', text)
+
+    def test_steam_build_env_is_written(self):
+        code, _, text = self._run(
+            {
+                "SERVER_URL": "wss://civilization.example/ws",
+                "STEAM_APP_ID": "480",
+                "BUILD_ENV": "steam",
+                "GIT_COMMIT": "63a1f2e",
+                "GIT_DIRTY": "0",
+            },
+            ["--require"],
+        )
+        self.assertEqual(code, 0)
+        self.assertIn('const BUILD_ENV := "steam"', text)
+        self.assertIn("const GIT_DIRTY := false", text)
 
     def test_dev_build_writes_configured_url(self):
         code, _, text = self._run({"SERVER_URL": "wss://civilization.satori.host/ws"})
