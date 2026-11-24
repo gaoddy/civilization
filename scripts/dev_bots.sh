@@ -15,7 +15,7 @@ SIM_BIN=${DEV_SIM_BIN:-"$ROOT/server/target/debug/sim"}
 
 for bin in "$SERVER_BIN" "$SIM_BIN"; do
   if [ ! -x "$bin" ]; then
-    echo "缺少 $(basename "$bin")，先执行 make m1b-build"
+    echo "缺少 $(basename "$bin")，先执行 make server-build"
     exit 1
   fi
 done

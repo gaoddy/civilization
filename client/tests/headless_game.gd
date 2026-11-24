@@ -37,10 +37,10 @@ const PENDING_LIMIT := 8
 
 
 func _ready() -> void:
-    var raw_timeout := OS.get_environment("M1B_TIMEOUT_SECONDS")
+    var raw_timeout := OS.get_environment("CIVILIZATION_E2E_TIMEOUT_SECONDS")
     if raw_timeout != "":
         _timeout = float(raw_timeout)
-    var display_name := OS.get_environment("M1B_NAME")
+    var display_name := OS.get_environment("CIVILIZATION_E2E_NAME")
     GameStore.display_name = display_name if display_name != "" else "GodotClient"
 
     GameStore.auth_changed.connect(_on_auth)
@@ -50,7 +50,7 @@ func _ready() -> void:
     GameStore.game_over.connect(_on_game_over)
     GameStore.error_received.connect(_on_error)
     Net.connected.connect(_on_connected)
-    Net.connect_to(OS.get_environment("M1B_URL"))
+    Net.connect_to(OS.get_environment("CIVILIZATION_E2E_URL"))
 
 
 func _process(delta: float) -> void:
@@ -58,7 +58,7 @@ func _process(delta: float) -> void:
         return
     _elapsed += delta
     if _elapsed >= _timeout:
-        push_error("M1B 超时：%.0f 秒内未结束对局" % _timeout)
+        push_error("CLIENT_E2E 超时：%.0f 秒内未结束对局" % _timeout)
         get_tree().quit(2)
 
 
@@ -77,7 +77,7 @@ func _on_auth() -> void:
     if GameStore.room_id != "" or _room_requested:
         return
     _room_requested = true
-    var room := OS.get_environment("M1B_ROOM")
+    var room := OS.get_environment("CIVILIZATION_E2E_ROOM")
     if room != "":
         Net.send(Protocol.MSG_JOIN_ROOM, {"code": room})
     else:
@@ -87,7 +87,7 @@ func _on_auth() -> void:
 func _on_room() -> void:
     if not _room_requested:
         return
-    if not _code_written and OS.get_environment("M1B_ROOM") == "" and GameStore.room_code != "":
+    if not _code_written and OS.get_environment("CIVILIZATION_E2E_ROOM") == "" and GameStore.room_code != "":
         _code_written = true
         _write_room_code(GameStore.room_code)
 
@@ -112,16 +112,16 @@ func _on_room() -> void:
         GameStore.request_start()
 
 
-## 选英雄阶段：从服务端下发的本人候选里挑一张；`M1B_HERO` 优先，不在候选里用第一张。
+## 选英雄阶段：从服务端下发的本人候选里挑一张；`CIVILIZATION_E2E_HERO` 优先，不在候选里用第一张。
 func _on_hero_pick() -> void:
     if _hero_sent:
         return
     var candidates: Array = GameStore.hero_pick.get("candidates", [])
     if candidates.is_empty():
-        push_error("M1B 选英雄阶段没有本人候选")
+        push_error("CLIENT_E2E 选英雄阶段没有本人候选")
         get_tree().quit(4)
         return
-    var preferred := OS.get_environment("M1B_HERO")
+    var preferred := OS.get_environment("CIVILIZATION_E2E_HERO")
     var hero := str(candidates[0])
     for candidate in candidates:
         if str(candidate) == preferred:
@@ -157,7 +157,7 @@ func _on_view() -> void:
     if fingerprint == _last_fingerprint:
         return
     _last_fingerprint = fingerprint
-    if OS.get_environment("M1B_DEBUG") != "":
+    if OS.get_environment("CIVILIZATION_E2E_DEBUG") != "":
         _debug_view(view, self_state)
     _act(self_state)
 
@@ -171,7 +171,7 @@ func _debug_view(view: Dictionary, self_state: Dictionary) -> void:
     for slot_aff in self_state.get("affordances", {}).get("shopSlots", []):
         if bool(slot_aff.get("buyable", false)):
             buyable.append(str(int(slot_aff.get("index", 0))))
-    print("M1B_VIEW seq=%d turn=%d gold=%d hp=%d era=%d hand=%d board=%d recruited=%s shop=[%s] buyable=[%s]" % [
+    print("CLIENT_E2E_VIEW seq=%d turn=%d gold=%d hp=%d era=%d hand=%d board=%d recruited=%s shop=[%s] buyable=[%s]" % [
         GameStore.last_seq,
         int(view.get("turn", 0)),
         int(self_state.get("gold", 0)),
@@ -274,7 +274,7 @@ func _send_intent(intent: Dictionary) -> void:
     _intent_counter += 1
     _intents_sent += 1
     var intent_id := "headless-%d-%d" % [Time.get_ticks_usec(), _intent_counter]
-    print("M1B_INTENT %s %s" % [intent_id, JSON.stringify(intent)])
+    print("CLIENT_E2E_INTENT %s %s" % [intent_id, JSON.stringify(intent)])
     if _pending_intents.size() >= PENDING_LIMIT:
         _pending_intents.erase(_pending_intents.keys()[0])
     _pending_intents[intent_id] = intent.duplicate(true)
@@ -341,7 +341,7 @@ func _choose_target() -> void:
     var candidates: Array = choices[0].get("candidates", []) if not choices.is_empty() else []
     var target := _next_candidate(candidates, {})
     if target.is_empty():
-        push_error("M1B 目标待选时没有可用候选")
+        push_error("CLIENT_E2E 目标待选时没有可用候选")
         get_tree().quit(4)
         return
     _send_intent({"kind": Protocol.INTENT_CHOOSE_TARGET, "target": target})
@@ -382,7 +382,7 @@ func _remember_target_rejection(rejected: Dictionary) -> bool:
 
 func _write_room_code(code: String) -> void:
     print("ROOM_CODE=%s" % code)
-    var path := OS.get_environment("M1B_CODE_FILE")
+    var path := OS.get_environment("CIVILIZATION_E2E_CODE_FILE")
     if path == "":
         return
     var file := FileAccess.open(path, FileAccess.WRITE)
@@ -401,7 +401,7 @@ func _on_game_over() -> void:
     for entry in GameStore.ranking:
         if str(entry.get("playerId", "")) == GameStore.player_id:
             place = int(entry.get("place", 0))
-    print("M1B_GAME_OVER place=%d seed=%s ranking=%d intents=%d errors=%d soft=%d" % [
+    print("CLIENT_E2E_GAME_OVER place=%d seed=%s ranking=%d intents=%d errors=%d soft=%d" % [
         place,
         GameStore.game_seed,
         GameStore.ranking.size(),
@@ -428,7 +428,7 @@ func _on_error() -> void:
             and _retry_with_target(_pending_intents[rejected_id])
         ):
             _soft_errors += 1
-            push_warning("M1B 补选目标后重发（intent=%s）" % rejected_id)
+            push_warning("CLIENT_E2E 补选目标后重发（intent=%s）" % rejected_id)
             return
         if recorded:
             # 目标池收窄导致的选择被拒：本回合跳过该牌或换下一个待选，按预期软错误处理。
@@ -451,7 +451,7 @@ func _on_error() -> void:
         # 驱动会在上一意图尚未确认时继续决策，服务端按最新状态拒绝属于预期；
         # 这三类不计为缺陷，其余任何错误都判失败。
         _soft_errors += 1
-    push_warning("M1B 收到错误 %s：%s（intent=%s）" % [
+    push_warning("CLIENT_E2E 收到错误 %s：%s（intent=%s）" % [
         code,
         str(GameStore.last_error.get("message", "")),
         str(GameStore.last_error.get("clientIntentId", "")),

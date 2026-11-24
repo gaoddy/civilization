@@ -30,7 +30,7 @@
 ## 4. 实现约定
 
 - 工程目录：`client/`，Godot 4.7.2，GDScript；主场景 `client/scenes/login.tscn`。
-- 测试：`make client-smoke` 无头实例化五个场景；`tests/test_client_boundary.py` 断言客户端不引用规则实现；`make m1b-e2e` 用 1 个无头客户端 + 7 个 `sim bot` 打完一局。
+- 测试：`make client-smoke` 无头实例化五个场景；`tests/test_client_boundary.py` 断言客户端不引用规则实现；`make client-e2e` 用 1 个无头客户端 + 7 个 `sim bot` 打完一局。
 - 构建与导出：本机运行与 macOS 桌面端导出均已落地，命令与产物见[Godot 客户端](../client.md) §4 与 §8。
 - 未确定事项见[待确认事项](../../../versions/v0.1/open-questions.md)。
 

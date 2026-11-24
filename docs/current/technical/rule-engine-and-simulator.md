@@ -202,11 +202,11 @@ impl Taxonomy {
 | `make audit` | effects DSL 审计 |
 | `make data` / `make data-check` | 生成卡牌数据 / 比对漂移并审计；四条生成或七项检查由 `scripts/run_parallel.py` 并行执行（`JOBS` 控制并行度，生成物确定性不变） |
 | `make protocol` / `make protocol-check` | 生成协议 GDScript 常量与字段表 / 漂移检测 |
-| `make m0-determinism` | 运行 `sim_determinism::replay_same_log_100_times_has_same_hash`：同一局用 `sim replay` 重放 100 次，终局状态哈希与事件序列哈希全部一致 |
-| `make m0-batch` | 1000 局 8 AI 批量对局（seed 1），写入 `output/m0-batch.json` |
-| `make check-core` | `data-check`、`test`、`lint`、`m0-determinism` 四项并行执行（基础验收门禁），任一失败整体非 0 |
-| `make check` | 全量验收门禁：`protocol-rs-check`、`protocol-check`、`data-check`、`test`、`lint`、`m0-determinism` 六项并行执行；e2e 由 `make test` 覆盖，详见[房间服务与联网](room-service/README.md) |
-| `make m0-report` | 先校验批量日志（`sim check --expect-games 1000`：局数、每局 8 名排名），再生成基线报告（字段口径见第 7 节）；输出同时写入 `output/m0-report.log`。可用 `M0_BATCH_LOG`、`M0_GAMES` 指向其他批量日志与局数 |
+| `make sim-determinism` | 运行 `sim_determinism::replay_same_log_100_times_has_same_hash`：同一局用 `sim replay` 重放 100 次，终局状态哈希与事件序列哈希全部一致 |
+| `make sim-batch` | 1000 局 8 AI 批量对局（seed 1），写入 `output/sim-batch.json` |
+| `make check-core` | `data-check`、`test`、`lint`、`sim-determinism` 四项并行执行（基础验收门禁），任一失败整体非 0 |
+| `make check` | 全量验收门禁：`protocol-rs-check`、`protocol-check`、`data-check`、`test`、`lint`、`sim-determinism` 六项并行执行；e2e 由 `make test` 覆盖，详见[房间服务与联网](room-service/README.md) |
+| `make sim-report` | 先校验批量日志（`sim check --expect-games 1000`：局数、每局 8 名排名），再生成基线报告（字段口径见第 7 节）；输出同时写入 `output/sim-report.log`。可用 `SIM_BATCH_LOG`、`SIM_GAMES` 指向其他批量日志与局数 |
 | `make load-build` | release 构建 `room-service` 与 `sim`，供压测使用（debug 结果与线上不可比） |
 | `make loadtest` | 并发容量稳态压测：本机起 `room-service`，维持 `LOAD_ROOMS`（默认 10）个活跃房间并补位 `LOAD_DURATION_MS`（默认 30000），报告写 `output/loadtest-steady.json` |
 | `make loadtest-ramp` | 爬坡找上限：从 `LOAD_ROOMS` 到 `LOAD_ROOMS_MAX`（默认 100）按 `LOAD_STEP`（默认 10）逐档压测，每档 `LOAD_STEP_MS`（默认 20000），报告写 `output/loadtest-ramp.json` |
@@ -234,24 +234,24 @@ M0 确定性 AI（`sim/src/ai.rs`）针对效果牌补充三条规则：
 
 ## 6. 验证方式
 
-验证矩阵：`make data-check && python3 scripts/validate_docs.py && make check-core && make m0-batch && make m0-report`（其中 `make check-core` 并行执行 `data-check`、`test`、`lint` 与 `m0-determinism`）。
+验证矩阵：`make data-check && python3 scripts/validate_docs.py && make check-core && make sim-batch && make sim-report`（其中 `make check-core` 并行执行 `data-check`、`test`、`lint` 与 `sim-determinism`）。
 
-每个 M0 标准类别由下列命令与字段支撑；表中「报告字段」指 `make m0-report` 输出的 JSON 字段。
+每个 M0 标准类别由下列命令与字段支撑；表中「报告字段」指 `make sim-report` 输出的 JSON 字段。
 
 | M0 标准 | 命令 | 证据 |
 | --- | --- | --- |
 | 卡池完整 | `make data-check`、`python3 scripts/validate_docs.py`、`make test` | 命令退出码 0；`catalog::loads_all_committed_data` 断言 432 卡（其中 24 张非池卡）/ 255 技能 / 32 英雄卡全部加载，`every_card_skill_exists`、`unknown_field_fails`、`catalog::committed_data_is_structured`；`audit_effects.py` 输出 `审计通过` |
 | 数据一致 | `make data-check` | 重新生成后输出 `生成数据无漂移`，退出码 0 |
 | 规则覆盖 | `make test` | `server/crates/rule-engine/tests/` 与 `server/crates/sim/tests/` 的用例全部 `test result: ok`（用例清单见第 8 节）；商店池耗尽留空槽由 `recruit::reroll_with_exhausted_pool_leaves_empty_slots_and_buy_rejects` 锁定 |
-| 确定性 | `make m0-determinism` | `replay_same_log_100_times_has_same_hash` 通过：100 次重放每次退出码 0，`final_hash` 全部等于原局，事件序列哈希同样一致；重放由日志种子重新推导同一组 5 个玩法 |
+| 确定性 | `make sim-determinism` | `replay_same_log_100_times_has_same_hash` 通过：100 次重放每次退出码 0，`final_hash` 全部等于原局，事件序列哈希同样一致；重放由日志种子重新推导同一组 5 个玩法 |
 | 分类与玩法 | `make data-check`、`python3 scripts/validate_docs.py`、`make test` | 分类树节点、父链、叶子层级与卡牌 `taxon` 全覆盖；`playstyles::draw` 同 seed 固定 5 个玩法；`Engine::new` 拒绝 `Neutral` 与重复玩法；`card_in_pool` 与筛选键由引擎测试覆盖 |
-| 稳定性 | `make m0-batch`、`make m0-report` | `make m0-batch` 退出码 0，无错误输出；产物 `output/m0-batch.json` 的 `games` 数为 1000（每局一条日志）。`make m0-report` 以 `sim check --expect-games 1000` 断言批量日志 `games` = 1000（批量退出码 0、异常/超时 0 的「无缺局」口径），局数不符即非零退出 |
-| 可判定 | `make m0-batch`、`make m0-report` | `sim check`（由 `make m0-report` 调用）逐局断言 `ranking.len() == 8`、座位恰为 0–7、名次 1–8 连续，任一局不满足即非零退出并给出异常局数；`sim report` 也内置同一校验，stdout 仅输出 JSON。契约另由 `sim_cli::single_game_produces_ranking_and_hash`、`batch_of_ten_all_ranked`、`check_fails_on_incomplete_ranking` 固化 |
-| 数值基线 | `make m0-report`（`output/m0-report.log`） | 退出码 0；`wins_by_playstyle`、`win_rate_permille_by_playstyle`、`avg_turns`、`era_upgrade_turns_by_seat`、`avg_era_upgrade_turn`、`triples_per_game`、`games_reaching_turn_20`、`survivors_at_turn_20`、`avg_damage_per_loss` 均有值；越界与口径问题登记[平衡问题](../product/content/balance-questions.md) |
+| 稳定性 | `make sim-batch`、`make sim-report` | `make sim-batch` 退出码 0，无错误输出；产物 `output/sim-batch.json` 的 `games` 数为 1000（每局一条日志）。`make sim-report` 以 `sim check --expect-games 1000` 断言批量日志 `games` = 1000（批量退出码 0、异常/超时 0 的「无缺局」口径），局数不符即非零退出 |
+| 可判定 | `make sim-batch`、`make sim-report` | `sim check`（由 `make sim-report` 调用）逐局断言 `ranking.len() == 8`、座位恰为 0–7、名次 1–8 连续，任一局不满足即非零退出并给出异常局数；`sim report` 也内置同一校验，stdout 仅输出 JSON。契约另由 `sim_cli::single_game_produces_ranking_and_hash`、`batch_of_ten_all_ranked`、`check_fails_on_incomplete_ranking` 固化 |
+| 数值基线 | `make sim-report`（`output/sim-report.log`） | 退出码 0；`wins_by_playstyle`、`win_rate_permille_by_playstyle`、`avg_turns`、`era_upgrade_turns_by_seat`、`avg_era_upgrade_turn`、`triples_per_game`、`games_reaching_turn_20`、`survivors_at_turn_20`、`avg_damage_per_loss` 均有值；越界与口径问题登记[平衡问题](../product/content/balance-questions.md) |
 
 ## 7. 报告字段口径
 
-`make m0-report` 的 JSON：
+`make sim-report` 的 JSON：
 
 | 字段 | 口径 |
 | --- | --- |

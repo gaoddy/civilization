@@ -26,7 +26,7 @@ check-core:
 		"$(MAKE) --no-print-directory data-check" \
 		"$(MAKE) --no-print-directory test" \
 		"$(MAKE) --no-print-directory lint" \
-		"$(MAKE) --no-print-directory m0-determinism"
+		"$(MAKE) --no-print-directory sim-determinism"
 
 # 全量验收：协议生成物、文档数据、测试、静态检查与确定性。
 # e2e 由 `make test` 的 `cargo test --workspace` 覆盖，不在此单独再跑：
@@ -38,4 +38,4 @@ check:
 		"$(MAKE) --no-print-directory data-check" \
 		"$(MAKE) --no-print-directory test" \
 		"$(MAKE) --no-print-directory lint" \
-		"$(MAKE) --no-print-directory m0-determinism"
+		"$(MAKE) --no-print-directory sim-determinism"

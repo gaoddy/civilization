@@ -1,5 +1,5 @@
 # 客户端构建、运行、检查与导出。由根 Makefile include。
-# 依赖根 Makefile 的 PYTHON、JOBS、CURDIR，以及 make/server.mk 的 m1b-build 目标。
+# 依赖根 Makefile 的 PYTHON、JOBS、CURDIR，以及 make/server.mk 的 server-build 目标。
 
 GODOT ?= $(shell command -v godot 2>/dev/null || echo /Applications/Godot.app/Contents/MacOS/Godot)
 # 补丁版本固定，导出模板目录与之精确一致；本机引擎不符时由 client-godot-check 拒绝执行。
@@ -157,7 +157,7 @@ client-run-check:
 	@$(if $(filter 0 1,$(LOCAL_SERVER)),,$(error LOCAL_SERVER 只能是 0 或 1，收到：$(LOCAL_SERVER)))
 	@$(if $(strip $(WIDTH)),$(if $(strip $(HEIGHT)),,$(error WIDTH 与 HEIGHT 需同时传入正整数)),$(if $(strip $(HEIGHT)),$(error WIDTH 与 HEIGHT 需同时传入正整数),))
 
-_client-run-macos: client-import $(if $(filter 1,$(LOCAL_SERVER)),m1b-build)
+_client-run-macos: client-import $(if $(filter 1,$(LOCAL_SERVER)),server-build)
 	@set -e; \
 	w="$(CLIENT_RUN_WIDTH)"; h="$(CLIENT_RUN_HEIGHT)"; \
 	if [ -n "$$w" ] || [ -n "$$h" ]; then \
@@ -308,7 +308,7 @@ _client-export-macos: client-env-check client-export-templates client-import
 	ditto -c -k --sequesterRsrc --keepParent output/desktop/Civilization.app output/desktop/Civilization-macos.zip
 
 # 本地调试包：启用 embedded_server 特性，内嵌 room-service 与 sim，只用于本机自测。
-_client-export-local: client-export-templates client-import m1b-build
+_client-export-local: client-export-templates client-import server-build
 	@[ "$$(uname -s)" = "Darwin" ] || { echo "client-export PLATFORM=local 仅支持 macOS（当前 $$(uname -s)）" >&2; exit 1; }
 	rm -rf output/desktop-local
 	mkdir -p output/desktop-local
