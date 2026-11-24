@@ -4,7 +4,7 @@
 	"ContentRoot" "__CONTENT_ROOT__"
 	"FileMapping"
 	{
-		"LocalPath" "Civilization.app/*"
+		"LocalPath" "__APP_NAME__/*"
 		"DepotPath" "."
 		"recursive" "1"
 	}

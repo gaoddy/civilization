@@ -16,6 +16,10 @@ CLEARED = (
     "CLIENT_DEV_SERVER_URL",
     "CLIENT_PROD_SERVER_URL",
     "STEAM_APP_ID",
+    "BUILD_ENV",
+    "BUILD_TIME",
+    "GIT_COMMIT",
+    "GIT_DIRTY",
     "PLATFORM",
     "DEVICE",
     "WIDTH",
@@ -170,15 +174,43 @@ class ClientBuildEnvTest(unittest.TestCase):
                 self.assertNotEqual(proc.returncode, 0)
                 self.assertIn("不支持 ENV", proc.stdout + proc.stderr)
 
-    def test_local_does_not_bake_build_config(self):
+    def test_local_bakes_empty_url_with_metadata(self):
+        """local 调试包仍写空地址，但会写入构建环境与 git 版本供产物识别。"""
         proc = self._run_make(["-n", "client-export", "PLATFORM=local"])
         self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
-        self.assertNotIn("gen_build_config.py", proc.stdout + proc.stderr)
+        line = self._gen_line(proc)
+        self.assertIn('SERVER_URL=""', line)
+        self.assertIn('BUILD_ENV="local"', line)
+        self.assertNotIn("--require", line)
+
+    def test_exports_name_platform_in_artifact_path(self):
+        """产物统一在 output/client/，文件名带平台；复用判定写入戳记目录。"""
+        cases = (
+            ("macos", [], "Civilization-macos-$id.app"),
+            ("ios", [], "Civilization-ios-$id.ipa"),
+            ("android", [], "Civilization-android-$id.$format"),
+            ("android", ["AAB=1"], "Civilization-android-$id.$format"),
+        )
+        for platform, extra, artifact in cases:
+            with self.subTest(platform=platform, extra=extra):
+                proc = self._run_make(["-n", "client-export", f"PLATFORM={platform}", *extra])
+                self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+                self.assertIn("output/client/" + artifact, proc.stdout)
+                self.assertIn("output/client/stamps/", proc.stdout)
+                self.assertIn("scripts/client_build.py reuse", proc.stdout)
+
+    def test_run_ios_install_uses_build_directory(self):
+        """真机安装路径与导出的构建号目录一致，导出被复用时直接安装已有产物。"""
+        proc = self._run_make(["-n", "run-ios-ipad-dev"])
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        self.assertIn("output/client/build/ios/$id", proc.stdout)
+        self.assertIn('IOS_APP=', proc.stdout)
 
     def test_android_aab_uses_aab_script(self):
         proc = self._run_make(["-n", "client-export", "PLATFORM=android", "AAB=1"])
         self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
-        self.assertIn("android_export.sh aab", proc.stdout)
+        self.assertIn('format="aab"', proc.stdout)
+        self.assertIn('android_export.sh "$format"', proc.stdout)
 
     def test_android_invalid_aab_is_rejected(self):
         proc = self._run_make(["-n", "client-export", "PLATFORM=android", "AAB=2"])
@@ -218,7 +250,8 @@ class ClientBuildEnvTest(unittest.TestCase):
     def test_alias_export_aab_uses_aab_script(self):
         proc = self._run_make(["-n", "export-aab"])
         self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
-        self.assertIn("android_export.sh aab", proc.stdout)
+        self.assertIn('format="aab"', proc.stdout)
+        self.assertIn('android_export.sh "$format"', proc.stdout)
 
     def test_alias_export_ios_passes_env(self):
         proc = self._run_make(["-n", "export-ios", "ENV=dev"])

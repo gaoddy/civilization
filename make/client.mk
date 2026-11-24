@@ -13,6 +13,15 @@ GODOT_TEMPLATE_DIR := $(HOME)/Library/Application Support/Godot/export_templates
 # 1=强制非无头。headless 下引擎不允许创建 RenderingDevice，GPU 压缩不可用。
 CLIENT_IMPORT_GPU ?= 0
 
+# 客户端产物统一落在 output/client/：直接产物文件名带平台与 <git 短号>[-dirty]-<环境>，
+# 中间产物进 build/<平台>/<构建号>/，戳记进 stamps/。同号同环境且源码指纹一致时复用，不重复导出。
+CLIENT_OUTPUT_DIR := output/client
+CLIENT_BUILD_DIR := $(CLIENT_OUTPUT_DIR)/build
+CLIENT_STAMP_DIR := $(CLIENT_OUTPUT_DIR)/stamps
+CLIENT_BUILD_INFO := $(PYTHON) scripts/client_build.py
+# 一次 make 调用内所有导出的构建时间取同一时刻，便于从戳记还原批次。
+CLIENT_BUILD_TIME := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
+
 .PHONY: client-godot-check client-import client-cache-copy client-check client-smoke \
 	client-run client-run-platform-check client-run-check client-run-ios-check _client-run-macos _client-run-ios _client-run-invalid \
 	client-env-check client-export-templates client-export client-export-platform-check \
@@ -192,11 +201,15 @@ _client-run-macos: client-env-check client-import $(if $(filter 1,$(LOCAL_SERVER
 
 # 真机联调默认走 local：空配置，客户端按移动端回落开发机局域网地址。
 # 环境由 ENV 指定；设备类型交给 ios_run.sh 自动选已连接的同类型设备。
+# 安装目标取 client-export 的同一构建号目录；导出被复用时直接装已有产物。
 client-run-ios-check:
 	@$(if $(filter iphone ipad,$(IOS_DEVICE_TYPE)),,$(error IOS_DEVICE_TYPE 只能是 iphone / ipad，收到：$(IOS_DEVICE_TYPE)))
 
 _client-run-ios: client-run-ios-check client-export
-	IOS_DEVICE="$(IOS_DEVICE)" IOS_DEVICE_TYPE="$(IOS_DEVICE_TYPE)" IOS_LAUNCH="$(IOS_LAUNCH)" bash scripts/ios_run.sh
+	@id=$$($(CLIENT_BUILD_INFO) id --env "$(CLIENT_ENV)" --watch client); \
+	IOS_APP="$(CURDIR)/$(CLIENT_BUILD_DIR)/ios/$$id/build/Build/Products/Release-iphoneos/Civilization.app" \
+	IOS_DEVICE="$(IOS_DEVICE)" IOS_DEVICE_TYPE="$(IOS_DEVICE_TYPE)" IOS_LAUNCH="$(IOS_LAUNCH)" \
+	bash scripts/ios_run.sh
 
 _client-run-invalid:
 	@exit 2
@@ -289,7 +302,8 @@ client-env-check:
 CLIENT_BACKUP_CONFIG = backup=$$(mktemp); cp client/generated/build_config.gd "$$backup"; trap 'cp "$$backup" client/generated/build_config.gd; rm -f "$$backup"' EXIT
 CLIENT_RESTORE_CONFIG = cp "$$backup" client/generated/build_config.gd; rm -f "$$backup"; trap - EXIT
 
-# 导出入口：PLATFORM 选择平台，ENV 选择服务端地址；各平台产物路径与签名方式见分目标。
+# 导出入口：PLATFORM 选择平台，ENV 选择服务端地址；产物统一放 output/client/，
+# 文件名带平台与构建号，源码与配置未变时直接复用已导出的产物。
 #   make client-export                          # macOS .app + zip（默认 PLATFORM=macos）
 #   make client-export PLATFORM=local           # 内嵌 room-service 的本地调试包
 #   make client-export PLATFORM=steam SERVER_URL=wss://... STEAM_APP_ID=...
@@ -306,51 +320,101 @@ _client-export-invalid:
 	@exit 2
 
 # 未签名 Universal .app 与 zip 产物。Gatekeeper 放行方式见 docs/current/technical/client.md。
+# 命中戳记时直接复用同名产物；戳记先写产物清单，再嵌进 .app 的 Resources，最后打包 zip。
 _client-export-macos: client-env-check client-export-templates client-import
 	@[ "$$(uname -s)" = "Darwin" ] || { echo "client-export PLATFORM=macos 仅支持 macOS（当前 $$(uname -s)）" >&2; exit 1; }
-	@set -e; $(CLIENT_BACKUP_CONFIG); \
-	SERVER_URL="$(CLIENT_SERVER_URL)" STEAM_APP_ID="" $(PYTHON) scripts/gen_build_config.py $(CLIENT_REQUIRE_SERVER); \
-	mkdir -p output/desktop; \
-	rm -rf output/desktop/Civilization.app output/desktop/Civilization-macos.zip; \
-	"$(GODOT)" --headless --path client --export-release "macOS" "$(CURDIR)/output/desktop/Civilization.app"; \
+	@set -e; \
+	env="$(CLIENT_ENV)"; \
+	id=$$($(CLIENT_BUILD_INFO) id --env "$$env" --watch client); \
+	app="$(CLIENT_OUTPUT_DIR)/Civilization-macos-$$id.app"; \
+	zip="$(CLIENT_OUTPUT_DIR)/Civilization-macos-$$id.zip"; \
+	stamp="$(CLIENT_STAMP_DIR)/Civilization-macos-$$id.json"; \
+	if $(CLIENT_BUILD_INFO) reuse --stamp "$$stamp" --platform macos --env "$$env" --id "$$id" \
+	     --watch client --artifact "$$app/Contents/MacOS/Civilization" --artifact "$$zip" \
+	     --server-url "$(CLIENT_SERVER_URL)" --godot-version "$(GODOT_VERSION)"; then \
+	  echo "复用 macOS 产物：$$zip"; exit 0; \
+	fi; \
+	$(CLIENT_BACKUP_CONFIG); \
+	SERVER_URL="$(CLIENT_SERVER_URL)" STEAM_APP_ID="" BUILD_ENV="$$env" BUILD_TIME="$(CLIENT_BUILD_TIME)" $(PYTHON) scripts/gen_build_config.py $(CLIENT_REQUIRE_SERVER); \
+	mkdir -p "$(CLIENT_OUTPUT_DIR)"; \
+	rm -rf "$$app" "$$zip"; \
+	"$(GODOT)" --headless --path client --export-release "macOS" "$(CURDIR)/$$app"; \
 	$(CLIENT_RESTORE_CONFIG); \
-	test -x output/desktop/Civilization.app/Contents/MacOS/Civilization; \
-	ditto -c -k --sequesterRsrc --keepParent output/desktop/Civilization.app output/desktop/Civilization-macos.zip
+	test -x "$$app/Contents/MacOS/Civilization"; \
+	$(CLIENT_BUILD_INFO) stamp --stamp "$$stamp" --platform macos --env "$$env" --id "$$id" \
+	  --watch client --artifact "$$app/Contents/MacOS/Civilization" --artifact "$$zip" \
+	  --server-url "$(CLIENT_SERVER_URL)" --godot-version "$(GODOT_VERSION)"; \
+	mkdir -p "$$app/Contents/Resources"; \
+	cp "$$stamp" "$$app/Contents/Resources/build-stamp.json"; \
+	ditto -c -k --sequesterRsrc --keepParent "$$app" "$$zip"; \
+	test -f "$$zip"; \
+	echo "macOS 产物：$$zip"
 
 # 本地调试包：启用 embedded_server 特性，内嵌 room-service 与 sim，只用于本机自测。
+# 复用判定把 server/ 也纳入指纹：sidecar 重新构建后旧产物不能再复用。
 _client-export-local: client-export-templates client-import server-build
 	@[ "$$(uname -s)" = "Darwin" ] || { echo "client-export PLATFORM=local 仅支持 macOS（当前 $$(uname -s)）" >&2; exit 1; }
-	rm -rf output/desktop-local
-	mkdir -p output/desktop-local
-	"$(GODOT)" --headless --path client --export-debug "macOS Local Debug" "$(CURDIR)/output/desktop-local/Civilization.app"
-	test -x output/desktop-local/Civilization.app/Contents/MacOS/Civilization
-	cp server/target/debug/room-service server/target/debug/sim output/desktop-local/Civilization.app/Contents/MacOS/
-	chmod +x output/desktop-local/Civilization.app/Contents/MacOS/room-service output/desktop-local/Civilization.app/Contents/MacOS/sim
-	test -x output/desktop-local/Civilization.app/Contents/MacOS/room-service
-	test -x output/desktop-local/Civilization.app/Contents/MacOS/sim
-	@echo "本地调试产物：output/desktop-local/Civilization.app"
+	@set -e; \
+	id=$$($(CLIENT_BUILD_INFO) id --env local --watch client --watch server); \
+	app="$(CLIENT_OUTPUT_DIR)/Civilization-local-$$id.app"; \
+	stamp="$(CLIENT_STAMP_DIR)/Civilization-local-$$id.json"; \
+	if $(CLIENT_BUILD_INFO) reuse --stamp "$$stamp" --platform local --env local --id "$$id" \
+	     --watch client --watch server --artifact "$$app/Contents/MacOS/Civilization" \
+	     --artifact "$$app/Contents/MacOS/room-service" --artifact "$$app/Contents/MacOS/sim" \
+	     --server-url "" --godot-version "$(GODOT_VERSION)"; then \
+	  echo "复用本地调试产物：$$app"; exit 0; \
+	fi; \
+	$(CLIENT_BACKUP_CONFIG); \
+	SERVER_URL="" STEAM_APP_ID="" BUILD_ENV="local" BUILD_TIME="$(CLIENT_BUILD_TIME)" $(PYTHON) scripts/gen_build_config.py; \
+	mkdir -p "$(CLIENT_OUTPUT_DIR)"; \
+	rm -rf "$$app"; \
+	"$(GODOT)" --headless --path client --export-debug "macOS Local Debug" "$(CURDIR)/$$app"; \
+	$(CLIENT_RESTORE_CONFIG); \
+	test -x "$$app/Contents/MacOS/Civilization"; \
+	cp server/target/debug/room-service server/target/debug/sim "$$app/Contents/MacOS/"; \
+	chmod +x "$$app/Contents/MacOS/room-service" "$$app/Contents/MacOS/sim"; \
+	test -x "$$app/Contents/MacOS/room-service"; \
+	test -x "$$app/Contents/MacOS/sim"; \
+	$(CLIENT_BUILD_INFO) stamp --stamp "$$stamp" --platform local --env local --id "$$id" \
+	  --watch client --watch server --artifact "$$app/Contents/MacOS/Civilization" \
+	  --artifact "$$app/Contents/MacOS/room-service" --artifact "$$app/Contents/MacOS/sim" \
+	  --server-url "" --godot-version "$(GODOT_VERSION)"; \
+	mkdir -p "$$app/Contents/Resources"; \
+	cp "$$stamp" "$$app/Contents/Resources/build-stamp.json"; \
+	echo "本地调试产物：$$app"
 
 # Steam 发行构建参数：SERVER_URL 必须是 wss://，STEAM_APP_ID 为 Steamworks App ID。
 SERVER_URL ?=
 STEAM_APP_ID ?=
 STEAM_DEPOT_ID ?=
 STEAM_USER ?=
-STEAM_OUTPUT ?= output/steam
+STEAM_OUTPUT ?= $(CLIENT_OUTPUT_DIR)
 STEAM_CMD ?= steamcmd
 CODESIGN_IDENTITY ?=
 NOTARY_PROFILE ?=
 
 # Steam 发行构建：临时写入发布配置后导出，退出时恢复仓库内的空配置。
+# 复用判定同时比对 SERVER_URL 与 STEAM_APP_ID，换渠道参数一定重建。
 # 校验产物内的 libsteam_api.dylib 同时包含 x86_64 与 arm64，避免产出不可用的 universal 包。
 _client-export-steam: client-export-templates client-import
 	@[ "$$(uname -s)" = "Darwin" ] || { echo "client-export PLATFORM=steam 仅支持 macOS（当前 $$(uname -s)）" >&2; exit 1; }
-	@set -e; $(CLIENT_BACKUP_CONFIG); \
-	SERVER_URL="$(SERVER_URL)" STEAM_APP_ID="$(STEAM_APP_ID)" $(PYTHON) scripts/gen_build_config.py --require; \
+	@set -e; \
+	id=$$($(CLIENT_BUILD_INFO) id --env steam --watch client); \
+	app="$(STEAM_OUTPUT)/Civilization-steam-$$id.app"; \
+	stamp="$(CLIENT_STAMP_DIR)/Civilization-steam-$$id.json"; \
+	if $(CLIENT_BUILD_INFO) reuse --stamp "$$stamp" --platform steam --env steam --id "$$id" \
+	     --watch client --artifact "$$app/Contents/MacOS/Civilization" \
+	     --server-url "$(SERVER_URL)" --steam-app-id "$(STEAM_APP_ID)" --godot-version "$(GODOT_VERSION)"; then \
+	  echo "复用 Steam 产物：$$app"; exit 0; \
+	fi; \
+	$(CLIENT_BACKUP_CONFIG); \
+	SERVER_URL="$(SERVER_URL)" STEAM_APP_ID="$(STEAM_APP_ID)" BUILD_ENV="steam" BUILD_TIME="$(CLIENT_BUILD_TIME)" $(PYTHON) scripts/gen_build_config.py --require; \
 	mkdir -p "$(STEAM_OUTPUT)"; \
-	rm -rf "$(STEAM_OUTPUT)/Civilization.app"; \
-	"$(GODOT)" --headless --path client --export-release "Steam" "$(CURDIR)/$(STEAM_OUTPUT)/Civilization.app"; \
-	test -x "$(STEAM_OUTPUT)/Civilization.app/Contents/MacOS/Civilization"; \
-	lib="$(STEAM_OUTPUT)/Civilization.app/Contents/Frameworks/libsteam_api.dylib"; \
+	rm -rf "$$app"; \
+	"$(GODOT)" --headless --path client --export-release "Steam" "$(CURDIR)/$$app"; \
+	$(CLIENT_RESTORE_CONFIG); \
+	test -x "$$app/Contents/MacOS/Civilization"; \
+	lib="$$app/Contents/Frameworks/libsteam_api.dylib"; \
 	[ -f "$$lib" ] || { echo "缺少 libsteam_api.dylib：$$lib" >&2; exit 1; }; \
 	archs="$$(lipo -info "$$lib")"; \
 	echo "$$archs"; \
@@ -358,17 +422,24 @@ _client-export-steam: client-export-templates client-import
 	  *x86_64*arm64*|*arm64*x86_64*) ;; \
 	  *) echo "libsteam_api.dylib 必须是 universal（x86_64 + arm64）" >&2; exit 1 ;; \
 	esac; \
-	echo "Steam 产物：$(STEAM_OUTPUT)/Civilization.app"
+	$(CLIENT_BUILD_INFO) stamp --stamp "$$stamp" --platform steam --env steam --id "$$id" \
+	  --watch client --artifact "$$app/Contents/MacOS/Civilization" \
+	  --server-url "$(SERVER_URL)" --steam-app-id "$(STEAM_APP_ID)" --godot-version "$(GODOT_VERSION)"; \
+	mkdir -p "$$app/Contents/Resources"; \
+	cp "$$stamp" "$$app/Contents/Resources/build-stamp.json"; \
+	echo "Steam 产物：$$app"
 
 # 签名与公证：先签嵌套 dylib（Steam 覆盖层由 Steam 客户端注入，需关闭库校验），
-# 再签 .app；公证通过后 staple 票据，最后交给 Gatekeeper 复核。
+# 再签 .app；公证通过后 staple 票据，最后交给 Gatekeeper 复核。产物与上次导出同号同环境。
 client-notarize:
 	@[ "$$(uname -s)" = "Darwin" ] || { echo "client-notarize 仅支持 macOS（当前 $$(uname -s)）" >&2; exit 1; }
-	@[ -d "$(STEAM_OUTPUT)/Civilization.app" ] || { echo "缺少 $(STEAM_OUTPUT)/Civilization.app，先运行 make client-export PLATFORM=steam" >&2; exit 1; }
-	@[ -n "$(CODESIGN_IDENTITY)" ] || { echo "需要 CODESIGN_IDENTITY，例如 'Developer ID Application: 名称 (TEAMID)'" >&2; exit 1; }
-	@[ -n "$(NOTARY_PROFILE)" ] || { echo "需要 NOTARY_PROFILE（用 xcrun notarytool store-credentials 创建）" >&2; exit 1; }
-	@set -e; \
-	app="$(STEAM_OUTPUT)/Civilization.app"; \
+	@id=$$($(CLIENT_BUILD_INFO) id --env steam --watch client); \
+	app="$(STEAM_OUTPUT)/Civilization-steam-$$id.app"; \
+	zip="$(STEAM_OUTPUT)/Civilization-steam-$$id.zip"; \
+	[ -d "$$app" ] || { echo "缺少 $$app，先运行 make client-export PLATFORM=steam" >&2; exit 1; }; \
+	[ -n "$(CODESIGN_IDENTITY)" ] || { echo "需要 CODESIGN_IDENTITY，例如 'Developer ID Application: 名称 (TEAMID)'" >&2; exit 1; }; \
+	[ -n "$(NOTARY_PROFILE)" ] || { echo "需要 NOTARY_PROFILE（用 xcrun notarytool store-credentials 创建）" >&2; exit 1; }; \
+	set -e; \
 	for lib in "$$app/Contents/Frameworks/"*.dylib; do \
 	  codesign --force --timestamp --options runtime --sign "$(CODESIGN_IDENTITY)" "$$lib"; \
 	done; \
@@ -376,9 +447,9 @@ client-notarize:
 	  --entitlements deploy/steam/entitlements.plist \
 	  --sign "$(CODESIGN_IDENTITY)" "$$app"; \
 	codesign --verify --deep --strict --verbose=2 "$$app"; \
-	rm -f "$(STEAM_OUTPUT)/Civilization-steam.zip"; \
-	ditto -c -k --sequesterRsrc --keepParent "$$app" "$(STEAM_OUTPUT)/Civilization-steam.zip"; \
-	xcrun notarytool submit "$(STEAM_OUTPUT)/Civilization-steam.zip" --keychain-profile "$(NOTARY_PROFILE)" --wait; \
+	rm -f "$$zip"; \
+	ditto -c -k --sequesterRsrc --keepParent "$$app" "$$zip"; \
+	xcrun notarytool submit "$$zip" --keychain-profile "$(NOTARY_PROFILE)" --wait; \
 	xcrun stapler staple "$$app"; \
 	xcrun stapler validate "$$app"; \
 	spctl -a -vv -t exec "$$app"; \
@@ -390,41 +461,62 @@ steam-upload:
 	@[ -n "$(STEAM_APP_ID)" ] || { echo "需要 STEAM_APP_ID" >&2; exit 1; }
 	@[ -n "$(STEAM_DEPOT_ID)" ] || { echo "需要 STEAM_DEPOT_ID" >&2; exit 1; }
 	@[ -n "$(STEAM_USER)" ] || { echo "需要 STEAM_USER" >&2; exit 1; }
-	@[ -d "$(STEAM_OUTPUT)/Civilization.app" ] || { echo "缺少 $(STEAM_OUTPUT)/Civilization.app，先运行 make client-export PLATFORM=steam" >&2; exit 1; }
-	@codesign --verify --deep --strict "$(STEAM_OUTPUT)/Civilization.app" 2>/dev/null || { echo "产物未签名或签名无效，先运行 make client-notarize" >&2; exit 1; }
-	@mkdir -p "$(STEAM_OUTPUT)/build"
+	@id=$$($(CLIENT_BUILD_INFO) id --env steam --watch client); \
+	app="$(STEAM_OUTPUT)/Civilization-steam-$$id.app"; \
+	[ -d "$$app" ] || { echo "缺少 $$app，先运行 make client-export PLATFORM=steam" >&2; exit 1; }; \
+	codesign --verify --deep --strict "$$app" 2>/dev/null || { echo "产物未签名或签名无效，先运行 make client-notarize" >&2; exit 1; }; \
+	mkdir -p "$(STEAM_OUTPUT)/build"; \
 	sed -e 's|__APP_ID__|$(STEAM_APP_ID)|g' -e 's|__DEPOT_ID__|$(STEAM_DEPOT_ID)|g' \
+	  -e "s|__APP_NAME__|Civilization-steam-$$id.app|g" \
 	  -e 's|__CONTENT_ROOT__|$(CURDIR)/$(STEAM_OUTPUT)|g' \
 	  -e 's|__BUILD_OUTPUT__|$(CURDIR)/$(STEAM_OUTPUT)/build|g' \
-	  deploy/steam/app_build.vdf > "$(STEAM_OUTPUT)/app_build.vdf"
+	  deploy/steam/app_build.vdf > "$(STEAM_OUTPUT)/app_build.vdf"; \
 	sed -e 's|__DEPOT_ID__|$(STEAM_DEPOT_ID)|g' \
+	  -e "s|__APP_NAME__|Civilization-steam-$$id.app|g" \
 	  -e 's|__CONTENT_ROOT__|$(CURDIR)/$(STEAM_OUTPUT)|g' \
-	  deploy/steam/depot_build.vdf > "$(STEAM_OUTPUT)/depot_build.vdf"
+	  deploy/steam/depot_build.vdf > "$(STEAM_OUTPUT)/depot_build.vdf"; \
 	$(STEAM_CMD) +login "$(STEAM_USER)" +run_app_build "$(CURDIR)/$(STEAM_OUTPUT)/app_build.vdf" +quit
 
 # iOS 真机开发签名包：先导出 Xcode 工程，再由 xcodebuild 自动签名并打包 .ipa。
 # 需要 Xcode 已登录 Apple 团队 Q62EFJPV3C，且目标真机已登记；否则 xcodebuild 失败。
+# 中间产物在 output/client/build/ios/<构建号>/，最终 ipa 在 output/client/；
+# 同一源码状态重复执行只校验戳记并复用，不重跑 Godot 导出与 xcodebuild。
 _client-export-ios: client-env-check client-export-templates client-import
 	@[ "$$(uname -s)" = "Darwin" ] || { echo "client-export PLATFORM=ios 仅支持 macOS（当前 $$(uname -s)）" >&2; exit 1; }
 	@[ -f "$(GODOT_TEMPLATE_DIR)/ios.zip" ] || { echo "缺少 iOS 导出模板：$(GODOT_TEMPLATE_DIR)/ios.zip" >&2; exit 1; }
-	@set -e; $(CLIENT_BACKUP_CONFIG); \
-	SERVER_URL="$(CLIENT_SERVER_URL)" STEAM_APP_ID="" $(PYTHON) scripts/gen_build_config.py $(CLIENT_REQUIRE_SERVER); \
-	mkdir -p output/ios; \
-	rm -rf output/ios/Civilization output/ios/Civilization.xcodeproj output/ios/Civilization.xcframework \
-	  output/ios/MoltenVK.xcframework output/ios/libgodot_camera.*.xcframework \
-	  output/ios/Civilization.pck output/ios/Payload output/ios/Civilization-ios.ipa; \
-	"$(GODOT)" --headless --path client --export-release "iOS" "$(CURDIR)/output/ios/Civilization.xcodeproj"; \
+	@set -e; \
+	env="$(CLIENT_ENV)"; \
+	id=$$($(CLIENT_BUILD_INFO) id --env "$$env" --watch client); \
+	work="$(CLIENT_BUILD_DIR)/ios/$$id"; \
+	app="$$work/build/Build/Products/Release-iphoneos/Civilization.app"; \
+	ipa="$(CLIENT_OUTPUT_DIR)/Civilization-ios-$$id.ipa"; \
+	stamp="$(CLIENT_STAMP_DIR)/Civilization-ios-$$id.json"; \
+	if $(CLIENT_BUILD_INFO) reuse --stamp "$$stamp" --platform ios --env "$$env" --id "$$id" \
+	     --watch client --artifact "$$app/Info.plist" --artifact "$$ipa" \
+	     --server-url "$(CLIENT_SERVER_URL)" --godot-version "$(GODOT_VERSION)"; then \
+	  echo "复用 iOS 产物：$$ipa"; exit 0; \
+	fi; \
+	$(CLIENT_BACKUP_CONFIG); \
+	SERVER_URL="$(CLIENT_SERVER_URL)" STEAM_APP_ID="" BUILD_ENV="$$env" BUILD_TIME="$(CLIENT_BUILD_TIME)" $(PYTHON) scripts/gen_build_config.py $(CLIENT_REQUIRE_SERVER); \
+	mkdir -p "$(CLIENT_OUTPUT_DIR)"; \
+	rm -rf "$$work"; \
+	mkdir -p "$$work"; \
+	"$(GODOT)" --headless --path client --export-release "iOS" "$(CURDIR)/$$work/Civilization.xcodeproj"; \
 	$(CLIENT_RESTORE_CONFIG); \
-	test -d output/ios/Civilization.xcodeproj; \
-	xcodebuild -project output/ios/Civilization.xcodeproj -scheme Civilization -configuration Release \
+	test -d "$$work/Civilization.xcodeproj"; \
+	xcodebuild -project "$$work/Civilization.xcodeproj" -scheme Civilization -configuration Release \
 	  -sdk iphoneos -destination 'generic/platform=iOS' -allowProvisioningUpdates \
-	  -derivedDataPath output/ios/build build; \
-	test -d output/ios/build/Build/Products/Release-iphoneos/Civilization.app; \
-	mkdir -p output/ios/Payload; \
-	ditto output/ios/build/Build/Products/Release-iphoneos/Civilization.app output/ios/Payload/Civilization.app; \
-	ditto -c -k --sequesterRsrc --keepParent output/ios/Payload output/ios/Civilization-ios.ipa; \
-	test -f output/ios/Civilization-ios.ipa; \
-	echo "iOS 产物：output/ios/Civilization-ios.ipa"
+	  -derivedDataPath "$$work/build" build; \
+	test -d "$$app"; \
+	$(CLIENT_BUILD_INFO) stamp --stamp "$$stamp" --platform ios --env "$$env" --id "$$id" \
+	  --watch client --artifact "$$app/Info.plist" --artifact "$$ipa" \
+	  --server-url "$(CLIENT_SERVER_URL)" --godot-version "$(GODOT_VERSION)"; \
+	cp "$$stamp" "$$app/build-stamp.json"; \
+	mkdir -p "$$work/Payload"; \
+	ditto "$$app" "$$work/Payload/Civilization.app"; \
+	ditto -c -k --sequesterRsrc --keepParent "$$work/Payload" "$$ipa"; \
+	test -f "$$ipa"; \
+	echo "iOS 产物：$$ipa"
 
 # iOS 真机开发运行：导出并签名后安装到设备并启动。
 # 默认取第一台已连接的 iPhone；IOS_DEVICE_TYPE 取 iphone / ipad 切换设备类型，
@@ -437,7 +529,7 @@ IOS_LAUNCH ?= 1
 ANDROID_KEYSTORE_PATH ?=
 ANDROID_KEYSTORE_USER ?=
 ANDROID_KEYSTORE_PASSWORD ?=
-ANDROID_OUTPUT ?= output/android
+ANDROID_OUTPUT ?= $(CLIENT_BUILD_DIR)/android
 export ANDROID_KEYSTORE_PATH ANDROID_KEYSTORE_USER ANDROID_KEYSTORE_PASSWORD
 
 client-export-android-check:
@@ -445,6 +537,7 @@ client-export-android-check:
 
 # Android 侧载 APK（AAB=0）或商店 AAB（AAB=1）：arm64、横屏、包名 com.civilization.banner，
 # release keystore 签名。缺少任一 ANDROID_KEYSTORE_* 或 keystore 文件时直接失败，不产出未签名包。
+# AAB 的构建号带 `-aab`，与 APK 分目录、分戳记；最终产物在 output/client/。
 _client-export-android: client-export-android-check client-env-check client-export-templates client-import
 	@if [ "$(AAB)" = "1" ]; then \
 	  [ -f "$(GODOT_TEMPLATE_DIR)/android_source.zip" ] || { echo "缺少 Android 构建模板：$(GODOT_TEMPLATE_DIR)/android_source.zip" >&2; exit 1; }; \
@@ -455,10 +548,31 @@ _client-export-android: client-export-android-check client-env-check client-expo
 	@[ -n "$$ANDROID_KEYSTORE_USER" ] || { echo "需要 ANDROID_KEYSTORE_USER（keystore alias）" >&2; exit 1; }
 	@[ -n "$$ANDROID_KEYSTORE_PASSWORD" ] || { echo "需要 ANDROID_KEYSTORE_PASSWORD（keystore 口令）" >&2; exit 1; }
 	@[ -f "$$ANDROID_KEYSTORE_PATH" ] || { echo "Android keystore 不存在：$$ANDROID_KEYSTORE_PATH" >&2; exit 1; }
-	@set -e; $(CLIENT_BACKUP_CONFIG); \
-	SERVER_URL="$(CLIENT_SERVER_URL)" STEAM_APP_ID="" $(PYTHON) scripts/gen_build_config.py $(CLIENT_REQUIRE_SERVER); \
-	GODOT="$(GODOT)" GODOT_TEMPLATE_DIR="$(GODOT_TEMPLATE_DIR)" ANDROID_OUTPUT="$(ANDROID_OUTPUT)" \
-	  bash scripts/android_export.sh $(if $(filter 1,$(AAB)),aab,apk)
+	@set -e; \
+	env="$(CLIENT_ENV)"; \
+	format="$(if $(filter 1,$(AAB)),aab,apk)"; \
+	id=$$($(CLIENT_BUILD_INFO) id --env "$$env" --watch client --format "$$format"); \
+	artifact="$(CLIENT_OUTPUT_DIR)/Civilization-android-$$id.$$format"; \
+	work="$(ANDROID_OUTPUT)/$$id"; \
+	stamp="$(CLIENT_STAMP_DIR)/Civilization-android-$$id.json"; \
+	if $(CLIENT_BUILD_INFO) reuse --stamp "$$stamp" --platform android --env "$$env" --id "$$id" \
+	     --watch client --format "$$format" --artifact "$$artifact" \
+	     --server-url "$(CLIENT_SERVER_URL)" --godot-version "$(GODOT_VERSION)"; then \
+	  echo "复用 Android 产物：$$artifact"; exit 0; \
+	fi; \
+	$(CLIENT_BACKUP_CONFIG); \
+	SERVER_URL="$(CLIENT_SERVER_URL)" STEAM_APP_ID="" BUILD_ENV="$$env" BUILD_TIME="$(CLIENT_BUILD_TIME)" $(PYTHON) scripts/gen_build_config.py $(CLIENT_REQUIRE_SERVER); \
+	mkdir -p "$(CLIENT_OUTPUT_DIR)"; \
+	rm -rf "$$work" "$$artifact"; \
+	mkdir -p "$$work"; \
+	GODOT="$(GODOT)" GODOT_TEMPLATE_DIR="$(GODOT_TEMPLATE_DIR)" ANDROID_OUTPUT="$$work" ANDROID_ARTIFACT="$$artifact" \
+	  bash scripts/android_export.sh "$$format"; \
+	$(CLIENT_RESTORE_CONFIG); \
+	test -f "$$artifact"; \
+	$(CLIENT_BUILD_INFO) stamp --stamp "$$stamp" --platform android --env "$$env" --id "$$id" \
+	  --watch client --format "$$format" --artifact "$$artifact" \
+	  --server-url "$(CLIENT_SERVER_URL)" --godot-version "$(GODOT_VERSION)"; \
+	echo "Android 产物：$$artifact"
 
 # 快速别名：常用设备与平台的短入口，等价于带参数的 client-run / client-export。
 # 命令行传入的 ENV、SERVER_URL、STEAM_APP_ID、WIDTH/HEIGHT、LOCAL_SERVER 等会原样传给子 make；

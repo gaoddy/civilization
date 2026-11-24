@@ -19,10 +19,16 @@ esac
 
 GODOT="${GODOT:-godot}"
 TEMPLATES="${GODOT_TEMPLATE_DIR:-$HOME/Library/Application Support/Godot/export_templates/4.7.2.stable}"
-OUTPUT="${ANDROID_OUTPUT:-$ROOT/output/android}"
+# 中间目录（Gradle 模板等）与最终产物分开：产物名由 make 传入，带平台与构建号。
+OUTPUT="${ANDROID_OUTPUT:-$ROOT/output/client/build/android}"
+ARTIFACT="${ANDROID_ARTIFACT:-$ROOT/output/client/Civilization-android.$EXTENSION}"
 case "$OUTPUT" in
   /*) ;;
   *) OUTPUT="$ROOT/$OUTPUT" ;;
+esac
+case "$ARTIFACT" in
+  /*) ;;
+  *) ARTIFACT="$ROOT/$ARTIFACT" ;;
 esac
 PRESETS="$ROOT/client/export_presets.cfg"
 
@@ -112,11 +118,11 @@ text = text[: options_match.start(1)] + options + text[options_match.end(1):]
 open(path, "w", encoding="utf-8").write(text)
 PY
 
-mkdir -p "$OUTPUT"
+mkdir -p "$OUTPUT" "$(dirname "$ARTIFACT")"
 export_args=(--headless --path "$ROOT/client")
 if [ "$FORMAT" = "aab" ] && [ ! -d "$ROOT/client/android/build" ]; then
   export_args+=(--install-android-build-template)
 fi
-"$GODOT" "${export_args[@]}" --export-release "$PRESET" "$OUTPUT/Civilization.$EXTENSION"
-test -f "$OUTPUT/Civilization.$EXTENSION"
-echo "Android 产物：$OUTPUT/Civilization.$EXTENSION"
+"$GODOT" "${export_args[@]}" --export-release "$PRESET" "$ARTIFACT"
+test -f "$ARTIFACT"
+echo "Android 产物：$ARTIFACT"
