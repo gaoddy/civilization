@@ -6915,8 +6915,9 @@
     "in_shop_pool": true,
     "level": 5,
     "skills": [
+      "keyword-armor-2",
       "keyword-taunt",
-      "trigger-reptile-permanent-taunt"
+      "activate-reptile-permanent-taunt"
     ],
     "subtype": "reptile",
     "taxon": "cheloniidae"

@@ -1005,6 +1005,8 @@ error.UNKNOWN_TYPE,未知消息类型
 skill.activate-friendly-growth-twice.name,推演
 skill.activate-friendly-growth-twice.text,使一个友方随从获得两次成长
 skill.activate-friendly-growth-twice.text.golden,使一个友方随从获得四次成长
+skill.activate-reptile-permanent-taunt.name,威慑
+skill.activate-reptile-permanent-taunt.text,使一个友方随从获得嘲讽
 skill.alternating-current.name,交流电
 skill.alternating-current.text,使一个友方随从获得无视嘲讽直到回合结束
 skill.aura-adjacent-mammal.text,相邻的友方哺乳纲随从获得 +2/+2
@@ -1461,7 +1463,6 @@ skill.trigger-protozoa-single-taunt-this-turn.text,使一个友方原生生物�
 skill.trigger-refresh-shop-free.text,刷新商店
 skill.trigger-reptile-all-plus-0-plus-3.text,使你的爬行纲随从获得 +0/+3
 skill.trigger-reptile-all-plus-0-plus-3.text.golden,使你的爬行纲随从获得 +0/+6
-skill.trigger-reptile-permanent-taunt.text,战吼：使一个友方爬行纲随从获得嘲讽
 skill.trigger-reptile-single-armor-2-this-turn.text,使一个友方爬行纲随从获得减伤 2 直到回合结束
 skill.trigger-reptile-single-armor-2-this-turn.text.golden,使一个友方爬行纲随从获得减伤 4 直到回合结束
 skill.trigger-reptile-single-poison-this-turn.text,使一个友方爬行纲随从获得剧毒直到回合结束
