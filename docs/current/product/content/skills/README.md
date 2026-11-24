@@ -194,7 +194,7 @@
 | [trigger-bird-single-windfury-this-turn](trigger-bird-single-windfury-this-turn.md) | 无 | 使一个友方鸟纲随从获得连击直到回合结束 | 1 |
 | [trigger-cephalopod-single-poison](trigger-cephalopod-single-poison.md) | 无 | 使一个友方头足纲随从获得剧毒 | 1 |
 | [trigger-cnidarian-all-plus-0-plus-4](trigger-cnidarian-all-plus-0-plus-4.md) | 无 | 使你的水螅纲随从获得 +0/+4 | 1 |
-| [trigger-cnidarian-permanent-taunt](trigger-cnidarian-permanent-taunt.md) | 无 | 使一个友方水螅纲随从获得嘲讽 | 1 |
+| [trigger-cnidarian-permanent-taunt](trigger-cnidarian-permanent-taunt.md) | battlecry | 战吼：使一个友方水螅纲随从获得嘲讽 | 1 |
 | [trigger-cnidarian-single-poison-this-turn](trigger-cnidarian-single-poison-this-turn.md) | 无 | 使一个友方水螅纲随从获得剧毒直到回合结束 | 1 |
 | [trigger-cnidarian-single-reborn](trigger-cnidarian-single-reborn.md) | 无 | 使一个友方水螅纲随从获得复生 | 1 |
 | [trigger-copy-friendly-minion](trigger-copy-friendly-minion.md) | 无 | 复制一个友方随从 | 2 |
@@ -214,7 +214,7 @@
 | [trigger-friendly-human-death-plus-1-plus-1](trigger-friendly-human-death-plus-1-plus-1.md) | 无 | 每当一个友方人科随从死亡，获得 +1/+1 | 1 |
 | [trigger-friendly-human-play-plus-1-attack](trigger-friendly-human-play-plus-1-attack.md) | 无 | 每当一个友方人科随从进入战场，获得 +1 攻击力 | 1 |
 | [trigger-friendly-human-taunt-until-turn-end](trigger-friendly-human-taunt-until-turn-end.md) | 无 | 使一个友方人科随从获得嘲讽直到回合结束 | 1 |
-| [trigger-friendly-permanent-taunt](trigger-friendly-permanent-taunt.md) | 无 | 使一个友方随从获得嘲讽 | 1 |
+| [trigger-friendly-permanent-taunt](trigger-friendly-permanent-taunt.md) | battlecry | 战吼：使一个友方随从获得嘲讽 | 1 |
 | [trigger-friendly-plant-breed-2](trigger-friendly-plant-breed-2.md) | 无 | 使一个友方植物随从获得繁衍 2 | 1 |
 | [trigger-friendly-plant-sow](trigger-friendly-plant-sow.md) | 无 | 使一个友方植物随从获得播种 | 1 |
 | [trigger-friendly-plus-0-plus-4-this-turn](trigger-friendly-plus-0-plus-4-this-turn.md) | 无 | 使一个友方随从获得 +0/+4 直到回合结束 | 1 |
@@ -251,7 +251,7 @@
 | [trigger-protozoa-single-taunt-this-turn](trigger-protozoa-single-taunt-this-turn.md) | 无 | 使一个友方原生生物界随从获得嘲讽直到回合结束 | 1 |
 | [trigger-refresh-shop-free](trigger-refresh-shop-free.md) | 无 | 刷新商店 | 1 |
 | [trigger-reptile-all-plus-0-plus-3](trigger-reptile-all-plus-0-plus-3.md) | 无 | 使你的爬行纲随从获得 +0/+3 | 1 |
-| [trigger-reptile-permanent-taunt](trigger-reptile-permanent-taunt.md) | 无 | 使一个友方爬行纲随从获得嘲讽 | 1 |
+| [trigger-reptile-permanent-taunt](trigger-reptile-permanent-taunt.md) | battlecry | 战吼：使一个友方爬行纲随从获得嘲讽 | 1 |
 | [trigger-reptile-single-armor-2-this-turn](trigger-reptile-single-armor-2-this-turn.md) | 无 | 使一个友方爬行纲随从获得减伤 2 直到回合结束 | 1 |
 | [trigger-reptile-single-poison-this-turn](trigger-reptile-single-poison-this-turn.md) | 无 | 使一个友方爬行纲随从获得剧毒直到回合结束 | 1 |
 | [trigger-summon-1-neutral-token-2-2](trigger-summon-1-neutral-token-2-2.md) | 无 | 召唤一个 2/2 的随从 | 1 |

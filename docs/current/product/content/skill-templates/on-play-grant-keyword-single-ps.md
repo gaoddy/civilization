@@ -8,5 +8,5 @@ arg.playstyle: playstyle
 arg.keyword: keyword
 arg.duration: duration
 params: keyword={keyword.name},value={keyword.level},duration={duration}
-text: 使一个友方{playstyle}随从获得{keyword}{duration.suffix}
+text: 战吼：使一个友方{playstyle}随从获得{keyword}{duration.suffix}
 ---

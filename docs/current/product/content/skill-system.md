@@ -175,43 +175,42 @@ OnAllyKill|Decompose|self|basis=pre_kill,duration=permanent
 | 维度 | 数量 |
 | --- | --- |
 | 技能总数 | 259 |
-| 经卡牌 `skills` 引用的技能 | 243 |
-| 仅经英雄卡 `skills` 引用的技能 | 8 |
+| 经卡牌 `skills` 引用的技能 | 249 |
+| 仅经英雄卡 `skills` 引用的技能 | 6 |
 | 既未被卡牌也未被英雄引用的技能 | 4 |
 | 引用技能的效果牌 | 100（每张 1 个技能） |
 | 引用技能的随从牌 | 308 |
-| 不带技能的随从牌 | 1 |
-| 卡牌技能引用 | 535 段效果单元 |
+| 不带技能的随从牌 | 24 |
+| 卡牌技能引用 | 538 段效果单元 |
 
-259 个技能中，243 个经卡牌 `skills` 引用，8 个仅由英雄卡引用（英雄专属主动技能），其余 4 个既未被卡牌也未被英雄引用。卡牌技能共 535 段引用（随从 435 段 + 效果牌 100 段），其中 2 处「若其为<筛选对象>」条件变体已并回前一段（见 §2「技能边界」）。
+259 个技能中，249 个经卡牌 `skills` 引用，6 个仅由英雄卡引用（英雄专属主动技能），其余 4 个既未被卡牌也未被英雄引用。不带技能的随从牌全部是非池衍生随从。卡牌技能共 538 段引用（随从 438 段 + 效果牌 100 段），其中 2 处「若其为<筛选对象>」条件变体已并回前一段（见 §2「技能边界」）。
 
 ### 5.1 筛选键使用分布
 
-按实例模板展开后的效果中实际出现的筛选键统计（同一技能内同一键只计一次）：
+按实例模板展开后的效果中实际出现的筛选键统计，含 `selector.filters` 与 `timesIf` / `condition` / `when` 里的筛选条件（同一技能内同一键只计一次）：
 
 | 筛选键 | 取值示例 | 使用技能数 |
 | --- | --- | --- |
-| `taxon` | `taxon=animalia`、`taxon=canidae` | 16 |
-| `playstyle` | `playstyle=machine`、`playstyle=plant`、`playstyle=virus` | 66 |
-| `scholar` | `scholar=true` | 3 |
-| `keyword` | `keyword=breed`、`keyword=taunt`、`keyword=poison` | 35 |
+| `taxon` | `taxon=animalia`、`taxon=canidae` | 22 |
+| `playstyle` | `playstyle=machine`、`playstyle=plant`、`playstyle=virus` | 72 |
+| `keyword` | `keyword=breed`、`keyword=taunt`、`keyword=poison` | 0 |
 | `type` | `type=minion` | 3 |
 | `id` | `id=gongjianshou` | 1 |
-| `other` | `other=true` | 17 |
+| `other` | `other=true` | 19 |
 | `play` / `prey` / `host` / `subtype` | — | 0 |
 
-`timesIf` 共 3 处，分别为 `timesIf=taxon:hominidae:2`、`timesIf=playstyle:plant:2` 与 `timesIf=scholar:2`；`condition` 共 6 处，均按 `taxon` 统计阵营内数量（`taxon=animalia` 1 处、`taxon=hominidae` 5 处）；`when` 共 3 处，其中 1 处按 `taxon=animalia` 限定触发对象、2 处按 `taxon=hominidae` 限定。数值以脚本统计为准，改技能后同步更新。
+`timesIf` 共 2 处，分别为 `timesIf=taxon:hominidae:2` 与 `timesIf=playstyle:plant:2`；`condition` 共 6 处，均按 `taxon` 统计阵营内数量（`taxon=animalia` 1 处、`taxon=hominidae` 5 处）；`when` 共 3 处，其中 1 处按 `taxon=animalia` 限定触发对象、2 处按 `taxon=hominidae` 限定。数值以脚本统计为准，改技能后同步更新。
 
 ### 5.2 共享度
 
 | 技能 | 引用数 |
 | --- | --- |
-| `shout` 战吼 | 28 |
-| `keyword-taunt` 嘲讽 | 20 |
+| `shout` 战吼 | 24 |
+| `keyword-taunt` 嘲讽 | 22 |
+| `keyword-contagion` 传染 | 16 |
 | `keyword-sow` 播种 | 16 |
-| `keyword-contagion` 传染 | 15 |
 
-引用数由校验脚本统计，不写入技能实体文档；另有多项并列 11 次引用（`keyword-windfury`、`keyword-assemble-1`、`battlecry-friendly-growth-once`、`combatstart-random-enemy-contagion-1`），表中从略。
+引用数由校验脚本统计，不写入技能实体文档；另有并列 11 次引用（`keyword-windfury`、`keyword-breed-1`、`keyword-assemble-1`），表中从略。
 
 ## 6. 校验
 

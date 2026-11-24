@@ -641,7 +641,7 @@ fn coverage_counts_all_effect_segments() {
 
     let total: usize = coverage.values().sum();
     // 英雄主动技能各带一段 `OnActivate` 效果，效果段总数随之上升。
-    assert_eq!(total, 242, "已提交数据的全部效果段都应被统计");
+    assert_eq!(total, 246, "已提交数据的全部效果段都应被统计");
     assert_eq!(coverage.get(&(Trigger::OnPlay, Op::Growth)), Some(&20));
     assert_eq!(coverage.get(&(Trigger::OnPlay, Op::ModifyStats)), Some(&12));
     assert_eq!(coverage.get(&(Trigger::OnUse, Op::ModifyStats)), Some(&1));

@@ -1,5 +1,6 @@
 ---
 id: trigger-cnidarian-permanent-taunt
+keyword: battlecry
 template: on-play-grant-keyword-single-ps(playstyle=cnidarian,keyword=taunt,duration=permanent)
 ---
 
@@ -10,9 +11,9 @@ template: on-play-grant-keyword-single-ps(playstyle=cnidarian,keyword=taunt,dura
 | 属性 | 值 |
 | --- | --- |
 | id | trigger-cnidarian-permanent-taunt |
-| 关键词 | 无 |
+| 关键词 | 战吼 |
 | 模板 | on-play-grant-keyword-single-ps |
 
 ## 效果
 
-使一个友方水螅纲随从获得嘲讽
+战吼：使一个友方水螅纲随从获得嘲讽

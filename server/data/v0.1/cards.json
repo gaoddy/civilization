@@ -5203,8 +5203,7 @@
     "level": 5,
     "skills": [
       "keyword-ignore-taunt",
-      "keyword-assemble-1",
-      "trigger-friendly-permanent-taunt"
+      "keyword-assemble-1"
     ],
     "subtype": "robot",
     "taxon": "automation"
@@ -6622,7 +6621,6 @@
     "in_shop_pool": true,
     "level": 5,
     "skills": [
-      "keyword-armor-2",
       "keyword-taunt",
       "trigger-reptile-permanent-taunt"
     ],
@@ -8476,7 +8474,8 @@
     "in_shop_pool": true,
     "level": 5,
     "skills": [
-      "combat-optimal-attack"
+      "combat-optimal-attack",
+      "trigger-friendly-permanent-taunt"
     ],
     "subtype": "aviation",
     "taxon": "hominidae"

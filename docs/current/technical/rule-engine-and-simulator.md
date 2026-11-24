@@ -14,7 +14,7 @@ server/
   data/v0.1/
     cards.json               # 生成物：随从与效果牌
     heroes.json              # 生成物：英雄卡（只含身份与技能）
-    skills.json              # 生成物：255 个技能
+    skills.json              # 生成物：259 个技能
     config.json              # 生成物：经济与对局配置
     taxonomy.json            # 生成物：科学分类树与玩法 id 清单
   crates/
@@ -240,7 +240,7 @@ M0 确定性 AI（`sim/src/ai.rs`）针对效果牌补充三条规则：
 
 | M0 标准 | 命令 | 证据 |
 | --- | --- | --- |
-| 卡池完整 | `make data-check`、`python3 scripts/validate_docs.py`、`make test` | 命令退出码 0；`catalog::loads_all_committed_data` 断言 432 卡（其中 24 张非池卡）/ 255 技能 / 32 英雄卡全部加载，`every_card_skill_exists`、`unknown_field_fails`、`catalog::committed_data_is_structured`；`audit_effects.py` 输出 `审计通过` |
+| 卡池完整 | `make data-check`、`python3 scripts/validate_docs.py`、`make test` | 命令退出码 0；`catalog::loads_all_committed_data` 断言 432 卡（其中 24 张非池卡）/ 259 技能 / 32 英雄卡全部加载，`every_card_skill_exists`、`unknown_field_fails`、`catalog::committed_data_is_structured`；`audit_effects.py` 输出 `审计通过` |
 | 数据一致 | `make data-check` | 重新生成后输出 `生成数据无漂移`，退出码 0 |
 | 规则覆盖 | `make test` | `server/crates/rule-engine/tests/` 与 `server/crates/sim/tests/` 的用例全部 `test result: ok`（用例清单见第 8 节）；商店池耗尽留空槽由 `recruit::reroll_with_exhausted_pool_leaves_empty_slots_and_buy_rejects` 锁定 |
 | 确定性 | `make sim-determinism` | `replay_same_log_100_times_has_same_hash` 通过：100 次重放每次退出码 0，`final_hash` 全部等于原局，事件序列哈希同样一致；重放由日志种子重新推导同一组 5 个玩法 |

@@ -4290,7 +4290,7 @@
       }
     ],
     "id": "trigger-cnidarian-permanent-taunt",
-    "keyword": null,
+    "keyword": "battlecry",
     "uses_per_turn": null
   },
   {
@@ -4760,7 +4760,7 @@
       }
     ],
     "id": "trigger-friendly-permanent-taunt",
-    "keyword": null,
+    "keyword": "battlecry",
     "uses_per_turn": null
   },
   {
@@ -5706,7 +5706,7 @@
       }
     ],
     "id": "trigger-reptile-permanent-taunt",
-    "keyword": null,
+    "keyword": "battlecry",
     "uses_per_turn": null
   },
   {
