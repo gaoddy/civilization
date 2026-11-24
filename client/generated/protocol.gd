@@ -72,6 +72,7 @@ const INTENT_SELL_MINION := "SellMinion"
 const INTENT_UNFREEZE_SHOP := "UnfreezeShop"
 const INTENT_UPGRADE_ERA := "UpgradeEra"
 const INTENT_USE_HERO_POWER := "UseHeroPower"
+const INTENT_USE_MINION_ABILITY := "UseMinionAbility"
 
 # 错误码
 const ERROR_ALREADY_IN_ROOM := "ALREADY_IN_ROOM"

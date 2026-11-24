@@ -529,6 +529,18 @@
 | `targetCandidates` | array<TargetRef> | 是 | 该牌的合法目标；随从牌为空数组 |
 | `disabledReason` | string | null | 是 | 不可操作时的错误码 |
 
+### MinionAbility
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `skillId` | string | 是 | 技能 id |
+| `cost` | integer | 是 | 发动一次消耗的金币 |
+| `usesLeft` | integer | 是 | 本回合剩余使用次数 |
+| `requiresTarget` | boolean | 是 | 该技能是否需要玩家指定单一目标 |
+| `targetCandidates` | array<TargetRef> | 是 | 该技能的合法目标；不需要目标时为空数组 |
+| `canUse` | boolean | 是 | 服务端算好的可发动提示 |
+| `disabledReason` | oneOf | 是 | 不可发动该技能时的错误码；可发动为 null |
+
 ### BoardMinion
 
 | 字段 | 类型 | 必填 | 说明 |
@@ -542,6 +554,7 @@
 | `keywords` | array<string> | 是 | 当前生效的关键词，取值为英文 id |
 | `stealth` | boolean | 是 | 当前是否仍处于潜行：携带 stealth 关键词且尚未被打破 |
 | `sellable` | boolean | 是 |  |
+| `abilities` | array<MinionAbility> | 否 | 该随从卡牌上的主动技能；只对本人棋盘填充，对手棋盘不填 |
 | `stats` | MinionStats | 否 | 攻防分层构成；旧客户端可忽略 |
 
 ### MinionStatBreakdown
@@ -738,11 +751,15 @@
 | `分支9.skillId` | string | 是 |  |
 | `分支9.target` | TargetRef | 否 | 需要目标的技能才填 |
 | `分支10.kind` | object | 是 |  |
+| `分支10.minionId` | string | 是 | 随从实例 id，与 SellMinion 一致 |
+| `分支10.skillId` | string | 是 |  |
+| `分支10.target` | TargetRef | 否 | 需要目标的技能才填 |
 | `分支11.kind` | object | 是 |  |
-| `分支11.choice` | integer | 是 | 发现为候选下标，进化为选项下标 |
 | `分支12.kind` | object | 是 |  |
-| `分支12.target` | TargetRef | 是 | 目标 |
+| `分支12.choice` | integer | 是 | 发现为候选下标，进化为选项下标 |
 | `分支13.kind` | object | 是 |  |
+| `分支13.target` | TargetRef | 是 | 目标 |
+| `分支14.kind` | object | 是 |  |
 
 ### ErrorCode
 

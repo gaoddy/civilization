@@ -51,6 +51,27 @@
         "disabledReason": { "type": ["string", "null"], "description": "不可操作时的错误码" }
       }
     },
+    "MinionAbility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["skillId", "cost", "usesLeft", "requiresTarget", "targetCandidates", "canUse", "disabledReason"],
+      "description": "随从卡牌上的一个主动技能及其本回合可用性",
+      "properties": {
+        "skillId": { "type": "string", "description": "技能 id" },
+        "cost": { "type": "integer", "minimum": 0, "description": "发动一次消耗的金币" },
+        "usesLeft": { "type": "integer", "minimum": 0, "description": "本回合剩余使用次数" },
+        "requiresTarget": { "type": "boolean", "description": "该技能是否需要玩家指定单一目标" },
+        "targetCandidates": { "type": "array", "items": { "$ref": "view.schema.json#/$defs/TargetRef" }, "description": "该技能的合法目标；不需要目标时为空数组" },
+        "canUse": { "type": "boolean", "description": "服务端算好的可发动提示" },
+        "disabledReason": {
+          "oneOf": [
+            { "$ref": "errors.schema.json#/$defs/ErrorCode" },
+            { "type": "null" }
+          ],
+          "description": "不可发动该技能时的错误码；可发动为 null"
+        }
+      }
+    },
     "BoardMinion": {
       "type": "object",
       "additionalProperties": false,
@@ -65,6 +86,11 @@
         "keywords": { "type": "array", "items": { "type": "string" }, "description": "当前生效的关键词，取值为英文 id" },
         "stealth": { "type": "boolean", "description": "当前是否仍处于潜行：携带 stealth 关键词且尚未被打破" },
         "sellable": { "type": "boolean" },
+        "abilities": {
+          "type": "array",
+          "items": { "$ref": "view.schema.json#/$defs/MinionAbility" },
+          "description": "该随从卡牌上的主动技能；只对本人棋盘填充，对手棋盘不填"
+        },
         "stats": { "$ref": "view.schema.json#/$defs/MinionStats", "description": "攻防分层构成；旧客户端可忽略" }
       }
     },

@@ -940,6 +940,13 @@ impl ::std::convert::From<&BoardAffordance> for BoardAffordance {
 ///    "stealth"
 ///  ],
 ///  "properties": {
+///    "abilities": {
+///      "description": "该随从卡牌上的主动技能；只对本人棋盘填充，对手棋盘不填",
+///      "type": "array",
+///      "items": {
+///        "$ref": "#/$defs/MinionAbility"
+///      }
+///    },
 ///    "attack": {
 ///      "type": "integer",
 ///      "minimum": 0.0
@@ -989,6 +996,9 @@ impl ::std::convert::From<&BoardAffordance> for BoardAffordance {
 #[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct BoardMinion {
+    ///该随从卡牌上的主动技能；只对本人棋盘填充，对手棋盘不填
+    #[serde(default, skip_serializing_if = "::std::vec::Vec::is_empty")]
+    pub abilities: ::std::vec::Vec<MinionAbility>,
     pub attack: u64,
     #[serde(rename = "cardId")]
     pub card_id: ::std::string::String,
@@ -4380,6 +4390,31 @@ impl ::std::convert::From<&HeroPower> for HeroPower {
 ///    {
 ///      "type": "object",
 ///      "required": [
+///        "kind",
+///        "minionId",
+///        "skillId"
+///      ],
+///      "properties": {
+///        "kind": {
+///          "const": "UseMinionAbility"
+///        },
+///        "minionId": {
+///          "description": "随从实例 id，与 SellMinion 一致",
+///          "type": "string"
+///        },
+///        "skillId": {
+///          "type": "string"
+///        },
+///        "target": {
+///          "description": "需要目标的技能才填",
+///          "$ref": "#/$defs/TargetRef"
+///        }
+///      },
+///      "additionalProperties": false
+///    },
+///    {
+///      "type": "object",
+///      "required": [
 ///        "kind"
 ///      ],
 ///      "properties": {
@@ -4483,6 +4518,16 @@ pub enum Intent {
         slot: ::std::option::Option<i64>,
     },
     UseHeroPower {
+        #[serde(rename = "skillId")]
+        skill_id: ::std::string::String,
+        ///需要目标的技能才填
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        target: ::std::option::Option<TargetRef>,
+    },
+    UseMinionAbility {
+        ///随从实例 id，与 SellMinion 一致
+        #[serde(rename = "minionId")]
+        minion_id: ::std::string::String,
         #[serde(rename = "skillId")]
         skill_id: ::std::string::String,
         ///需要目标的技能才填
@@ -4978,6 +5023,98 @@ pub struct MatchFound {
 }
 impl ::std::convert::From<&MatchFound> for MatchFound {
     fn from(value: &MatchFound) -> Self {
+        value.clone()
+    }
+}
+///随从卡牌上的一个主动技能及其本回合可用性
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "description": "随从卡牌上的一个主动技能及其本回合可用性",
+///  "type": "object",
+///  "required": [
+///    "canUse",
+///    "cost",
+///    "disabledReason",
+///    "requiresTarget",
+///    "skillId",
+///    "targetCandidates",
+///    "usesLeft"
+///  ],
+///  "properties": {
+///    "canUse": {
+///      "description": "服务端算好的可发动提示",
+///      "type": "boolean"
+///    },
+///    "cost": {
+///      "description": "发动一次消耗的金币",
+///      "type": "integer",
+///      "minimum": 0.0
+///    },
+///    "disabledReason": {
+///      "description": "不可发动该技能时的错误码；可发动为 null",
+///      "oneOf": [
+///        {
+///          "$ref": "#/$defs/ErrorCode"
+///        },
+///        {
+///          "type": "null"
+///        }
+///      ]
+///    },
+///    "requiresTarget": {
+///      "description": "该技能是否需要玩家指定单一目标",
+///      "type": "boolean"
+///    },
+///    "skillId": {
+///      "description": "技能 id",
+///      "type": "string"
+///    },
+///    "targetCandidates": {
+///      "description": "该技能的合法目标；不需要目标时为空数组",
+///      "type": "array",
+///      "items": {
+///        "$ref": "#/$defs/TargetRef"
+///      }
+///    },
+///    "usesLeft": {
+///      "description": "本回合剩余使用次数",
+///      "type": "integer",
+///      "minimum": 0.0
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct MinionAbility {
+    ///服务端算好的可发动提示
+    #[serde(rename = "canUse")]
+    pub can_use: bool,
+    ///发动一次消耗的金币
+    pub cost: u64,
+    ///不可发动该技能时的错误码；可发动为 null
+    #[serde(rename = "disabledReason")]
+    pub disabled_reason: ::std::option::Option<ErrorCode>,
+    ///该技能是否需要玩家指定单一目标
+    #[serde(rename = "requiresTarget")]
+    pub requires_target: bool,
+    ///技能 id
+    #[serde(rename = "skillId")]
+    pub skill_id: ::std::string::String,
+    ///该技能的合法目标；不需要目标时为空数组
+    #[serde(rename = "targetCandidates")]
+    pub target_candidates: ::std::vec::Vec<TargetRef>,
+    ///本回合剩余使用次数
+    #[serde(rename = "usesLeft")]
+    pub uses_left: u64,
+}
+impl ::std::convert::From<&MinionAbility> for MinionAbility {
+    fn from(value: &MinionAbility) -> Self {
         value.clone()
     }
 }

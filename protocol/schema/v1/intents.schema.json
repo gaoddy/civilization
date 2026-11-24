@@ -91,6 +91,17 @@
         {
           "type": "object",
           "additionalProperties": false,
+          "required": ["kind", "minionId", "skillId"],
+          "properties": {
+            "kind": { "const": "UseMinionAbility" },
+            "minionId": { "type": "string", "description": "随从实例 id，与 SellMinion 一致" },
+            "skillId": { "type": "string" },
+            "target": { "$ref": "view.schema.json#/$defs/TargetRef", "description": "需要目标的技能才填" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
           "required": ["kind"],
           "properties": {
             "kind": { "const": "EndRecruit" }
