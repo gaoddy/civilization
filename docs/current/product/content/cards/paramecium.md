@@ -8,7 +8,7 @@ subtype: protozoa
 level: 1
 era: prehistoric
 attack: 2
-health: 2
+health: 3
 skills: [battlecry-friendly-protozoa-growth-once]
 ---
 
@@ -26,7 +26,7 @@ skills: [battlecry-friendly-protozoa-growth-once]
 | 星级 | 1 |
 | 时代 | 史前 |
 | 攻击力 | 2 |
-| 生命值 | 2 |
+| 生命值 | 3 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-protozoa-growth-once |
 | 科学分类 | 原生生物界 › 纤毛门 › 寡膜纲 › 草履虫目 › 草履虫科 |
@@ -38,7 +38,7 @@ skills: [battlecry-friendly-protozoa-growth-once]
 ## 设计说明
 
 定位：原生生物界低费战吼成长，帮助早期随从站住。
-平衡边界：1 星 2/2；攻击力取该星级上限，生命值取该星级下限；关键词折算 2 点，合计 6，低于 8 上限 2 点。
+平衡边界：1 星 2/3；攻击力取该星级中位，生命值取该星级偏下；关键词折算 2 点，合计 7，低于 8 上限 1 点。
 使用建议：把成长给带分裂或吞噬的原生生物核心。
 
 ## 出处

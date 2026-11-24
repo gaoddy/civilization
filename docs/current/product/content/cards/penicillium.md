@@ -8,7 +8,7 @@ subtype: fungus
 level: 1
 era: primitive
 attack: 2
-health: 4
+health: 3
 skills: [battlecry-friendly-fungus-growth-once]
 ---
 
@@ -26,7 +26,7 @@ skills: [battlecry-friendly-fungus-growth-once]
 | 星级 | 1 |
 | 时代 | 原始 |
 | 攻击力 | 2 |
-| 生命值 | 4 |
+| 生命值 | 3 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-fungus-growth-once |
 | 科学分类 | 真菌界 › 子囊菌门 › 散囊菌纲 › 散囊菌目 › 曲霉科 |
@@ -38,7 +38,7 @@ skills: [battlecry-friendly-fungus-growth-once]
 ## 设计说明
 
 定位：真菌界低费战吼成长，补足真菌随从的生命。
-平衡边界：1 星 2/4；攻击力取该星级上限，生命值取该星级上限；关键词折算 2 点，合计 8，等于 8 上限。
+平衡边界：1 星 2/3；攻击力取该星级中位，生命值取该星级偏下；关键词折算 2 点，合计 7，低于 8 上限 1 点。
 使用建议：把成长给带分裂或分解的真菌核心。
 
 ## 出处

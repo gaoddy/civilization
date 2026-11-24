@@ -7,8 +7,8 @@ taxon: octopodidae
 subtype: mollusk
 level: 3
 era: modern
-attack: 5
-health: 4
+attack: 4
+health: 6
 skills: [keyword-poison, mimic-1]
 ---
 
@@ -25,8 +25,8 @@ skills: [keyword-poison, mimic-1]
 | 子类 | 软体 |
 | 星级 | 3 |
 | 时代 | 现代 |
-| 攻击力 | 5 |
-| 生命值 | 4 |
+| 攻击力 | 4 |
+| 生命值 | 6 |
 | 关键词 | 剧毒 |
 | 技能 | keyword-poison；mimic-1 |
 | 科学分类 | 动物界 › 软体动物门 › 头足纲 › 八腕目 › 章鱼科 |
@@ -38,7 +38,7 @@ skills: [keyword-poison, mimic-1]
 ## 设计说明
 
 定位：头足纲的剧毒单位，用高攻配合剧毒点杀。
-平衡边界：3 星 5/4；攻击力取该星级上限，生命值取该星级下限；关键词折算 3 点，合计 12，低于 13 上限 1 点。
+平衡边界：3 星 4/6；攻击力取该星级偏下，生命值取该星级中位；关键词折算 3 点，合计 13，等于 13 上限。
 使用建议：用于交换敌方高生命随从，护盾抵消伤害时不触发剧毒。
 
 ## 出处

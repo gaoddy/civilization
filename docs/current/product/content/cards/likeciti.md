@@ -8,7 +8,7 @@ subtype: bacteria
 level: 3
 era: modern
 attack: 4
-health: 6
+health: 7
 skills: [keyword-contagion]
 ---
 
@@ -26,7 +26,7 @@ skills: [keyword-contagion]
 | 星级 | 3 |
 | 时代 | 现代 |
 | 攻击力 | 4 |
-| 生命值 | 6 |
+| 生命值 | 7 |
 | 关键词 | 传染 |
 | 技能 | keyword-contagion |
 | 科学分类 | 细菌域 › 变形菌门 › α-变形菌纲 › 立克次体目 › 立克次体科 |

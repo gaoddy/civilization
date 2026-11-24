@@ -8,7 +8,7 @@ subtype: fish
 level: 1
 era: prehistoric
 attack: 2
-health: 3
+health: 2
 skills: [battlecry-friendly-fish-growth-once]
 ---
 
@@ -26,7 +26,7 @@ skills: [battlecry-friendly-fish-growth-once]
 | 星级 | 1 |
 | 时代 | 史前 |
 | 攻击力 | 2 |
-| 生命值 | 3 |
+| 生命值 | 2 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-fish-growth-once |
 | 科学分类 | 动物界 › 脊索动物门 › 无颌纲 › 昆明鱼目 › 海口鱼科 |
@@ -38,7 +38,7 @@ skills: [battlecry-friendly-fish-growth-once]
 ## 设计说明
 
 定位：鱼纲低费起手随从，用战吼把成长集中到已有鱼群。
-平衡边界：1 星 2/3；攻击力取该星级上限，生命值取该星级中位；关键词折算 2 点，合计 7，低于 8 上限 1 点。
+平衡边界：1 星 2/2；攻击力取该星级中位，生命值取该星级下限；关键词折算 2 点，合计 6，低于 8 上限 2 点。
 使用建议：先铺下可长期站场的鱼纲随从，再打出海口鱼补身材。
 
 ## 出处

@@ -7,7 +7,7 @@ taxon: caliciviridae
 subtype: virus
 level: 3
 era: modern
-attack: 4
+attack: 3
 health: 6
 skills: [detonate-2]
 ---
@@ -25,7 +25,7 @@ skills: [detonate-2]
 | 子类 | 病毒 |
 | 星级 | 3 |
 | 时代 | 现代 |
-| 攻击力 | 4 |
+| 攻击力 | 3 |
 | 生命值 | 6 |
 | 关键词 | 无 |
 | 技能 | detonate-2 |

@@ -8,7 +8,7 @@ subtype: crop
 level: 4
 era: feudal
 attack: 4
-health: 9
+health: 8
 skills: [keyword-sow, keyword-breed-1]
 ---
 
@@ -26,7 +26,7 @@ skills: [keyword-sow, keyword-breed-1]
 | 星级 | 4 |
 | 时代 | 封建 |
 | 攻击力 | 4 |
-| 生命值 | 9 |
+| 生命值 | 8 |
 | 关键词 | 播种；繁衍 1 |
 | 技能 | keyword-sow；keyword-breed-1 |
 | 科学分类 | 植物界 › 被子植物门 › 单子叶植物纲 › 禾本目 › 禾本科 |

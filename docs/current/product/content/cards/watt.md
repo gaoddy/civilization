@@ -8,7 +8,7 @@ subtype: engineering
 level: 4
 era: industrial
 attack: 0
-health: 12
+health: 13
 skills: [aura-mech-plus-2-plus-2]
 ---
 
@@ -26,7 +26,7 @@ skills: [aura-mech-plus-2-plus-2]
 | 星级 | 4 |
 | 时代 | 工业 |
 | 攻击力 | 0 |
-| 生命值 | 12 |
+| 生命值 | 13 |
 | 关键词 | 无 |
 | 技能 | aura-mech-plus-2-plus-2 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |

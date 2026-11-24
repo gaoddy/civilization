@@ -8,7 +8,7 @@ subtype: flight
 level: 5
 era: modern
 attack: 9
-health: 8
+health: 11
 skills: [keyword-ignore-taunt, shout]
 ---
 
@@ -26,7 +26,7 @@ skills: [keyword-ignore-taunt, shout]
 | 星级 | 5 |
 | 时代 | 现代 |
 | 攻击力 | 9 |
-| 生命值 | 8 |
+| 生命值 | 11 |
 | 关键词 | 无视嘲讽 |
 | 技能 | keyword-ignore-taunt；shout |
 | 科学分类 | 造物 › 交通与运载 |

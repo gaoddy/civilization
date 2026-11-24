@@ -8,7 +8,7 @@ subtype: bacteria
 level: 1
 era: prehistoric
 attack: 1
-health: 4
+health: 2
 skills: [battlecry-friendly-bacteria-plus-0-plus-1]
 ---
 
@@ -26,7 +26,7 @@ skills: [battlecry-friendly-bacteria-plus-0-plus-1]
 | 星级 | 1 |
 | 时代 | 史前 |
 | 攻击力 | 1 |
-| 生命值 | 4 |
+| 生命值 | 2 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-bacteria-plus-0-plus-1 |
 | 科学分类 | 细菌域 › 厚壁菌门 › 芽孢杆菌纲 › 乳杆菌目 › 乳杆菌科 |
@@ -38,7 +38,7 @@ skills: [battlecry-friendly-bacteria-plus-0-plus-1]
 ## 设计说明
 
 定位：细菌域的早期战吼增益单位，为同玩法随从补充生命。
-平衡边界：1 星 1/4；攻击力取该星级下限，生命值取该星级上限；关键词折算 2 点，合计 7，低于 8 上限 1 点。
+平衡边界：1 星 1/2；攻击力取该星级下限，生命值取该星级下限；关键词折算 2 点，合计 5，低于 8 上限 3 点。
 使用建议：在铺场前打出，把生命加成落到即将成长的单位上。
 
 ## 出处

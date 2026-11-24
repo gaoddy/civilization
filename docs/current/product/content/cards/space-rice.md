@@ -8,7 +8,7 @@ subtype: crop
 level: 5
 era: future
 attack: 6
-health: 12
+health: 10
 skills: [keyword-sow, keyword-breed-3]
 ---
 
@@ -26,7 +26,7 @@ skills: [keyword-sow, keyword-breed-3]
 | 星级 | 5 |
 | 时代 | 未来 |
 | 攻击力 | 6 |
-| 生命值 | 12 |
+| 生命值 | 10 |
 | 关键词 | 播种；繁衍 3 |
 | 技能 | keyword-sow；keyword-breed-3 |
 | 科学分类 | 植物界 › 被子植物门 › 单子叶植物纲 › 禾本目 › 禾本科 |

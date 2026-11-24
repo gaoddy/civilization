@@ -7,8 +7,8 @@ taxon: hominidae
 subtype: philosophy
 level: 4
 era: classical
-attack: 5
-health: 8
+attack: 7
+health: 10
 skills: [enemy-random-cannot-attack]
 ---
 
@@ -25,8 +25,8 @@ skills: [enemy-random-cannot-attack]
 | 子类 | 哲学 |
 | 星级 | 4 |
 | 时代 | 古典 |
-| 攻击力 | 5 |
-| 生命值 | 8 |
+| 攻击力 | 7 |
+| 生命值 | 10 |
 | 关键词 | 无 |
 | 技能 | enemy-random-cannot-attack |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |

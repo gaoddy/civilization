@@ -8,7 +8,7 @@ subtype: unit
 level: 5
 era: feudal
 attack: 9
-health: 8
+health: 12
 skills: [keyword-taunt, trigger-friendly-human-death-plus-1-plus-1]
 ---
 
@@ -26,7 +26,7 @@ skills: [keyword-taunt, trigger-friendly-human-death-plus-1-plus-1]
 | 星级 | 5 |
 | 时代 | 封建 |
 | 攻击力 | 9 |
-| 生命值 | 8 |
+| 生命值 | 12 |
 | 关键词 | 嘲讽 |
 | 技能 | keyword-taunt；trigger-friendly-human-death-plus-1-plus-1 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |

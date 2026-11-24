@@ -7,8 +7,8 @@ taxon: lamnidae
 subtype: fish
 level: 5
 era: modern
-attack: 9
-health: 8
+attack: 8
+health: 10
 skills: [keyword-ignore-taunt, aura-school-fish-1]
 ---
 
@@ -25,8 +25,8 @@ skills: [keyword-ignore-taunt, aura-school-fish-1]
 | 子类 | 鱼类 |
 | 星级 | 5 |
 | 时代 | 现代 |
-| 攻击力 | 9 |
-| 生命值 | 8 |
+| 攻击力 | 8 |
+| 生命值 | 10 |
 | 关键词 | 无视嘲讽 |
 | 技能 | keyword-ignore-taunt；aura-school-fish-1 |
 | 科学分类 | 动物界 › 脊索动物门 › 软骨鱼纲 › 鼠鲨目 › 鼠鲨科 |
@@ -38,7 +38,7 @@ skills: [keyword-ignore-taunt, aura-school-fish-1]
 ## 设计说明
 
 定位：鱼纲高攻无视嘲讽单位，负责越过嘲讽攻击敌方后排。
-平衡边界：5 星 9/8；攻击力取该星级上限，生命值取该星级下限；关键词折算 2 点，合计 19，低于 22 上限 3 点。
+平衡边界：5 星 8/10；攻击力取该星级中位，生命值取该星级偏下；关键词折算 2 点，合计 20，低于 22 上限 2 点。
 使用建议：在群聚加成后进场，利用无视嘲讽越过嘲讽攻击敌方后排。
 
 ## 出处

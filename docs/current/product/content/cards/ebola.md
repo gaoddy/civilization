@@ -7,8 +7,8 @@ taxon: filoviridae
 subtype: virus
 level: 5
 era: modern
-attack: 6
-health: 12
+attack: 7
+health: 13
 skills: [keyword-contagion, combatstart-random-enemy-contagion-2]
 ---
 
@@ -25,8 +25,8 @@ skills: [keyword-contagion, combatstart-random-enemy-contagion-2]
 | 子类 | 病毒 |
 | 星级 | 5 |
 | 时代 | 现代 |
-| 攻击力 | 6 |
-| 生命值 | 12 |
+| 攻击力 | 7 |
+| 生命值 | 13 |
 | 关键词 | 传染 |
 | 技能 | keyword-contagion；combatstart-random-enemy-contagion-2 |
 | 科学分类 | 病毒 › 核糖病毒门 › 单股负链病毒纲 › 单股负链病毒目 › 丝状病毒科 |

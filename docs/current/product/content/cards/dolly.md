@@ -8,7 +8,7 @@ subtype: clone
 level: 4
 era: future
 attack: 5
-health: 6
+health: 7
 skills: [keyword-reborn, shout]
 ---
 
@@ -26,7 +26,7 @@ skills: [keyword-reborn, shout]
 | 星级 | 4 |
 | 时代 | 未来 |
 | 攻击力 | 5 |
-| 生命值 | 6 |
+| 生命值 | 7 |
 | 关键词 | 复生 |
 | 技能 | keyword-reborn；shout |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 偶蹄目 › 牛科 |

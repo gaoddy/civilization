@@ -8,7 +8,7 @@ subtype: synthesis
 level: 5
 era: future
 attack: 6
-health: 10
+health: 11
 skills: [keyword-evolve, keyword-contagion]
 ---
 
@@ -26,7 +26,7 @@ skills: [keyword-evolve, keyword-contagion]
 | 星级 | 5 |
 | 时代 | 未来 |
 | 攻击力 | 6 |
-| 生命值 | 10 |
+| 生命值 | 11 |
 | 关键词 | 进化；传染 |
 | 技能 | keyword-evolve；keyword-contagion |
 | 科学分类 | 细菌域 › 未定科 |

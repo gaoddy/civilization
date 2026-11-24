@@ -8,7 +8,7 @@ subtype: fungus
 level: 1
 era: prehistoric
 attack: 1
-health: 3
+health: 2
 skills: [deathrattle-summon-spore-token-1]
 ---
 
@@ -26,7 +26,7 @@ skills: [deathrattle-summon-spore-token-1]
 | 星级 | 1 |
 | 时代 | 史前 |
 | 攻击力 | 1 |
-| 生命值 | 3 |
+| 生命值 | 2 |
 | 关键词 | 亡语 |
 | 技能 | deathrattle-summon-spore-token-1 |
 | 科学分类 | 真菌界 › 子囊菌门 › 酵母纲 › 酵母目 › 酵母科 |
@@ -38,7 +38,7 @@ skills: [deathrattle-summon-spore-token-1]
 ## 设计说明
 
 定位：真菌界 1 星分裂单位，用孢子维持早期场面。
-平衡边界：1 星 1/3；攻击力取该星级下限，生命值取该星级中位；关键词折算 4 点，合计 8，等于 8 上限。
+平衡边界：1 星 1/2；攻击力取该星级下限，生命值取该星级下限；关键词折算 4 点，合计 7，低于 8 上限 1 点。
 使用建议：早期交换时主动送掉，让孢子承接后续亡语与分解。
 
 ## 出处

@@ -7,7 +7,7 @@ taxon: hominidae
 subtype: colonist
 level: 6
 era: future
-attack: 8
+attack: 9
 health: 11
 skills: [keyword-divine-shield, shout]
 ---
@@ -25,7 +25,7 @@ skills: [keyword-divine-shield, shout]
 | 子类 | 殖民者 |
 | 星级 | 6 |
 | 时代 | 未来 |
-| 攻击力 | 8 |
+| 攻击力 | 9 |
 | 生命值 | 11 |
 | 关键词 | 护盾 |
 | 技能 | keyword-divine-shield；shout |

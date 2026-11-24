@@ -8,7 +8,7 @@ subtype: physics
 level: 5
 era: modern
 attack: 0
-health: 16
+health: 17
 skills: [battlecry-friendly-growth-twice]
 ---
 
@@ -26,7 +26,7 @@ skills: [battlecry-friendly-growth-twice]
 | 星级 | 5 |
 | 时代 | 现代 |
 | 攻击力 | 0 |
-| 生命值 | 16 |
+| 生命值 | 17 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-growth-twice |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |

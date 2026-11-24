@@ -7,8 +7,8 @@ taxon: felidae
 subtype: beast
 level: 2
 era: classical
-attack: 2
-health: 5
+attack: 3
+health: 4
 skills: [keyword-taunt]
 ---
 
@@ -25,8 +25,8 @@ skills: [keyword-taunt]
 | 子类 | 猛兽 |
 | 星级 | 2 |
 | 时代 | 古典 |
-| 攻击力 | 2 |
-| 生命值 | 5 |
+| 攻击力 | 3 |
+| 生命值 | 4 |
 | 关键词 | 嘲讽 |
 | 技能 | keyword-taunt |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 食肉目 › 猫科 |

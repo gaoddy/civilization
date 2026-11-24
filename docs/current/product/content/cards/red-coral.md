@@ -8,7 +8,7 @@ subtype: ocean
 level: 5
 era: feudal
 attack: 6
-health: 12
+health: 13
 skills: [revive-2, keyword-armor-1]
 ---
 
@@ -26,7 +26,7 @@ skills: [revive-2, keyword-armor-1]
 | 星级 | 5 |
 | 时代 | 封建 |
 | 攻击力 | 6 |
-| 生命值 | 12 |
+| 生命值 | 13 |
 | 关键词 | 减伤 1 |
 | 技能 | revive-2；keyword-armor-1 |
 | 科学分类 | 动物界 › 刺胞动物门 › 珊瑚纲 › 软珊瑚目 › 红珊瑚科 |

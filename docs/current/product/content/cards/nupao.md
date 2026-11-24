@@ -7,8 +7,8 @@ taxon: weapon-siege
 subtype: siege
 level: 3
 era: classical
-attack: 4
-health: 6
+attack: 5
+health: 7
 skills: [combatstart-leftmost-damage-3, shout]
 ---
 
@@ -25,8 +25,8 @@ skills: [combatstart-leftmost-damage-3, shout]
 | 子类 | 攻城 |
 | 星级 | 3 |
 | 时代 | 古典 |
-| 攻击力 | 4 |
-| 生命值 | 6 |
+| 攻击力 | 5 |
+| 生命值 | 7 |
 | 关键词 | 无 |
 | 技能 | combatstart-leftmost-damage-3；shout |
 | 科学分类 | 造物 › 武器与攻城 |

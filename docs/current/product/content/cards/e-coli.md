@@ -7,7 +7,7 @@ taxon: enterobacteriaceae
 subtype: bacteria
 level: 1
 era: modern
-attack: 1
+attack: 2
 health: 4
 skills: [deathrattle-friendly-bacteria-growth-once]
 ---
@@ -25,7 +25,7 @@ skills: [deathrattle-friendly-bacteria-growth-once]
 | 子类 | 细菌 |
 | 星级 | 1 |
 | 时代 | 现代 |
-| 攻击力 | 1 |
+| 攻击力 | 2 |
 | 生命值 | 4 |
 | 关键词 | 亡语 |
 | 技能 | deathrattle-friendly-bacteria-growth-once |
@@ -38,7 +38,7 @@ skills: [deathrattle-friendly-bacteria-growth-once]
 ## 设计说明
 
 定位：细菌域的早期亡语成长单位，为同玩法随从提供成长。
-平衡边界：1 星 1/4；攻击力取该星级下限，生命值取该星级上限；关键词折算 2 点，合计 7，低于 8 上限 1 点。
+平衡边界：1 星 2/4；攻击力取该星级中位，生命值取该星级偏上；关键词折算 2 点，合计 8，等于 8 上限。
 使用建议：放在友方细菌域随从旁，死亡后把成长落到核心单位。
 
 ## 出处

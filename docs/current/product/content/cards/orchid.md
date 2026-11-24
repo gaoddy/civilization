@@ -8,7 +8,7 @@ subtype: flower
 level: 3
 era: classical
 attack: 3
-health: 4
+health: 6
 skills: [keyword-sow, keyword-breed-1]
 ---
 
@@ -26,7 +26,7 @@ skills: [keyword-sow, keyword-breed-1]
 | 星级 | 3 |
 | 时代 | 古典 |
 | 攻击力 | 3 |
-| 生命值 | 4 |
+| 生命值 | 6 |
 | 关键词 | 播种；繁衍 1 |
 | 技能 | keyword-sow；keyword-breed-1 |
 | 科学分类 | 植物界 › 被子植物门 › 单子叶植物纲 › 天门冬目 › 兰科 |
@@ -38,7 +38,7 @@ skills: [keyword-sow, keyword-breed-1]
 ## 设计说明
 
 定位：植物界的中期播种与繁衍单位，死亡后留下幼苗维持场面。
-平衡边界：3 星 3/4；攻击力取该星级下限，生命值取该星级下限；关键词折算 4 点，合计 11，低于 13 上限 2 点。
+平衡边界：3 星 3/6；攻击力取该星级下限，生命值取该星级中位；关键词折算 4 点，合计 13，等于 13 上限。
 使用建议：先铺植物再打出，让繁衍持续堆高生命，死亡后的幼苗继续吃植物光环。
 
 ## 出处

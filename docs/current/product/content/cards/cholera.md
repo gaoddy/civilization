@@ -8,7 +8,7 @@ subtype: bacteria
 level: 4
 era: feudal
 attack: 4
-health: 9
+health: 7
 skills: [combatstart-random-enemy-contagion-1, keyword-contagion]
 ---
 
@@ -26,7 +26,7 @@ skills: [combatstart-random-enemy-contagion-1, keyword-contagion]
 | 星级 | 4 |
 | 时代 | 封建 |
 | 攻击力 | 4 |
-| 生命值 | 9 |
+| 生命值 | 7 |
 | 关键词 | 传染 |
 | 技能 | combatstart-random-enemy-contagion-1；keyword-contagion |
 | 科学分类 | 细菌域 › 变形菌门 › γ-变形菌纲 › 肠杆菌目 › 弧菌科 |

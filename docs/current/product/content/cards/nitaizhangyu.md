@@ -7,8 +7,8 @@ taxon: octopodidae
 subtype: mollusk
 level: 2
 era: prehistoric
-attack: 2
-health: 4
+attack: 4
+health: 6
 skills: [mimic-1]
 ---
 
@@ -25,8 +25,8 @@ skills: [mimic-1]
 | 子类 | 软体 |
 | 星级 | 2 |
 | 时代 | 史前 |
-| 攻击力 | 2 |
-| 生命值 | 4 |
+| 攻击力 | 4 |
+| 生命值 | 6 |
 | 关键词 | 无 |
 | 技能 | mimic-1 |
 | 科学分类 | 动物界 › 软体动物门 › 头足纲 › 八腕目 › 章鱼科 |

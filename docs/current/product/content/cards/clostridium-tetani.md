@@ -8,7 +8,7 @@ subtype: bacteria
 level: 3
 era: industrial
 attack: 3
-health: 7
+health: 6
 skills: [keyword-contagion, microbiology]
 ---
 
@@ -26,7 +26,7 @@ skills: [keyword-contagion, microbiology]
 | 星级 | 3 |
 | 时代 | 工业 |
 | 攻击力 | 3 |
-| 生命值 | 7 |
+| 生命值 | 6 |
 | 关键词 | 传染 |
 | 技能 | keyword-contagion；microbiology |
 | 科学分类 | 细菌域 › 厚壁菌门 › 梭菌纲 › 梭菌目 › 梭菌科 |
@@ -38,7 +38,7 @@ skills: [keyword-contagion, microbiology]
 ## 设计说明
 
 定位：细菌域的中期传染单位，造成伤害后持续削弱目标。
-平衡边界：3 星 3/7；攻击力取该星级下限，生命值取该星级上限；关键词折算 2 点，合计 12，低于 13 上限 1 点。
+平衡边界：3 星 3/6；攻击力取该星级下限，生命值取该星级中位；关键词折算 2 点，合计 11，低于 13 上限 2 点。
 使用建议：优先攻击高生命目标，让传染的每回合掉血持续生效。
 
 ## 出处

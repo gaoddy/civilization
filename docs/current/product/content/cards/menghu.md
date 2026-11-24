@@ -8,7 +8,7 @@ subtype: mammal
 level: 3
 era: primitive
 attack: 4
-health: 5
+health: 6
 skills: [keyword-evolve, shout]
 ---
 
@@ -26,7 +26,7 @@ skills: [keyword-evolve, shout]
 | 星级 | 3 |
 | 时代 | 原始 |
 | 攻击力 | 4 |
-| 生命值 | 5 |
+| 生命值 | 6 |
 | 关键词 | 进化 |
 | 技能 | keyword-evolve；shout |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 食肉目 › 猫科 |

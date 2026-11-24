@@ -7,7 +7,7 @@ taxon: anguillidae
 subtype: fish
 level: 4
 era: feudal
-attack: 7
+attack: 5
 health: 6
 skills: [aura-school-fish-1, deathrattle-summon-fish-fry-2]
 ---
@@ -25,7 +25,7 @@ skills: [aura-school-fish-1, deathrattle-summon-fish-fry-2]
 | 子类 | 鱼类 |
 | 星级 | 4 |
 | 时代 | 封建 |
-| 攻击力 | 7 |
+| 攻击力 | 5 |
 | 生命值 | 6 |
 | 关键词 | 亡语 |
 | 技能 | aura-school-fish-1；deathrattle-summon-fish-fry-2 |

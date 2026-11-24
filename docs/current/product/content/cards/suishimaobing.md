@@ -7,8 +7,8 @@ taxon: hominidae
 subtype: primitive
 level: 1
 era: prehistoric
-attack: 2
-health: 2
+attack: 3
+health: 4
 skills: [trigger-2-humans-self-plus-1-attack]
 ---
 
@@ -25,8 +25,8 @@ skills: [trigger-2-humans-self-plus-1-attack]
 | 子类 | 原始 |
 | 星级 | 1 |
 | 时代 | 史前 |
-| 攻击力 | 2 |
-| 生命值 | 2 |
+| 攻击力 | 3 |
+| 生命值 | 4 |
 | 关键词 | 无 |
 | 技能 | trigger-2-humans-self-plus-1-attack |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |

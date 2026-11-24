@@ -7,7 +7,7 @@ taxon: hominidae
 subtype: primitive
 level: 2
 era: primitive
-attack: 2
+attack: 4
 health: 3
 skills: [battlecry-friendly-growth-plant-twice]
 ---
@@ -25,7 +25,7 @@ skills: [battlecry-friendly-growth-plant-twice]
 | 子类 | 原始 |
 | 星级 | 2 |
 | 时代 | 原始 |
-| 攻击力 | 2 |
+| 攻击力 | 4 |
 | 生命值 | 3 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-growth-plant-twice |

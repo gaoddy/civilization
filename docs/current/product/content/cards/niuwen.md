@@ -7,7 +7,7 @@ taxon: paramyxoviridae
 subtype: virus
 level: 5
 era: modern
-attack: 6
+attack: 7
 health: 12
 skills: [keyword-contagion, combatstart-random-enemy-contagion-1]
 ---
@@ -25,7 +25,7 @@ skills: [keyword-contagion, combatstart-random-enemy-contagion-1]
 | 子类 | 病毒 |
 | 星级 | 5 |
 | 时代 | 现代 |
-| 攻击力 | 6 |
+| 攻击力 | 7 |
 | 生命值 | 12 |
 | 关键词 | 传染 |
 | 技能 | keyword-contagion；combatstart-random-enemy-contagion-1 |

@@ -7,7 +7,7 @@ taxon: accipitridae
 subtype: bird
 level: 5
 era: feudal
-attack: 9
+attack: 10
 health: 8
 skills: [dive-1, battlecry-friendly-bird-growth-once]
 ---
@@ -25,7 +25,7 @@ skills: [dive-1, battlecry-friendly-bird-growth-once]
 | 子类 | 鸟类 |
 | 星级 | 5 |
 | 时代 | 封建 |
-| 攻击力 | 9 |
+| 攻击力 | 10 |
 | 生命值 | 8 |
 | 关键词 | 战吼 |
 | 技能 | dive-1；battlecry-friendly-bird-growth-once |
@@ -38,7 +38,7 @@ skills: [dive-1, battlecry-friendly-bird-growth-once]
 ## 设计说明
 
 定位：鸟纲的高攻俯冲单位，战斗开始时点杀攻击力最低的敌人。
-平衡边界：5 星 9/8；攻击力取该星级上限，生命值取该星级下限；关键词折算 2 点，合计 19，低于 22 上限 3 点。
+平衡边界：5 星 10/8；攻击力取该星级上限，生命值取该星级下限；关键词折算 2 点，合计 20，低于 22 上限 2 点。
 使用建议：用于开局压低敌方低攻随从的血线，伤害来源为自身，可触发击杀类效果。
 
 ## 出处

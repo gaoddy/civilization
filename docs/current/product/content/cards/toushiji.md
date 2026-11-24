@@ -7,8 +7,8 @@ taxon: weapon-siege
 subtype: siege
 level: 3
 era: feudal
-attack: 3
-health: 5
+attack: 5
+health: 4
 skills: [keyword-assemble-2]
 ---
 
@@ -25,8 +25,8 @@ skills: [keyword-assemble-2]
 | 子类 | 攻城 |
 | 星级 | 3 |
 | 时代 | 封建 |
-| 攻击力 | 3 |
-| 生命值 | 5 |
+| 攻击力 | 5 |
+| 生命值 | 4 |
 | 关键词 | 装配 2 |
 | 技能 | keyword-assemble-2 |
 | 科学分类 | 造物 › 武器与攻城 |

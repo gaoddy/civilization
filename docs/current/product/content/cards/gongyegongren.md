@@ -8,7 +8,7 @@ subtype: worker
 level: 5
 era: modern
 attack: 8
-health: 11
+health: 10
 skills: [battlecry-other-friendly-humans-plus-1-attack, shout]
 ---
 
@@ -26,7 +26,7 @@ skills: [battlecry-other-friendly-humans-plus-1-attack, shout]
 | 星级 | 5 |
 | 时代 | 现代 |
 | 攻击力 | 8 |
-| 生命值 | 11 |
+| 生命值 | 10 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-other-friendly-humans-plus-1-attack；shout |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |

@@ -8,7 +8,7 @@ subtype: mecha
 level: 5
 era: modern
 attack: 6
-health: 12
+health: 8
 skills: [keyword-taunt, battlecry-friendly-mech-growth-once]
 ---
 
@@ -26,7 +26,7 @@ skills: [keyword-taunt, battlecry-friendly-mech-growth-once]
 | 星级 | 5 |
 | 时代 | 现代 |
 | 攻击力 | 6 |
-| 生命值 | 12 |
+| 生命值 | 8 |
 | 关键词 | 嘲讽；战吼 |
 | 技能 | keyword-taunt；battlecry-friendly-mech-growth-once |
 | 科学分类 | 造物 › 自动机械 |

@@ -8,7 +8,7 @@ subtype: crop
 level: 5
 era: future
 attack: 6
-health: 12
+health: 13
 skills: [aura-plant-plus-1-plus-1, keyword-breed-3]
 ---
 
@@ -26,7 +26,7 @@ skills: [aura-plant-plus-1-plus-1, keyword-breed-3]
 | 星级 | 5 |
 | 时代 | 未来 |
 | 攻击力 | 6 |
-| 生命值 | 12 |
+| 生命值 | 13 |
 | 关键词 | 繁衍 3 |
 | 技能 | aura-plant-plus-1-plus-1；keyword-breed-3 |
 | 科学分类 | 植物界 › 被子植物门 › 双子叶植物纲 › 豆目 › 豆科 |

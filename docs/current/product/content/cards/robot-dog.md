@@ -7,8 +7,8 @@ taxon: automation
 subtype: robot
 level: 3
 era: modern
-attack: 5
-health: 4
+attack: 4
+health: 6
 skills: [keyword-ignore-taunt]
 ---
 
@@ -25,8 +25,8 @@ skills: [keyword-ignore-taunt]
 | 子类 | 机器人 |
 | 星级 | 3 |
 | 时代 | 现代 |
-| 攻击力 | 5 |
-| 生命值 | 4 |
+| 攻击力 | 4 |
+| 生命值 | 6 |
 | 关键词 | 无视嘲讽 |
 | 技能 | keyword-ignore-taunt |
 | 科学分类 | 造物 › 自动机械 |

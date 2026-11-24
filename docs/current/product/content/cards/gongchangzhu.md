@@ -7,8 +7,8 @@ taxon: hominidae
 subtype: capital
 level: 5
 era: industrial
-attack: 8
-health: 11
+attack: 7
+health: 9
 skills: [battlecry-other-friendly-humans-plus-1-attack, shout]
 ---
 
@@ -25,8 +25,8 @@ skills: [battlecry-other-friendly-humans-plus-1-attack, shout]
 | 子类 | 资本 |
 | 星级 | 5 |
 | 时代 | 工业 |
-| 攻击力 | 8 |
-| 生命值 | 11 |
+| 攻击力 | 7 |
+| 生命值 | 9 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-other-friendly-humans-plus-1-attack；shout |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |

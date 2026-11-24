@@ -7,8 +7,8 @@ taxon: automation
 subtype: nanotech
 level: 7
 era: future
-attack: 10
-health: 15
+attack: 13
+health: 16
 skills: [keyword-assemble-2, invention-factory]
 ---
 
@@ -25,8 +25,8 @@ skills: [keyword-assemble-2, invention-factory]
 | 子类 | 纳米 |
 | 星级 | 7 |
 | 时代 | 未来 |
-| 攻击力 | 10 |
-| 生命值 | 15 |
+| 攻击力 | 13 |
+| 生命值 | 16 |
 | 关键词 | 装配 2 |
 | 技能 | keyword-assemble-2；invention-factory |
 | 科学分类 | 造物 › 自动机械 |

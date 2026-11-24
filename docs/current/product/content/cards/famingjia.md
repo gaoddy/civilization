@@ -7,7 +7,7 @@ taxon: hominidae
 subtype: invention
 level: 4
 era: industrial
-attack: 6
+attack: 7
 health: 8
 skills: [battlecry-all-mech-growth-once, shout]
 ---
@@ -25,7 +25,7 @@ skills: [battlecry-all-mech-growth-once, shout]
 | 子类 | 发明 |
 | 星级 | 4 |
 | 时代 | 工业 |
-| 攻击力 | 6 |
+| 攻击力 | 7 |
 | 生命值 | 8 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-all-mech-growth-once；shout |

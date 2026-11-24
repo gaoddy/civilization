@@ -8,7 +8,7 @@ subtype: bacteria
 level: 4
 era: industrial
 attack: 4
-health: 9
+health: 8
 skills: [keyword-contagion, keyword-armor-1]
 ---
 
@@ -26,7 +26,7 @@ skills: [keyword-contagion, keyword-armor-1]
 | 星级 | 4 |
 | 时代 | 工业 |
 | 攻击力 | 4 |
-| 生命值 | 9 |
+| 生命值 | 8 |
 | 关键词 | 传染；减伤 1 |
 | 技能 | keyword-contagion；keyword-armor-1 |
 | 科学分类 | 细菌域 › 放线菌门 › 放线菌纲 › 分枝杆菌目 › 分枝杆菌科 |

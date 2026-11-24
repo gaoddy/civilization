@@ -8,7 +8,7 @@ subtype: aquatic-plant
 level: 2
 era: prehistoric
 attack: 2
-health: 5
+health: 4
 skills: [keyword-breed-1]
 ---
 
@@ -26,7 +26,7 @@ skills: [keyword-breed-1]
 | 星级 | 2 |
 | 时代 | 史前 |
 | 攻击力 | 2 |
-| 生命值 | 5 |
+| 生命值 | 4 |
 | 关键词 | 繁衍 1 |
 | 技能 | keyword-breed-1 |
 | 科学分类 | 植物界 › 蕨类植物门 › 水龙骨纲 › 槐叶苹目 › 槐叶苹科 |

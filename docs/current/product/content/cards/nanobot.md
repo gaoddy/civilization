@@ -7,7 +7,7 @@ taxon: automation
 subtype: robot
 level: 5
 era: future
-attack: 9
+attack: 7
 health: 8
 skills: [keyword-ignore-taunt, keyword-assemble-1]
 ---
@@ -25,7 +25,7 @@ skills: [keyword-ignore-taunt, keyword-assemble-1]
 | 子类 | 机器人 |
 | 星级 | 5 |
 | 时代 | 未来 |
-| 攻击力 | 9 |
+| 攻击力 | 7 |
 | 生命值 | 8 |
 | 关键词 | 无视嘲讽；装配 1 |
 | 技能 | keyword-ignore-taunt；keyword-assemble-1 |

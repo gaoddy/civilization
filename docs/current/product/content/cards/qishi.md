@@ -7,7 +7,7 @@ taxon: hominidae
 subtype: unit
 level: 2
 era: feudal
-attack: 2
+attack: 3
 health: 5
 skills: [keyword-taunt]
 ---
@@ -25,7 +25,7 @@ skills: [keyword-taunt]
 | 子类 | 兵种 |
 | 星级 | 2 |
 | 时代 | 封建 |
-| 攻击力 | 2 |
+| 攻击力 | 3 |
 | 生命值 | 5 |
 | 关键词 | 嘲讽 |
 | 技能 | keyword-taunt |

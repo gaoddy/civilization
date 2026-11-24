@@ -7,7 +7,7 @@ taxon: life-medical
 subtype: appliance
 level: 3
 era: modern
-attack: 4
+attack: 3
 health: 5
 skills: [battlecry-friendly-human-plus-0-plus-1]
 ---
@@ -25,7 +25,7 @@ skills: [battlecry-friendly-human-plus-0-plus-1]
 | 子类 | 家电 |
 | 星级 | 3 |
 | 时代 | 现代 |
-| 攻击力 | 4 |
+| 攻击力 | 3 |
 | 生命值 | 5 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-human-plus-0-plus-1 |

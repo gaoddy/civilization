@@ -7,8 +7,8 @@ taxon: mammalia-incertae-sedis
 subtype: mammal
 level: 3
 era: primitive
-attack: 4
-health: 4
+attack: 5
+health: 6
 skills: [trigger-friendly-evolve-self-plus-1-plus-1]
 ---
 
@@ -25,8 +25,8 @@ skills: [trigger-friendly-evolve-self-plus-1-plus-1]
 | 子类 | 哺乳 |
 | 星级 | 3 |
 | 时代 | 原始 |
-| 攻击力 | 4 |
-| 生命值 | 4 |
+| 攻击力 | 5 |
+| 生命值 | 6 |
 | 关键词 | 无 |
 | 技能 | trigger-friendly-evolve-self-plus-1-plus-1 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 未定科 |

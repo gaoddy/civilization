@@ -8,7 +8,7 @@ subtype: communication
 level: 3
 era: industrial
 attack: 4
-health: 6
+health: 4
 skills: [combatstart-leftmost-damage-3, shout]
 ---
 
@@ -26,7 +26,7 @@ skills: [combatstart-leftmost-damage-3, shout]
 | 星级 | 3 |
 | 时代 | 工业 |
 | 攻击力 | 4 |
-| 生命值 | 6 |
+| 生命值 | 4 |
 | 关键词 | 无 |
 | 技能 | combatstart-leftmost-damage-3；shout |
 | 科学分类 | 造物 › 信息与计算 |

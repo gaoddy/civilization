@@ -7,8 +7,8 @@ taxon: virus-incertae-sedis
 subtype: nanotech
 level: 7
 era: future
-attack: 10
-health: 20
+attack: 11
+health: 19
 skills: [keyword-contagion, combatstart-random-enemy-contagion-1]
 ---
 
@@ -25,8 +25,8 @@ skills: [keyword-contagion, combatstart-random-enemy-contagion-1]
 | 子类 | 纳米 |
 | 星级 | 7 |
 | 时代 | 未来 |
-| 攻击力 | 10 |
-| 生命值 | 20 |
+| 攻击力 | 11 |
+| 生命值 | 19 |
 | 关键词 | 传染 |
 | 技能 | keyword-contagion；combatstart-random-enemy-contagion-1 |
 | 科学分类 | 病毒 › 未定科 |

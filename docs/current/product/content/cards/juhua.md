@@ -8,7 +8,7 @@ subtype: flower
 level: 3
 era: primitive
 attack: 3
-health: 4
+health: 6
 skills: [keyword-sow, keyword-breed-1]
 ---
 
@@ -26,7 +26,7 @@ skills: [keyword-sow, keyword-breed-1]
 | 星级 | 3 |
 | 时代 | 原始 |
 | 攻击力 | 3 |
-| 生命值 | 4 |
+| 生命值 | 6 |
 | 关键词 | 播种；繁衍 1 |
 | 技能 | keyword-sow；keyword-breed-1 |
 | 科学分类 | 植物界 › 未定科 |

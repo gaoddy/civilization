@@ -7,8 +7,8 @@ taxon: vibrionaceae
 subtype: bacteria
 level: 3
 era: industrial
-attack: 3
-health: 7
+attack: 4
+health: 8
 skills: [detonate-2, microbiology]
 ---
 
@@ -25,8 +25,8 @@ skills: [detonate-2, microbiology]
 | 子类 | 细菌 |
 | 星级 | 3 |
 | 时代 | 工业 |
-| 攻击力 | 3 |
-| 生命值 | 7 |
+| 攻击力 | 4 |
+| 生命值 | 8 |
 | 关键词 | 无 |
 | 技能 | detonate-2；microbiology |
 | 科学分类 | 细菌域 › 变形菌门 › γ-变形菌纲 › 肠杆菌目 › 弧菌科 |

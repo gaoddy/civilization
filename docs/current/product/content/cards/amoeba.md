@@ -7,8 +7,8 @@ taxon: amoebidae
 subtype: protozoa
 level: 1
 era: prehistoric
-attack: 1
-health: 3
+attack: 2
+health: 2
 skills: [deathrattle-summon-amoeba-larva-1]
 ---
 
@@ -25,8 +25,8 @@ skills: [deathrattle-summon-amoeba-larva-1]
 | 子类 | 原生生物 |
 | 星级 | 1 |
 | 时代 | 史前 |
-| 攻击力 | 1 |
-| 生命值 | 3 |
+| 攻击力 | 2 |
+| 生命值 | 2 |
 | 关键词 | 亡语 |
 | 技能 | deathrattle-summon-amoeba-larva-1 |
 | 科学分类 | 原生生物界 › 变形虫门 › 管状根足纲 › 真变形虫目 › 变形虫科 |
@@ -38,7 +38,7 @@ skills: [deathrattle-summon-amoeba-larva-1]
 ## 设计说明
 
 定位：原生生物界 1 星分裂单位，死亡后留下变形虫幼体。
-平衡边界：1 星 1/3；攻击力取该星级下限，生命值取该星级中位；关键词折算 4 点，合计 8，等于 8 上限。
+平衡边界：1 星 2/2；攻击力取该星级中位，生命值取该星级下限；关键词折算 4 点，合计 8，等于 8 上限。
 使用建议：早期主动交换，让幼体继续承接成长与吞噬。
 
 ## 出处

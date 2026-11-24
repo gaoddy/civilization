@@ -8,7 +8,7 @@ subtype: biology
 level: 4
 era: feudal
 attack: 0
-health: 12
+health: 13
 skills: [battlecry-all-biology-growth-once]
 ---
 
@@ -26,7 +26,7 @@ skills: [battlecry-all-biology-growth-once]
 | 星级 | 4 |
 | 时代 | 封建 |
 | 攻击力 | 0 |
-| 生命值 | 12 |
+| 生命值 | 13 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-all-biology-growth-once |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |

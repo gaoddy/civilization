@@ -7,8 +7,8 @@ taxon: staphylococcaceae
 subtype: bacteria
 level: 2
 era: modern
-attack: 2
-health: 5
+attack: 3
+health: 6
 skills: [combatstart-random-enemy-contagion-1]
 ---
 
@@ -25,8 +25,8 @@ skills: [combatstart-random-enemy-contagion-1]
 | 子类 | 细菌 |
 | 星级 | 2 |
 | 时代 | 现代 |
-| 攻击力 | 2 |
-| 生命值 | 5 |
+| 攻击力 | 3 |
+| 生命值 | 6 |
 | 关键词 | 无 |
 | 技能 | combatstart-random-enemy-contagion-1 |
 | 科学分类 | 细菌域 › 厚壁菌门 › 芽孢杆菌纲 › 芽孢杆菌目 › 葡萄球菌科 |

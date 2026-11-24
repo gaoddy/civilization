@@ -8,7 +8,7 @@ subtype: primate
 level: 4
 era: modern
 attack: 6
-health: 8
+health: 9
 skills: [battlecry-self-growth-twice]
 ---
 
@@ -26,7 +26,7 @@ skills: [battlecry-self-growth-twice]
 | 星级 | 4 |
 | 时代 | 现代 |
 | 攻击力 | 6 |
-| 生命值 | 8 |
+| 生命值 | 9 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-self-growth-twice |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |

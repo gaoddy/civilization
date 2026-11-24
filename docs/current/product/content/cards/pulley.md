@@ -7,7 +7,7 @@ taxon: automation
 subtype: robot
 level: 2
 era: primitive
-attack: 3
+attack: 2
 health: 3
 skills: [keyword-assemble-1]
 ---
@@ -25,7 +25,7 @@ skills: [keyword-assemble-1]
 | 子类 | 机器人 |
 | 星级 | 2 |
 | 时代 | 原始 |
-| 攻击力 | 3 |
+| 攻击力 | 2 |
 | 生命值 | 3 |
 | 关键词 | 装配 1 |
 | 技能 | keyword-assemble-1 |
@@ -38,7 +38,7 @@ skills: [keyword-assemble-1]
 ## 设计说明
 
 定位：2 星装配，衔接低费机械铺场。
-平衡边界：2 星 3/3；攻击力取该星级上限，生命值取该星级下限；关键词折算 2 点，合计 8，低于 10 上限 2 点。
+平衡边界：2 星 2/3；攻击力取该星级下限，生命值取该星级下限；关键词折算 2 点，合计 7，低于 10 上限 3 点。
 使用建议：与齿轮形成连续装配，快速拉起机械身材。
 
 ## 出处

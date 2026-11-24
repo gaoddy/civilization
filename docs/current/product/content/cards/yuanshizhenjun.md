@@ -7,8 +7,8 @@ taxon: fungi-incertae-sedis
 subtype: fungus
 level: 1
 era: prehistoric
-attack: 2
-health: 2
+attack: 1
+health: 3
 skills: [keyword-sow]
 ---
 
@@ -25,8 +25,8 @@ skills: [keyword-sow]
 | 子类 | 真菌 |
 | 星级 | 1 |
 | 时代 | 史前 |
-| 攻击力 | 2 |
-| 生命值 | 2 |
+| 攻击力 | 1 |
+| 生命值 | 3 |
 | 关键词 | 播种 |
 | 技能 | keyword-sow |
 | 科学分类 | 真菌界 › 未定科 |

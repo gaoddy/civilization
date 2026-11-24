@@ -8,7 +8,7 @@ subtype: physics
 level: 3
 era: primitive
 attack: 0
-health: 9
+health: 10
 skills: [battlecry-friendly-mech-growth-once]
 ---
 
@@ -26,7 +26,7 @@ skills: [battlecry-friendly-mech-growth-once]
 | 星级 | 3 |
 | 时代 | 原始 |
 | 攻击力 | 0 |
-| 生命值 | 9 |
+| 生命值 | 10 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-mech-growth-once |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |

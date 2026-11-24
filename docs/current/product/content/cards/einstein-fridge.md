@@ -7,8 +7,8 @@ taxon: life-medical
 subtype: appliance
 level: 3
 era: modern
-attack: 4
-health: 5
+attack: 3
+health: 4
 skills: []
 ---
 
@@ -25,8 +25,8 @@ skills: []
 | 子类 | 家电 |
 | 星级 | 3 |
 | 时代 | 现代 |
-| 攻击力 | 4 |
-| 生命值 | 5 |
+| 攻击力 | 3 |
+| 生命值 | 4 |
 | 关键词 | 无 |
 | 技能 | 无 |
 | 科学分类 | 造物 › 生活与医疗 |

@@ -7,8 +7,8 @@ taxon: equidae
 subtype: mammal
 level: 4
 era: feudal
-attack: 6
-health: 7
+attack: 5
+health: 9
 skills: [keyword-evolve]
 ---
 
@@ -25,8 +25,8 @@ skills: [keyword-evolve]
 | 子类 | 哺乳 |
 | 星级 | 4 |
 | 时代 | 封建 |
-| 攻击力 | 6 |
-| 生命值 | 7 |
+| 攻击力 | 5 |
+| 生命值 | 9 |
 | 关键词 | 进化 |
 | 技能 | keyword-evolve |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 奇蹄目 › 马科 |

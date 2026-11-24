@@ -8,7 +8,7 @@ subtype: natural-history
 level: 5
 era: feudal
 attack: 0
-health: 16
+health: 17
 skills: [observation]
 ---
 
@@ -26,7 +26,7 @@ skills: [observation]
 | 星级 | 5 |
 | 时代 | 封建 |
 | 攻击力 | 0 |
-| 生命值 | 16 |
+| 生命值 | 17 |
 | 关键词 | 无 |
 | 技能 | observation |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |

@@ -8,7 +8,7 @@ subtype: reptile
 level: 1
 era: prehistoric
 attack: 1
-health: 4
+health: 5
 skills: [deathrattle-random-enemy-minus-1-attack]
 ---
 
@@ -26,7 +26,7 @@ skills: [deathrattle-random-enemy-minus-1-attack]
 | 星级 | 1 |
 | 时代 | 史前 |
 | 攻击力 | 1 |
-| 生命值 | 4 |
+| 生命值 | 5 |
 | 关键词 | 无 |
 | 技能 | deathrattle-random-enemy-minus-1-attack |
 | 科学分类 | 动物界 › 脊索动物门 › 爬行纲 › 有鳞目 › 蜥蜴科 |
@@ -38,7 +38,7 @@ skills: [deathrattle-random-enemy-minus-1-attack]
 ## 设计说明
 
 定位：1 星亡语削弱单位，死亡后降低随机敌人的攻击力。
-平衡边界：1 星 1/4；攻击力取该星级下限，生命值取该星级上限；无关键词折算，合计 5，低于 8 上限 3 点。
+平衡边界：1 星 1/5；攻击力取该星级下限，生命值取该星级上限；无关键词折算，合计 6，低于 8 上限 2 点。
 使用建议：早期交换用，亡语对高攻随从更有效。
 
 ## 出处

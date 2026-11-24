@@ -7,8 +7,8 @@ taxon: ophiocordycipitaceae
 subtype: fungus
 level: 4
 era: feudal
-attack: 4
-health: 7
+attack: 5
+health: 8
 skills: [deathrattle-summon-cordyceps, decompose-kill-original]
 ---
 
@@ -25,8 +25,8 @@ skills: [deathrattle-summon-cordyceps, decompose-kill-original]
 | 子类 | 真菌 |
 | 星级 | 4 |
 | 时代 | 封建 |
-| 攻击力 | 4 |
-| 生命值 | 7 |
+| 攻击力 | 5 |
+| 生命值 | 8 |
 | 关键词 | 亡语；分解 |
 | 技能 | deathrattle-summon-cordyceps；decompose-kill-original |
 | 科学分类 | 真菌界 › 子囊菌门 › 粪壳菌纲 › 肉座菌目 › 线虫草科 |
@@ -38,7 +38,7 @@ skills: [deathrattle-summon-cordyceps, decompose-kill-original]
 ## 设计说明
 
 定位：真菌界 4 星分裂单位，死亡后留下 3/3 虫草。
-平衡边界：4 星 4/7；攻击力取该星级下限，生命值取该星级偏下；关键词折算 4 点，合计 15，低于 17 上限 2 点。
+平衡边界：4 星 5/8；攻击力取该星级偏下，生命值取该星级中位；关键词折算 4 点，合计 17，等于 17 上限。
 使用建议：作为高生命前排，死亡后的虫草继续参与分解与光环。
 
 ## 出处

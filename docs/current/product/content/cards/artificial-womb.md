@@ -8,7 +8,7 @@ subtype: medical
 level: 5
 era: future
 attack: 6
-health: 9
+health: 8
 skills: [battlecry-summon-3-3-synthetic-cell, shout]
 ---
 
@@ -26,7 +26,7 @@ skills: [battlecry-summon-3-3-synthetic-cell, shout]
 | 星级 | 5 |
 | 时代 | 未来 |
 | 攻击力 | 6 |
-| 生命值 | 9 |
+| 生命值 | 8 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-summon-3-3-synthetic-cell；shout |
 | 科学分类 | 造物 › 生活与医疗 |

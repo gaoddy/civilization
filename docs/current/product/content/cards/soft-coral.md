@@ -8,7 +8,7 @@ subtype: ocean
 level: 4
 era: classical
 attack: 4
-health: 9
+health: 10
 skills: [revive-1, keyword-armor-1]
 ---
 
@@ -26,7 +26,7 @@ skills: [revive-1, keyword-armor-1]
 | 星级 | 4 |
 | 时代 | 古典 |
 | 攻击力 | 4 |
-| 生命值 | 9 |
+| 生命值 | 10 |
 | 关键词 | 减伤 1 |
 | 技能 | revive-1；keyword-armor-1 |
 | 科学分类 | 动物界 › 刺胞动物门 › 珊瑚纲 › 软珊瑚目 › 软珊瑚科 |

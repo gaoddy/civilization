@@ -7,8 +7,8 @@ taxon: power-energy
 subtype: power
 level: 4
 era: industrial
-attack: 7
-health: 6
+attack: 6
+health: 8
 skills: [keyword-ignore-taunt, shout]
 ---
 
@@ -25,8 +25,8 @@ skills: [keyword-ignore-taunt, shout]
 | 子类 | 动力 |
 | 星级 | 4 |
 | 时代 | 工业 |
-| 攻击力 | 7 |
-| 生命值 | 6 |
+| 攻击力 | 6 |
+| 生命值 | 8 |
 | 关键词 | 无视嘲讽 |
 | 技能 | keyword-ignore-taunt；shout |
 | 科学分类 | 造物 › 动力与能源 |

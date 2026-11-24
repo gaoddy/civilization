@@ -7,8 +7,8 @@ taxon: volvocaceae
 subtype: protozoa
 level: 7
 era: prehistoric
-attack: 15
-health: 14
+attack: 12
+health: 15
 skills: [deathrattle-summon-4-volvox-cells, aura-other-protozoa-plus-1-attack]
 ---
 
@@ -25,8 +25,8 @@ skills: [deathrattle-summon-4-volvox-cells, aura-other-protozoa-plus-1-attack]
 | 子类 | 原生生物 |
 | 星级 | 7 |
 | 时代 | 史前 |
-| 攻击力 | 15 |
-| 生命值 | 14 |
+| 攻击力 | 12 |
+| 生命值 | 15 |
 | 关键词 | 亡语 |
 | 技能 | deathrattle-summon-4-volvox-cells；aura-other-protozoa-plus-1-attack |
 | 科学分类 | 原生生物界 › 绿藻门 › 绿藻纲 › 团藻目 › 团藻科 |
@@ -38,7 +38,7 @@ skills: [deathrattle-summon-4-volvox-cells, aura-other-protozoa-plus-1-attack]
 ## 设计说明
 
 定位：原生生物界 7 星分裂大随从，死亡后留下四个团藻细胞。
-平衡边界：7 星 15/14；攻击力取该星级上限，生命值取该星级下限；关键词折算 4 点，合计 33，等于 33 上限。
+平衡边界：7 星 12/15；攻击力取该星级偏下，生命值取该星级偏下；关键词折算 4 点，合计 31，低于 33 上限 2 点。
 使用建议：作为终局交换单位，用四个细胞继续承接光环与成长。
 
 ## 出处

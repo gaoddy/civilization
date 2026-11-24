@@ -7,8 +7,8 @@ taxon: trypanosomatidae
 subtype: protozoa
 level: 3
 era: modern
-attack: 4
-health: 6
+attack: 3
+health: 4
 skills: [devour-2]
 ---
 
@@ -25,8 +25,8 @@ skills: [devour-2]
 | 子类 | 原生生物 |
 | 星级 | 3 |
 | 时代 | 现代 |
-| 攻击力 | 4 |
-| 生命值 | 6 |
+| 攻击力 | 3 |
+| 生命值 | 4 |
 | 关键词 | 无 |
 | 技能 | devour-2 |
 | 科学分类 | 原生生物界 › 眼虫门 › 动质体纲 › 锥虫目 › 锥虫科 |

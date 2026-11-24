@@ -7,7 +7,7 @@ taxon: acrididae
 subtype: insect
 level: 3
 era: primitive
-attack: 5
+attack: 4
 health: 4
 skills: [battlecry-other-insect-growth-once]
 ---
@@ -25,7 +25,7 @@ skills: [battlecry-other-insect-growth-once]
 | 子类 | 昆虫 |
 | 星级 | 3 |
 | 时代 | 原始 |
-| 攻击力 | 5 |
+| 攻击力 | 4 |
 | 生命值 | 4 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-other-insect-growth-once |
@@ -38,7 +38,7 @@ skills: [battlecry-other-insect-growth-once]
 ## 设计说明
 
 定位：铺场后的群体成长，战吼给其他昆虫纲随从。
-平衡边界：3 星 5/4；攻击力取该星级上限，生命值取该星级下限；关键词折算 2 点，合计 11，低于 13 上限 2 点。
+平衡边界：3 星 4/4；攻击力取该星级偏下，生命值取该星级下限；关键词折算 2 点，合计 10，低于 13 上限 3 点。
 使用建议：场上昆虫随从越多，收益越高。
 
 ## 出处

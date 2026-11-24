@@ -8,7 +8,7 @@ subtype: bacteria
 level: 2
 era: prehistoric
 attack: 2
-health: 5
+health: 4
 skills: [combatstart-random-enemy-contagion-1]
 ---
 
@@ -26,7 +26,7 @@ skills: [combatstart-random-enemy-contagion-1]
 | 星级 | 2 |
 | 时代 | 史前 |
 | 攻击力 | 2 |
-| 生命值 | 5 |
+| 生命值 | 4 |
 | 关键词 | 无 |
 | 技能 | combatstart-random-enemy-contagion-1 |
 | 科学分类 | 细菌域 › 厚壁菌门 › 芽孢杆菌纲 › 乳杆菌目 › 链球菌科 |

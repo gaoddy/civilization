@@ -7,8 +7,8 @@ taxon: rhabdoviridae
 subtype: virus
 level: 2
 era: primitive
-attack: 3
-health: 5
+attack: 2
+health: 3
 skills: [battlecry-friendly-virus-plus-1-attack]
 ---
 
@@ -25,8 +25,8 @@ skills: [battlecry-friendly-virus-plus-1-attack]
 | 子类 | 病毒 |
 | 星级 | 2 |
 | 时代 | 原始 |
-| 攻击力 | 3 |
-| 生命值 | 5 |
+| 攻击力 | 2 |
+| 生命值 | 3 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-virus-plus-1-attack |
 | 科学分类 | 病毒 › 核糖病毒门 › 单股负链病毒纲 › 单股负链病毒目 › 弹状病毒科 |

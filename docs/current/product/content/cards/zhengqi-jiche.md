@@ -7,8 +7,8 @@ taxon: transport
 subtype: transport
 level: 3
 era: industrial
-attack: 3
-health: 7
+attack: 6
+health: 6
 skills: [keyword-taunt]
 ---
 
@@ -25,8 +25,8 @@ skills: [keyword-taunt]
 | 子类 | 交通 |
 | 星级 | 3 |
 | 时代 | 工业 |
-| 攻击力 | 3 |
-| 生命值 | 7 |
+| 攻击力 | 6 |
+| 生命值 | 6 |
 | 关键词 | 嘲讽 |
 | 技能 | keyword-taunt |
 | 科学分类 | 造物 › 交通与运载 |

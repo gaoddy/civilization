@@ -7,7 +7,7 @@ taxon: corvidae
 subtype: bird
 level: 3
 era: feudal
-attack: 5
+attack: 6
 health: 4
 skills: [battlecry-friendly-bird-growth-once, dive-1]
 ---
@@ -25,7 +25,7 @@ skills: [battlecry-friendly-bird-growth-once, dive-1]
 | 子类 | 鸟类 |
 | 星级 | 3 |
 | 时代 | 封建 |
-| 攻击力 | 5 |
+| 攻击力 | 6 |
 | 生命值 | 4 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-bird-growth-once；dive-1 |
@@ -38,7 +38,7 @@ skills: [battlecry-friendly-bird-growth-once, dive-1]
 ## 设计说明
 
 定位：鸟纲的战吼成长单位，为同伴累积成长层。
-平衡边界：3 星 5/4；攻击力取该星级上限，生命值取该星级下限；关键词折算 2 点，合计 11，低于 13 上限 2 点。
+平衡边界：3 星 6/4；攻击力取该星级上限，生命值取该星级下限；关键词折算 2 点，合计 12，低于 13 上限 1 点。
 使用建议：放在铺场之后入场，把成长落到最需要攻击力的鸟纲随从上。
 
 ## 出处

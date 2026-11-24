@@ -7,7 +7,7 @@ taxon: hominidae
 subtype: unit
 level: 3
 era: feudal
-attack: 4
+attack: 6
 health: 5
 skills: [battlecry-random-enemy-damage-2, shout]
 ---
@@ -25,7 +25,7 @@ skills: [battlecry-random-enemy-damage-2, shout]
 | 子类 | 兵种 |
 | 星级 | 3 |
 | 时代 | 封建 |
-| 攻击力 | 4 |
+| 攻击力 | 6 |
 | 生命值 | 5 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-random-enemy-damage-2；shout |

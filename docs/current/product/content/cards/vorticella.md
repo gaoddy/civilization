@@ -7,7 +7,7 @@ taxon: vorticellidae
 subtype: protozoa
 level: 2
 era: primitive
-attack: 2
+attack: 3
 health: 4
 skills: [deathrattle-friendly-protozoa-growth-once]
 ---
@@ -25,7 +25,7 @@ skills: [deathrattle-friendly-protozoa-growth-once]
 | 子类 | 原生生物 |
 | 星级 | 2 |
 | 时代 | 原始 |
-| 攻击力 | 2 |
+| 攻击力 | 3 |
 | 生命值 | 4 |
 | 关键词 | 亡语 |
 | 技能 | deathrattle-friendly-protozoa-growth-once |
@@ -38,7 +38,7 @@ skills: [deathrattle-friendly-protozoa-growth-once]
 ## 设计说明
 
 定位：原生生物界亡语成长单位，用死亡为本族核心补身材。
-平衡边界：2 星 2/4；攻击力取该星级下限，生命值取该星级中位；关键词折算 2 点，合计 8，低于 10 上限 2 点。
+平衡边界：2 星 3/4；攻击力取该星级中位，生命值取该星级偏下；关键词折算 2 点，合计 9，低于 10 上限 1 点。
 使用建议：放在前排交换，亡语把成长交给吞噬或分裂核心。
 
 ## 出处
