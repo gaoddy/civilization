@@ -18,7 +18,7 @@ func _init() -> void:
     friends_button.open_requested.connect(func() -> void: friends_pressed.emit())
     add_child(friends_button)
 
-    add_child(_entry_button(tr("ui.gallery.entry_match"), "GalleryButton", gallery_pressed))
+    add_child(_entry_button(tr("ui.gallery.entry"), "GalleryButton", gallery_pressed))
     if Platform.is_steam():
         add_child(_entry_button(tr("ui.account.title"), "AccountButton", account_pressed))
     add_child(
