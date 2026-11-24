@@ -80,7 +80,7 @@ protocol/
 - 英雄候选过滤：候选只取 `hero_in_pool` 通过的英雄卡，按本局 5 个玩法过滤；英雄 `categories` 中任一条 `play:` 命中即通过，工具卡与普通英雄同一口径。过滤后一张英雄都没有时回退到全部英雄卡（产品兜底）。
 - 候选池不足：池大小 ≥ `SEAT_COUNT * CANDIDATE_COUNT`（32）时沿用分段、房间内互不重复；不足 32 时按 `(segment * 4 + i) % len` 取 `min(4, len)` 张，允许跨玩家重复；池小于 4 时每人取整个池并至少 1 张。
 - 选英雄校验：只在 `HeroPick` 阶段接受；id 必须在英雄池 `Catalog.heroes` 中，且在本人候选内（否则 `INVALID_CHOICE`）；已确认后再选返回 `INVALID_CHOICE`，非选英雄阶段返回 `INVALID_STAGE`；全员确认后立即启动第 1 回合。
-- 候选下发：`HeroPickStarted` 只向本人下发 `candidates`；各座位只公开 `seat`、`displayName`、`isBot` 与 `picked`，不公开他人候选或所选英雄。
+- 候选下发：`HeroPickStarted` 只向本人下发 `candidates`；各座位只公开 `playerId`、`seat`、`displayName`、`isBot` 与 `picked`，不公开他人候选或所选英雄；`playerId` 供客户端识别本人座位，匹配局重连没有 `RoomUpdate` 时这是唯一身份来源。
 - 候选池校验：`AppState::new` 要求英雄卡至少 1 张，且每张英雄卡的 `categories` 至少 1 条 `play:`、取值是合法玩法（不含 `neutral`），`prey:` / `host:` 节点必须在分类树中；不再要求 32 张。池不足时由跨玩家重复兜底，房间仍能开局。
 - 大厅断线：`Detach` 不再立即释放座位，而是标记离线并记录 `disconnected_at_ms`；房间 task 的 tick 调用 `tick_disconnects`，超过 `RECONNECT_GRACE_MS` 才按原规则释放座位。`Leave` 命令仍立即释放。座位已被释放后再 `Reconnect` 回 `NOT_IN_ROOM`，并摘除该座位的下行登记。
 - 离开：座位立即空出且不重排；房主离开时转给座位号最小的剩余玩家；**大厅最后一人离开即销毁房间**（注册表同时删 `by_code` 与 `rooms`）。

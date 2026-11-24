@@ -3996,6 +3996,7 @@ impl ::std::convert::From<&HandCard> for HandCard {
 ///          "displayName",
 ///          "isBot",
 ///          "picked",
+///          "playerId",
 ///          "seat"
 ///        ],
 ///        "properties": {
@@ -4008,6 +4009,10 @@ impl ::std::convert::From<&HandCard> for HandCard {
 ///          "picked": {
 ///            "description": "该座位是否已确认英雄",
 ///            "type": "boolean"
+///          },
+///          "playerId": {
+///            "description": "该座位玩家 id；客户端据此识别本人座位",
+///            "type": "string"
 ///          },
 ///          "seat": {
 ///            "type": "integer",
@@ -4048,6 +4053,7 @@ impl ::std::convert::From<&HeroPickStarted> for HeroPickStarted {
 ///    "displayName",
 ///    "isBot",
 ///    "picked",
+///    "playerId",
 ///    "seat"
 ///  ],
 ///  "properties": {
@@ -4060,6 +4066,10 @@ impl ::std::convert::From<&HeroPickStarted> for HeroPickStarted {
 ///    "picked": {
 ///      "description": "该座位是否已确认英雄",
 ///      "type": "boolean"
+///    },
+///    "playerId": {
+///      "description": "该座位玩家 id；客户端据此识别本人座位",
+///      "type": "string"
 ///    },
 ///    "seat": {
 ///      "type": "integer",
@@ -4080,6 +4090,9 @@ pub struct HeroPickStartedPlayersItem {
     pub is_bot: bool,
     ///该座位是否已确认英雄
     pub picked: bool,
+    ///该座位玩家 id；客户端据此识别本人座位
+    #[serde(rename = "playerId")]
+    pub player_id: ::std::string::String,
     pub seat: i64,
 }
 impl ::std::convert::From<&HeroPickStartedPlayersItem> for HeroPickStartedPlayersItem {

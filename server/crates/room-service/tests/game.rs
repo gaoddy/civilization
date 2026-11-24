@@ -175,6 +175,11 @@ fn hero_pick_started_carries_own_candidates_only() {
     assert!(payload.players.iter().all(|item| !item.is_bot));
     assert!(payload.players.iter().all(|item| !item.picked));
     assert_eq!(payload.players[0].seat, 0);
+    assert_eq!(
+        payload.players[0].player_id, "p0",
+        "载荷须带玩家 id 供客户端识别本人"
+    );
+    assert_eq!(payload.players[5].player_id, "p5", "玩家 id 与座位一一对应");
     assert!(!payload.deadline.is_empty(), "截止时刻应为 RFC3339");
 
     let other = match task

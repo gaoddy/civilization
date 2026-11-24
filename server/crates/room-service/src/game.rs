@@ -689,6 +689,7 @@ impl GameTask {
         let candidates = self.candidates.get(&seat).cloned().unwrap_or_default();
         let players = (0..SEAT_COUNT)
             .map(|index| HeroPickStartedPlayersItem {
+                player_id: self.seats[index].player_id.clone(),
                 display_name: self.seats[index].display_name.clone(),
                 is_bot: self.bot_seats.contains(&(index as Seat)),
                 picked: self.picks[index].is_some(),

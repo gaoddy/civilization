@@ -13,6 +13,8 @@ const SEAT_DOT_SIZE := 8
 const SEAT_DOT_OFFSET := 4
 
 var _self_id := ""
+## 载荷 `players[]` 里解析到的本人座位；-1 表示载荷未命中，回退房间快照。
+var _payload_seat := -1
 
 var _title: Label
 var _timer: Label
@@ -147,6 +149,7 @@ func setup(payload: Dictionary, self_id: String) -> void:
 	_timer.add_theme_color_override("font_color", UITheme.color("color-accent"))
 
 	var players := Array(payload.get("players", []))
+	_payload_seat = _seat_in_players(players)
 	# 服务端「本人已选」是锁定态的唯一权威：重连、他人刷新和本地确认都据此校正。
 	_locked = _self_picked(players)
 	var ids := _candidate_ids(payload)
@@ -219,10 +222,11 @@ func _format_seconds(total: int) -> String:
 	return "%02d:%02d" % [total / 60, total % 60]
 
 
-## 本人座位：优先按 room_players 的 playerId → seat 映射，兜底用 GameStore 的座位查询。
-## 匹配局服务端刻意不下发 `RoomUpdate`，`room_players` 为空；座位由 `MatchFound`
-## 写入 `match_seat`，不回退会让本人座位恒为 -1，锁定态与座位点全部失效。
+## 本人座位：优先用载荷 `players[].playerId`；匹配局全新进程重连时 `RoomUpdate`
+## 与 `MatchFound` 都不会重放，`room_players` 为空、`match_seat` 为 -1，载荷是唯一来源。
 func _self_seat() -> int:
+	if _payload_seat >= 0:
+		return _payload_seat
 	for player in GameStore.room_players:
 		if str(player.get("playerId", "")) == _self_id:
 			return int(player.get("seat", -1))
@@ -230,6 +234,16 @@ func _self_seat() -> int:
 	if room_seat >= 0:
 		return room_seat
 	return GameStore.match_seat if GameStore.match_seat >= 0 else -1
+
+
+## 在载荷 `players[]` 里按 playerId 定位本人座位；找不到返回 -1。
+func _seat_in_players(players: Array) -> int:
+	if _self_id.is_empty():
+		return -1
+	for entry in players:
+		if entry is Dictionary and str(entry.get("playerId", "")) == _self_id:
+			return int(entry.get("seat", -1))
+	return -1
 
 
 func _candidate_ids(payload: Dictionary) -> Array[String]:

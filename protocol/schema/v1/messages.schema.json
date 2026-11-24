@@ -290,8 +290,12 @@
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["seat", "displayName", "isBot", "picked"],
+            "required": ["playerId", "seat", "displayName", "isBot", "picked"],
             "properties": {
+              "playerId": {
+                "type": "string",
+                "description": "该座位玩家 id；客户端据此识别本人座位"
+              },
               "seat": { "type": "integer", "minimum": 0, "maximum": 7 },
               "displayName": { "type": "string" },
               "isBot": { "type": "boolean" },

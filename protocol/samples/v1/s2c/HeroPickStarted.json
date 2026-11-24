@@ -9,12 +9,14 @@
     "candidates": ["adam-smith", "darwin", "gauss", "lavoisier"],
     "players": [
       {
+        "playerId": "p_ada",
         "seat": 0,
         "displayName": "Ada",
         "isBot": false,
         "picked": false
       },
       {
+        "playerId": "bot:room_1:1",
         "seat": 1,
         "displayName": "Bot 1",
         "isBot": true,
