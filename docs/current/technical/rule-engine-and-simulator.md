@@ -352,7 +352,7 @@ M0 确定性 AI（`sim/src/ai.rs`）针对效果牌补充三条规则：
 - 光环只经 `fold_auras` 折叠进克隆：把 `state.auras` 的派生值写入克隆的 `aura` 层并保留「光环失效不致死」的夹紧，持久实例的 `aura` 层始终为 0。
 - `state.auras` 由引擎在固定时机重算：`recompute_auras` 全量扫描全部未出局座位并整体替换，用于开局、回合开始、招募结束（`Engine::finish_recruit`）与结算（`Engine::resolve_settle`）；`recompute_auras_for(seat)` 只重算单个座位，供 `Engine::apply` 在每条意图成功后调用——移除并重建该座位棋盘的条目，同时清理已不在任何未出局玩家棋盘上的陈旧条目，结果与全量重算一致。
 - `hash.rs` 编码 `stats` 各分量（含 `current`）；编码变化会改变状态哈希，同代码重放仍保持确定。
-- 随从主动技能的基线重定：`PlayerState.minion_uses` 进入玩家状态哈希后，`rule-engine/tests/combat.rs` 的金标准由 `f9a835e67bdfbfa7` 重定为 `a6bd26475ba79a27`；`sim/tests/golden/seed-1-games-20.json` 的 20 局 `final_hash` / `hashes` 同步重定，`intents`、`event_hash`、`rankings`、`stats`、`turns` 与旧基线一致——机器人不发送 `UseMinionAbility`，行为路径不变，仅哈希编码变化。
+- 随从主动技能的基线重定：`PlayerState.minion_uses` 进入玩家状态哈希后，`rule-engine/tests/combat.rs` 的金标准由 `f9a835e67bdfbfa7` 重定为 `a6bd26475ba79a27`；`sim/tests/golden/seed-1-games-20.json` 的顶层 `hashes` 与各局 `final_hash` 同步重定，各局 `intents`、`event_hash`、`ranking`、`stats`、`turns` 与旧基线一致——机器人不发送 `UseMinionAbility`，行为路径不变，仅哈希编码变化。
 - 关键词编码：光环关键词存 `KeywordSet` 位图，`hash.rs` 经 `names()` 输出排序后的原文逐条写入；随从的 `granted` 仍按 `(关键词原文, 时长)` 逐条写入。战斗内部的位图判定与层数累加不改变哈希口径，因此关键词位图化不改变既有日志与黄金基线的哈希。
 
 ### 10.1 伤害来源与击杀归属

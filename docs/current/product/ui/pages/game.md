@@ -137,7 +137,8 @@
 | --- | --- |
 | 回合、阶段、阶段截止时间 | `view.turn`、`view.phase`、`view.phaseDeadline`；`GameStore.phase`、`GameStore.deadline` 作为空视图或旧视图时的兜底 |
 | 生命、生命上限、时代、金币、英雄、技能次数 | `view.self` 与 `view.hpCap` |
-| 被动技能标记 | `CardDB.hero(heroCardId).skills` 中 `CardDB.skill(id).cost` 为空的技能；英雄主动技能只取 `view.self.heroPowers`，棋盘随从主动技能取 `view.self.board[*].abilities` |
+| 被动技能标记 | `CardDB.hero(heroCardId).skills` 中 `CardDB.skill(id).cost` 为空的技能 |
+| 主动技能数据 | 英雄主动技能取 `view.self.heroPowers`，棋盘随从主动技能取 `view.self.board[*].abilities` |
 | 选英雄候选与截止时间 | `GameStore.hero_pick`：`candidates`、`deadline`、`players[].seat` / `isBot` / `picked` |
 | 本人已确认状态 | `GameStore.hero_pick.players[]` 中本人座位的 `picked`；`GameStore.select_hero(cardId)` 发送成功后本地锁定 |
 | 选英雄候选卡面与详情 | `HeroPickList` / `HeroPickCard`；详情由 `HeroPickDetailLayer` 读取 `CardDB` 的英雄卡面、名字、介绍与技能 |

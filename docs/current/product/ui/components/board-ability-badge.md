@@ -21,7 +21,7 @@
 - 字段：`minion_id`、`skill_id`、`cost`、`uses_left`、`can_use`。
 - `refresh()`：按字段刷新文本、tooltip 与可用状态；尺寸由调用方按卡片剩余空间设置。
 - 只发出继承的 `pressed` / `button_down`，不携带意图参数，也不做本地扣费或次数预判。
-- 可用性由对局页注入：服务端 `abilities[].canUse` 与拖拽同批的 `can_rearrange` 相与；服务端 `disabledReason` 决定置灰原因。
+- 可用性由对局页注入：服务端 `abilities[].canUse` 与拖拽同批的 `can_rearrange` 相与；`disabledReason` 随视图下发，但控件与页面当前都不消费。
 
 ## 与页面的协作
 
