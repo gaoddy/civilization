@@ -1686,7 +1686,6 @@ ui.lobby.join_title,加入房间
 ui.lobby.match_found,匹配成功，正在进入对局…
 ui.lobby.no_friends,还没有好友
 ui.lobby.no_recent,还没有最近对局
-ui.lobby.no_requests,没有待处理的好友申请
 ui.lobby.not_connected,未连接服务器
 ui.lobby.notice_title,提示
 ui.lobby.outgoing_hint,已发送 %d 条好友申请
