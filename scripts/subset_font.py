@@ -5,11 +5,9 @@
 字符集 = `client/text/zh_CN.csv` 的全部字符 + 可打印 ASCII + GB2312 常用字，
 兼顾界面文案与玩家自填显示名；文案新增生僻字时重跑本脚本。
 
-依赖 fontTools：
-
-    python3 -m venv output/fonttools-venv
-    output/fonttools-venv/bin/pip install fonttools
-    make font-subset PYTHON=output/fonttools-venv/bin/python
+依赖 fontTools：`make font-subset` 会自动把源字体下载到 `output/fonts/`，
+并在缺少 fontTools 时创建 `output/fonttools-venv` 安装；已有 fontTools 的解释器
+可用 `make font-subset PYTHON=<python>` 直接复用。
 
 源字体为 Google Fonts 的 Noto Sans SC（OFL），变量字体按 wght=400 取静态实例。
 """
@@ -96,6 +94,8 @@ def build_subset(source: Path, output: Path, charset: set[str]) -> None:
     subsetter = subset.Subsetter(options=options)
     subsetter.populate(unicodes={ord(ch) for ch in charset})
     subsetter.subset(font)
+    # 不把生成时间写进 head：产物只由源字体与字符集决定，重跑不产生假 diff。
+    font.recalcTimestamp = False
     output.parent.mkdir(parents=True, exist_ok=True)
     font.save(output)
     font.close()
