@@ -29,7 +29,6 @@ func _init() -> void:
 
     _panel = UIControls.card_panel("raised")
     _panel.name = "FriendsPanelCard"
-    _panel.custom_minimum_size = Vector2(UITheme.metric("lobby-friends-drawer-width"), 0)
     set_content(_panel)
 
     var root := VBoxContainer.new()
@@ -148,10 +147,14 @@ func _unhandled_input(event: InputEvent) -> void:
         get_viewport().set_input_as_handled()
 
 
-## 左侧抽屉占满整高：头部与输入行固定，列表在剩余高度内滚动。
+## 左侧抽屉占满整高：宽度贴合内容，达到令牌上限或视口宽度后停止增长；
+## 头部与输入行固定，列表在剩余高度内滚动。
 func _sync_layout() -> void:
-    var width := mini(UITheme.metric("lobby-friends-drawer-width"), maxi(360, int(size.x)))
+    _panel.custom_minimum_size = Vector2.ZERO
+    var fit := int(ceil(_panel.get_combined_minimum_size().x))
+    var width := mini(fit, mini(UITheme.metric("lobby-friends-drawer-width"), int(size.x)))
     _panel.custom_minimum_size = Vector2(width, size.y)
+    _panel.size = Vector2(width, size.y)
     _scroll.custom_minimum_size.y = maxi(180, int(size.y) - 230)
 
 
@@ -186,6 +189,8 @@ func _render() -> void:
         var row := RecentPlayerRow.new(player)
         row.add_requested.connect(_add_friend_by_code)
         _recent_box.add_child(row)
+    # 列表内容变化会改变自然宽度，渲染后重新贴合一次。
+    _sync_layout()
 
 
 func _on_close() -> void:

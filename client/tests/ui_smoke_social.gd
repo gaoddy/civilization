@@ -96,6 +96,10 @@ func _check_lobby_social() -> void:
     _expect(panel.visible, "点击好友入口应打开浮层")
     _expect(panel.placement == PopupLayer.Placement.EDGE_LEFT, "好友面板应贴左边")
     _expect(int(panel.content.size.y) == int(panel.size.y), "好友面板应占满整高")
+    _expect(
+        panel.content.size.x < float(UITheme.metric("lobby-friends-drawer-width")),
+        "好友抽屉宽度应贴合内容，未达令牌上限时不占满宽度"
+    )
 
     # 邀请模式：在线好友可邀请，对局中的好友禁用。
     panel.open_invite()

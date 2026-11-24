@@ -48,7 +48,7 @@ PopupLayer（Control，全屏，默认隐藏）
 
 ### 4.1 贴左抽屉
 
-- `FriendsPanel` 使用 `EDGE_LEFT`，`edge_margin = 0`，内容块贴左整高：宽度由组件取 `lobby-friends-drawer-width` 并夹紧在视口内，高度跟随图层；列表在剩余高度内滚动。
+- `FriendsPanel` 使用 `EDGE_LEFT`，`edge_margin = 0`，内容块贴左整高：宽度由组件按内容自适应，以 `lobby-friends-drawer-width` 为上限并夹紧在视口内，高度跟随图层；列表在剩余高度内滚动。
 - 抽屉靠 `dismiss_on_scrim = true` 支持点遮罩关闭，Esc 与关闭按钮走组件自己的 `closed` 信号。
 
 ## 5. 使用方
@@ -56,7 +56,7 @@ PopupLayer（Control，全屏，默认隐藏）
 | 组件 | 定位 | 遮罩 | 备注 |
 | --- | --- | --- | --- |
 | `InvitePopup` | `CENTER` | 黑 0.55 | 无邀请时整体隐藏 |
-| `FriendsPanel` | `EDGE_LEFT` | 黑 0.58，遮罩放行 | 贴左整高抽屉，宽度 600；根节点拦截点击；Esc 与关闭按钮走 `closed` |
+| `FriendsPanel` | `EDGE_LEFT` | 黑 0.58，遮罩放行 | 贴左整高抽屉，宽度贴合内容、上限 600；根节点拦截点击；Esc 与关闭按钮走 `closed` |
 | `ConnectionDialog` | `CENTER` | 黑 0.6 | 断线提示与重连入口，只有重连按钮接收点击 |
 | `LobbyJoinDialog` | `CENTER` | 黑 0.55 | 加入房间码输入；Esc 与取消关闭 |
 | `LobbyNoticeDialog` | `CENTER` | 黑 0.55 | 单段提示；点遮罩关闭 |

@@ -117,7 +117,7 @@
 | `lobby-primary-action-height` | 54 | 大厅匹配主按钮高度；手机 44 |
 | `lobby-secondary-action-height` | 40 | 大厅创建 / 加入次按钮高度；手机 44 |
 | `lobby-player-avatar` | 52 | 大厅玩家卡头像边长；手机 42 |
-| `lobby-friends-drawer-width` | 600 | 好友抽屉宽度，贴左整高并夹紧在 `[360, 视口宽]`；手机 600 |
+| `lobby-friends-drawer-width` | 600 | 好友抽屉宽度上限：贴左整高，宽度贴合内容，达到该值或视口宽时停止增长；手机 600 |
 | `lobby-rank-tier-size` | 38 | 段位卡段位名字号；手机 30 |
 | `lobby-rank-score-size` | 15 | 段位卡积分字号；手机 13 |
 | `lobby-rank-ring-size` | 220 | 段位卡背景淡金环直径；手机 160 |
@@ -178,7 +178,7 @@ iPhone 以 960×540 为宽度基准（高度随窗口扩展），对局页通过
 | `lobby-primary-action-height-compact` | 44 | iPhone 大厅匹配主按钮高度 |
 | `lobby-secondary-action-height-compact` | 44 | iPhone 大厅创建 / 加入次按钮高度 |
 | `lobby-player-avatar-compact` | 42 | iPhone 大厅玩家卡头像边长 |
-| `lobby-friends-drawer-width-compact` | 600 | iPhone 好友抽屉宽度，与桌面同宽并按视口夹紧 |
+| `lobby-friends-drawer-width-compact` | 600 | iPhone 好友抽屉宽度上限，与桌面同值并按视口夹紧 |
 | `lobby-rank-tier-size-compact` | 30 | iPhone 段位卡段位名字号 |
 | `lobby-rank-score-size-compact` | 13 | iPhone 段位卡积分字号 |
 | `lobby-rank-ring-size-compact` | 160 | iPhone 段位卡背景淡金环直径 |
