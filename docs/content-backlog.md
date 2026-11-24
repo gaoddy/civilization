@@ -35,6 +35,11 @@
 
 **已作为英雄卡上线**：亚当·斯密（人类）、爱迪生（机械）、巴斯德（病毒）已作为 v0.1 英雄卡上线，同时保留同 id、同名的随从卡在随从池，见[英雄卡索引](current/product/content/heroes/README.md)与[卡牌索引](current/product/content/cards/README.md)。
 
+## 诺奖素材
+
+- [诺贝尔奖得主与获奖理由](current/product/content/reference/nobel-laureates.md)：1901–2026 年六奖全部得主与官方英文获奖理由，作为内容设计原始材料。
+- [诺奖卡牌设计角度](current/product/content/reference/nobel-laureates-card-angles.md)：现有卡池覆盖、机制原型、玩法落位与首批建议。
+
 ## 相关文档
 
 - [卡牌规范与数据](current/product/content/card-system.md)
