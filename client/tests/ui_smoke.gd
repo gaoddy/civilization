@@ -81,6 +81,7 @@ func _ready() -> void:
     await _check_target_pending_aim()
     await _check_pending_aim_abandon()
     await _check_skill_aim()
+    await _check_minion_ability()
     await _check_effect_drag_aim_visual()
     await _check_overlay_hidden_in_combat()
     await _check_discover_choice_row()
@@ -1140,7 +1141,11 @@ func _check_game_layout() -> void:
         shop_text.contains(TranslationServer.translate("enum.playstyle.reptile")),
         "商店卡应显示玩法：%s" % shop_text,
     )
-    _expect(shop_text.contains("9"), "商店卡应显示原始生命值：%s" % shop_text)
+    var aristotle_health := CardText.stat_text(CardDB.card("aristotle").get("health"))
+    _expect(
+        shop_text.contains(aristotle_health),
+        "商店卡应显示原始生命值 %s：%s" % [aristotle_health, shop_text],
+    )
     _expect(instance.find_child("HeroCard", true, false) != null, "英雄行应显示我的英雄卡")
     instance.queue_free()
     GameStore.view = {}
@@ -3356,6 +3361,162 @@ func _check_skill_aim() -> void:
         await _push_button(instance, button_point, false)
     instance.queue_free()
     await get_tree().process_frame
+    GameStore.view = {}
+    GameStore.turn = 1
+    _fake_disconnect()
+
+
+## 棋盘随从主动技能：无目标技能点击角标直接提交；需要目标的技能按下角标进入
+## 现有瞄准，命中候选后补 `target` 提交；置灰角标不产生意图；次数用尽用随从文案。
+func _check_minion_ability() -> void:
+    _fake_connect()
+    GameStore.player_id = "p0"
+    GameStore.phase = Protocol.PHASE_RECRUIT
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    _clear_combat()
+    GameStore.last_error = {}
+    var view: Dictionary = FixtureScript.view()
+    view["self"]["board"] = [FixtureScript.board_minion("mi_1", "huo")]
+    view["self"]["board"][0]["abilities"] = [
+        {
+            "skillId": "alternating-current",
+            "cost": 1,
+            "usesLeft": 2,
+            "requiresTarget": false,
+            "targetCandidates": [],
+            "canUse": true,
+            "disabledReason": null,
+        },
+        {
+            "skillId": "division-of-labor",
+            "cost": 2,
+            "usesLeft": 1,
+            "requiresTarget": true,
+            "targetCandidates": [{"zone": "board", "id": "mi_1"}],
+            "canUse": true,
+            "disabledReason": null,
+        },
+        {
+            "skillId": "binomial-nomenclature",
+            "cost": 1,
+            "usesLeft": 0,
+            "requiresTarget": false,
+            "targetCandidates": [],
+            "canUse": false,
+            "disabledReason": "HERO_POWER_LIMIT",
+        },
+    ]
+    GameStore.view = view
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
+    if instance == null:
+        _fake_disconnect()
+        return
+    var aim = instance.find_child("AimLayer", true, false)
+    var no_target = instance.find_child("MinionAbility0_0", true, false)
+    var targeted = instance.find_child("MinionAbility0_1", true, false)
+    var disabled_badge = instance.find_child("MinionAbility0_2", true, false)
+    var card := _board_card(instance, "mi_1")
+    var status: Label = instance.find_child("StatusMessage", true, false)
+    _expect(
+        aim != null and no_target != null and targeted != null and disabled_badge != null,
+        "随从技能夹具缺少角标或瞄准层",
+    )
+    if (
+        aim != null
+        and no_target != null
+        and targeted != null
+        and disabled_badge != null
+        and card != null
+        and status != null
+    ):
+        var captured: Array = []
+        instance.intent_sent.connect(func(intent: Dictionary) -> void: captured.append(intent))
+
+        # 无目标：点击角标只发 1 条 UseMinionAbility，不带 target。
+        await _push_click(instance, no_target.get_global_rect().get_center())
+        _expect(captured.size() == 1, "无目标技能点击应只发 1 条意图，实际 %d" % captured.size())
+        if captured.size() == 1:
+            var intent: Dictionary = captured[0]
+            _expect(
+                str(intent.get("kind", "")) == Protocol.INTENT_USE_MINION_ABILITY,
+                "应发出 UseMinionAbility",
+            )
+            _expect(str(intent.get("minionId", "")) == "mi_1", "应带随从实例 id")
+            _expect(str(intent.get("skillId", "")) == "alternating-current", "应带技能 id")
+            _expect(not intent.has("target"), "无目标技能不应带 target")
+
+        # 置灰角标：点击不发意图。
+        captured.clear()
+        await _push_click(instance, disabled_badge.get_global_rect().get_center())
+        _expect(captured.is_empty(), "canUse=false 的角标点击不应发意图")
+
+        # 有目标：按下角标进入瞄准，命中候选松手后补 target。
+        var badge_point: Vector2 = targeted.get_global_rect().get_center()
+        var card_point: Vector2 = card.get_global_rect().get_center()
+        await _push_motion(instance, badge_point)
+        await _push_button(instance, badge_point, true)
+        _expect(aim.skill_active(), "按下需要目标的随从技能角标应进入瞄准")
+        await _push_motion(instance, card_point)
+        _expect(str(aim._hovered.get("id", "")) == "mi_1", "指针落在候选上应命中该随从")
+        await _push_button(instance, card_point, false)
+        _expect(not aim.skill_active(), "松手后应结束瞄准")
+        _expect(captured.size() == 1, "命中候选应只发 1 条意图，实际 %d" % captured.size())
+        if captured.size() == 1:
+            var intent: Dictionary = captured[0]
+            _expect(
+                str(intent.get("kind", "")) == Protocol.INTENT_USE_MINION_ABILITY,
+                "应发出 UseMinionAbility",
+            )
+            _expect(str(intent.get("minionId", "")) == "mi_1", "应带随从实例 id")
+            _expect(str(intent.get("skillId", "")) == "division-of-labor", "应带技能 id")
+            var target: Dictionary = intent.get("target", {})
+            _expect(str(target.get("zone", "")) == "board", "应带上目标区域")
+            _expect(str(target.get("id", "")) == "mi_1", "应带上命中目标")
+
+        # 落在非候选：取消且不发意图。
+        captured.clear()
+        await _push_button(instance, badge_point, true)
+        await _push_motion(instance, Vector2(4, 4))
+        await _push_button(instance, Vector2(4, 4), false)
+        _expect(not aim.skill_active() and captured.is_empty(), "落在非候选处应取消且不发意图")
+
+        # Esc：取消且不发意图。
+        await _push_button(instance, badge_point, true)
+        await _push_key(instance, KEY_ESCAPE)
+        _expect(not aim.skill_active() and captured.is_empty(), "Esc 应取消随从技能瞄准且不发意图")
+        await _push_button(instance, badge_point, false)
+
+        # 服务端拒绝次数用尽：最近意图是随从技能时用随从文案，而非英雄文案。
+        var minion_text := TranslationServer.translate("error.HERO_POWER_LIMIT.minion")
+        var hero_text := UIWording.error_text(Protocol.ERROR_HERO_POWER_LIMIT)
+        _expect(minion_text != hero_text, "随从技能文案应与英雄技能文案区分")
+        _expect(
+            UIWording.error_text_for(Protocol.ERROR_HERO_POWER_LIMIT, "minion") == minion_text,
+            "error_text_for 应优先取上下文文案",
+        )
+        _expect(
+            UIWording.error_text_for(Protocol.ERROR_HERO_POWER_LIMIT) == hero_text,
+            "无上下文时应回落英雄技能文案",
+        )
+        GameStore.last_error = {"code": Protocol.ERROR_HERO_POWER_LIMIT}
+        GameStore.error_received.emit()
+        await get_tree().process_frame
+        _expect(
+            str(status.text) == minion_text,
+            "随从技能次数用尽应显示随从文案，实际「%s」" % status.text,
+        )
+        # 反向：最近意图不是随从技能时仍用英雄技能文案。
+        instance._last_intent_kind = Protocol.INTENT_USE_HERO_POWER
+        GameStore.error_received.emit()
+        await get_tree().process_frame
+        _expect(
+            str(status.text) == hero_text,
+            "英雄技能次数用尽应显示英雄文案，实际「%s」" % status.text,
+        )
+    instance.queue_free()
+    await get_tree().process_frame
+    GameStore.last_error = {}
     GameStore.view = {}
     GameStore.turn = 1
     _fake_disconnect()

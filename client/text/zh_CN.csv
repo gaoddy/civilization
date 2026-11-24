@@ -968,6 +968,7 @@ error.FRIEND_REQUEST_PENDING,已有待处理的好友申请
 error.FRIEND_SELF,不能添加自己为好友
 error.HERO_NOT_SELECTED,还没有选择英雄
 error.HERO_POWER_LIMIT,英雄技能次数已用完
+error.HERO_POWER_LIMIT.minion,该随从技能本回合已用完
 error.INTERNAL_ERROR,服务端内部错误
 error.INVALID_CHOICE,选择无效
 error.INVALID_STAGE,当前阶段不能执行该操作

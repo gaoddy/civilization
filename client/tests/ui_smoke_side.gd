@@ -24,6 +24,7 @@ func _ready() -> void:
     await _check_shop_view()
     await _check_freeze_toggle()
     await _check_recruit_view()
+    await _check_minion_ability_badges()
     await _check_opponent_view()
     await _check_recruit_stage()
     await _check_countdown_flip()
@@ -929,6 +930,92 @@ func _check_recruit_view() -> void:
     _expect(board_scroll != null and board_scroll.get_global_rect().size.y == 146, "棋盘滚动区高应为 146")
     var board_row: Control = view.find_child("BoardRow", true, false)
     _expect(board_row != null and board_row.get_child_count() == 1, "棋盘只应渲染实际随从")
+    host.queue_free()
+    await get_tree().process_frame
+
+
+## 棋盘随从技能角标：每人棋盘按服务端 abilities 渲染，费用与剩余次数可见；
+## 无技能不出角标，canUse=false 的角标置灰不可交互，可用角标发出按下信号。
+func _check_minion_ability_badges() -> void:
+    var host: Control = await _host(Vector2(1148, 438))
+    var view := GameRecruitView.new()
+    view.set_anchors_preset(Control.PRESET_TOP_WIDE)
+    host.add_child(view)
+    await get_tree().process_frame
+    var fixture := FixtureScript.view()
+    fixture["self"]["board"] = [FixtureScript.board_minion("mi_1", "huo")]
+    fixture["self"]["board"][0]["abilities"] = [
+        {
+            "skillId": "alternating-current",
+            "cost": 1,
+            "usesLeft": 2,
+            "requiresTarget": false,
+            "targetCandidates": [],
+            "canUse": true,
+            "disabledReason": null,
+        },
+        {
+            "skillId": "division-of-labor",
+            "cost": 2,
+            "usesLeft": 1,
+            "requiresTarget": true,
+            "targetCandidates": [{"zone": "board", "id": "mi_1"}],
+            "canUse": true,
+            "disabledReason": null,
+        },
+        {
+            "skillId": "binomial-nomenclature",
+            "cost": 1,
+            "usesLeft": 1,
+            "requiresTarget": false,
+            "targetCandidates": [],
+            "canUse": false,
+            "disabledReason": "HERO_POWER_LIMIT",
+        },
+    ]
+    view.refresh(_state_for(Protocol.PHASE_RECRUIT, fixture))
+    await get_tree().process_frame
+    await get_tree().process_frame
+
+    var badges: Array = view.find_children("MinionAbility*", "Button", true, false)
+    _expect(badges.size() == 3, "带 3 个主动技能的随从应渲染 3 个角标，实际 %d" % badges.size())
+    if badges.size() == 3:
+        var first: Button = badges[0]
+        _expect(first.name == "MinionAbility0_0", "第 1 个角标命名不符：%s" % first.name)
+        _expect(
+            first.text.contains("1") and first.text.contains("2"),
+            "角标文本应同时含费用与剩余次数，实际「%s」" % first.text,
+        )
+        var skill_name := str(CardDB.skill_info("alternating-current").get("name", ""))
+        _expect(
+            skill_name != "" and first.tooltip_text.contains(skill_name),
+            "角标悬停应显示技能名，实际「%s」" % first.tooltip_text,
+        )
+        _expect(not first.disabled, "canUse=true 的角标应可交互")
+        var disabled_badge: Button = badges[2]
+        _expect(disabled_badge.disabled, "canUse=false 的角标应置灰且不可交互")
+
+        var pressed: Array = []
+        view.minion_ability_pressed.connect(
+            func(minion_id: String, skill_id: String) -> void: pressed.append([minion_id, skill_id])
+        )
+        await _push_click(host, first.get_global_rect().get_center())
+        _expect(
+            pressed == [["mi_1", "alternating-current"]],
+            "点击可用角标应发出随从与技能 id，实际 %s" % [pressed],
+        )
+        pressed.clear()
+        await _push_click(host, disabled_badge.get_global_rect().get_center())
+        _expect(pressed.is_empty(), "点击置灰角标不应发出信号")
+
+    # 无 abilities 字段的随从按空数组处理：不渲染任何角标。
+    fixture["self"]["board"] = [FixtureScript.board_minion("mi_2", "lun")]
+    view.refresh(_state_for(Protocol.PHASE_RECRUIT, fixture))
+    await get_tree().process_frame
+    _expect(
+        view.find_children("MinionAbility*", "Button", true, false).is_empty(),
+        "无主动技能的随从不应有角标",
+    )
     host.queue_free()
     await get_tree().process_frame
 

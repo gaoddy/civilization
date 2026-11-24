@@ -20,6 +20,8 @@ const ERROR_NOTICE_SECONDS := 4.0
 var _intent_counter := 0
 ## 技能瞄准期间缓存的 `UseHeroPower` 意图；命中候选后补 `target` 再发出。
 var _aim_skill_intent: Dictionary = {}
+## 最近一次发送意图的 kind：错误文案据此区分随从技能与英雄技能的拒绝语境。
+var _last_intent_kind := ""
 var _elapsed := 0.0
 var _deadline_expired := false
 var _view_stale := false
@@ -251,6 +253,8 @@ func _build_center() -> VBoxContainer:
 	_recruit_view.sell_dropped.connect(_on_sell_dropped)
 	_recruit_view.sell_hover.connect(_on_sell_hover)
 	_recruit_view.end_recruit_pressed.connect(_on_end_recruit)
+	_recruit_view.minion_ability_pressed.connect(_on_minion_ability)
+	_recruit_view.minion_ability_down.connect(_on_minion_ability_down)
 	center.add_child(_recruit_view)
 
 	_combat_view = GameCombatView.new()
@@ -708,6 +712,9 @@ func _refresh_aim(self_state: Dictionary, phase: String, recruited: bool) -> voi
 
 func _send_intent(intent: Dictionary) -> String:
 	intent_sent.emit(intent)
+	var kind := str(intent.get("kind", ""))
+	if kind != "":
+		_last_intent_kind = kind
 	_intent_counter += 1
 	var intent_id := Net.send(Protocol.MSG_INTENT, {
 		"clientIntentId": "ui-%d-%d" % [Time.get_ticks_usec(), _intent_counter],
@@ -901,6 +908,55 @@ func _on_hero_power_down(skill_id: String) -> void:
 	_aim.begin_skill(_hero_row.power_rect(skill_id), candidates)
 
 
+## 按随从实例与技能 id 取本人棋盘视图里的主动技能条目；不存在时为空字典。
+func _minion_ability_of(minion_id: String, skill_id: String) -> Dictionary:
+	for minion in GameStore.view.get("self", {}).get("board", []):
+		if not minion is Dictionary or str(minion.get("minionId", "")) != minion_id:
+			continue
+		for ability in minion.get("abilities", []):
+			if ability is Dictionary and str(ability.get("skillId", "")) == skill_id:
+				return ability
+	return {}
+
+
+## 无目标随从技能：点击角标直接提交；需要目标的技能由按下事件进入瞄准。
+func _on_minion_ability(minion_id: String, skill_id: String) -> void:
+	if not _click_allowed():
+		return
+	var ability := _minion_ability_of(minion_id, skill_id)
+	if ability.is_empty():
+		return
+	if bool(ability.get("requiresTarget", false)):
+		return
+	_send_intent({
+		"kind": Protocol.INTENT_USE_MINION_ABILITY,
+		"minionId": minion_id,
+		"skillId": skill_id,
+	})
+
+
+## 随从技能角标按下：需要目标且可用时从角标矩形起瞄准；命中后复用技能提交补 `target`。
+func _on_minion_ability_down(minion_id: String, skill_id: String) -> void:
+	var ability := _minion_ability_of(minion_id, skill_id)
+	if ability.is_empty() or not bool(ability.get("requiresTarget", false)):
+		return
+	if not bool(ability.get("canUse", false)):
+		return
+	if not _aim_submit_allowed():
+		return
+	var candidates := Array(ability.get("targetCandidates", []))
+	if candidates.is_empty():
+		return
+	_aim_skill_intent = {
+		"kind": Protocol.INTENT_USE_MINION_ABILITY,
+		"minionId": minion_id,
+		"skillId": skill_id,
+	}
+	_detail.blocked = true
+	_detail.hide_panel()
+	_aim.begin_skill(_recruit_view.ability_rect(minion_id, skill_id), candidates)
+
+
 func _on_end_recruit() -> void:
 	if not _click_allowed():
 		return
@@ -956,8 +1012,15 @@ func _aim_submit_allowed() -> bool:
 
 func _on_error() -> void:
 	var code := str(GameStore.last_error.get("code", ""))
-	var text := UIWording.error_text(code)
+	# 次数用尽按最近一次意图区分是英雄技能还是随从技能，选用对应的玩家用语。
+	var context := ""
+	if code == Protocol.ERROR_HERO_POWER_LIMIT and _last_intent_kind == Protocol.INTENT_USE_MINION_ABILITY:
+		context = "minion"
+	var text := UIWording.error_text_for(code, context)
 	var detail := UIWording.error_tooltip(code)
+	# 无错误详情时不要把通用文案再当作详情重复显示。
+	if detail == UIWording.error_text(code):
+		detail = text
 	_show_notice("error", text, "danger", detail if detail != text else "")
 	# 一次拒绝只提示一段时间；阶段/回合变化后的下一次刷新会提前收起。
 	_error_notice_phase = GameStore.phase

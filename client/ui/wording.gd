@@ -31,6 +31,17 @@ static func error_text(code: String) -> String:
     return code if text == key else text
 
 
+## 带上下文的错误文案：优先 `error.<code>.<context>`，缺键回落到通用文案。
+## 上下文只用来区分同一错误码在不同操作下的玩家用语，不参与规则判断。
+static func error_text_for(code: String, context := "") -> String:
+    if context != "":
+        var key := "error.%s.%s" % [code, context]
+        var text := TranslationServer.translate(key)
+        if text != key:
+            return text
+    return error_text(code)
+
+
 ## 按完整文本 id 取错误详情；空 id 或缺键返回空串，params 非空时按 % 格式化。
 static func error_text_by_id(id: String, params: Array = []) -> String:
     if id == "":

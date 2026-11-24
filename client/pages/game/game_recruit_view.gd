@@ -12,6 +12,10 @@ signal board_dropped(payload: Dictionary, position: int, target: Dictionary)
 signal sell_dropped(payload: Dictionary)
 signal sell_hover(hovering: bool, refund: int)
 signal end_recruit_pressed
+## 棋盘随从技能角标被点击：页面据此直接提交 `UseMinionAbility`。
+signal minion_ability_pressed(minion_id: String, skill_id: String)
+## 技能角标按下：需要目标的技能由页面进入瞄准，抬起由瞄准层接管。
+signal minion_ability_down(minion_id: String, skill_id: String)
 
 ## 卡片详情登记入口，由对局页注入；同步给商店视图。
 var detail: DetailLayer = null
@@ -19,6 +23,8 @@ var detail: DetailLayer = null
 var _shop: GameShopView
 var _river: GameRiver
 var _board_row: BoardDrop
+## 角标登记：`minion_id|skill_id` → 控件，供瞄准弧线取全局矩形。
+var _ability_badges: Dictionary = {}
 
 
 func _init() -> void:
@@ -123,6 +129,7 @@ func seconds_left() -> int:
 
 func _refresh_board(state: GameUiState) -> void:
     UIControls.clear(_board_row)
+    _ability_badges.clear()
     var aff: Dictionary = state.self_state.get("affordances", {})
     var board: Array = state.self_state.get("board", [])
     var slots := state.board_slots
@@ -170,7 +177,83 @@ func _minion_card(
     panel.drag_allowed = can_rearrange and Net.is_open()
     if not panel.drag_allowed:
         UIControls.apply_dim(panel)
+    _add_ability_badges(panel, minion, can_rearrange, position)
     return panel
+
+
+## 技能角标：作为卡片外层叠加，锚定右上并纵向排列，不进入卡面内部。
+## 只渲染服务端下发的 `abilities`；对手棋盘本就无该字段，不会出现角标。
+func _add_ability_badges(
+    panel: Control,
+    minion: Dictionary,
+    can_rearrange: bool,
+    position: int,
+) -> void:
+    var abilities: Array = minion.get("abilities", [])
+    if abilities.is_empty():
+        return
+    var minion_id := str(minion.get("minionId", ""))
+    var overlay := Control.new()
+    overlay.name = "AbilityBadges"
+    overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+    panel.add_child(overlay)
+
+    # 角标从卡面顶部角标行下方开始：不遮挡 ★/潜行角标，底部攻血数值也保持可见。
+    var width := UITheme.space("space-3xl") + UITheme.space("space-lg")
+    var gap := UITheme.space("space-2xs")
+    var top := (
+        UITheme.space("space-xs")
+        + UITheme.font_size("font-caption")
+        + UITheme.space("space-md")
+    )
+    var count := abilities.size()
+    # 底部为攻血数值留出固定高度：角标纵向排列到底也不会盖住数值行。
+    var available := (
+        UITheme.stage_metric("minion-card-height")
+        - top
+        - UITheme.space("space-3xl")
+        - gap * maxi(count - 1, 0)
+    )
+    var height := mini(UITheme.hit_small(), maxi(1, available / count))
+    for index in count:
+        var skill = abilities[index]
+        if not skill is Dictionary:
+            continue
+        var skill_id := str(skill.get("skillId", ""))
+        var badge := BoardAbilityBadge.new()
+        badge.name = "MinionAbility%d_%d" % [position, index]
+        badge.minion_id = minion_id
+        badge.skill_id = skill_id
+        badge.cost = int(skill.get("cost", 0))
+        badge.uses_left = int(skill.get("usesLeft", 0))
+        badge.can_use = bool(skill.get("canUse", false)) and can_rearrange
+        badge.refresh()
+        badge.custom_minimum_size = Vector2(width, height)
+        badge.size = Vector2(width, height)
+        badge.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+        badge.offset_left = -UITheme.space("space-xs") - width
+        badge.offset_right = -UITheme.space("space-xs")
+        badge.offset_top = top + index * (height + gap)
+        badge.offset_bottom = badge.offset_top + height
+        badge.pressed.connect(
+            func() -> void: minion_ability_pressed.emit(minion_id, skill_id)
+        )
+        badge.button_down.connect(
+            func() -> void: minion_ability_down.emit(minion_id, skill_id)
+        )
+        overlay.add_child(badge)
+        _ability_badges[_ability_key(minion_id, skill_id)] = badge
+
+
+## 技能角标的全局矩形：瞄准弧线的起点；未知技能返回空矩形。
+func ability_rect(minion_id: String, skill_id: String) -> Rect2:
+    var badge: Control = _ability_badges.get(_ability_key(minion_id, skill_id))
+    return badge.get_global_rect() if badge != null else Rect2()
+
+
+func _ability_key(minion_id: String, skill_id: String) -> String:
+    return minion_id + "|" + skill_id
 
 
 func _find_by_index(items: Array, index: int) -> Dictionary:
