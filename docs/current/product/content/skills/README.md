@@ -4,7 +4,7 @@
 
 | 技能 | 关键词 | 文本 | 引用数 |
 | --- | --- | --- | --- |
-| [activate-friendly-growth-twice](activate-friendly-growth-twice.md) | 无 | 使一个友方随从获得两次成长 | 2 |
+| [activate-friendly-growth-twice](activate-friendly-growth-twice.md) | 无 | 使一个友方随从获得两次成长 | 1 |
 | [alternating-current](alternating-current.md) | 无 | 使一个友方随从获得无视嘲讽直到回合结束 | 1 |
 | [aura-adjacent-mammal](aura-adjacent-mammal.md) | 无 | 相邻的友方哺乳纲随从获得 +2/+2 | 1 |
 | [aura-all-plus-0-plus-1](aura-all-plus-0-plus-1.md) | 无 | 你的随从获得 +0/+1 | 3 |
@@ -40,11 +40,11 @@
 | [battlecry-friendly-bird-growth-once](battlecry-friendly-bird-growth-once.md) | battlecry | 战吼：使一个友方鸟纲随从获得一次成长 | 5 |
 | [battlecry-friendly-fish-growth-once](battlecry-friendly-fish-growth-once.md) | battlecry | 战吼：使一个友方鱼纲随从获得一次成长 | 2 |
 | [battlecry-friendly-fungus-growth-once](battlecry-friendly-fungus-growth-once.md) | battlecry | 战吼：使一个友方真菌界随从获得一次成长 | 1 |
-| [battlecry-friendly-growth-once](battlecry-friendly-growth-once.md) | battlecry | 战吼：使一个友方随从获得一次成长 | 6 |
+| [battlecry-friendly-growth-once](battlecry-friendly-growth-once.md) | battlecry | 战吼：使一个友方随从获得一次成长 | 7 |
 | [battlecry-friendly-growth-plant-twice](battlecry-friendly-growth-plant-twice.md) | battlecry | 战吼：使一个友方随从获得一次成长；若其为植物，改为两次 | 1 |
 | [battlecry-friendly-growth-twice](battlecry-friendly-growth-twice.md) | battlecry | 战吼：使一个友方随从获得两次成长 | 3 |
 | [battlecry-friendly-human-plus-0-plus-1](battlecry-friendly-human-plus-0-plus-1.md) | battlecry | 战吼：使一个友方人科随从获得 +0/+1 | 1 |
-| [battlecry-friendly-mech-growth-once](battlecry-friendly-mech-growth-once.md) | battlecry | 战吼：使一个友方机械随从获得一次成长 | 2 |
+| [battlecry-friendly-mech-growth-once](battlecry-friendly-mech-growth-once.md) | battlecry | 战吼：使一个友方机械随从获得一次成长 | 3 |
 | [battlecry-friendly-plant-growth-once](battlecry-friendly-plant-growth-once.md) | battlecry | 战吼：使一个友方植物随从获得一次成长 | 1 |
 | [battlecry-friendly-plant-kingdom-growth-once](battlecry-friendly-plant-kingdom-growth-once.md) | battlecry | 战吼：使一个友方植物界随从获得一次成长 | 0 |
 | [battlecry-friendly-plus-0-plus-1](battlecry-friendly-plus-0-plus-1.md) | battlecry | 战吼：使一个友方随从获得 +0/+1 | 5 |
@@ -165,7 +165,7 @@
 | [light-speed-strike](light-speed-strike.md) | 无 | 使一个友方随从本回合获得连击 | 1 |
 | [mass-energy-equivalence](mass-energy-equivalence.md) | 无 | 使你的所有随从获得一次成长 | 0 |
 | [materia-medica](materia-medica.md) | 无 | 使一个友方植物随从获得两次成长 | 0 |
-| [mechanism-art](mechanism-art.md) | 无 | 使一个友方机械随从获得一次成长 | 1 |
+| [mechanism-art](mechanism-art.md) | 无 | 使一个友方机械随从获得一次成长 | 0 |
 | [microbiology](microbiology.md) | 无 | 战斗开始时使敌方最左侧随从获得 1 层传染 | 5 |
 | [mimic-1](mimic-1.md) | 无 | 战吼：复制一个友方随从的当前攻击力与生命值直到本回合结束 | 5 |
 | [mimic-2](mimic-2.md) | 无 | 拟态：战斗开始时，复制一个敌方随从的当前攻击力与生命值直到本回合结束 | 2 |
