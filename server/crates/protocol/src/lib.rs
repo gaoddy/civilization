@@ -331,7 +331,13 @@ mod tests {
         let payload = serde_json::json!({
             "deadline": "2026-11-15T10:00:30Z",
             "candidates": ["darwin"],
-            "players": [{ "seat": 0, "displayName": "Ada", "isBot": false, "picked": false }],
+            "players": [{
+                "playerId": "p1",
+                "seat": 0,
+                "displayName": "Ada",
+                "isBot": false,
+                "picked": false,
+            }],
         });
         let envelope = ServerEnvelope::new(
             "HeroPickStarted",

@@ -133,6 +133,12 @@ static func styled_button(text: String, variant := "default", min_height := 30) 
         var target := UITheme.hit_small() if variant == "micro" else UITheme.hit_primary()
         height = maxi(min_height, target)
     node.custom_minimum_size = Vector2(0, height)
+    apply_button_style(node, variant)
+    return node
+
+
+## 给已有 Button 套用统一按钮样式；Button 子类复用它，避免重复样式代码。
+static func apply_button_style(node: Button, variant := "default") -> void:
     node.focus_mode = Control.FOCUS_ALL
     for state in ["normal", "hover", "pressed", "focus", "disabled"]:
         node.add_theme_stylebox_override(state, UITheme.button_style(variant, state))
@@ -145,7 +151,6 @@ static func styled_button(text: String, variant := "default", min_height := 30) 
     node.add_theme_color_override("font_focus_color", text_color)
     node.add_theme_color_override("font_disabled_color", UITheme.color("color-text-muted"))
     node.add_theme_font_size_override("font_size", UITheme.font_size("font-body"))
-    return node
 
 
 ## 淘汰或失效的行：统一降低透明度，不改变布局。

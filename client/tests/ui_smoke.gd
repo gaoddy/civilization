@@ -606,10 +606,14 @@ func _check_room_seat_grid() -> void:
 
 ## 准备按钮：未准备显示「准备」，my_ready() 为真时显示「取消准备」。
 func _check_room_ready_toggle() -> void:
-    _seed_room_players([
-        {"playerId": "p0", "displayName": "玩家A", "seat": 0, "ready": false, "isHost": true},
-        {"playerId": "p1", "displayName": "玩家B", "seat": 1, "ready": true, "isHost": false},
-    ])
+    # 宾客视角：准备按钮在本人的准备状态间切换。
+    _seed_room_players(
+        [
+            {"playerId": "p0", "displayName": "玩家A", "seat": 0, "ready": true, "isHost": true},
+            {"playerId": "p1", "displayName": "玩家B", "seat": 1, "ready": false, "isHost": false},
+        ],
+        "p1"
+    )
     _fake_connect()
     var instance := await _check_scene("res://pages/room/room.tscn", false)
     if instance == null:
@@ -622,7 +626,7 @@ func _check_room_ready_toggle() -> void:
             "未准备时应显示「准备」，实际：%s" % str(ready.text),
         )
         _expect(not ready.disabled, "已连接时准备按钮应可用")
-        GameStore.room_players[0]["ready"] = true
+        GameStore.room_players[1]["ready"] = true
         GameStore.room_changed.emit()
         await get_tree().process_frame
         _expect(GameStore.my_ready(), "服务端状态应同步为已准备")
@@ -632,6 +636,30 @@ func _check_room_ready_toggle() -> void:
         )
     instance.queue_free()
     await get_tree().process_frame
+
+    # 房主视角：房主默认已准备，等待区不给准备按钮；座位徽标显示已准备。
+    _seed_room_players(
+        [
+            {"playerId": "p0", "displayName": "玩家A", "seat": 0, "ready": true, "isHost": true},
+            {"playerId": "p1", "displayName": "玩家B", "seat": 1, "ready": false, "isHost": false},
+        ],
+        "p0"
+    )
+    _fake_connect()
+    var host_instance := await _check_scene("res://pages/room/room.tscn", false)
+    if host_instance != null:
+        var host_ready = host_instance.find_child("ReadyButton", true, false)
+        _expect(
+            host_ready == null or not host_ready.is_visible_in_tree(),
+            "房主不应看到准备按钮"
+        )
+        var badge = host_instance.find_child("ReadyBadge", true, false)
+        _expect(
+            badge != null and str(badge.text) == TranslationServer.translate("ui.room.seat_ready"),
+            "房主座位徽标应显示已准备"
+        )
+        host_instance.queue_free()
+        await get_tree().process_frame
     _reset_room_players()
 
 

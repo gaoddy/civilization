@@ -40,6 +40,8 @@ client/
     pill_button.gd           # 胶囊按钮：neutral/primary/danger 三变体（class_name PillButton）
     popup_layer.gd           # 弹出层外壳：遮罩、居中/锚点/四向贴边定位与点击遮罩关闭（class_name PopupLayer）
     art.gd                   # 图片取用与铺层（class_name UIArt）
+    connection_dialog.gd     # 断线弹窗：说明、重新连接与重连中（class_name ConnectionDialog）
+    social/                  # 好友入口与抽屉：FriendsButton、FriendsPanel、FriendRow、FriendRequestRow、RecentPlayerRow
     drag_preview.gd          # 拖拽预览定位（class_name UIDrag）
     long_press.gd            # 长按判定：450ms 与 8 画布单位位移取消（class_name LongPressTracker），详情层与选英雄覆盖层共用
     avatar.gd                # 头像块：继承 AvatarFrame 的圆角头像，贴图或玩法色封面 + 首字（class_name Avatar）
@@ -71,14 +73,17 @@ client/
       login.tscn/.gd         # 登录
       login_field.gd         # 表单行：标题 + 输入框（class_name LoginField）
     lobby/
-      lobby.tscn/.gd         # 大厅：开局入口在主页，好友入口在左下角、图鉴入口在右下角
-      lobby_top_bar.gd       # 顶部标题、问候与状态提示（class_name LobbyTopBar）
-      lobby_actions.gd       # 创建房间、房间码输入与加入（class_name LobbyActions）
-      lobby_bottom_bar.gd    # 底部好友与图鉴入口（class_name LobbyBottomBar）
-      friends_panel.gd       # 好友浮层：添加、申请、好友与最近队友（class_name FriendsPanel）
-      friend_row.gd          # 好友行：显示与删除（class_name FriendRow）
-      friend_request_row.gd  # 好友申请行：接受与拒绝（class_name FriendRequestRow）
-      recent_player_row.gd   # 最近队友行：按玩家码回加（class_name RecentPlayerRow）
+      lobby.tscn/.gd         # 大厅：内容区 7:3 两栏；左栏大厅图与入口，右栏玩家卡、中部卡片与操作区
+      lobby_hall_image.gd    # 大厅图：位图 cover 铺满，缺图回退下沉面板（class_name LobbyHallImage）
+      lobby_player_card.gd   # 玩家卡：头像缩写、显示名与编号（class_name LobbyPlayerCard）
+      lobby_rank_card.gd     # 段位卡：段位名与积分（class_name LobbyRankCard）
+      lobby_queue_card.gd    # 排队卡：等待时长与已凑人数（class_name LobbyQueueCard）
+      lobby_left_actions.gd  # 左栏底栏：好友入口、卡牌图鉴、排行榜与 Steam 账号入口（class_name LobbyLeftActions）
+      lobby_quick_actions.gd # 右栏快捷操作：匹配 / 取消、创建与加入（class_name LobbyQuickActions）
+      lobby_room_list.gd     # 创建模式座位列表：8 行、准备圆点、邀请与移除，行区可滚动（class_name LobbyRoomList）
+      lobby_room_actions.gd  # 创建模式操作：开始 / 解散与可见原因行（class_name LobbyRoomActions）
+      lobby_join_dialog.gd   # 加入房间弹窗：房间码校验、提交与就地错误（class_name LobbyJoinDialog）
+      lobby_notice_dialog.gd # 大厅提示弹窗：标题、说明与关闭（class_name LobbyNoticeDialog）
       invite_popup.gd        # 邀请弹层：订阅 social_changed、逐条接受/拒绝（class_name InvitePopup）
     room/
       room.tscn/.gd          # 房间等待区：装配座位矩阵、邀请与操作栏，收到 HeroPickStarted 后导航到对局页
@@ -480,10 +485,10 @@ make ui-preview SETUP=res://tests/previews/game_rail.gd     # 无 .tscn 的组�
 
 ## 10. 美术素材层
 
-- 位置：`client/assets/`。`characters/portraits/ch_<id>_full.png` 为去水印立绘，`characters/avatars/ch_<id>_ava.png` 为 256² 方形头像（方形裁切、四角不透明），`cards/faces/card_<id>_face.png` 为 448×584 卡面封面；`asset_manifest.json` 按卡牌 id 登记三类路径与展示尺寸。`assets/ui/bg/bg_main.png` 为所有页面共用的软件背景纹理（512×512，整窗拉伸，不平铺）；`assets/ui/bg/bg_game_desktop.png`（1280×720）与 `bg_game_phone.png`（960×540）为对局页 `PageSurface` 的分区背景，按 Godot 运行态导出的真实控件矩形构图（深墨描金氛围底、河道横线对齐河道区、商店/棋盘/手牌区不画卡框），按设备档位在设计画布内拉伸，不再承担整窗背景。
+- 位置：`client/assets/`。`characters/portraits/ch_<id>_full.png` 为去水印立绘，`characters/avatars/ch_<id>_ava.png` 为 256² 方形头像（方形裁切、四角不透明），`cards/faces/card_<id>_face.png` 为 448×584 卡面封面；`asset_manifest.json` 按卡牌 id 登记三类路径与展示尺寸。`assets/ui/bg/bg_main.png` 为所有页面共用的软件背景纹理（512×512，整窗拉伸，不平铺）；`assets/ui/bg/bg_game_desktop.png`（1280×720）与 `bg_game_phone.png`（960×540）为对局页 `PageSurface` 的分区背景，按 Godot 运行态导出的真实控件矩形构图（深墨描金氛围底、河道横线对齐河道区、商店/棋盘/手牌区不画卡框），按设备档位在设计画布内拉伸，不再承担整窗背景；`assets/ui/lobby/lobby_hall.png`（1600×1000）为大厅左栏主视觉，由 `LobbyHallImage` 以 `EXPAND_IGNORE_SIZE` + `STRETCH_KEEP_ASPECT_COVERED` 铺满左栏剩余高度，溢出部分裁切，不含文字与品牌标识。
 - 加载：`CardDB` 启动时读取清单到 `art`，提供 `has_art(id)` 与 `art_path(id, kind)`；清单缺失或条目缺字段时返回空串，不报错。
 - 卡面展示位：图鉴网格与详情、选英雄覆盖层候选卡一律取 `card_face`，同一个 id 在英雄视图与随从视图显示同一张图；展示框宽高比固定 112:146，只给宽度时高度由 `UITheme.card_face_height(width)` 计算。头像位（对局英雄卡封面、座位头像、对手头像、`Avatar.create()`）仍取 `avatar`，不参与卡面比例；方形头像位统一由 `AvatarFrame` 按 `radius-md` 裁切，封面与描边由框提供；对局英雄卡封面按 `STRETCH_KEEP_ASPECT_COVERED` 铺满，超出的上下部分由头像框圆角裁掉；对局英雄详情与选英雄覆盖层悬停详情（`HeroPickDetailLayer`）不显示图片。
-- 回退：`UIArt.texture()` / `UIArt.layer()` 统一取图与铺层，纹理加载失败与无资源返回空；`CardFaceBase.create_face()` 用带卡面圆角的 Panel 绘制玩法色封面，有卡面纹理时叠 `CoverArt`（向内收 3px，方形四角落在圆角内）并隐藏首字水印，否则保留纯色封面与首字；选英雄覆盖层候选卡（`HeroPickCard`）叠 `card_face`；对局英雄卡封面、座位头像与对手英雄卡用 `avatar`，`Avatar.create()` / `GamePortrait` / `GameHeroCard` 有头像纹理时叠 `AvatarFrameArt`（裁切层索引 0）并隐藏首字；图鉴详情用 `card_face`，对局英雄详情与选英雄覆盖层悬停详情不显示图片。各类无图时回退玩法色块与首字（英雄卡封面回退玩法色与首字，图鉴详情省略图片）。软件背景由 `UIControls.background()` 加载通用底图，缺图或加载失败时回退 `color-bg` 纯色；页面容器背景由 `UIControls.page_surface(path)` 创建，传对局分区图时按容器尺寸拉伸，缺图时回退统一语义面板。
+- 回退：`UIArt.texture()` / `UIArt.layer()` 统一取图与铺层，纹理加载失败与无资源返回空；`CardFaceBase.create_face()` 用带卡面圆角的 Panel 绘制玩法色封面，有卡面纹理时叠 `CoverArt`（向内收 3px，方形四角落在圆角内）并隐藏首字水印，否则保留纯色封面与首字；选英雄覆盖层候选卡（`HeroPickCard`）叠 `card_face`；对局英雄卡封面、座位头像与对手英雄卡用 `avatar`，`Avatar.create()` / `GamePortrait` / `GameHeroCard` 有头像纹理时叠 `AvatarFrameArt`（裁切层索引 0）并隐藏首字；图鉴详情用 `card_face`，对局英雄详情与选英雄覆盖层悬停详情不显示图片。各类无图时回退玩法色块与首字（英雄卡封面回退玩法色与首字，图鉴详情省略图片）。软件背景由 `UIControls.background()` 加载通用底图，缺图或加载失败时回退 `color-bg` 纯色；页面容器背景由 `UIControls.page_surface(path)` 创建，传对局分区图时按容器尺寸拉伸，缺图时回退统一语义面板；大厅图缺失或加载失败时 `LobbyHallImage` 只保留 `sunken` 面板底色，不建纹理层、不报错。
 - 生成：`make assets` 调用 `scripts/process_assets.py`，按 `ASSET_MAP`（`client/assets/characters/portraits/asset_map.json`，随仓库提交，内容为 `card_id → characters/portraits/ 下的立绘文件名`）处理源立绘，并更新清单中对应条目；清单内不在映射中的条目（如直接生成的随从封面）原样保留。映射文件缺失时目标直接失败。效果牌封面走 `make assets-covers`：取每个 `<card_id>/` 下最新的 PNG，去水印后缩放到 448×584，清单只写入 `card_face` 与 `display.card_face`，保留条目已有的 `portrait` / `avatar`。逐张处理按 `--jobs`（默认 CPU 数、上限 8）分给子进程并行执行，清单条目与日志顺序仍按串行顺序产出，`--jobs 1` 退回串行。运行前需安装 Pillow（`python3 -m pip install pillow`）。封面生成风格、prompt 模板、主题符号映射与去水印约束见 [卡片封面美术生成](card-cover-art.md)。
 - 批次：英雄与已生成的随从、效果牌封面随仓库提交，统一按卡面 112:146 展示；尚无封面的卡牌继续走程序化绘制，由玩法色与首字回退。
 - 离线产物：纹理压缩产物由 `tools/asset-compress` 生成（`make asset-compress`），不依赖 Godot。BC7 走 GPU（wgpu/Metal，`standard` 档：60 张卡面 mean 44.05 dB、min 39.58 dB），ASTC 4x4 走 CPU astcenc `PRESET_MEDIUM`（与 Godot 同档，单张产物与 Godot 逐字节一致）；写出 `.ctex`、`.import`、`.md5` 后，`make client-import` 不会重导（实测 540 张 0 变更）。质量门禁用 `make asset-compress-check`。全量 540 张在 M1 Max 上约 50s，瓶颈是 ASTC 的 CPU 编码。

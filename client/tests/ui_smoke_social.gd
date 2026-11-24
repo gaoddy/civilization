@@ -3,9 +3,28 @@ extends "res://tests/smoke_case.gd"
 
 
 func _ready() -> void:
+    await _check_friends_button()
     await _check_lobby_social()
     await _check_room_invites()
     _finish()
+
+
+## 好友入口只显示在线好友数，点击转发打开请求。
+func _check_friends_button() -> void:
+    var button := FriendsButton.new()
+    add_child(button)
+    button.set_online_count(1)
+    await get_tree().process_frame
+    _expect(button.text == "1", "好友入口只显示在线好友数")
+    _expect(
+        button.custom_minimum_size.x >= UITheme.stage_metric("lobby-friends-button-width"),
+        "好友入口宽度取大厅令牌"
+    )
+    var opened := [false]
+    button.open_requested.connect(func(): opened[0] = true)
+    button.pressed.emit()
+    _expect(opened[0], "点击好友入口应请求打开好友面板")
+    button.queue_free()
 
 
 func _seed_social() -> void:
@@ -61,10 +80,10 @@ func _check_lobby_social() -> void:
     _expect(labels.contains("100001"), "大厅应展示本人玩家编号")
     _expect(labels.contains("ABC234"), "邀请弹窗应展示房间码")
 
-    # 好友管理收在浮层里：主页只留入口，入口显示待处理申请数。
+    # 好友管理收在抽屉里：主页只留入口，入口显示在线好友数。
     var entry := instance.find_child("FriendsButton", true, false)
     _expect(entry != null, "大厅应有好友入口")
-    _expect(entry != null and str(entry.text).contains("1"), "好友入口应展示待处理申请数")
+    _expect(entry != null and str(entry.text) == "1", "好友入口应展示在线好友数")
     var panel = instance.find_child("FriendsPanel", true, false)
     _expect(panel != null and not panel.visible, "好友浮层初始应隐藏")
     if entry == null or panel == null:
@@ -75,6 +94,22 @@ func _check_lobby_social() -> void:
     entry.pressed.emit()
     await get_tree().process_frame
     _expect(panel.visible, "点击好友入口应打开浮层")
+    _expect(panel.placement == PopupLayer.Placement.EDGE_LEFT, "好友面板应贴左边")
+    _expect(int(panel.content.size.y) == int(panel.size.y), "好友面板应占满整高")
+
+    # 邀请模式：在线好友可邀请，对局中的好友禁用。
+    panel.open_invite()
+    await get_tree().process_frame
+    var invite_online = instance.find_child("Invite_p_online", true, false)
+    var invite_game = instance.find_child("Invite_p_game", true, false)
+    _expect(invite_online != null and not invite_online.disabled, "在线好友应可邀请")
+    _expect(invite_game != null and invite_game.disabled, "对局中的好友应禁用邀请")
+    panel.open()
+    await get_tree().process_frame
+    _expect(
+        instance.find_child("Invite_p_online", true, false) == null,
+        "普通模式不应残留邀请按钮"
+    )
 
     labels = _node_text(instance)
     _expect(labels.contains("在线好友"), "好友浮层应列出好友")

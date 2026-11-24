@@ -25,6 +25,8 @@ static func draw(canvas: CanvasItem, icon: String, rect: Rect2, color: Color, wi
 			_draw_hero_power(canvas, rect, color)
 		"passive_skill":
 			_draw_passive_skill(canvas, rect, color, stroke)
+		"friends":
+			_draw_friends(canvas, rect, color, stroke)
 		_:
 			pass
 
@@ -93,6 +95,21 @@ static func _draw_passive_skill(
 	var scale := _scale(rect)
 	canvas.draw_arc(center, 8.5 * scale, 0.0, TAU, ARC_SEGMENTS, color, stroke, true)
 	canvas.draw_circle(center, 3.2 * scale, color)
+
+
+## 双人形：一前一后两个头像与肩线，表示好友。
+static func _draw_friends(
+	canvas: CanvasItem, rect: Rect2, color: Color, stroke: float
+) -> void:
+	var scale := _scale(rect)
+	var back_head := _map(rect, Vector2(16.4, 8.2))
+	canvas.draw_arc(back_head, 2.1 * scale, 0.0, TAU, ARC_SEGMENTS, color, stroke, true)
+	var back_shoulders := _map(rect, Vector2(16.4, 16.2))
+	canvas.draw_arc(back_shoulders, 3.6 * scale, PI, TAU, ARC_SEGMENTS, color, stroke, true)
+	var front_head := _map(rect, Vector2(8.6, 7.6))
+	canvas.draw_arc(front_head, 2.6 * scale, 0.0, TAU, ARC_SEGMENTS, color, stroke, true)
+	var front_shoulders := _map(rect, Vector2(8.6, 15.8))
+	canvas.draw_arc(front_shoulders, 4.6 * scale, PI, TAU, ARC_SEGMENTS, color, stroke, true)
 
 
 static func _line(

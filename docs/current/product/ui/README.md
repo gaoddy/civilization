@@ -9,7 +9,7 @@
 ## 1. 视觉语言
 
 - 深色酒馆基调：近黑的背景、分层卡片、金色强调，状态色只表达结果（成功、危险、信息）。
-- 资源约束：工程没有字体与主题资源文件，界面由 Godot 内置控件与 `StyleBoxFlat` 构建；位图资源只有卡牌立绘、头像、卡面与页面背景（所有页面共用的软件背景 `assets/ui/bg/bg_main.png`；对局页另有挂在 `PageBody.PageSurface`、按真实控件矩形构图的分区背景 `bg_game_desktop.png` / `bg_game_phone.png`），清单与回退规则见 [client.md](../../technical/client.md#10-美术素材层)。英雄「头像」无素材时仍是玩法色块加名字首字的排版块。
+- 资源约束：工程没有字体与主题资源文件，界面由 Godot 内置控件与 `StyleBoxFlat` 构建；位图资源只有卡牌立绘、头像、卡面、页面背景与大厅图（所有页面共用的软件背景 `assets/ui/bg/bg_main.png`；对局页另有挂在 `PageBody.PageSurface`、按真实控件矩形构图的分区背景 `bg_game_desktop.png` / `bg_game_phone.png`；大厅左栏另有按 cover 裁切的 `assets/ui/lobby/lobby_hall.png`），清单与回退规则见 [client.md](../../technical/client.md#10-美术素材层)。英雄「头像」无素材时仍是玩法色块加名字首字的排版块。
 - 代码绘制：卡框（`CardFrame`）、顶部星级、时代象形（`EraGlyph`）与攻防底牌（`StatPlate`）由代码绘制，不占位图；入口见第 4 节组件表。稀有度不是展示维度，卡面以 `level` 的 1–7 星表达成长档位。
 - 深浅色：只有深色一套，不实现浅色主题与主题切换，UI 评审不做浅色检查。
 
@@ -36,7 +36,7 @@
 | 页面 | 场景 | 文档 |
 | --- | --- | --- |
 | 登录 | `pages/login/login.tscn` | 未单独成文 |
-| 大厅 | `pages/lobby/lobby.tscn` | 未单独成文 |
+| 大厅 | `pages/lobby/lobby.tscn` | [pages/lobby.md](pages/lobby.md) |
 | 房间（开局前） | `pages/room/room.tscn` | [pages/room.md](pages/room.md) |
 | 对局 | `pages/game/game.tscn` | [pages/game.md](pages/game.md) |
 | 结算 | `pages/result/result.tscn` | [pages/result.md](pages/result.md) |
@@ -53,6 +53,10 @@
 | 胶囊按钮 | `PillButton`（`client/ui/pill_button.gd`） | [components/pill-button.md](components/pill-button.md) |
 | 卡片容器 | `UIControls.card_panel` | [components/card-panel.md](components/card-panel.md) |
 | 可选项框 | `SelectableBox`（`client/ui/selectable_box.gd`） | [components/selectable-box.md](components/selectable-box.md) |
+| 弹出层外壳 | `PopupLayer`（`client/ui/popup_layer.gd`） | [components/popup-layer.md](components/popup-layer.md) |
+| 好友入口 | `FriendsButton`（`client/ui/social/friends_button.gd`） | [pages/lobby.md](pages/lobby.md) |
+| 好友抽屉 | `FriendsPanel`（`client/ui/social/friends_panel.gd`） | [pages/lobby.md](pages/lobby.md) |
+| 断线弹窗 | `ConnectionDialog`（`client/ui/connection_dialog.gd`） | [pages/lobby.md](pages/lobby.md) |
 | 卡框与星级 | `CardFrame`（`client/ui/card_frame.gd`） | [tokens.md](tokens.md) |
 | 攻防底牌 | `StatPlate`（`client/ui/stat_plate.gd`） | [tokens.md](tokens.md) |
 | 时代象形 | `EraGlyph`（`client/ui/era_glyph.gd`） | [icons.md](icons.md) |
@@ -69,6 +73,7 @@
 | 对局状态模态 | `GameStatusModal`（`client/pages/game/game_status_modal.gd`） | [components/game-status-modal.md](components/game-status-modal.md) |
 | 技能瞄准层 | `GameAimLayer`（`client/pages/game/game_aim_layer.gd`） | [components/aim-layer.md](components/aim-layer.md) |
 | 房间座位矩阵 | `RoomSeatGrid`（`client/pages/room/room_seat_grid.gd`） | [pages/room.md](pages/room.md) |
+| 大厅页组件 | `LobbyPlayerCard`、`LobbyRankCard`、`LobbyQueueCard`、`LobbyQuickActions`、`LobbyLeftActions`、`LobbyHallImage`、`LobbyRoomList`、`LobbyRoomActions`、`LobbyJoinDialog`、`LobbyNoticeDialog`（`client/pages/lobby/`） | [pages/lobby.md](pages/lobby.md) |
 | 房间座位格 | `RoomSeatCell`（`client/pages/room/room_seat_cell.gd`） | [pages/room.md](pages/room.md) |
 | 房间操作栏 | `RoomActionBar`（`client/pages/room/room_action_bar.gd`） | [pages/room.md](pages/room.md) |
 | 选英雄覆盖层 | `HeroPickOverlay`（`client/pages/game/hero_pick_overlay.gd`） | [pages/game.md](pages/game.md) |

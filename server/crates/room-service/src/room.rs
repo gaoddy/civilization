@@ -306,7 +306,10 @@ impl RoomRegistry {
         let (id, code) = self.allocate_id();
 
         let mut slots = BTreeMap::new();
-        slots.insert(0, PlayerSlot::from_session(host));
+        let mut host_slot = PlayerSlot::from_session(host);
+        // 房主不参与准备确认：建房即视为已准备，开局条件只等待其他真人。
+        host_slot.ready = true;
+        slots.insert(0, host_slot);
         // 本局种子只算一次：玩法抽取与英雄候选分配共用同一个值。
         let seed = seed_for_code(&code);
         let room = Room {
@@ -538,7 +541,17 @@ impl RoomRegistry {
             .find(|(_, slot)| !slot.is_bot)
             .map(|(_, slot)| slot.player_id.clone());
         match next_host {
-            Some(next_host) => room.host_id = next_host,
+            Some(next_host) => {
+                room.host_id = next_host.clone();
+                // 新房主继承「房主默认准备」，避免转移后卡住开局。
+                if let Some(slot) = room
+                    .slots
+                    .values_mut()
+                    .find(|slot| slot.player_id == next_host)
+                {
+                    slot.ready = true;
+                }
+            }
             None => {
                 let code = room.code.clone();
                 let tokens: Vec<String> = room.invite_tokens.keys().cloned().collect();
@@ -619,8 +632,10 @@ impl RoomRegistry {
         if room.phase != Phase::Lobby {
             return Err(RoomError::WrongPhase);
         }
+        let is_host = player_id == room.host_id;
         let slot = room.slot_mut(player_id).ok_or(RoomError::NotInRoom)?;
-        slot.ready = ready;
+        // 房主始终视为已准备：客户端不再提供准备按钮，也不允许通过协议取消。
+        slot.ready = is_host || ready;
         Ok(())
     }
 

@@ -266,6 +266,81 @@ fn join_same_player_twice_is_idempotent() {
 }
 
 #[test]
+fn create_marks_host_ready() {
+    let clock = FixedClock::new(1_000_000);
+    let mut store = SessionStore::new();
+    let host = session(&mut store, &clock, "房主");
+
+    let mut registry = RoomRegistry::with_seed(0);
+    let room = registry.create(&host, &catalog());
+
+    assert!(
+        room.slot(0).expect("房主坐在 0 号座位").ready,
+        "建房后房主默认已准备"
+    );
+    assert!(
+        registry.room_update(&room.id).unwrap().players[0].ready,
+        "房间视图里房主同样已准备"
+    );
+}
+
+#[test]
+fn host_ready_cannot_be_cleared() {
+    let clock = FixedClock::new(1_000_000);
+    let mut store = SessionStore::new();
+    let host = session(&mut store, &clock, "房主");
+    let second = session(&mut store, &clock, "玩家2");
+
+    let mut registry = RoomRegistry::with_seed(0);
+    let room = registry.create(&host, &catalog());
+    let room_id = room.id.clone();
+    registry
+        .join(&room.code, &second, &catalog())
+        .expect("加入成功");
+
+    registry
+        .ready(&room_id, &host.player_id, false)
+        .expect("房主请求取消准备不报错，但不改变准备状态");
+    let room = registry.room(&room_id).expect("房间存在");
+    assert!(room.slot(0).unwrap().ready, "房主不能取消准备");
+
+    registry
+        .ready(&room_id, &second.player_id, false)
+        .expect("其他成员可以取消准备");
+    assert!(!registry.room(&room_id).unwrap().slot(1).unwrap().ready,
+        "非房主的准备状态仍按请求写入");
+}
+
+#[test]
+fn host_transfer_marks_new_host_ready() {
+    let clock = FixedClock::new(1_000_000);
+    let mut store = SessionStore::new();
+    let host = session(&mut store, &clock, "房主");
+    let second = session(&mut store, &clock, "玩家2");
+
+    let mut registry = RoomRegistry::with_seed(0);
+    let room = registry.create(&host, &catalog());
+    let room_id = room.id.clone();
+    let code = room.code.clone();
+    registry
+        .join(&code, &second, &catalog())
+        .expect("玩家2 加入");
+    assert!(
+        !registry.room(&room_id).unwrap().slot(1).unwrap().ready,
+        "新加入成员默认未准备"
+    );
+
+    registry.leave(&room_id, &host.player_id).expect("房主离开");
+
+    let room = registry.room(&room_id).expect("房间仍存在");
+    assert_eq!(room.host_id, second.player_id, "房主转给最小座位号的玩家");
+    assert!(
+        room.slot(1).unwrap().ready,
+        "继承房主身份的成员自动准备"
+    );
+}
+
+#[test]
 fn ready_succeeds_without_hero_selection() {
     let clock = FixedClock::new(1_000_000);
     let mut store = SessionStore::new();
@@ -530,7 +605,11 @@ fn room_update_carries_seat_and_bot_fill() {
     assert_eq!(update.players.len(), 3);
     for (index, item) in update.players.iter().enumerate() {
         assert_eq!(item.seat, i64::try_from(index).expect("座位号可表示"));
-        assert!(!item.ready);
+        if index == 0 {
+            assert!(item.ready, "房主默认已准备");
+        } else {
+            assert!(!item.ready, "新加入成员默认未准备");
+        }
     }
     assert!(update.players[0].is_host);
 
