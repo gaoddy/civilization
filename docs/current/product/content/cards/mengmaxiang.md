@@ -27,7 +27,7 @@ skills: [deathrattle-all-friendly-plus-0-plus-1]
 | 时代 | 史前 |
 | 攻击力 | 2 |
 | 生命值 | 6 |
-| 关键词 | 无 |
+| 关键词 | 亡语 |
 | 技能 | deathrattle-all-friendly-plus-0-plus-1 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 长鼻目 › 象科 |
 

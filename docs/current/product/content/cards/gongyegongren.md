@@ -9,7 +9,7 @@ level: 5
 era: modern
 attack: 9
 health: 9
-skills: [battlecry-other-friendly-humans-plus-1-attack, trigger-all-friendly-growth-once]
+skills: [battlecry-other-friendly-humans-plus-1-attack, battlecry-all-friendly-growth-once]
 ---
 
 # 工业工人
@@ -28,12 +28,12 @@ skills: [battlecry-other-friendly-humans-plus-1-attack, trigger-all-friendly-gro
 | 攻击力 | 9 |
 | 生命值 | 9 |
 | 关键词 | 战吼 |
-| 技能 | battlecry-other-friendly-humans-plus-1-attack；trigger-all-friendly-growth-once |
+| 技能 | battlecry-other-friendly-humans-plus-1-attack；battlecry-all-friendly-growth-once |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果
 
-战吼：使你的其他人科随从获得 +1 攻击力；使你的随从各获得一次成长
+战吼：使你的其他人科随从获得 +1 攻击力；战吼：使你的所有随从获得一次成长
 
 ## 出处
 

@@ -24635,7 +24635,7 @@
     },
     {
       "event_hash": "c6795745083d1ed2",
-      "final_hash": "32985cb6c8243ded",
+      "final_hash": "f5e1234905bab655",
       "intents": [
         {
           "intent": {
@@ -29512,6 +29512,16 @@
         },
         {
           "intent": {
+            "kind": "choose_target",
+            "target": {
+              "id": 25,
+              "zone": "board"
+            }
+          },
+          "seat": 4
+        },
+        {
+          "intent": {
             "kind": "buy_minion",
             "slot": 1
           },
@@ -32394,7 +32404,7 @@
             "kind": "use_hero_power",
             "skill_id": "light-speed-strike",
             "target": {
-              "id": 1105,
+              "id": 25,
               "zone": "board"
             }
           },
@@ -152753,7 +152763,7 @@
     "81470d19bb7066e7",
     "1c13007929e027c8",
     "6a602ff6a9be9cd8",
-    "32985cb6c8243ded",
+    "f5e1234905bab655",
     "333604678efb2c8a",
     "6cc0970079b220ec",
     "e439b4dfba505da7",

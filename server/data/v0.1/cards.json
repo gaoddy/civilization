@@ -861,7 +861,7 @@
     "level": 4,
     "skills": [
       "keyword-windfury",
-      "trigger-friendly-growth-thrice"
+      "aura-school-mammal"
     ],
     "subtype": "martial-artist",
     "taxon": "hominidae"
@@ -950,7 +950,7 @@
     "in_shop_pool": true,
     "level": 2,
     "skills": [
-      "trigger-friendly-single-plus-0-plus-2"
+      "battlecry-friendly-mammal-growth-once"
     ],
     "subtype": "invention",
     "taxon": "hominidae"
@@ -1680,7 +1680,7 @@
     "level": 4,
     "skills": [
       "keyword-reborn",
-      "trigger-mammal-all-growth-once"
+      "aura-school-mammal-1"
     ],
     "subtype": "clone",
     "taxon": "bovidae"
@@ -2928,7 +2928,7 @@
     "level": 5,
     "skills": [
       "battlecry-other-friendly-humans-plus-1-attack",
-      "trigger-all-friendly-growth-once"
+      "battlecry-all-friendly-growth-once"
     ],
     "subtype": "worker",
     "taxon": "hominidae"
@@ -4531,7 +4531,7 @@
     "level": 3,
     "skills": [
       "keyword-taunt",
-      "trigger-friendly-growth-twice"
+      "battlecry-friendly-growth-twice"
     ],
     "subtype": "unit",
     "taxon": "hominidae"
@@ -6512,7 +6512,7 @@
     "in_shop_pool": true,
     "level": 2,
     "skills": [
-      "trigger-friendly-plus-2-attack"
+      "battlecry-friendly-growth-twice"
     ],
     "subtype": "primitive",
     "taxon": "hominidae"
@@ -6616,13 +6616,12 @@
     ],
     "cost": null,
     "era": "modern",
-    "health": 11,
+    "health": 9,
     "id": "sea-turtle",
     "in_shop_pool": true,
     "level": 5,
     "skills": [
       "keyword-armor-2",
-      "keyword-taunt",
       "trigger-reptile-permanent-taunt"
     ],
     "subtype": "reptile",
@@ -7623,7 +7622,7 @@
     "level": 6,
     "skills": [
       "keyword-divine-shield",
-      "trigger-friendly-growth-twice"
+      "battlecry-friendly-growth-twice"
     ],
     "subtype": "colonist",
     "taxon": "hominidae"
@@ -9246,7 +9245,7 @@
     "in_shop_pool": true,
     "level": 4,
     "skills": [
-      "trigger-friendly-single-plus-0-plus-2"
+      "battlecry-all-friendly-plus-0-plus-2"
     ],
     "subtype": "medicine",
     "taxon": "hominidae"

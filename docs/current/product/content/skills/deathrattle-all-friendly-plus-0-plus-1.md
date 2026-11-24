@@ -1,5 +1,6 @@
 ---
 id: deathrattle-all-friendly-plus-0-plus-1
+keyword: deathrattle
 template: on-death-stats-all-friendly-health(health=1)
 ---
 
@@ -10,7 +11,7 @@ template: on-death-stats-all-friendly-health(health=1)
 | 属性 | 值 |
 | --- | --- |
 | id | deathrattle-all-friendly-plus-0-plus-1 |
-| 关键词 | 无 |
+| 关键词 | 亡语 |
 | 模板 | on-death-stats-all-friendly-health |
 
 ## 效果

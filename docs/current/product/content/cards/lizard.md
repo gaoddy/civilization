@@ -27,7 +27,7 @@ skills: [deathrattle-random-enemy-minus-1-attack]
 | 时代 | 史前 |
 | 攻击力 | 1 |
 | 生命值 | 4 |
-| 关键词 | 无 |
+| 关键词 | 亡语 |
 | 技能 | deathrattle-random-enemy-minus-1-attack |
 | 科学分类 | 动物界 › 脊索动物门 › 爬行纲 › 有鳞目 › 蜥蜴科 |
 

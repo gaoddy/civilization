@@ -229,6 +229,10 @@ fn same_seed_reproduces_event_sequence_hash() {
 /// 2026-11-24 第二十八次重定：卡池差异化放宽 1–5 星数值区间，重排 309 张进池
 /// 随从的身材并替换大量技能引用，另新增 4 个永久嘲讽授予实例；参战数值与技能
 /// 组合全面变化，本批次 20 局哈希全部改变。本次只同步数据与基线，不改规则引擎。
+///
+/// 2026-11-25 第二十九次重定：最终评审修复轮把 8 张随从引用不可达效果牌技能改为
+/// 战吼/光环，海龟 6/11 降为 6/9，另有两个亡语技能补登记关键词；只有第 4 局
+/// （下标 3）的购买与战斗路径命中这些卡，该局哈希改变，其余 19 局不变。
 #[test]
 fn batch_final_hashes_match_golden_baseline() {
     let golden: Value = serde_json::from_str(include_str!("golden/seed-1-games-20.json"))

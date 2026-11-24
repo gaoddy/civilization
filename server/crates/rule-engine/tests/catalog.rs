@@ -11,7 +11,7 @@ fn loads_all_committed_data() {
     let catalog = test_catalog();
     assert_eq!(catalog.cards.len(), 432);
     assert_eq!(catalog.heroes.len(), 32);
-    assert_eq!(catalog.skills().len(), 259);
+    assert_eq!(catalog.skills().len(), 262);
     assert_eq!(
         catalog
             .cards
