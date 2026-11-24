@@ -1,6 +1,6 @@
 # 技能索引
 
-本文索引 v0.1 的 255 个技能实体文档，一行一个；字段规范与校验规则见[技能系统](../skill-system.md)。文件名等于技能 `id`，是数据契约的一部分；技能 `id` 与卡牌 `id` 分属两个命名空间，允许同名。技能实例用 `template` 引用[技能模板](../skill-templates/README.md)并只写参数，卡面文本由模板渲染，特殊措辞才用 `text` 覆盖。技能按科学分类（`taxon`）、玩法（`playstyle`）与关联分类（`play` / `prey` / `host`）筛选，筛选口径见[技能系统](../skill-system.md) §2.2。英雄卡引用的技能不带英雄专属前缀；主动技能带 `cost` 与 `uses_per_turn`，触发式技能按文本前缀结算。
+本文索引 v0.1 的 259 个技能实体文档，一行一个；字段规范与校验规则见[技能系统](../skill-system.md)。文件名等于技能 `id`，是数据契约的一部分；技能 `id` 与卡牌 `id` 分属两个命名空间，允许同名。技能实例用 `template` 引用[技能模板](../skill-templates/README.md)并只写参数，卡面文本由模板渲染，特殊措辞才用 `text` 覆盖。技能按科学分类（`taxon`）、玩法（`playstyle`）与关联分类（`play` / `prey` / `host`）筛选，筛选口径见[技能系统](../skill-system.md) §2.2。英雄卡引用的技能不带英雄专属前缀；主动技能带 `cost` 与 `uses_per_turn`，触发式技能按文本前缀结算。
 
 | 技能 | 关键词 | 文本 | 引用数 |
 | --- | --- | --- | --- |
@@ -24,6 +24,7 @@
 | [aura-other-protozoa-plus-1-attack](aura-other-protozoa-plus-1-attack.md) | 无 | 你的其他原生生物界随从获得 +1 攻击力 | 5 |
 | [aura-plant-plus-1-plus-1](aura-plant-plus-1-plus-1.md) | 无 | 你的植物随从获得 +1/+1 | 2 |
 | [aura-plant-plus-2-plus-2](aura-plant-plus-2-plus-2.md) | 无 | 你的植物随从获得 +2/+2 | 1 |
+| [aura-plant-taunt](aura-plant-taunt.md) | 无 | 你的植物随从获得嘲讽 | 1 |
 | [aura-school-fish-1](aura-school-fish-1.md) | 无 | 群聚：你的其他鱼纲随从获得 +1/+0；每有一个其他鱼纲随从，再获得 +0/+1 | 6 |
 | [aura-school-fish-2](aura-school-fish-2.md) | 无 | 群聚：你的其他鱼纲随从获得 +1/+1；每有一个其他鱼纲随从，再获得 +1 攻击力 | 1 |
 | [aura-school-mammal](aura-school-mammal.md) | 无 | 群聚：你的其他哺乳纲随从获得 +1/+1；每有一个其他哺乳纲随从，再获得 +1 攻击力 | 2 |
@@ -193,6 +194,7 @@
 | [trigger-bird-single-windfury-this-turn](trigger-bird-single-windfury-this-turn.md) | 无 | 使一个友方鸟纲随从获得连击直到回合结束 | 1 |
 | [trigger-cephalopod-single-poison](trigger-cephalopod-single-poison.md) | 无 | 使一个友方头足纲随从获得剧毒 | 1 |
 | [trigger-cnidarian-all-plus-0-plus-4](trigger-cnidarian-all-plus-0-plus-4.md) | 无 | 使你的水螅纲随从获得 +0/+4 | 1 |
+| [trigger-cnidarian-permanent-taunt](trigger-cnidarian-permanent-taunt.md) | 无 | 使一个友方水螅纲随从获得嘲讽 | 1 |
 | [trigger-cnidarian-single-poison-this-turn](trigger-cnidarian-single-poison-this-turn.md) | 无 | 使一个友方水螅纲随从获得剧毒直到回合结束 | 1 |
 | [trigger-cnidarian-single-reborn](trigger-cnidarian-single-reborn.md) | 无 | 使一个友方水螅纲随从获得复生 | 1 |
 | [trigger-copy-friendly-minion](trigger-copy-friendly-minion.md) | 无 | 复制一个友方随从 | 2 |
@@ -212,6 +214,7 @@
 | [trigger-friendly-human-death-plus-1-plus-1](trigger-friendly-human-death-plus-1-plus-1.md) | 无 | 每当一个友方人科随从死亡，获得 +1/+1 | 1 |
 | [trigger-friendly-human-play-plus-1-attack](trigger-friendly-human-play-plus-1-attack.md) | 无 | 每当一个友方人科随从进入战场，获得 +1 攻击力 | 1 |
 | [trigger-friendly-human-taunt-until-turn-end](trigger-friendly-human-taunt-until-turn-end.md) | 无 | 使一个友方人科随从获得嘲讽直到回合结束 | 1 |
+| [trigger-friendly-permanent-taunt](trigger-friendly-permanent-taunt.md) | 无 | 使一个友方随从获得嘲讽 | 1 |
 | [trigger-friendly-plant-breed-2](trigger-friendly-plant-breed-2.md) | 无 | 使一个友方植物随从获得繁衍 2 | 1 |
 | [trigger-friendly-plant-sow](trigger-friendly-plant-sow.md) | 无 | 使一个友方植物随从获得播种 | 1 |
 | [trigger-friendly-plus-0-plus-4-this-turn](trigger-friendly-plus-0-plus-4-this-turn.md) | 无 | 使一个友方随从获得 +0/+4 直到回合结束 | 1 |
@@ -248,6 +251,7 @@
 | [trigger-protozoa-single-taunt-this-turn](trigger-protozoa-single-taunt-this-turn.md) | 无 | 使一个友方原生生物界随从获得嘲讽直到回合结束 | 1 |
 | [trigger-refresh-shop-free](trigger-refresh-shop-free.md) | 无 | 刷新商店 | 1 |
 | [trigger-reptile-all-plus-0-plus-3](trigger-reptile-all-plus-0-plus-3.md) | 无 | 使你的爬行纲随从获得 +0/+3 | 1 |
+| [trigger-reptile-permanent-taunt](trigger-reptile-permanent-taunt.md) | 无 | 使一个友方爬行纲随从获得嘲讽 | 1 |
 | [trigger-reptile-single-armor-2-this-turn](trigger-reptile-single-armor-2-this-turn.md) | 无 | 使一个友方爬行纲随从获得减伤 2 直到回合结束 | 1 |
 | [trigger-reptile-single-poison-this-turn](trigger-reptile-single-poison-this-turn.md) | 无 | 使一个友方爬行纲随从获得剧毒直到回合结束 | 1 |
 | [trigger-summon-1-neutral-token-2-2](trigger-summon-1-neutral-token-2-2.md) | 无 | 召唤一个 2/2 的随从 | 1 |

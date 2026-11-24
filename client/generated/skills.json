@@ -555,6 +555,35 @@
     "cost": null,
     "effects": [
       {
+        "op": "grant_keyword",
+        "params": {
+          "duration": "permanent",
+          "keyword": {
+            "keyword": "taunt"
+          }
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "plant"
+            }
+          ],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "aura"
+      }
+    ],
+    "id": "aura-plant-taunt",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
         "op": "modify_stats",
         "params": {
           "attack": 1,
@@ -4241,6 +4270,35 @@
       {
         "op": "grant_keyword",
         "params": {
+          "duration": "permanent",
+          "keyword": {
+            "keyword": "taunt"
+          }
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "cnidarian"
+            }
+          ],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play"
+      }
+    ],
+    "id": "trigger-cnidarian-permanent-taunt",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "grant_keyword",
+        "params": {
           "duration": "combat",
           "keyword": {
             "keyword": "poison"
@@ -4678,6 +4736,30 @@
       }
     ],
     "id": "trigger-friendly-human-taunt-until-turn-end",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "grant_keyword",
+        "params": {
+          "duration": "permanent",
+          "keyword": {
+            "keyword": "taunt"
+          }
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play"
+      }
+    ],
+    "id": "trigger-friendly-permanent-taunt",
     "keyword": null,
     "uses_per_turn": null
   },
@@ -5595,6 +5677,35 @@
       }
     ],
     "id": "trigger-reptile-all-plus-0-plus-3",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "grant_keyword",
+        "params": {
+          "duration": "permanent",
+          "keyword": {
+            "keyword": "taunt"
+          }
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "reptile"
+            }
+          ],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play"
+      }
+    ],
+    "id": "trigger-reptile-permanent-taunt",
     "keyword": null,
     "uses_per_turn": null
   },

@@ -9,7 +9,7 @@ level: 5
 era: modern
 attack: 6
 health: 11
-skills: [keyword-armor-2, keyword-taunt]
+skills: [keyword-armor-2, keyword-taunt, trigger-reptile-permanent-taunt]
 ---
 
 # 海龟
@@ -28,12 +28,12 @@ skills: [keyword-armor-2, keyword-taunt]
 | 攻击力 | 6 |
 | 生命值 | 11 |
 | 关键词 | 减伤 2；嘲讽 |
-| 技能 | keyword-armor-2；keyword-taunt |
+| 技能 | keyword-armor-2；keyword-taunt；trigger-reptile-permanent-taunt |
 | 科学分类 | 动物界 › 脊索动物门 › 爬行纲 › 龟鳖目 › 海龟科 |
 
 ## 效果
 
-减伤 2：受到伤害时，减免 2 点伤害；嘲讽
+减伤 2：受到伤害时，减免 2 点伤害；嘲讽；使一个友方爬行纲随从获得嘲讽
 
 ## 设计说明
 

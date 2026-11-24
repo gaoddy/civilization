@@ -3471,7 +3471,8 @@
     "level": 5,
     "skills": [
       "keyword-sow",
-      "keyword-breed-2"
+      "keyword-breed-2",
+      "aura-plant-taunt"
     ],
     "subtype": "tree",
     "taxon": "rhizophoraceae"
@@ -5431,7 +5432,8 @@
     "level": 5,
     "skills": [
       "keyword-ignore-taunt",
-      "keyword-assemble-1"
+      "keyword-assemble-1",
+      "trigger-friendly-permanent-taunt"
     ],
     "subtype": "robot",
     "taxon": "automation"
@@ -6543,7 +6545,8 @@
     "level": 5,
     "skills": [
       "revive-2",
-      "keyword-armor-1"
+      "keyword-armor-1",
+      "trigger-cnidarian-permanent-taunt"
     ],
     "subtype": "ocean",
     "taxon": "coralliidae"
@@ -6914,7 +6917,8 @@
     "level": 5,
     "skills": [
       "keyword-armor-2",
-      "keyword-taunt"
+      "keyword-taunt",
+      "trigger-reptile-permanent-taunt"
     ],
     "subtype": "reptile",
     "taxon": "cheloniidae"

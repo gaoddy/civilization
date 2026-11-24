@@ -9,7 +9,7 @@ level: 5
 era: modern
 attack: 6
 health: 11
-skills: [keyword-sow, keyword-breed-2]
+skills: [keyword-sow, keyword-breed-2, aura-plant-taunt]
 ---
 
 # 红树林
@@ -28,12 +28,12 @@ skills: [keyword-sow, keyword-breed-2]
 | 攻击力 | 6 |
 | 生命值 | 11 |
 | 关键词 | 播种；繁衍 2 |
-| 技能 | keyword-sow；keyword-breed-2 |
+| 技能 | keyword-sow；keyword-breed-2；aura-plant-taunt |
 | 科学分类 | 植物界 › 被子植物门 › 双子叶植物纲 › 金虎尾目 › 红树科 |
 
 ## 效果
 
-播种：死亡时召唤一个 1/1 的幼苗；繁衍 2：回合开始时获得 +2 生命
+播种：死亡时召唤一个 1/1 的幼苗；繁衍 2：回合开始时获得 +2 生命；你的植物随从获得嘲讽
 
 ## 出处
 

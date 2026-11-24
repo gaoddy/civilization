@@ -9,7 +9,7 @@ level: 5
 era: future
 attack: 8
 health: 10
-skills: [keyword-ignore-taunt, keyword-assemble-1]
+skills: [keyword-ignore-taunt, keyword-assemble-1, trigger-friendly-permanent-taunt]
 ---
 
 # 纳米机器人
@@ -28,12 +28,12 @@ skills: [keyword-ignore-taunt, keyword-assemble-1]
 | 攻击力 | 8 |
 | 生命值 | 10 |
 | 关键词 | 无视嘲讽；装配 1 |
-| 技能 | keyword-ignore-taunt；keyword-assemble-1 |
+| 技能 | keyword-ignore-taunt；keyword-assemble-1；trigger-friendly-permanent-taunt |
 | 科学分类 | 造物 › 自动机械 |
 
 ## 效果
 
-无视嘲讽：攻击时无视敌方嘲讽；装配 1：进入战场时，使你的其他机械随从各获得 1 次成长
+无视嘲讽：攻击时无视敌方嘲讽；装配 1：进入战场时，使你的其他机械随从各获得 1 次成长；使一个友方随从获得嘲讽
 
 ## 出处
 

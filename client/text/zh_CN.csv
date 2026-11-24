@@ -1042,6 +1042,7 @@ skill.aura-plant-plus-1-plus-1.text,你的植物随从获得 +1/+1
 skill.aura-plant-plus-1-plus-1.text.golden,你的植物随从获得 +2/+2
 skill.aura-plant-plus-2-plus-2.text,你的植物随从获得 +2/+2
 skill.aura-plant-plus-2-plus-2.text.golden,你的植物随从获得 +4/+4
+skill.aura-plant-taunt.text,你的植物随从获得嘲讽
 skill.aura-school-fish-1.text,群聚：你的其他鱼纲随从获得 +1/+0；每有一个其他鱼纲随从，再获得 +0/+1
 skill.aura-school-fish-1.text.golden,群聚：你的其他鱼纲随从获得 +2/+0；每有一个其他鱼纲随从，再获得 +0/+2
 skill.aura-school-fish-2.text,群聚：你的其他鱼纲随从获得 +1/+1；每有一个其他鱼纲随从，再获得 +1 攻击力
@@ -1367,6 +1368,7 @@ skill.trigger-bird-single-windfury-this-turn.text,使一个友方鸟纲随从获
 skill.trigger-cephalopod-single-poison.text,使一个友方头足纲随从获得剧毒
 skill.trigger-cnidarian-all-plus-0-plus-4.text,使你的水螅纲随从获得 +0/+4
 skill.trigger-cnidarian-all-plus-0-plus-4.text.golden,使你的水螅纲随从获得 +0/+8
+skill.trigger-cnidarian-permanent-taunt.text,使一个友方水螅纲随从获得嘲讽
 skill.trigger-cnidarian-single-poison-this-turn.text,使一个友方水螅纲随从获得剧毒直到回合结束
 skill.trigger-cnidarian-single-reborn.text,使一个友方水螅纲随从获得复生
 skill.trigger-copy-friendly-minion.text,复制一个友方随从
@@ -1398,6 +1400,7 @@ skill.trigger-friendly-human-death-plus-1-plus-1.text.golden,每当一个友方�
 skill.trigger-friendly-human-play-plus-1-attack.text,每当一个友方人科随从进入战场，获得 +1 攻击力
 skill.trigger-friendly-human-play-plus-1-attack.text.golden,每当一个友方人科随从进入战场，获得 +2 攻击力
 skill.trigger-friendly-human-taunt-until-turn-end.text,使一个友方人科随从获得嘲讽直到回合结束
+skill.trigger-friendly-permanent-taunt.text,使一个友方随从获得嘲讽
 skill.trigger-friendly-plant-breed-2.text,使一个友方植物随从获得繁衍 2
 skill.trigger-friendly-plant-breed-2.text.golden,使一个友方植物随从获得繁衍 4
 skill.trigger-friendly-plant-sow.text,使一个友方植物随从获得播种
@@ -1458,6 +1461,7 @@ skill.trigger-protozoa-single-taunt-this-turn.text,使一个友方原生生物�
 skill.trigger-refresh-shop-free.text,刷新商店
 skill.trigger-reptile-all-plus-0-plus-3.text,使你的爬行纲随从获得 +0/+3
 skill.trigger-reptile-all-plus-0-plus-3.text.golden,使你的爬行纲随从获得 +0/+6
+skill.trigger-reptile-permanent-taunt.text,使一个友方爬行纲随从获得嘲讽
 skill.trigger-reptile-single-armor-2-this-turn.text,使一个友方爬行纲随从获得减伤 2 直到回合结束
 skill.trigger-reptile-single-armor-2-this-turn.text.golden,使一个友方爬行纲随从获得减伤 4 直到回合结束
 skill.trigger-reptile-single-poison-this-turn.text,使一个友方爬行纲随从获得剧毒直到回合结束
