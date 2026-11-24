@@ -139,6 +139,7 @@ func _connect_signals() -> void:
     _quick.join_pressed.connect(_on_join_pressed)
     _left_actions.friends_pressed.connect(_on_friends_pressed)
     _left_actions.gallery_pressed.connect(_on_gallery_pressed)
+    _left_actions.account_pressed.connect(_on_account_pressed)
     _left_actions.leaderboard_pressed.connect(_on_leaderboard_pressed)
     _room_list.invite_pressed.connect(_on_room_invite_pressed)
     _room_list.kick_requested.connect(_on_kick_pressed)
@@ -285,6 +286,10 @@ func _close_friends() -> void:
 
 func _on_gallery_pressed() -> void:
     UINavigation.navigate(self, UINavigation.PAGE_GALLERY)
+
+
+func _on_account_pressed() -> void:
+    UINavigation.navigate(self, UINavigation.PAGE_ACCOUNT)
 
 
 func _on_leaderboard_pressed() -> void:

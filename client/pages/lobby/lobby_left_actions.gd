@@ -4,6 +4,7 @@ extends HBoxContainer
 
 signal friends_pressed
 signal gallery_pressed
+signal account_pressed
 signal leaderboard_pressed
 
 var friends_button: FriendsButton
@@ -18,6 +19,8 @@ func _init() -> void:
     add_child(friends_button)
 
     add_child(_entry_button(tr("ui.gallery.entry_match"), "GalleryButton", gallery_pressed))
+    if Platform.is_steam():
+        add_child(_entry_button(tr("ui.account.title"), "AccountButton", account_pressed))
     add_child(
         _entry_button(tr("ui.leaderboard.entry"), "LeaderboardButton", leaderboard_pressed)
     )
