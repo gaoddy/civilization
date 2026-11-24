@@ -779,3 +779,135 @@ async fn reconnect_after_start_returns_snapshot() {
     assert_eq!(snapshot.view.turn.get(), 1, "选完英雄后应进入第 1 回合");
     println!("reconnect after start returned Snapshot");
 }
+
+// ---------------------------------------------------------------------------
+// 单客户端登录：顶号接管对局。
+// ---------------------------------------------------------------------------
+
+/// 等本人快照：接管进入进行中对局只靠新登录，不额外发 `Reconnect`。
+async fn wait_takeover_snapshot(client: &mut RawClient) -> Snapshot {
+    tokio::time::timeout(Duration::from_secs(10), async {
+        loop {
+            let (_, message) = client.recv_room().await.expect("等待 Snapshot 时连接关闭");
+            match message {
+                ServerMessage::Snapshot(snapshot) => return snapshot,
+                ServerMessage::HeroPickStarted(_) => {
+                    panic!("对局已进入 Playing，接管不应回 HeroPickStarted")
+                }
+                ServerMessage::Error(error) => {
+                    panic!("接管收到错误 {}: {}", error.code, error.message)
+                }
+                _ => {}
+            }
+        }
+    })
+    .await
+    .expect("10 秒内应收到 Snapshot")
+}
+
+/// 同账号新登录直接接管进行中的对局：拿到本人快照，其他玩家看不到托管。
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn second_login_takes_over_started_game() {
+    let addr = common::start_server().await;
+    let mut room = join_eight_ready(addr, "solo-game-").await;
+    let (started, _picks) = start_and_pick_all(&mut room.clients).await;
+    assert_eq!(started.len(), 8, "8 名真人选完英雄后都应开局");
+
+    let (target_id, _target_token) = room.identities[7].clone();
+    let mut next = RawClient::connect(addr).await;
+    let (next_id, _next_token) = authenticate(&mut next, "solo-game-7").await;
+    assert_eq!(next_id, target_id, "同一手机号应恢复同一账号");
+
+    let snapshot = wait_takeover_snapshot(&mut next).await;
+    assert_eq!(snapshot.view.self_.player_id, target_id, "快照应属于本人");
+    assert_eq!(snapshot.view.room_id, room.room_id, "快照应带上房间 id");
+    let own = snapshot
+        .view
+        .players
+        .iter()
+        .find(|player| player.player_id == target_id)
+        .expect("快照应包含本人座位");
+    assert!(!own.managed, "接管后本人座位不应处于托管");
+    assert!(
+        snapshot
+            .view
+            .players
+            .iter()
+            .all(|player| player.player_id == target_id || !player.managed),
+        "其他玩家不应因顶号进入托管"
+    );
+
+    // 旧连接收到顶号提示。
+    let error = match room.clients[7].recv_room().await {
+        Some((_, ServerMessage::Error(error))) => error,
+        other => panic!("旧连接应收到 SESSION_REPLACED，实际 {other:?}"),
+    };
+    assert_eq!(error.code, protocol::ErrorCode::SessionReplaced);
+
+    // 接管后的连接已绑定下发通道，可继续请求快照。
+    next.send("RequestSnapshot", json!({})).await;
+    let again = wait_takeover_snapshot(&mut next).await;
+    assert_eq!(again.view.room_id, room.room_id);
+}
+
+/// 旧连接先被强制断开再登录：接管仍成功，座位不因迟到的 `Detach` 被释放或托管。
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn takeover_after_forced_disconnect_keeps_seat() {
+    let addr = common::start_server().await;
+    let mut room = join_eight_ready(addr, "solo-drop-").await;
+    let (started, _picks) = start_and_pick_all(&mut room.clients).await;
+    assert_eq!(started.len(), 8);
+
+    let (target_id, _target_token) = room.identities[7].clone();
+    // 模拟网络断开：旧 socket 直接丢弃，服务端随后处理 Detach 与断线宽限。
+    drop(room.clients.pop().expect("应有第 8 条连接"));
+
+    let mut next = RawClient::connect(addr).await;
+    let (next_id, _next_token) = authenticate(&mut next, "solo-drop-7").await;
+    assert_eq!(next_id, target_id);
+
+    let snapshot = wait_takeover_snapshot(&mut next).await;
+    assert_eq!(snapshot.view.self_.player_id, target_id, "快照应属于本人");
+    let own = snapshot
+        .view
+        .players
+        .iter()
+        .find(|player| player.player_id == target_id)
+        .expect("快照应包含本人座位");
+    assert!(!own.managed, "接管后座位不应处于托管");
+}
+
+/// 已弃权的座位不接管：同账号新登录停在大厅，不收到房间或对局状态。
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn second_login_skips_forfeited_seat() {
+    let addr = common::start_server().await;
+    let mut room = join_eight_ready(addr, "solo-forfeit-").await;
+    let (started, _picks) = start_and_pick_all(&mut room.clients).await;
+    assert_eq!(started.len(), 8);
+
+    // 对局中离开即弃权：座位保留到本局结束，但不再接收任何推送。
+    room.clients[7].send("LeaveRoom", json!({})).await;
+    let (target_id, _target_token) = room.identities[7].clone();
+    drop(room.clients.pop().expect("应有第 8 条连接"));
+
+    let mut next = RawClient::connect(addr).await;
+    let (next_id, _next_token) = authenticate(&mut next, "solo-forfeit-7").await;
+    assert_eq!(next_id, target_id);
+
+    let quiet = tokio::time::timeout(Duration::from_millis(500), async {
+        loop {
+            let (_, message) = next.recv_room().await.expect("等待接管结果时连接关闭");
+            match message {
+                ServerMessage::RoomUpdate(update) => {
+                    panic!("弃权座位不应接管房间，实际收到房间 {}", update.room_id)
+                }
+                ServerMessage::Snapshot(_) | ServerMessage::HeroPickStarted(_) => {
+                    panic!("弃权座位不应接管对局")
+                }
+                _ => {}
+            }
+        }
+    })
+    .await;
+    assert!(quiet.is_err(), "新登录应停在大厅，不收到房间或对局状态");
+}

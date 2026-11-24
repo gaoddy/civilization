@@ -3,6 +3,7 @@
 mod common;
 
 use std::sync::Arc;
+use std::time::Duration;
 
 use chrono::{DateTime, Utc};
 use futures_util::{SinkExt, StreamExt};
@@ -306,24 +307,37 @@ async fn bind_phone_links_steam_and_phone_identity() {
     assert_eq!(phone_auth.player_id, auth.player_id);
     assert_eq!(phone_auth.player_code, auth.player_code);
 
+    // Steam 与手机号是同一账号：手机号登录把 Steam 连接顶下线，后续操作走新连接。
+    let kicked = tokio::time::timeout(Duration::from_secs(5), async {
+        loop {
+            let message = client.recv().await.expect("Steam 连接在顶号提示前关闭");
+            if let ServerMessage::Error(error) = message {
+                return error;
+            }
+        }
+    })
+    .await
+    .expect("5 秒内应收到顶号提示");
+    assert_eq!(kicked.code, ErrorCode::SessionReplaced);
+
     // 同号重复绑定幂等；不同手机号被拒绝。
     clock.advance(RESEND_COOLDOWN_MS);
-    client
+    phone_client
         .request_phone_code("13800000000")
         .await
         .expect("冷却后应能再次发送");
-    let again = client
+    let again = phone_client
         .bind_phone("13800000000", DEV_PHONE_CODE)
         .await
         .expect("同号重复绑定应幂等");
     assert_eq!(again.player_id, auth.player_id);
 
     clock.advance(RESEND_COOLDOWN_MS);
-    client
+    phone_client
         .request_phone_code("13900000000")
         .await
         .expect("新手机号验证码应发送成功");
-    let error = client
+    let error = phone_client
         .bind_phone("13900000000", DEV_PHONE_CODE)
         .await
         .expect_err("已绑定账号不能换绑");

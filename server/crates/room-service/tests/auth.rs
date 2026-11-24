@@ -76,6 +76,48 @@ fn player_code_is_six_digits_and_stable_across_token_auth() {
 }
 
 #[test]
+fn second_login_invalidates_previous_token() {
+    let clock = FixedClock::new(NOW_MS);
+    let mut store = SessionStore::new();
+    let account = room_service::Account {
+        player_id: "p_single".to_string(),
+        player_code: "100000".to_string(),
+        display_name: "玩家1".to_string(),
+        phone: None,
+        steam_id: None,
+    };
+
+    let first = store
+        .authenticate_with(
+            &phone_auth("13800000001", DEV_SMS_CODE),
+            &clock,
+            Some(account.clone()),
+        )
+        .expect("首次登录成功");
+    let second = store
+        .authenticate_with(
+            &phone_auth("13800000001", DEV_SMS_CODE),
+            &clock,
+            Some(account.clone()),
+        )
+        .expect("再次登录成功");
+
+    assert_eq!(first.player_id, second.player_id, "同一账号复用 playerId");
+    assert_ne!(first.token, second.token, "每次登录签发新令牌");
+
+    let err = store
+        .authenticate(&token_auth(&first.token), &clock)
+        .expect_err("顶号后旧令牌必须失效");
+    assert_eq!(err.code, ErrorCode::TokenExpired);
+
+    let active = store
+        .authenticate(&token_auth(&second.token), &clock)
+        .expect("新令牌仍可续登");
+    assert_eq!(active.token, second.token, "续登不轮换令牌");
+    assert_eq!(store.created_sessions(), 1, "同一账号只保留一个会话");
+}
+
+#[test]
 fn auth_rejects_wrong_code() {
     let clock = FixedClock::new(NOW_MS);
     let mut store = SessionStore::new();
