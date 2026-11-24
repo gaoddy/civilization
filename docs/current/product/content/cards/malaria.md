@@ -9,7 +9,7 @@ level: 3
 era: primitive
 attack: 6
 health: 4
-skills: [combatstart-random-enemy-contagion-1]
+skills: [combatstart-random-enemy-contagion-2]
 ---
 
 # 疟疾
@@ -28,13 +28,13 @@ skills: [combatstart-random-enemy-contagion-1]
 | 攻击力 | 6 |
 | 生命值 | 4 |
 | 关键词 | 无 |
-| 技能 | combatstart-random-enemy-contagion-1 |
+| 技能 | combatstart-random-enemy-contagion-2 |
 | 科学分类 | 原生生物界 › 顶复门 › 无腔纲 › 血孢子虫目 › 疟原虫科 |
 | 关联分类 | 寄生：人科 |
 
 ## 效果
 
-战斗开始时，使一个随机敌方随从获得 1 层传染
+战斗开始时，使一个随机敌方随从获得 2 层传染
 
 ## 出处
 
