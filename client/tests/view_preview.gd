@@ -23,7 +23,7 @@ func _ready() -> void:
         _fail("headless")
         get_tree().quit(2)
         return
-    _apply_device(str(args.get("device", "")))
+    _apply_device(str(args.get("device", "")), _preview_label(args))
     var fixture := str(args.get("fixture", ""))
     if fixture == "":
         fixture = PreviewFixture.default_for_page(str(args.get("page", "")))
@@ -115,13 +115,22 @@ func _parse_args(raw: PackedStringArray) -> Dictionary:
     return args
 
 
-func _apply_device(kind: String) -> void:
+## 窗口标题带上当前预览对象：同时开多个窗口时按标题区分。
+func _preview_label(args: Dictionary) -> String:
+    for key in ["page", "scene", "setup"]:
+        var value := str(args.get(key, ""))
+        if value != "":
+            return value.get_file().get_basename()
+    return ""
+
+
+func _apply_device(kind: String, label := "") -> void:
     var device := ScreenProfile.parse_device(kind)
     if device != "":
         ScreenProfile.set_device_for_test(device)
     var canvas := ScreenProfile.base_canvas()
     var window := get_window()
-    window.title = WINDOW_TITLE
+    window.title = WINDOW_TITLE if label == "" else "%s · %s" % [WINDOW_TITLE, label]
     window.content_scale_size = canvas
     window.size = canvas
     print("VIEW_PREVIEW_WINDOW driver=%s device=%s window=%s content_scale=%s scale=%.2f" % [
