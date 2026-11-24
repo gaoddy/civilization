@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """client_cache_copy.py：新 worktree 播种导入缓存的判定、过滤与回退。"""
 
+import contextlib
+import io
 import pathlib
 import subprocess
 import sys
@@ -11,13 +13,25 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts" / "client_cache_copy.py"
 
 
-def run(*args):
+def run(*args, cwd=None):
     return subprocess.run(
         [sys.executable, str(SCRIPT), *args],
-        cwd=ROOT,
+        cwd=cwd or ROOT,
         text=True,
         capture_output=True,
     )
+
+
+def make_git_repo(base, name="repo"):
+    repo = pathlib.Path(base) / name
+    repo.mkdir()
+    subprocess.run(["git", "init", "-q"], cwd=repo, check=True)
+    subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=repo, check=True)
+    subprocess.run(["git", "config", "user.name", "Test"], cwd=repo, check=True)
+    (repo / "README.md").write_text("test\n")
+    subprocess.run(["git", "add", "README.md"], cwd=repo, check=True)
+    subprocess.run(["git", "commit", "-qm", "init"], cwd=repo, check=True)
+    return repo
 
 
 class ClientCacheCopyTest(unittest.TestCase):
@@ -126,6 +140,137 @@ class ClientCacheCopyTest(unittest.TestCase):
             self.assertEqual(code, 0)
             self.assertTrue((worktree / "client" / ".godot" / "imported" / "tex.bin").is_file())
             self.assertTrue((worktree / "client" / "assets" / "a.png.import").is_file())
+
+    def test_auto_detects_main_checkout(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = make_git_repo(tmp)
+            imported = repo / "client" / ".godot" / "imported"
+            imported.mkdir(parents=True)
+            (imported / "tex.bin").write_bytes(b"x")
+            result = run(cwd=repo)
+            self.assertEqual(result.returncode, 0)
+            self.assertIn("当前是主检出，无需复制缓存", result.stdout)
+
+    def test_auto_detects_linked_worktree(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = make_git_repo(tmp)
+            imported = repo / "client" / ".godot" / "imported"
+            imported.mkdir(parents=True)
+            (imported / "tex.bin").write_bytes(b"x")
+            worktree = pathlib.Path(tmp) / "wt"
+            subprocess.run(
+                ["git", "worktree", "add", "--detach", str(worktree), "HEAD"],
+                cwd=repo,
+                check=True,
+                capture_output=True,
+            )
+            result = run(cwd=worktree)
+            self.assertEqual(result.returncode, 0)
+            self.assertIn("播种", result.stdout)
+            self.assertTrue((worktree / "client" / ".godot" / "imported" / "tex.bin").is_file())
+
+    def test_clone_failure_falls_back(self):
+        sys.path.insert(0, str(ROOT / "scripts"))
+        import client_cache_copy as module
+
+        with tempfile.TemporaryDirectory() as tmp:
+            src = pathlib.Path(tmp) / "src"
+            src.mkdir()
+            (src / "a.bin").write_bytes(b"a")
+            dst = pathlib.Path(tmp) / "dst"
+            real_run = module.subprocess.run
+
+            def failing_run(command, *args, **kwargs):
+                if isinstance(command, list) and command and command[0] == "cp":
+                    return subprocess.CompletedProcess(command, 1, "", "clone failed")
+                return real_run(command, *args, **kwargs)
+
+            module.subprocess.run = failing_run
+            try:
+                module.copy_tree(src, dst)
+            finally:
+                module.subprocess.run = real_run
+            self.assertEqual((dst / "a.bin").read_bytes(), b"a")
+
+    def test_unreadable_source_cache_is_handled(self):
+        sys.path.insert(0, str(ROOT / "scripts"))
+        import client_cache_copy as module
+
+        with tempfile.TemporaryDirectory() as tmp:
+            main = self.make_checkout(tmp, "main")
+            worktree = pathlib.Path(tmp) / "wt"
+            worktree.mkdir()
+            source = (main / "client" / ".godot" / "imported").resolve()
+            (source / "tex.bin").write_bytes(b"x")
+            real_count = module.count_files
+
+            def failing_count(path):
+                if path.resolve() == source:
+                    raise PermissionError("denied")
+                return real_count(path)
+
+            module.count_files = failing_count
+            try:
+                stderr = io.StringIO()
+                with contextlib.redirect_stderr(stderr):
+                    code = module.main(["--main", str(main), "--worktree", str(worktree)])
+                self.assertEqual(code, 0)
+                self.assertIn("跳过播种", stderr.getvalue())
+
+                stderr = io.StringIO()
+                with contextlib.redirect_stderr(stderr):
+                    code = module.main(
+                        ["--strict", "--main", str(main), "--worktree", str(worktree)]
+                    )
+                self.assertEqual(code, 1)
+                self.assertIn("读取主检出导入缓存失败", stderr.getvalue())
+            finally:
+                module.count_files = real_count
+
+    def test_non_git_environment_soft_skips(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            result = run(cwd=pathlib.Path(tmp))
+            self.assertEqual(result.returncode, 0)
+            self.assertIn("跳过播种", result.stderr)
+
+            strict = run("--strict", cwd=pathlib.Path(tmp))
+            self.assertEqual(strict.returncode, 1)
+
+    def test_subdir_invocation_uses_repo_root(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = make_git_repo(tmp)
+            (repo / "client" / "assets").mkdir(parents=True)
+            (repo / "client" / "assets" / "a.png").write_bytes(b"png")
+            main = self.make_checkout(tmp, "main")
+            (main / "client" / ".godot" / "imported" / "tex.bin").write_bytes(b"x")
+            (main / "client" / "assets" / "a.png").write_bytes(b"png")
+            (main / "client" / "assets" / "a.png.import").write_text("sidecar")
+            result = run("--main", str(main), cwd=repo / "client")
+            self.assertEqual(result.returncode, 0)
+            self.assertTrue((repo / "client" / "assets" / "a.png.import").is_file())
+            self.assertFalse((repo / "client" / "client").exists())
+
+    def test_quiet_suppresses_noop_messages(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            main = self.make_checkout(tmp, "main")
+            (main / "client" / ".godot" / "imported" / "tex.bin").write_bytes(b"x")
+
+            result = run("--quiet", "--main", str(main), "--worktree", str(main))
+            self.assertEqual(result.returncode, 0)
+            self.assertEqual(result.stdout.strip(), "")
+
+            worktree = pathlib.Path(tmp) / "wt"
+            (worktree / "client" / ".godot" / "imported").mkdir(parents=True)
+            (worktree / "client" / ".godot" / "imported" / "local.bin").write_bytes(b"y")
+            result = run("--quiet", "--main", str(main), "--worktree", str(worktree))
+            self.assertEqual(result.returncode, 0)
+            self.assertEqual(result.stdout.strip(), "")
+
+            seeded = pathlib.Path(tmp) / "wt2"
+            seeded.mkdir()
+            result = run("--quiet", "--main", str(main), "--worktree", str(seeded))
+            self.assertEqual(result.returncode, 0)
+            self.assertIn("播种", result.stdout)
 
     def test_copy_tree_falls_back_without_clone(self):
         sys.path.insert(0, str(ROOT / "scripts"))
