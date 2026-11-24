@@ -9,7 +9,7 @@ level: 5
 era: modern
 attack: 9
 health: 8
-skills: [keyword-reborn, aura-school-fish-1]
+skills: [keyword-reborn, aura-school-fish-2]
 ---
 
 # 腔棘鱼
@@ -28,12 +28,12 @@ skills: [keyword-reborn, aura-school-fish-1]
 | 攻击力 | 9 |
 | 生命值 | 8 |
 | 关键词 | 复生 |
-| 技能 | keyword-reborn；aura-school-fish-1 |
+| 技能 | keyword-reborn；aura-school-fish-2 |
 | 科学分类 | 动物界 › 脊索动物门 › 肉鳍鱼纲 › 腔棘鱼目 › 腔棘鱼科 |
 
 ## 效果
 
-复生：以 1 点生命复活一次；群聚：你的其他鱼纲随从获得 +1/+0；每有一个其他鱼纲随从，再获得 +0/+1
+复生：以 1 点生命复活一次；群聚：你的其他鱼纲随从获得 +1/+1；每有一个其他鱼纲随从，再获得 +1 攻击力
 
 ## 设计说明
 

@@ -9,7 +9,7 @@ level: 3
 era: classical
 attack: 4
 health: 5
-skills: [keyword-ignore-taunt, aura-school-fish-1]
+skills: [keyword-ignore-taunt, aura-school-fish-2]
 ---
 
 # 飞鱼
@@ -28,12 +28,12 @@ skills: [keyword-ignore-taunt, aura-school-fish-1]
 | 攻击力 | 4 |
 | 生命值 | 5 |
 | 关键词 | 无视嘲讽 |
-| 技能 | keyword-ignore-taunt；aura-school-fish-1 |
+| 技能 | keyword-ignore-taunt；aura-school-fish-2 |
 | 科学分类 | 动物界 › 脊索动物门 › 鱼纲 › 颌针鱼目 › 飞鱼科 |
 
 ## 效果
 
-无视嘲讽：攻击时无视敌方嘲讽；群聚：你的其他鱼纲随从获得 +1/+0；每有一个其他鱼纲随从，再获得 +0/+1
+无视嘲讽：攻击时无视敌方嘲讽；群聚：你的其他鱼纲随从获得 +1/+1；每有一个其他鱼纲随从，再获得 +1 攻击力
 
 ## 设计说明
 

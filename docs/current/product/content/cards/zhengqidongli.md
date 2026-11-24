@@ -7,7 +7,7 @@ era: industrial
 categories: [play:machine]
 taxon: power-energy
 cost: 2
-skills: [trigger-all-mech-growth-once]
+skills: [trigger-mech-optimal-attack-this-turn]
 ---
 
 # 蒸汽动力
@@ -22,13 +22,13 @@ skills: [trigger-all-mech-growth-once]
 | 星级 | 4 |
 | 时代 | 工业 |
 | 玩法 | 机械 |
-| 技能 | trigger-all-mech-growth-once |
+| 技能 | trigger-mech-optimal-attack-this-turn |
 | 费用 | 2 |
 | 科学分类 | 造物 › 动力与能源 |
 
 ## 效果
 
-使你的机械随从各获得一次成长
+你的机械随从获得无视嘲讽直到回合结束
 
 ## 出处
 

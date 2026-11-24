@@ -9,7 +9,7 @@ level: 2
 era: prehistoric
 attack: 2
 health: 5
-skills: [combatstart-random-enemy-contagion-1]
+skills: [combatstart-random-enemy-contagion-2]
 ---
 
 # 链球菌
@@ -28,12 +28,12 @@ skills: [combatstart-random-enemy-contagion-1]
 | 攻击力 | 2 |
 | 生命值 | 5 |
 | 关键词 | 无 |
-| 技能 | combatstart-random-enemy-contagion-1 |
+| 技能 | combatstart-random-enemy-contagion-2 |
 | 科学分类 | 细菌域 › 厚壁菌门 › 芽孢杆菌纲 › 乳杆菌目 › 链球菌科 |
 
 ## 效果
 
-战斗开始时，使一个随机敌方随从获得 1 层传染
+战斗开始时，使一个随机敌方随从获得 2 层传染
 
 ## 设计说明
 

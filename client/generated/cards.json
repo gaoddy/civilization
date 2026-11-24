@@ -1288,7 +1288,7 @@
     "level": 5,
     "skills": [
       "keyword-reborn",
-      "aura-school-fish-1"
+      "aura-school-fish-2"
     ],
     "subtype": "fish",
     "taxon": "coelacanthidae"
@@ -2532,7 +2532,7 @@
     "level": 3,
     "skills": [
       "keyword-ignore-taunt",
-      "aura-school-fish-1"
+      "aura-school-fish-2"
     ],
     "subtype": "fish",
     "taxon": "exocoetidae"
@@ -3157,7 +3157,7 @@
     "in_shop_pool": true,
     "level": 5,
     "skills": [
-      "trigger-all-friendly-plus-1-plus-1"
+      "trigger-friendly-single-plus-2-plus-2"
     ],
     "subtype": null,
     "taxon": "physics"
@@ -3941,7 +3941,7 @@
     "in_shop_pool": true,
     "level": 3,
     "skills": [
-      "trigger-friendly-growth-twice"
+      "trigger-friendly-single-plus-2-plus-2"
     ],
     "subtype": null,
     "taxon": "biology"
@@ -5584,7 +5584,7 @@
     "in_shop_pool": true,
     "level": 2,
     "skills": [
-      "mimic-1"
+      "mimic-3"
     ],
     "subtype": "mollusk",
     "taxon": "octopodidae"
@@ -7806,7 +7806,7 @@
     "in_shop_pool": true,
     "level": 2,
     "skills": [
-      "combatstart-random-enemy-contagion-1"
+      "combatstart-random-enemy-contagion-2"
     ],
     "subtype": "bacteria",
     "taxon": "streptococcaceae"
@@ -9841,7 +9841,7 @@
     "in_shop_pool": true,
     "level": 4,
     "skills": [
-      "trigger-all-mech-growth-once"
+      "trigger-mech-optimal-attack-this-turn"
     ],
     "subtype": null,
     "taxon": "power-energy"
