@@ -125,7 +125,8 @@
 | `lobby-room-pill-height` | 18 | 座位行房主标记胶囊高度；手机 16 |
 | `lobby-room-ready-dot` | 8 | 座位行准备圆点直径；手机 7 |
 | `lobby-room-invite-height` | 32 | 座位列表「邀请好友」按钮高度；手机 34 |
-| `lobby-room-action-height` | 40 | 创建房间操作按钮高度；手机 44 |
+| `lobby-room-action-height` | 40 | 创建房间操作按钮高度，按令牌固定、不再按触控命中抬升；手机 44 |
+| `lobby-page-margin` | 24 | 大厅页面四边内边距，被安全区包裹在内；手机 14 |
 | `aim-arc-width` | 2.5 | 选目标弧线与角标的线宽 |
 | `aim-dash` / `aim-gap` | 10 / 6 | 弧线虚线段长与间隔 |
 | `aim-dot-radius` | 2.5 | 弧线上流动光点的半径 |
@@ -181,7 +182,8 @@ iPhone 以 960×540 为宽度基准（高度随窗口扩展），对局页通过
 | `lobby-room-pill-height-compact` | 16 | iPhone 座位行房主标记胶囊高度 |
 | `lobby-room-ready-dot-compact` | 7 | iPhone 座位行准备圆点直径 |
 | `lobby-room-invite-height-compact` | 34 | iPhone 座位列表「邀请好友」按钮高度 |
-| `lobby-room-action-height-compact` | 44 | iPhone 创建房间操作按钮高度 |
+| `lobby-room-action-height-compact` | 44 | iPhone 创建房间操作按钮高度，按令牌固定 |
+| `lobby-page-margin-compact` | 14 | iPhone 大厅页面四边内边距 |
 
 - 随从详情按 `stats.sources` 行数选宽：不超过 8 行取 `detail-minion-width`；超过 8 行且 `detail-minion-width-dense` 大于当前档位基础宽度时取 dense，否则保持基础宽度。手机两档都是 200，因此来源再多也保持单列。
 - 座位行边长取栏内宽与人均可用高度的较小值（960×540 下约 57），不再使用固定行内边距；头像边长 = 行边长 − 4，血量条叠在头像底部内侧、不额外占高；行距 2 让 8 席一屏放下，左栏不出现滚动。

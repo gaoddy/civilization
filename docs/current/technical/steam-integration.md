@@ -17,7 +17,7 @@
 | `client/autoload/ws_client.gd` | `BuildConfig.SERVER_URL` 优先；Steam 构建回落到桌面地址 |
 | `client/pages/login/` | Steam 渠道自动登录、失败文案与重试/退出；非 Steam 保持手机号表单 |
 | `client/pages/account/` | 账号页与手机号绑定 |
-| `client/pages/lobby/lobby_bottom_bar.gd` | Steam 渠道的大厅「账号」入口 |
+| `client/pages/lobby/lobby_left_actions.gd` | Steam 渠道的大厅「账号」入口 |
 | `client/pages/room/room_action_bar.gd` | Steam 渠道的「邀请 Steam 好友」入口 |
 | `client/generated/build_config.gd` | 由 `scripts/gen_build_config.py` 生成；编辑器与本地调试为空配置，release 导出写入构建环境地址 |
 

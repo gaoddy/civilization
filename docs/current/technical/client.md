@@ -40,6 +40,8 @@ client/
     pill_button.gd           # 胶囊按钮：neutral/primary/danger 三变体（class_name PillButton）
     popup_layer.gd           # 弹出层外壳：遮罩、居中/锚点/四向贴边定位与点击遮罩关闭（class_name PopupLayer）
     art.gd                   # 图片取用与铺层（class_name UIArt）
+    connection_dialog.gd     # 断线弹窗：说明、重新连接与重连中（class_name ConnectionDialog）
+    social/                  # 好友入口与抽屉：FriendsButton、FriendsPanel、FriendRow、FriendRequestRow、RecentPlayerRow
     drag_preview.gd          # 拖拽预览定位（class_name UIDrag）
     long_press.gd            # 长按判定：450ms 与 8 画布单位位移取消（class_name LongPressTracker），详情层与选英雄覆盖层共用
     avatar.gd                # 头像块：继承 AvatarFrame 的圆角头像，贴图或玩法色封面 + 首字（class_name Avatar）
@@ -71,14 +73,17 @@ client/
       login.tscn/.gd         # 登录
       login_field.gd         # 表单行：标题 + 输入框（class_name LoginField）
     lobby/
-      lobby.tscn/.gd         # 大厅：开局入口在主页，好友入口在左下角、图鉴入口在右下角
-      lobby_top_bar.gd       # 顶部标题、问候与状态提示（class_name LobbyTopBar）
-      lobby_actions.gd       # 创建房间、房间码输入与加入（class_name LobbyActions）
-      lobby_bottom_bar.gd    # 底部好友与图鉴入口（class_name LobbyBottomBar）
-      friends_panel.gd       # 好友浮层：添加、申请、好友与最近队友（class_name FriendsPanel）
-      friend_row.gd          # 好友行：显示与删除（class_name FriendRow）
-      friend_request_row.gd  # 好友申请行：接受与拒绝（class_name FriendRequestRow）
-      recent_player_row.gd   # 最近队友行：按玩家码回加（class_name RecentPlayerRow）
+      lobby.tscn/.gd         # 大厅：内容区 7:3 两栏；左栏大厅图与入口，右栏玩家卡、中部卡片与操作区
+      lobby_hall_image.gd    # 大厅图：位图 cover 铺满，缺图回退下沉面板（class_name LobbyHallImage）
+      lobby_player_card.gd   # 玩家卡：头像缩写、显示名与编号（class_name LobbyPlayerCard）
+      lobby_rank_card.gd     # 段位卡：段位名与积分（class_name LobbyRankCard）
+      lobby_queue_card.gd    # 排队卡：等待时长与已凑人数（class_name LobbyQueueCard）
+      lobby_left_actions.gd  # 左栏底栏：好友入口、卡牌图鉴、排行榜与 Steam 账号入口（class_name LobbyLeftActions）
+      lobby_quick_actions.gd # 右栏快捷操作：匹配 / 取消、创建与加入（class_name LobbyQuickActions）
+      lobby_room_list.gd     # 创建模式座位列表：8 行、准备圆点、邀请与移除，行区可滚动（class_name LobbyRoomList）
+      lobby_room_actions.gd  # 创建模式操作：开始 / 解散与可见原因行（class_name LobbyRoomActions）
+      lobby_join_dialog.gd   # 加入房间弹窗：房间码校验、提交与就地错误（class_name LobbyJoinDialog）
+      lobby_notice_dialog.gd # 大厅提示弹窗：标题、说明与关闭（class_name LobbyNoticeDialog）
       invite_popup.gd        # 邀请弹层：订阅 social_changed、逐条接受/拒绝（class_name InvitePopup）
     room/
       room.tscn/.gd          # 房间等待区：装配座位矩阵、邀请与操作栏，收到 HeroPickStarted 后导航到对局页
