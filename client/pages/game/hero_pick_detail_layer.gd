@@ -1,6 +1,6 @@
-class_name RoomHeroDetailLayer
+class_name HeroPickDetailLayer
 extends DetailLayer
-## 选英雄页悬停详情：复用详情层的悬停/长按状态机，只替换内容与定位。
+## 对局页选英雄悬停详情：复用详情层的悬停/长按状态机，只替换内容与定位。
 ##
 ## 桌面悬停或触控长按候选卡时，在悬停卡外侧显示名字、介绍与技能，不显示图片；
 ## 详情层与全部子控件忽略鼠标，点击仍落到候选卡上。
@@ -9,14 +9,14 @@ var row: Control
 
 
 func _ready() -> void:
-	name = "HeroDetailLayer"
+	name = "HeroPickDetailLayer"
 	if _panel == null:
 		return
-	_panel.name = "RoomHeroDetail"
-	_panel.custom_minimum_size = Vector2(UITheme.stage_metric("room-hero-detail-width"), 0)
+	_panel.name = "HeroPickDetail"
+	_panel.custom_minimum_size = Vector2(UITheme.stage_metric("hero-detail-width"), 0)
 
 
-## 重建候选卡后恢复悬停详情；`hero_id` 由页面从旧卡元数据取出。
+## 重建候选卡后恢复悬停详情；`hero_id` 由覆盖层从旧卡元数据取出。
 func show_for(card: Control, hero_id: String) -> void:
 	if card == null or hero_id == "":
 		return
@@ -34,7 +34,7 @@ func visible_hero_id() -> String:
 
 ## 选英雄页固定使用英雄详情卡宽度，不随详情类别切换。
 func _panel_width(_kind: String) -> int:
-	return UITheme.stage_metric("room-hero-detail-width")
+	return UITheme.stage_metric("hero-detail-width")
 
 
 func _render_hero_detail(box: VBoxContainer, hero_id: Variant) -> void:

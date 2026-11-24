@@ -1,8 +1,13 @@
 //! `sim bot --connect`：真实 WebSocket 客户端。
 //!
-//! 协议顺序固定为：`AuthRequest` →（`CreateRoom` | `JoinRoom`）→
-//! `SelectHeroCard` → `Ready` → 等 `GameStarted` → 循环按 [`brain`] 决策发送
-//! `IntentMessage`，直到 `GameOver`。
+//! 协议顺序固定为：`AuthRequest` →（`CreateRoom` | `JoinRoom`）→ `Ready` →
+//! 房主在全员准备后发 `StartGame` → 等 `HeroPickStarted` 并发送 `SelectHeroCard` →
+//! 等 `GameStarted` → 循环按 [`brain`] 决策发送 `IntentMessage`，直到 `GameOver`。
+//!
+//! 建房机器人同时承担房主：8 名真人全部准备后发送一次 `StartGame`。
+//! 机器人房主只在编排式入口（`sim dev` / `sim load`）与手动 `--create` 中出现，
+//! 这些流程都先打印房间码、等其余真人入房，因此不能按「补位开启即开始」提前开局。
+//! 选英雄优先使用 [`BotConfig::hero`]，不在本人候选内时取候选第一张。
 //!
 //! 每个意图使用确定性递增的 `clientIntentId`（`{name}-{counter}`）。客户端只对
 //! 「自身视角有新变化」的视图做一次决策，避免重连广播导致的重复意图。
@@ -15,7 +20,7 @@ use protocol::ErrorCode;
 use protocol::ServerEnvelope;
 use protocol::ServerMessage;
 use protocol::intents::Intent;
-use protocol::server::RoomUpdate;
+use protocol::server::{HeroPickStarted, RoomUpdate};
 use protocol::view::PlayerView;
 use rule_engine::data::Catalog;
 use serde_json::{Value, json};
@@ -24,6 +29,7 @@ use tokio::sync::{mpsc, watch};
 use tokio_tungstenite::MaybeTlsStream;
 use tokio_tungstenite::tungstenite::Message;
 
+use crate::PLAYER_COUNT;
 use crate::bot::brain;
 
 /// 机器人连接配置。
@@ -210,18 +216,12 @@ async fn run_inner(config: &mut BotConfig, options: &mut BotOptions) -> Result<B
         return leave_room(&mut ws, &mut conn.seq).await;
     }
 
-    // 英雄只能从服务端分配给本人的候选里选：优先用配置的英雄，不在候选里就退到第一张。
-    let hero = pick_hero(&room_update, &config.hero)?;
-    send(
-        &mut ws,
-        "SelectHeroCard",
-        json!({ "cardId": hero }),
-        &mut conn.seq,
-    )
-    .await?;
+    // 大厅只提交准备；开局由房主显式 `StartGame` 触发，选英雄在其后的阶段进行。
     send(&mut ws, "Ready", json!({ "ready": true }), &mut conn.seq).await?;
 
     let mut turns = 1_u8;
+    let mut start_sent = false;
+    let mut hero_pick_sent = false;
     loop {
         let message = tokio::select! {
             _ = wait_stop(&mut options.stop) => {
@@ -233,6 +233,30 @@ async fn run_inner(config: &mut BotConfig, options: &mut BotOptions) -> Result<B
             return Err("连接在对局结束前关闭".into());
         };
         match message {
+            ServerMessage::RoomUpdate(update) => {
+                // 建房机器人同时是房主：8 名真人全部准备后由它开始对局。
+                if config.create && !start_sent && all_ready(&update) {
+                    start_sent = true;
+                    if !options.quiet {
+                        eprintln!("bot {} 全员已准备，发送 StartGame", config.name);
+                    }
+                    send(&mut ws, "StartGame", json!({}), &mut conn.seq).await?;
+                }
+            }
+            ServerMessage::HeroPickStarted(pick) => {
+                // 每次有人确认都会再推一次；本人已选或已被超时自动选则跳过。
+                if !hero_pick_sent && !picked_for_name(&pick, &config.name) {
+                    let hero = pick_hero(&pick, &config.hero)?;
+                    send(
+                        &mut ws,
+                        "SelectHeroCard",
+                        json!({ "cardId": hero }),
+                        &mut conn.seq,
+                    )
+                    .await?;
+                    hero_pick_sent = true;
+                }
+            }
             ServerMessage::GameStarted(started) => {
                 emit(options, BotEvent::GameStarted);
                 turns = turn_of(&started.view);
@@ -344,6 +368,41 @@ async fn run_inner(config: &mut BotConfig, options: &mut BotOptions) -> Result<B
     }
 }
 
+/// 是否满足开始条件：8 名真人全部准备。
+///
+/// `RoomUpdate.players` 只含真人（机器人由服务端在开局时补入）。机器人房主只出现在
+/// 编排式入口与手动 `--create` 中，这些流程都在打印房间码后等待其余真人入房，因此
+/// 不能因为补位开启就在真人不足 8 时提前开局：后到的入房者会被 `INVALID_STAGE` 拒绝。
+fn all_ready(update: &RoomUpdate) -> bool {
+    update.players.len() == usize::from(PLAYER_COUNT)
+        && update.players.iter().all(|player| player.ready)
+}
+
+/// 本人在选英雄视图里是否已确认；按展示名匹配，机器人名字在房内唯一。
+fn picked_for_name(pick: &HeroPickStarted, name: &str) -> bool {
+    pick.players
+        .iter()
+        .any(|player| player.display_name == name && player.picked)
+}
+
+/// 从本人候选里选英雄：优先配置英雄，不在候选内则取第一张。
+///
+/// 候选只来自服务端 `HeroPickStarted`，机器人不做随机或卡表推断。
+///
+/// # Errors
+///
+/// 本人候选为空时返回错误，避免发送空 `cardId` 被服务端拒绝。
+pub fn pick_hero(pick: &HeroPickStarted, preferred: &str) -> Result<String, String> {
+    if pick.candidates.is_empty() {
+        return Err("选英雄阶段没有本人候选".into());
+    }
+    if pick.candidates.iter().any(|card| card == preferred) {
+        Ok(preferred.to_string())
+    } else {
+        Ok(pick.candidates[0].clone())
+    }
+}
+
 /// 由机器人名字派生稳定且互不相同的手机号：同一手机号会恢复同一账号，
 /// 多台机器人必须各自拥有独立身份。
 fn phone_for(name: &str) -> String {
@@ -424,25 +483,6 @@ async fn authenticate(
             _ => {}
         }
     }
-}
-
-/// 从本人的 `RoomUpdate` 里挑一张候选英雄。
-///
-/// 服务端只给本人填充 `heroCandidates`，机器人必须在这组候选里选；
-/// 配置里的英雄不在候选内时退到第一张，保证机器人总能进入准备状态。
-fn pick_hero(update: &RoomUpdate, preferred: &str) -> Result<String, String> {
-    let candidates = update
-        .players
-        .iter()
-        .flat_map(|item| item.hero_candidates.clone().unwrap_or_default())
-        .collect::<Vec<_>>();
-    if candidates.iter().any(|id| id == preferred) {
-        return Ok(preferred.to_string());
-    }
-    candidates
-        .into_iter()
-        .next()
-        .ok_or_else(|| "服务端未下发英雄候选".to_string())
 }
 
 async fn wait_room_update(
@@ -638,4 +678,39 @@ async fn receive(ws: &mut Ws) -> Result<Option<ServerMessage>, String> {
         }
     }
     Ok(None)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::pick_hero;
+    use protocol::HeroPickStartedPlayersItem;
+    use protocol::server::HeroPickStarted;
+
+    fn pick(candidates: &[&str]) -> HeroPickStarted {
+        HeroPickStarted {
+            candidates: candidates.iter().map(|card| (*card).to_string()).collect(),
+            deadline: "2026-01-01T00:00:00Z".to_string(),
+            players: vec![HeroPickStartedPlayersItem {
+                display_name: "bot0".to_string(),
+                is_bot: false,
+                picked: false,
+                seat: 0,
+            }],
+        }
+    }
+
+    #[test]
+    fn pick_hero_prefers_configured_card() {
+        assert_eq!(pick_hero(&pick(&["a", "b", "c"]), "b").unwrap(), "b");
+    }
+
+    #[test]
+    fn pick_hero_falls_back_to_first_candidate() {
+        assert_eq!(pick_hero(&pick(&["a", "b"]), "missing").unwrap(), "a");
+    }
+
+    #[test]
+    fn pick_hero_rejects_empty_candidates() {
+        assert!(pick_hero(&pick(&[]), "b").is_err());
+    }
 }

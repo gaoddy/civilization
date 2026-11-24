@@ -1620,6 +1620,13 @@ fn map_room_message(
             player_id,
             ready: request.ready,
         })),
+        ClientMessage::StartGame(_) => {
+            Ok(RoomMessage::Command(RoomCommand::StartGame { player_id }))
+        }
+        ClientMessage::SetBotFill(request) => Ok(RoomMessage::Command(RoomCommand::SetBotFill {
+            player_id,
+            enabled: request.enabled,
+        })),
         ClientMessage::SelectHeroCard(request) => {
             Ok(RoomMessage::Command(RoomCommand::SelectHero {
                 player_id,
@@ -2283,7 +2290,7 @@ impl RoomTask {
             },
         );
         if self.game.is_some() {
-            // 对局中的断线曾写回注册表；重连回来要清掉宽限标记，避免回房后被误释放。
+            // 对局中的断线曾写回注册表；重连回来要清掉宽限标记，避免对局内被误释放。
             {
                 let mut rooms = self.state.rooms.lock().await;
                 let _ = rooms.mark_reconnected(&self.room_id, &player_id);
@@ -2353,9 +2360,10 @@ impl RoomTask {
             };
             self.deliver(updates).await;
         } else {
-            let result = {
+            let (result, ranked) = {
                 let mut rooms = self.state.rooms.lock().await;
-                rooms.mark_reconnected(&self.room_id, &player_id)
+                let ranked = rooms.room(&self.room_id).is_some_and(|room| room.ranked);
+                (rooms.mark_reconnected(&self.room_id, &player_id), ranked)
             };
             if result.is_err() {
                 self.send_lobby_error(&player_id, "NOT_IN_ROOM", "座位已释放")
@@ -2363,7 +2371,10 @@ impl RoomTask {
                 self.senders.remove(&player_id);
                 return;
             }
-            self.send_room_update_to(&player_id).await;
+            // 匹配房跳过大厅阶段：重连不补发 `RoomUpdate`，等 `GameStarted`。
+            if !ranked {
+                self.send_room_update_to(&player_id).await;
+            }
         }
     }
 
@@ -2379,8 +2390,8 @@ impl RoomTask {
                     player_id: player_id.clone(),
                 });
             }
-            // 对局中的断线同样写回注册表：对局结束回房后，大厅 tick 才能在
-            // 宽限期后释放该座位；只记在 GameTask 里会让座位永久残留。
+            // 对局中的断线同样写回注册表：大厅 tick 才能在宽限期后释放该座位；
+            // 只记在 GameTask 里会让座位一直占着。对局结束房间直接销毁，不回房。
             let now = self.state.clock.now_ms();
             let _ = {
                 let mut rooms = self.state.rooms.lock().await;
@@ -2409,7 +2420,7 @@ impl RoomTask {
             return;
         }
         if self.game.is_some() {
-            // 对局中退出按弃权结算：座位保留到本局结束，回房重置时统一移除。
+            // 对局中退出按弃权结算：座位保留到本局结束，随后随房间一起销毁。
             let updates = {
                 let game = self.game.as_mut().expect("刚判空");
                 game.handle(RoomCommand::Forfeit {
@@ -2462,17 +2473,8 @@ impl RoomTask {
                     rooms.ready(&self.room_id, &player_id, ready)
                 };
                 match result {
-                    Ok(()) => {
-                        let all_ready = {
-                            let rooms = self.state.rooms.lock().await;
-                            rooms.start_ready(&self.room_id).is_some()
-                        };
-                        if all_ready {
-                            self.start_game().await;
-                        } else {
-                            self.broadcast_room_update().await;
-                        }
-                    }
+                    // 准备只更新状态：开局改由房主显式 `StartGame` 触发。
+                    Ok(()) => self.broadcast_room_update().await,
                     Err(error) => {
                         let code = error.code().to_string();
                         let message = error.to_string();
@@ -2480,10 +2482,13 @@ impl RoomTask {
                     }
                 }
             }
-            RoomCommand::SelectHero { player_id, card_id } => {
+            RoomCommand::StartGame { player_id } => {
+                self.start_game(&player_id).await;
+            }
+            RoomCommand::SetBotFill { player_id, enabled } => {
                 let result = {
                     let mut rooms = self.state.rooms.lock().await;
-                    rooms.select_hero(&self.room_id, &player_id, &card_id, &self.state.catalog)
+                    rooms.set_bot_fill(&self.room_id, &player_id, enabled)
                 };
                 match result {
                     Ok(()) => self.broadcast_room_update().await,
@@ -2493,6 +2498,11 @@ impl RoomTask {
                         self.send_lobby_error(&player_id, &code, &message).await;
                     }
                 }
+            }
+            RoomCommand::SelectHero { player_id, .. } => {
+                // 选英雄只在对局内的选英雄阶段有效。
+                self.send_lobby_error(&player_id, "INVALID_STAGE", "对局尚未开始")
+                    .await;
             }
             RoomCommand::RequestSnapshot { player_id } => {
                 self.send_room_update_to(&player_id).await;
@@ -2596,20 +2606,16 @@ impl RoomTask {
         }
     }
 
-    /// 大厅 → 对局交接：先校验并取得英雄表，构造 `GameTask` 成功后才提交阶段。
+    /// 房主开始对局：先只读构造开局计划与 `GameTask`，成功后才提交阶段。
     ///
-    /// 这样 `GameTask::new` 失败时房间仍停留在 `Lobby`，玩家可以正常 `Leave`，
-    /// 注册表也会在最后一人离开时回收，不会留下「已离开大厅但没有对局」的死房间。
-    async fn start_game(&mut self) {
+    /// `prepare_start` 失败（非房主、阶段、准备或补位人数不足）只回大厅错误，
+    /// 注册表不变；`GameTask::new_picking` 失败同样不提交，房间仍可离开。
+    async fn start_game(&mut self, actor: &str) {
         let prepared = {
             let rooms = self.state.rooms.lock().await;
-            let Some(host) = rooms.room(&self.room_id).map(|room| room.host_id.clone()) else {
-                return;
-            };
-            match rooms.start_heroes(&self.room_id, &host) {
-                Ok(heroes) => rooms
-                    .room(&self.room_id)
-                    .map(|room| (heroes, room.players(), room.playstyles)),
+            let bot_fill = rooms.room(&self.room_id).is_some_and(|room| room.bot_fill);
+            match rooms.prepare_start(&self.room_id, actor, &self.state.catalog) {
+                Ok(plan) => Some((plan, bot_fill)),
                 Err(error) => {
                     let code = error.code().to_string();
                     let message = error.to_string();
@@ -2619,21 +2625,24 @@ impl RoomTask {
                 }
             }
         };
-        let Some((heroes, players, playstyles)) = prepared else {
+        let Some((plan, bot_fill)) = prepared else {
             return;
         };
+        let humans = plan.slots.iter().filter(|slot| !slot.is_bot).count();
+        let bots = plan.slots.len().saturating_sub(humans);
 
-        let seed = self.seed;
-        let game = match GameTask::new(
+        let game = match GameTask::new_picking(
             self.state.catalog.clone(),
-            seed,
-            playstyles,
-            heroes,
-            players,
+            plan.seed,
+            plan.playstyles,
+            plan.candidates.clone(),
+            plan.slots.clone(),
             self.state.clock.clone(),
             self.state.achievements.clone(),
         ) {
-            Ok(game) => game.with_room_id(self.room_id.clone()),
+            Ok(game) => game
+                .with_room_id(self.room_id.clone())
+                .with_ranked(plan.ranked),
             Err(error) => {
                 // 阶段尚未提交，房间仍在 `Lobby`；错误只通知当前连接，玩家可重试或离开。
                 self.broadcast_lobby_error("INTERNAL_ERROR", &error.to_string())
@@ -2642,10 +2651,10 @@ impl RoomTask {
             }
         };
 
-        // 对局构造成功后才提交阶段。
+        // 对局构造成功后才提交阶段与机器人座位。
         {
             let mut rooms = self.state.rooms.lock().await;
-            if let Err(error) = rooms.commit_start(&self.room_id) {
+            if let Err(error) = rooms.commit_start(&self.room_id, plan) {
                 let code = error.code().to_string();
                 let message = error.to_string();
                 drop(rooms);
@@ -2654,10 +2663,14 @@ impl RoomTask {
             }
         }
 
+        eprintln!(
+            "room-service: start room={} humans={} bots={} bot_fill={}",
+            self.room_id, humans, bots, bot_fill
+        );
         self.activate_game(game).await;
     }
 
-    /// 匹配房开局：阶段已由 `RoomRegistry::create_match` 推进到 `Recruit`。
+    /// 匹配房开局：候选与座位已由 `RoomRegistry::create_match` 写入，直接进入选英雄阶段。
     ///
     /// 与大厅开局共用 [`RoomTask::activate_game`] 的发送端绑定与开局通知。
     async fn start_ranked_game(&mut self) {
@@ -2667,20 +2680,9 @@ impl RoomTask {
             let Some(room) = rooms.room(&self.room_id) else {
                 return;
             };
-            let mut heroes = BTreeMap::new();
-            for (&seat, slot) in room.slots() {
-                let Some(hero) = slot.hero_card_id.clone() else {
-                    eprintln!(
-                        "room-service: 匹配房 room={} seat={seat} 缺少英雄",
-                        self.room_id
-                    );
-                    return;
-                };
-                heroes.insert(seat, hero);
-            }
-            (heroes, room.players(), room.playstyles)
+            (room.players(), room.candidates().clone(), room.playstyles)
         };
-        let (heroes, players, playstyles) = prepared;
+        let (players, candidates, playstyles) = prepared;
         // 开局积分快照：后续结算一律使用这里的值，不中途再读存储。
         self.ranked_start_ratings = {
             let ratings = self.state.ratings.lock().await;
@@ -2694,11 +2696,11 @@ impl RoomTask {
                 })
                 .collect()
         };
-        let game = match GameTask::new(
+        let game = match GameTask::new_picking(
             self.state.catalog.clone(),
             self.seed,
             playstyles,
-            heroes,
+            candidates,
             players,
             self.state.clock.clone(),
             self.state.achievements.clone(),
@@ -2715,9 +2717,9 @@ impl RoomTask {
         self.activate_game(game).await;
     }
 
-    /// 对局已构造成功：绑定各连接发送端、下发 `GameStarted` 并进入对局状态。
+    /// 对局已构造成功：绑定各连接发送端、下发 `HeroPickStarted` 并进入对局状态。
     async fn activate_game(&mut self, mut game: GameTask) {
-        // 每次建连的发送端都先绑定（首次连接也走这里），随后 `GameStarted` 用同一
+        // 每次建连的发送端都先绑定（首次连接也走这里），随后 `HeroPickStarted` 用同一
         // 座位通道编号，保证序号连续。
         for (player_id, sender) in &self.senders {
             game.bind_sender(player_id, sender.out.clone());
@@ -2726,7 +2728,7 @@ impl RoomTask {
         for (player_id, sender) in &self.senders {
             if let Some(seat) = game.seat_of(player_id) {
                 game.set_seq_floor(seat, sender.floor.current());
-                if let Some(envelope) = game.game_started_for(seat) {
+                if let Some(envelope) = game.hero_pick_started_for(seat) {
                     sender.floor.record(envelope.seq.get());
                     started.push((sender.out.clone(), envelope));
                 }
@@ -2900,30 +2902,26 @@ impl RoomTask {
             .collect();
 
         let mut rooms = self.state.rooms.lock().await;
-        // 每个座位单独序列化：`heroCandidates` 只出现在本人那份里。
-        let mut payloads = Vec::new();
-        for (player_id, out, floor) in &targets {
-            let Some(update) = rooms.room_update_for(&self.room_id, player_id) else {
-                continue;
-            };
-            let Ok(value) = serde_json::to_value(&update) else {
-                continue;
-            };
-            let Value::Object(payload) = value else {
-                continue;
-            };
-            payloads.push((player_id.clone(), out.clone(), floor.clone(), payload));
-        }
-        let Some(room) = rooms.room_mut(&self.room_id) else {
+        // 同一载荷广播：等待区不再按座位下发不同候选。
+        let Some(update) = rooms.room_update(&self.room_id) else {
+            return;
+        };
+        let Ok(value) = serde_json::to_value(&update) else {
+            return;
+        };
+        let Value::Object(payload) = value else {
             return;
         };
         let mut envelopes = Vec::new();
-        for (player_id, out, floor, payload) in payloads {
-            let Some(slot) = room.slot_entry_mut(&player_id) else {
+        for (player_id, out, floor) in targets {
+            let Some(slot) = rooms
+                .room_mut(&self.room_id)
+                .and_then(|room| room.slot_entry_mut(&player_id))
+            else {
                 continue;
             };
             slot.channel.set_next_seq(floor.current());
-            if let Ok(envelope) = slot.channel.bind("RoomUpdate", payload) {
+            if let Ok(envelope) = slot.channel.bind("RoomUpdate", payload.clone()) {
                 floor.record(envelope.seq.get());
                 envelopes.push((out, envelope));
             }
@@ -2941,7 +2939,7 @@ impl RoomTask {
         let out = sender.out.clone();
         let floor = sender.floor.clone();
         let mut rooms = self.state.rooms.lock().await;
-        let Some(update) = rooms.room_update_for(&self.room_id, player_id) else {
+        let Some(update) = rooms.room_update(&self.room_id) else {
             return;
         };
         let Ok(value) = serde_json::to_value(&update) else {
@@ -3073,70 +3071,270 @@ mod tests {
             .expect("开发验证码应登录成功")
     }
 
-    /// `GameTask::new` 失败时，房间必须仍在 `Lobby`，且玩家可以正常离开。
-    #[tokio::test]
-    async fn game_task_failure_leaves_room_in_lobby() {
-        let clock = FixedClock::new(1_000_000);
-        let mut state = AppState::new(Arc::new(clock.clone())).expect("状态应能构造");
+    /// 构造一个大厅房间，返回房间 id 与按座位升序的 playerId。
+    async fn lobby_with_humans(
+        state: &AppState,
+        clock: &FixedClock,
+        names: &[&str],
+    ) -> (String, Vec<String>) {
         let mut store = SessionStore::new();
+        let mut rooms = state.rooms.lock().await;
+        let host = session(&mut store, clock, names[0]);
+        let host_id = host.player_id.clone();
+        let created = rooms.create(&host, &state.catalog);
+        let room_id = created.id.clone();
+        let code = created.code.clone();
+        let mut players = vec![host_id];
+        for name in &names[1..] {
+            let player = session(&mut store, clock, name);
+            players.push(player.player_id.clone());
+            rooms
+                .join(&code, &player, &state.catalog)
+                .expect("加入成功");
+        }
+        (room_id, players)
+    }
 
-        let (room_id, host_id, last_hero) = {
-            let mut rooms = state.rooms.lock().await;
-            let host = session(&mut store, &clock, "房主");
-            let host_id = host.player_id.clone();
-            let created = rooms.create(&host, &state.catalog);
-            let room_id = created.id.clone();
-            let code = created.code.clone();
-
-            let mut players = vec![host];
-            for index in 1..8 {
-                let player = session(&mut store, &clock, &format!("玩家{index}"));
-                rooms
-                    .join(&code, &player, &state.catalog)
-                    .expect("加入成功");
-                players.push(player);
-            }
-            let mut last_hero = String::new();
-            for player in &players {
-                let hero = rooms
-                    .candidates_of(&room_id, &player.player_id)
-                    .and_then(|list| list.into_iter().next())
-                    .expect("每人都有候选");
-                rooms
-                    .select_hero(&room_id, &player.player_id, &hero, &state.catalog)
-                    .expect("选英雄成功");
-                rooms
-                    .ready(&room_id, &player.player_id, true)
-                    .expect("准备成功");
-                last_hero = hero;
-            }
-            assert!(rooms.start_ready(&room_id).is_some(), "应满足开局条件");
-            (room_id, host_id, last_hero)
-        };
-
-        // 移除一张已选英雄卡，使 `GameTask::new` 必然失败。
-        state.catalog.heroes.remove(&last_hero);
-
-        let mut task = RoomTask {
+    fn task_for(state: AppState, room_id: String) -> RoomTask {
+        RoomTask {
             state,
-            room_id: room_id.clone(),
+            room_id,
             seed: 7,
             game: None,
             senders: BTreeMap::new(),
             presence_end_notified: false,
             ranked_start_deadline_ms: None,
             ranked_start_ratings: BTreeMap::new(),
+        }
+    }
+
+    fn add_sender(task: &mut RoomTask, player_id: &str) -> mpsc::Receiver<ServerEnvelope> {
+        let (out, rx) = mpsc::channel::<ServerEnvelope>(32);
+        task.senders.insert(
+            player_id.to_string(),
+            SeatSender {
+                out,
+                floor: SeqFloor::default(),
+                generation: 1,
+            },
+        );
+        rx
+    }
+
+    async fn recv_envelope(rx: &mut mpsc::Receiver<ServerEnvelope>) -> ServerEnvelope {
+        tokio::time::timeout(std::time::Duration::from_millis(500), rx.recv())
+            .await
+            .expect("应在超时前收到下行消息")
+            .expect("下行通道不应关闭")
+    }
+
+    async fn recv_error_code(rx: &mut mpsc::Receiver<ServerEnvelope>) -> protocol::ErrorCode {
+        match recv_envelope(rx).await.parse().expect("载荷可解析") {
+            protocol::ServerMessage::Error(error) => error.code,
+            other => panic!("期望 Error，实际 {other:?}"),
+        }
+    }
+
+    #[tokio::test]
+    async fn start_game_command_requires_host() {
+        let clock = FixedClock::new(1_000_000);
+        let state = AppState::new(Arc::new(clock.clone())).expect("状态应能构造");
+        let (room_id, players) = lobby_with_humans(&state, &clock, &["房主", "玩家2"]).await;
+        for player_id in &players {
+            let mut rooms = state.rooms.lock().await;
+            rooms.ready(&room_id, player_id, true).expect("准备成功");
+        }
+        let mut task = task_for(state, room_id.clone());
+        let mut rx = add_sender(&mut task, &players[1]);
+
+        task.on_lobby_command(RoomCommand::StartGame {
+            player_id: players[1].clone(),
+        })
+        .await;
+
+        assert_eq!(recv_error_code(&mut rx).await, protocol::ErrorCode::NotHost);
+        assert!(task.game.is_none(), "非房主开始不应创建对局");
+        let rooms = task.state.rooms.lock().await;
+        assert_eq!(rooms.room(&room_id).expect("房间仍在").phase, Phase::Lobby);
+    }
+
+    #[tokio::test]
+    async fn ready_does_not_auto_start() {
+        let clock = FixedClock::new(1_000_000);
+        let state = AppState::new(Arc::new(clock.clone())).expect("状态应能构造");
+        let names = ["p0", "p1", "p2", "p3", "p4", "p5", "p6", "p7"];
+        let (room_id, players) = lobby_with_humans(&state, &clock, &names).await;
+        let mut task = task_for(state, room_id.clone());
+
+        for player_id in &players {
+            task.on_lobby_command(RoomCommand::Ready {
+                player_id: player_id.clone(),
+                ready: true,
+            })
+            .await;
+        }
+
+        assert!(task.game.is_none(), "全员准备不得自动开局");
+        {
+            let rooms = task.state.rooms.lock().await;
+            assert_eq!(rooms.room(&room_id).expect("房间仍在").phase, Phase::Lobby);
+        }
+
+        let mut rx = add_sender(&mut task, &players[0]);
+        task.on_lobby_command(RoomCommand::StartGame {
+            player_id: players[0].clone(),
+        })
+        .await;
+        assert!(task.game.is_some(), "房主 StartGame 后才开局");
+        match recv_envelope(&mut rx).await.parse().expect("载荷可解析") {
+            protocol::ServerMessage::HeroPickStarted(_) => {}
+            other => panic!("期望先收到 HeroPickStarted，实际 {other:?}"),
+        }
+    }
+
+    #[tokio::test]
+    async fn set_bot_fill_broadcasts_room_update() {
+        let clock = FixedClock::new(1_000_000);
+        let state = AppState::new(Arc::new(clock.clone())).expect("状态应能构造");
+        let (room_id, players) = lobby_with_humans(&state, &clock, &["房主"]).await;
+        let mut task = task_for(state, room_id);
+        let mut rx = add_sender(&mut task, &players[0]);
+
+        task.on_lobby_command(RoomCommand::SetBotFill {
+            player_id: players[0].clone(),
+            enabled: false,
+        })
+        .await;
+
+        match recv_envelope(&mut rx).await.parse().expect("载荷可解析") {
+            protocol::ServerMessage::RoomUpdate(update) => {
+                assert!(!update.bot_fill, "广播应反映关闭后的补位开关");
+                assert_eq!(update.players.len(), 1);
+                assert_eq!(update.players[0].seat, 0);
+            }
+            other => panic!("期望 RoomUpdate，实际 {other:?}"),
+        }
+    }
+
+    #[tokio::test]
+    async fn select_hero_in_lobby_is_invalid_stage() {
+        let clock = FixedClock::new(1_000_000);
+        let state = AppState::new(Arc::new(clock.clone())).expect("状态应能构造");
+        let (room_id, players) = lobby_with_humans(&state, &clock, &["房主"]).await;
+        let mut task = task_for(state, room_id);
+        let mut rx = add_sender(&mut task, &players[0]);
+
+        task.on_lobby_command(RoomCommand::SelectHero {
+            player_id: players[0].clone(),
+            card_id: "darwin".to_string(),
+        })
+        .await;
+
+        assert_eq!(
+            recv_error_code(&mut rx).await,
+            protocol::ErrorCode::InvalidStage
+        );
+        assert!(task.game.is_none());
+    }
+
+    #[tokio::test]
+    async fn start_game_sends_hero_pick_then_game_started() {
+        let clock = FixedClock::new(1_000_000);
+        let state = AppState::new(Arc::new(clock.clone())).expect("状态应能构造");
+        let (room_id, players) = lobby_with_humans(&state, &clock, &["房主"]).await;
+        {
+            let mut rooms = state.rooms.lock().await;
+            rooms.ready(&room_id, &players[0], true).expect("准备成功");
+        }
+        let mut task = task_for(state, room_id.clone());
+        let mut rx = add_sender(&mut task, &players[0]);
+
+        task.on_lobby_command(RoomCommand::StartGame {
+            player_id: players[0].clone(),
+        })
+        .await;
+
+        let hero = match recv_envelope(&mut rx).await.parse().expect("载荷可解析") {
+            protocol::ServerMessage::HeroPickStarted(payload) => {
+                assert_eq!(payload.candidates.len(), 4, "本人候选应下发");
+                assert!(payload.players.iter().skip(1).all(|item| item.is_bot));
+                payload.candidates[0].clone()
+            }
+            other => panic!("期望先收到 HeroPickStarted，实际 {other:?}"),
         };
-        task.start_game().await;
+
+        task.on_command(RoomCommand::SelectHero {
+            player_id: players[0].clone(),
+            card_id: hero,
+        })
+        .await;
+
+        match recv_envelope(&mut rx).await.parse().expect("载荷可解析") {
+            protocol::ServerMessage::GameStarted(_) => {}
+            other => panic!("期望选完后收到 GameStarted，实际 {other:?}"),
+        }
+        assert_eq!(
+            task.game.as_ref().expect("对局已开始").stage(),
+            crate::game::GameStage::Playing
+        );
+    }
+
+    /// 构造 `GameTask` 失败时，房间必须仍在 `Lobby`，且玩家可以正常离开。
+    #[tokio::test]
+    async fn start_game_without_heroes_leaves_room_in_lobby() {
+        let clock = FixedClock::new(1_000_000);
+        let mut state = AppState::new(Arc::new(clock.clone())).expect("状态应能构造");
+        let names = ["p0", "p1", "p2", "p3", "p4", "p5", "p6", "p7"];
+        let (room_id, players) = lobby_with_humans(&state, &clock, &names).await;
+        for player_id in &players {
+            let mut rooms = state.rooms.lock().await;
+            rooms.ready(&room_id, player_id, true).expect("准备成功");
+        }
+        // 清空英雄卡：`prepare_start` 仍可构造计划，但候选为空，`new_picking` 必然失败。
+        state.catalog.heroes.clear();
+        let host = players[0].clone();
+
+        let mut task = task_for(state, room_id.clone());
+        task.start_game(&host).await;
 
         assert!(task.game.is_none(), "构造失败不应保存对局");
         let mut rooms = task.state.rooms.lock().await;
         let phase = rooms.room(&room_id).expect("房间应仍存在").phase;
         assert_eq!(phase, Phase::Lobby, "构造失败后房间必须留在 Lobby");
         assert!(
-            rooms.leave(&room_id, &host_id).is_ok(),
+            rooms.leave(&room_id, &host).is_ok(),
             "Lobby 阶段房主应能正常离开"
         );
+    }
+
+    /// 匹配房重连不补发 `RoomUpdate`：匹配局没有大厅视图，等 `GameStarted`。
+    #[tokio::test]
+    async fn ranked_room_reconnect_skips_room_update() {
+        let clock = FixedClock::new(1_000_000);
+        let state = AppState::new(Arc::new(clock.clone())).expect("状态应能构造");
+        let mut store = SessionStore::new();
+        let sessions: Vec<_> = (0..8)
+            .map(|index| session(&mut store, &clock, &format!("p{index}")))
+            .collect();
+        let player_id = sessions[2].player_id.clone();
+        let room_id = {
+            let mut rooms = state.rooms.lock().await;
+            rooms
+                .create_match(&sessions, &state.catalog)
+                .expect("匹配房应能创建")
+                .id
+        };
+        let mut task = task_for(state, room_id);
+        let mut rx = add_sender(&mut task, &player_id);
+        let (out, mut out_rx) = mpsc::channel::<ServerEnvelope>(4);
+
+        task.reconnect(player_id.clone(), 0, out, SeqFloor::default(), 1)
+            .await;
+
+        // 重连会用新发送端替换同一 `player_id` 的旧表项，所以断言必须看新连接的接收端；
+        // 旧 `rx` 因发送端被替换而必然关闭，只看它无法发现回归。
+        assert!(out_rx.try_recv().is_err(), "匹配房重连不得补发 RoomUpdate");
+        assert!(rx.try_recv().is_err(), "旧发送端已被替换，不应再收到消息");
     }
 
     /// 座位已被宽限超时释放时，重连仍必须收到 `NOT_IN_ROOM`，不能静默丢弃。

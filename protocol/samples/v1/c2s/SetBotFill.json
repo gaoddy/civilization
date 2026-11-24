@@ -1,0 +1,9 @@
+{
+  "v": 1,
+  "id": "m_setbotfill",
+  "type": "SetBotFill",
+  "ts": "2026-11-15T10:00:00Z",
+  "payload": {
+    "enabled": true
+  }
+}

@@ -6,11 +6,11 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
 
-use protocol::ErrorCode;
 use protocol::intents::Intent as ProtocolIntent;
+use protocol::{ErrorCode, ServerMessage};
 use room_service::clock::{Clock, FixedClock};
 use room_service::envelope::SeatChannel;
-use room_service::game::{GameTask, RoomCommand, SeatUpdate, UpdateKind};
+use room_service::game::{GameStage, GameTask, RoomCommand, SeatUpdate, UpdateKind};
 use room_service::room::PlayerSlot;
 use rule_engine::data::{CardType, Catalog, Playstyle, Skill};
 use rule_engine::state::Seat;
@@ -62,14 +62,411 @@ fn players() -> Vec<PlayerSlot> {
             player_id: format!("p{seat}"),
             display_name: format!("玩家{seat}"),
             ready: true,
-            hero_card_id: Some(HEROES[seat].to_string()),
+            is_bot: false,
             channel: SeatChannel::new(),
-            hero_candidates: Vec::new(),
-            candidate_segment: None,
             connected: true,
             disconnected_at_ms: None,
         })
         .collect()
+}
+
+/// 每个座位 4 张候选：以本座位英雄开头，便于机器人「选第一张」断言。
+fn candidates() -> BTreeMap<Seat, Vec<String>> {
+    (0..8)
+        .map(|seat| {
+            (
+                seat as Seat,
+                (0..4)
+                    .map(|offset| HEROES[(seat + offset) % HEROES.len()].to_string())
+                    .collect(),
+            )
+        })
+        .collect()
+}
+
+/// 构造选英雄阶段的对局；`bot_seats` 中的座位标为机器人。
+fn picking_task(clock: FixedClock, bot_seats: &[Seat]) -> (GameTask, FixedClock) {
+    let players = players()
+        .into_iter()
+        .enumerate()
+        .map(|(seat, mut slot)| {
+            slot.is_bot = bot_seats.contains(&(seat as Seat));
+            slot
+        })
+        .collect();
+    let task = GameTask::new_picking(
+        catalog(),
+        SEED,
+        playstyles(),
+        candidates(),
+        players,
+        Arc::new(clock.clone()) as Arc<dyn Clock>,
+        Arc::new(room_service::AchievementCatalog::embedded()),
+    )
+    .expect("选英雄阶段应能构造");
+    (task.with_room_id("room_test"), clock)
+}
+
+/// 默认全人真的选英雄对局。
+fn human_picking_task() -> (GameTask, FixedClock) {
+    picking_task(FixedClock::new(1_000_000), &[])
+}
+
+/// 各座位本人候选的第一张。
+fn first_pick(seat: Seat) -> String {
+    candidates()[&seat][0].clone()
+}
+
+/// 统计一批更新里某类 `GameStarted` 的数量。
+fn count_game_started(updates: &[SeatUpdate]) -> usize {
+    updates
+        .iter()
+        .filter(|update| matches!(update.kind, UpdateKind::GameStarted))
+        .count()
+}
+
+fn count_game_over(updates: &[SeatUpdate]) -> usize {
+    updates
+        .iter()
+        .filter(|update| matches!(update.kind, UpdateKind::GameOver(_)))
+        .count()
+}
+
+fn select(player: &str, card_id: &str) -> RoomCommand {
+    RoomCommand::SelectHero {
+        player_id: player.to_string(),
+        card_id: card_id.to_string(),
+    }
+}
+
+#[test]
+fn new_picking_bots_pick_first_candidate() {
+    let (task, _clock) = picking_task(FixedClock::new(1_000_000), &[1, 2, 3]);
+
+    assert_eq!(task.stage(), GameStage::HeroPick);
+    for seat in [1_u8, 2, 3] {
+        assert!(task.is_bot_seat(seat), "座位 {seat} 应为机器人");
+        assert_eq!(
+            task.seat_pick(seat),
+            Some(first_pick(seat).as_str()),
+            "机器人应立即选本人候选第一张"
+        );
+    }
+    assert!(!task.is_bot_seat(0));
+    assert_eq!(task.seat_pick(0), None, "真人等待确认");
+}
+
+#[test]
+fn hero_pick_started_carries_own_candidates_only() {
+    let (mut task, _clock) = human_picking_task();
+
+    let payload = match task
+        .hero_pick_started_for(0)
+        .expect("座位 0 应能编码")
+        .parse()
+        .expect("载荷可解析")
+    {
+        ServerMessage::HeroPickStarted(payload) => payload,
+        other => panic!("期望 HeroPickStarted，实际为 {other:?}"),
+    };
+    assert_eq!(payload.candidates, candidates()[&0], "只填本人候选");
+    assert_eq!(payload.candidates.len(), 4);
+    assert_eq!(payload.players.len(), 8);
+    assert!(payload.players.iter().all(|item| !item.is_bot));
+    assert!(payload.players.iter().all(|item| !item.picked));
+    assert_eq!(payload.players[0].seat, 0);
+    assert!(!payload.deadline.is_empty(), "截止时刻应为 RFC3339");
+
+    let other = match task
+        .hero_pick_started_for(1)
+        .expect("座位 1 应能编码")
+        .parse()
+        .expect("载荷可解析")
+    {
+        ServerMessage::HeroPickStarted(payload) => payload,
+        other => panic!("期望 HeroPickStarted，实际为 {other:?}"),
+    };
+    assert_eq!(other.candidates, candidates()[&1]);
+    assert_ne!(other.candidates, payload.candidates, "不同座位候选不同");
+}
+
+#[test]
+fn human_pick_waits_for_others() {
+    let (mut task, _clock) = human_picking_task();
+
+    let updates = task.handle(select("p0", &first_pick(0)));
+
+    assert_eq!(task.stage(), GameStage::HeroPick, "一人确认后仍在选英雄");
+    assert_eq!(task.seat_pick(0), Some(first_pick(0).as_str()));
+    assert_eq!(updates.len(), 8, "全员都应收到 HeroPick 更新");
+    assert!(
+        updates
+            .iter()
+            .all(|update| matches!(update.kind, UpdateKind::HeroPick)),
+        "选英雄阶段不产生 View/Snapshot"
+    );
+}
+
+#[test]
+fn all_picked_starts_game_once() {
+    let (mut task, _clock) = human_picking_task();
+
+    let mut last = Vec::new();
+    for seat in 0..8_u8 {
+        last = task.handle(select(&format!("p{seat}"), &first_pick(seat)));
+    }
+
+    assert_eq!(task.stage(), GameStage::Playing);
+    assert_eq!(count_game_started(&last), 8, "每座位恰好一条 GameStarted");
+
+    let again = task.handle(select("p0", &first_pick(0)));
+    assert_eq!(error_codes(&again), vec![ErrorCode::InvalidStage]);
+    assert_eq!(count_game_started(&again), 0);
+    assert_eq!(count_game_over(&again), 0);
+    assert_eq!(task.stage(), GameStage::Playing, "重复确认不得重新开局");
+}
+
+#[test]
+fn pick_rejects_foreign_candidate() {
+    let (mut task, _clock) = human_picking_task();
+
+    let updates = task.handle(select("p0", "knuth"));
+
+    assert_eq!(error_codes(&updates), vec![ErrorCode::InvalidChoice]);
+    assert_eq!(task.seat_pick(0), None, "被拒后不记录选择");
+    assert_eq!(task.stage(), GameStage::HeroPick);
+}
+
+#[test]
+fn tick_at_deadline_auto_picks_and_starts() {
+    let (mut task, clock) = human_picking_task();
+
+    clock.advance(29_999);
+    assert!(task.tick().is_empty(), "未到点不得推进");
+    assert_eq!(task.stage(), GameStage::HeroPick);
+
+    clock.advance(1);
+    let updates = task.tick();
+    assert_eq!(task.stage(), GameStage::Playing);
+    assert_eq!(count_game_started(&updates), 8);
+
+    for seat in 0..8_u8 {
+        let list = &candidates()[&seat];
+        let expected_index = (usize::try_from(
+            (SEED ^ u64::from(seat).wrapping_mul(0x9E37_79B9_7F4A_7C15)) % list.len() as u64,
+        )
+        .expect("候选下标")) as usize;
+        assert_eq!(
+            task.seat_pick(seat),
+            Some(list[expected_index].as_str()),
+            "超时自动选必须由 seed+座位 确定"
+        );
+    }
+}
+
+#[test]
+fn pick_stage_reconnect_returns_hero_pick() {
+    let (mut task, _clock) = human_picking_task();
+
+    let snapshot = task.handle(RoomCommand::RequestSnapshot {
+        player_id: "p0".to_string(),
+    });
+    assert_eq!(snapshot.len(), 1);
+    assert!(matches!(snapshot[0].kind, UpdateKind::HeroPick));
+
+    let (out, _rx) = tokio::sync::mpsc::channel(4);
+    let reconnected = task.handle(RoomCommand::Reconnect {
+        player_id: "p0".to_string(),
+        last_seq: 0,
+        out,
+    });
+    assert_eq!(reconnected.len(), 1);
+    assert!(matches!(reconnected[0].kind, UpdateKind::HeroPick));
+    assert!(
+        reconnected
+            .iter()
+            .all(|update| !matches!(update.kind, UpdateKind::Snapshot)),
+        "选英雄阶段不回快照"
+    );
+}
+
+#[test]
+fn forfeit_during_pick_is_settled_after_start() {
+    let (mut task, _clock) = human_picking_task();
+
+    let before = task.handle(RoomCommand::Forfeit {
+        player_id: "p0".to_string(),
+    });
+    assert_eq!(task.stage(), GameStage::HeroPick, "弃权不立即开局");
+    assert_eq!(count_game_over(&before), 0, "选英雄阶段不立即终局");
+    assert_eq!(count_game_started(&before), 0);
+    assert!(task.seat_pick(0).is_some(), "弃权座位自动补一张英雄");
+
+    let mut last = Vec::new();
+    for seat in 1..8_u8 {
+        last = task.handle(select(&format!("p{seat}"), &first_pick(seat)));
+    }
+    assert_eq!(task.stage(), GameStage::Playing);
+    assert_eq!(count_game_started(&last), 7, "弃权座位不收 GameStarted");
+    assert!(
+        last.iter().all(|update| update.player_id != "p0"),
+        "弃权座位不再收到更新"
+    );
+    assert!(
+        last.iter().any(
+            |update| update.player_id == "p1" && matches!(update.kind, UpdateKind::View { .. })
+        ),
+        "待弃权必须在开局后结算并通知其他座位"
+    );
+}
+
+#[test]
+fn deadline_and_last_pick_race_starts_once() {
+    let (mut task, clock) = human_picking_task();
+    for seat in 0..7_u8 {
+        let _ = task.handle(select(&format!("p{seat}"), &first_pick(seat)));
+    }
+
+    clock.advance(30_000);
+    let timeout_updates = task.tick();
+    assert_eq!(count_game_started(&timeout_updates), 8);
+    assert_eq!(task.stage(), GameStage::Playing);
+
+    let late = task.handle(select("p7", &first_pick(7)));
+    assert_eq!(error_codes(&late), vec![ErrorCode::InvalidStage]);
+    assert_eq!(count_game_started(&late), 0);
+    assert_eq!(count_game_over(&late), 0);
+}
+
+#[test]
+fn last_human_disconnect_times_out_and_starts_once() {
+    let (mut task, clock) = human_picking_task();
+    for seat in 0..7_u8 {
+        let _ = task.handle(select(&format!("p{seat}"), &first_pick(seat)));
+    }
+
+    let disconnected = task.handle(RoomCommand::Disconnect {
+        player_id: "p7".to_string(),
+    });
+    assert!(disconnected.is_empty(), "断线本身不产出下行更新");
+    assert_eq!(task.stage(), GameStage::HeroPick, "断线不提前开局");
+
+    // 超过 30 秒选英雄截止（也超过 30 秒断线宽限）：未选真人按确定性公式补选。
+    clock.advance(31_000);
+    let updates = task.tick();
+    assert_eq!(task.stage(), GameStage::Playing, "到点应开局");
+    assert_eq!(
+        count_game_started(&updates),
+        8,
+        "断线不是弃权，8 个座位都应收到 GameStarted"
+    );
+
+    let list = &candidates()[&7];
+    let expected_index = usize::try_from(
+        (SEED ^ u64::from(7_u8).wrapping_mul(0x9E37_79B9_7F4A_7C15)) % list.len() as u64,
+    )
+    .expect("候选下标");
+    assert_eq!(
+        task.seat_pick(7),
+        Some(list[expected_index].as_str()),
+        "离线座位必须由 seed+座位 确定性地补选英雄"
+    );
+
+    let again = task.tick();
+    assert_eq!(task.stage(), GameStage::Playing, "重复 tick 不得重新开局");
+    assert_eq!(count_game_started(&again), 0);
+}
+
+#[test]
+fn last_pick_then_tick_starts_once() {
+    let (mut task, clock) = human_picking_task();
+    for seat in 0..7_u8 {
+        let _ = task.handle(select(&format!("p{seat}"), &first_pick(seat)));
+    }
+
+    let last = task.handle(select("p7", &first_pick(7)));
+    assert_eq!(task.stage(), GameStage::Playing);
+    assert_eq!(count_game_started(&last), 8);
+    assert_eq!(count_game_over(&last), 0);
+
+    clock.advance(30_000);
+    let after = task.tick();
+    assert_eq!(task.stage(), GameStage::Playing);
+    assert_eq!(
+        count_game_started(&after),
+        0,
+        "最后一人确认已开局，随后 tick 不得重复开局"
+    );
+    assert_eq!(count_game_over(&after), 0);
+}
+
+#[test]
+fn combat_played_during_hero_pick_is_invalid_stage() {
+    let (mut task, _clock) = human_picking_task();
+
+    let updates = task.handle(RoomCommand::CombatPlayed {
+        player_id: "p0".to_string(),
+    });
+
+    assert_eq!(task.stage(), GameStage::HeroPick, "错误命令不得推进阶段");
+    assert_eq!(error_codes(&updates), vec![ErrorCode::InvalidStage]);
+    assert!(
+        updates
+            .iter()
+            .all(|update| !matches!(update.kind, UpdateKind::View { .. } | UpdateKind::Snapshot)),
+        "选英雄阶段不应返回对局视图或快照"
+    );
+}
+
+#[test]
+fn bots_finish_recruit_without_humans() {
+    let (mut task, clock) = picking_task(FixedClock::new(1_000_000), &[0, 1, 2, 3, 4, 5, 6, 7]);
+    assert_eq!(task.stage(), GameStage::HeroPick);
+
+    clock.advance(30_000);
+    let updates = task.tick();
+
+    assert_eq!(task.stage(), GameStage::Playing);
+    assert_eq!(count_game_started(&updates), 8);
+    assert!(
+        updates
+            .iter()
+            .all(|update| !matches!(update.kind, UpdateKind::AchievementUnlocked { .. })),
+        "机器人座位不得产生 AchievementUnlocked"
+    );
+    assert_eq!(
+        task.player_view(0).expect("视图应可用").phase,
+        protocol::view::Phase::Combat,
+        "全员机器人时第 1 回合招募结束直接进入战斗"
+    );
+}
+
+#[test]
+fn playstyles_and_seed_unchanged() {
+    let (mut task, clock) = human_picking_task();
+    for seat in 0..8_u8 {
+        let _ = task.handle(select(&format!("p{seat}"), &first_pick(seat)));
+    }
+
+    let mut game_over = None;
+    for _ in 0..30 {
+        clock.advance(150_000);
+        let mut updates = task.tick();
+        updates.extend(play_combat(&mut task));
+        if let Some(payload) = updates.into_iter().find_map(|update| match update.kind {
+            UpdateKind::GameOver(payload) => Some(payload),
+            _ => None,
+        }) {
+            game_over = Some(payload);
+            break;
+        }
+    }
+    let game_over = game_over.expect("30 个回合内应结束对局");
+    assert_eq!(
+        game_over.seed,
+        format!("{SEED:016x}"),
+        "对局公开种子必须与传入 seed 一致"
+    );
 }
 
 /// 测试固定玩法：覆盖各级随从，保证商店不至于因池过小而全空。

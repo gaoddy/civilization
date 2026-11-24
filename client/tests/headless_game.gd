@@ -8,6 +8,7 @@ var _finished := false
 var _room_requested := false
 var _hero_sent := false
 var _ready_sent := false
+var _start_sent := false
 var _intent_counter := 0
 var _intents_sent := 0
 var _errors := 0
@@ -44,6 +45,7 @@ func _ready() -> void:
 
     GameStore.auth_changed.connect(_on_auth)
     GameStore.room_changed.connect(_on_room)
+    GameStore.hero_pick_started.connect(_on_hero_pick)
     GameStore.view_changed.connect(_on_view)
     GameStore.game_over.connect(_on_game_over)
     GameStore.error_received.connect(_on_error)
@@ -88,18 +90,45 @@ func _on_room() -> void:
     if not _code_written and OS.get_environment("M1B_ROOM") == "" and GameStore.room_code != "":
         _code_written = true
         _write_room_code(GameStore.room_code)
+
+    var found_self := false
+    var is_host := false
+    var all_ready := GameStore.room_players.size() == 8
     for player in GameStore.room_players:
-        if str(player.get("playerId", "")) != GameStore.player_id:
-            continue
-        if player.get("heroCardId") == null and not _hero_sent:
-            var hero := _pick_hero(player)
-            if hero == "":
-                return
-            _hero_sent = true
-            Net.send(Protocol.MSG_SELECT_HERO_CARD, {"cardId": hero})
-        if not bool(player.get("ready", false)) and not _ready_sent:
-            _ready_sent = true
-            Net.send(Protocol.MSG_READY, {"ready": true})
+        var is_self := str(player.get("playerId", "")) == GameStore.player_id
+        if is_self:
+            found_self = true
+            is_host = bool(player.get("isHost", false))
+        if not bool(player.get("ready", false)):
+            all_ready = false
+    if not found_self:
+        return
+    if not _ready_sent:
+        _ready_sent = true
+        Net.send(Protocol.MSG_READY, {"ready": true})
+    # 房主在 8 人全部准备后显式开始；选英雄由服务端在开始后下发。
+    if is_host and all_ready and not _start_sent:
+        _start_sent = true
+        GameStore.request_start()
+
+
+## 选英雄阶段：从服务端下发的本人候选里挑一张；`M1B_HERO` 优先，不在候选里用第一张。
+func _on_hero_pick() -> void:
+    if _hero_sent:
+        return
+    var candidates: Array = GameStore.hero_pick.get("candidates", [])
+    if candidates.is_empty():
+        push_error("M1B 选英雄阶段没有本人候选")
+        get_tree().quit(4)
+        return
+    var preferred := OS.get_environment("M1B_HERO")
+    var hero := str(candidates[0])
+    for candidate in candidates:
+        if str(candidate) == preferred:
+            hero = preferred
+            break
+    _hero_sent = true
+    Net.send(Protocol.MSG_SELECT_HERO_CARD, {"cardId": hero})
 
 
 ## 无头客户端不渲染动画：进入战斗即回报演示完成，让服务端按播完结算。
@@ -112,19 +141,6 @@ func _ack_combat() -> void:
         return
     _combat_ack_turn = GameStore.turn
     Net.send(Protocol.MSG_COMBAT_PLAYED, {})
-
-
-## 从服务端分配给本人的候选里挑英雄：优先环境变量指定，不在候选里就用第一张。
-func _pick_hero(player: Dictionary) -> String:
-    var raw = player.get("heroCandidates")
-    var candidates: Array = raw if raw is Array else []
-    if candidates.is_empty():
-        return ""
-    var preferred := OS.get_environment("M1B_HERO")
-    for candidate in candidates:
-        if str(candidate) == preferred:
-            return preferred
-    return str(candidates[0])
 
 
 func _on_view() -> void:

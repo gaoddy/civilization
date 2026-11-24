@@ -21,9 +21,9 @@ const PAGES := [
     },
     {
         "path": "res://pages/room/room.tscn",
-        "children": 2,
-        "direct_names": ["DraftPanel", "HeroDetailLayer"],
-        "deep_names": ["ConfirmButton", "OtherPlayers", "HeroCandidates"],
+        "children": 1,
+        "direct_names": ["RoomPanel"],
+        "deep_names": ["RoomSeatGrid", "ReadyButton", "StartButton", "SeatCell0"],
     },
     {
         "path": "res://pages/game/game.tscn",

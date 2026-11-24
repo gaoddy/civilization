@@ -7,12 +7,16 @@ mod common;
 use std::sync::Arc;
 use std::time::Duration;
 
-use common::{ClientWs, connect_with_retry, start_server, wait_for_server};
+use common::{
+    RawClient, authenticate, authenticate_with_token, connect_with_retry, first_candidate,
+    start_and_pick_all, start_server, wait_all_ready, wait_for_server, wait_game_started,
+    wait_hero_pick, wait_room_update, wait_room_update_until,
+};
 use futures_util::{SinkExt, StreamExt};
-use protocol::server::RoomUpdate;
+use protocol::server::GameStarted;
 use protocol::{ErrorCode, ServerEnvelope, ServerMessage};
 use room_service::clock::{Clock, SystemClock};
-use serde_json::{Value, json};
+use serde_json::json;
 use sim::bot::client::{BotConfig, run};
 use tokio::sync::oneshot;
 use tokio_tungstenite::tungstenite::Message;
@@ -113,147 +117,19 @@ async fn eight_bots_finish_a_game() {
 // 原始 WS 客户端：用于重连、序号与房间生命周期测试。
 // ---------------------------------------------------------------------------
 
-struct RawClient {
-    ws: ClientWs,
-    next_id: u64,
-}
-
-impl RawClient {
-    async fn connect(addr: std::net::SocketAddr) -> Self {
-        let ws = connect_with_retry(&format!("ws://{addr}/ws")).await;
-        Self { ws, next_id: 0 }
-    }
-
-    async fn send(&mut self, kind: &str, payload: Value) {
-        self.next_id += 1;
-        let envelope = json!({
-            "v": 1,
-            "id": format!("raw_{}", self.next_id),
-            "type": kind,
-            "ts": "2026-01-01T00:00:00Z",
-            "payload": payload,
-        });
-        self.ws
-            .send(Message::Text(envelope.to_string().into()))
-            .await
-            .expect("发送应当成功");
-    }
-
-    /// 取下一条非社交/账号推送的下行消息与其 `seq`；连接关闭时返回 `None`。
-    ///
-    /// 认证成功与在线状态变化都会插入社交推送与 `AccountView`，讨论房间行为的断言
-    /// 不应受其干扰。
-    async fn recv_room(&mut self) -> Option<(u64, ServerMessage)> {
-        loop {
-            let (seq, message) = self.recv().await?;
-            if matches!(
-                message,
-                ServerMessage::FriendUpdate(_)
-                    | ServerMessage::AccountView(_)
-                    | ServerMessage::AchievementState(_)
-                    | ServerMessage::AchievementUnlocked(_)
-            ) {
-                continue;
-            }
-            return Some((seq, message));
-        }
-    }
-
-    /// 取下一条下行消息与其 `seq`；连接关闭时返回 `None`。
-    async fn recv(&mut self) -> Option<(u64, ServerMessage)> {
-        while let Some(item) = self.ws.next().await {
-            match item {
-                Ok(Message::Text(text)) => {
-                    let envelope: ServerEnvelope =
-                        serde_json::from_str(text.as_str()).expect("下行信封应能解析");
-                    let seq = envelope.seq.get();
-                    let message = envelope.parse().expect("下行载荷应能解析");
-                    return Some((seq, message));
-                }
-                Ok(Message::Close(_)) => return None,
-                Ok(_) => continue,
-                Err(_) => return None,
-            }
-        }
-        None
-    }
-}
-
-/// 由名字派生稳定且互不相同的手机号：同一手机号会恢复同一账号，测试客户端
-/// 必须各自拥有独立身份。
-fn phone_for(name: &str) -> String {
-    let mut hash: u64 = 0xcbf2_9ce4_8422_2325;
-    for byte in name.as_bytes() {
-        hash ^= u64::from(*byte);
-        hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
-    }
-    format!("139{:08}", hash % 100_000_000)
-}
-
-async fn authenticate(client: &mut RawClient, name: &str) -> (String, String) {
-    client
-        .send(
-            "AuthRequest",
-            json!({ "phone": phone_for(name), "code": "123456", "displayName": name }),
-        )
-        .await;
-    loop {
-        let (_, message) = client.recv().await.expect("认证期间连接不应关闭");
-        match message {
-            ServerMessage::AuthResult(result) => return (result.player_id, result.token),
-            ServerMessage::Error(error) => panic!("认证失败: {} {}", error.code, error.message),
-            _ => {}
-        }
-    }
-}
-
-async fn authenticate_with_token(client: &mut RawClient, token: &str) -> String {
-    client
-        .send(
-            "AuthRequest",
-            json!({ "token": token, "displayName": "reconnect" }),
-        )
-        .await;
-    loop {
-        let (_, message) = client.recv().await.expect("认证期间连接不应关闭");
-        match message {
-            ServerMessage::AuthResult(result) => return result.player_id,
-            ServerMessage::Error(error) => {
-                panic!("token 认证失败: {} {}", error.code, error.message)
-            }
-            _ => {}
-        }
-    }
-}
-
-async fn wait_room_update(client: &mut RawClient) -> RoomUpdate {
-    loop {
-        let (_, message) = client.recv().await.expect("等待 RoomUpdate 时连接关闭");
-        if let ServerMessage::RoomUpdate(update) = message {
-            return update;
-        }
-    }
-}
-
-/// 取本人那一项里的候选；服务端只给本人填充 `heroCandidates`。
-fn own_candidates(update: &RoomUpdate, player_id: &str) -> Vec<String> {
-    update
-        .players
-        .iter()
-        .find(|item| item.player_id == player_id)
-        .and_then(|item| item.hero_candidates.clone())
-        .unwrap_or_default()
-}
-
 struct GameFixture {
     room_id: String,
     /// `(player_id, token)`，按座位顺序。
     identities: Vec<(String, String)>,
     /// 保持 8 条连接存活；丢弃即断线。
     clients: Vec<RawClient>,
+    /// 各客户端按座位顺序收到的 `GameStarted`。
+    started: Vec<GameStarted>,
+    /// 各客户端按座位顺序选择的英雄。
+    picks: Vec<String>,
 }
 
-/// 用 8 条原始连接建好房间、选英雄并准备，直到收到 `GameStarted`。
+/// 用 8 条原始连接建好房间、全员准备、房主开始、每人选英雄，直到收到 `GameStarted`。
 async fn start_eight_raw_clients(addr: std::net::SocketAddr) -> GameFixture {
     let mut clients = Vec::with_capacity(8);
     let mut identities = Vec::with_capacity(8);
@@ -264,12 +140,6 @@ async fn start_eight_raw_clients(addr: std::net::SocketAddr) -> GameFixture {
     let room = wait_room_update(&mut host).await;
     let room_id = room.room_id.clone();
     let room_code = room.code.clone();
-    let host_hero = own_candidates(&room, &player_id)
-        .into_iter()
-        .next()
-        .expect("房主应拿到候选");
-    host.send("SelectHeroCard", json!({ "cardId": host_hero }))
-        .await;
     host.send("Ready", json!({ "ready": true })).await;
     clients.push(host);
     identities.push((player_id, token));
@@ -279,38 +149,245 @@ async fn start_eight_raw_clients(addr: std::net::SocketAddr) -> GameFixture {
         let (player_id, token) = authenticate(&mut client, &format!("p{index}")).await;
         client.send("JoinRoom", json!({ "code": room_code })).await;
         let joined = wait_room_update(&mut client).await;
-        let hero = own_candidates(&joined, &player_id)
-            .into_iter()
-            .next()
-            .expect("入房玩家应拿到候选");
-        client
-            .send("SelectHeroCard", json!({ "cardId": hero }))
-            .await;
+        assert!(
+            joined
+                .players
+                .iter()
+                .any(|player| player.player_id == player_id),
+            "入房后本人应出现在 RoomUpdate 里"
+        );
         client.send("Ready", json!({ "ready": true })).await;
         clients.push(client);
         identities.push((player_id, token));
     }
 
-    // 等最后一条 Ready 真正触发开局，避免后续重连落在大厅阶段。
-    let started = tokio::time::timeout(Duration::from_secs(5), async {
-        loop {
-            let (_, message) = clients[0]
-                .recv()
-                .await
-                .expect("等待 GameStarted 时连接关闭");
-            if matches!(message, ServerMessage::GameStarted(_)) {
-                return;
-            }
-        }
-    })
-    .await;
-    assert!(started.is_ok(), "8 人准备后应收到 GameStarted");
+    // 等注册表确认全员准备后再开始，避免 `StartGame` 撞上 ROOM_NOT_READY。
+    wait_all_ready(&mut clients[0], 8).await;
+    let (started, picks) = start_and_pick_all(&mut clients).await;
 
     GameFixture {
         room_id,
         identities,
         clients,
+        started,
+        picks,
     }
+}
+
+/// 1 真人开局：选英雄阶段列出 8 个座位、7 个机器人；房主选完后机器人自动打第 1 回合。
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn one_human_starts_with_seven_bots() {
+    let addr = start_server().await;
+    let mut host = RawClient::connect(addr).await;
+    let (_host_id, _token) = authenticate(&mut host, "solo-host").await;
+    host.send("CreateRoom", json!({})).await;
+    let room = wait_room_update(&mut host).await;
+    assert!(room.bot_fill, "新房间默认开启机器人补位");
+    host.send("Ready", json!({ "ready": true })).await;
+    wait_all_ready(&mut host, 1).await;
+    host.send("StartGame", json!({})).await;
+
+    let pick = wait_hero_pick(&mut host).await;
+    assert_eq!(pick.players.len(), 8, "选英雄阶段应列出 8 个座位");
+    assert_eq!(
+        pick.players.iter().filter(|player| player.is_bot).count(),
+        7,
+        "1 名真人应补入 7 个机器人"
+    );
+    assert_eq!(
+        pick.players
+            .iter()
+            .find(|player| player.seat == 0)
+            .map(|player| player.is_bot),
+        Some(false),
+        "房主座位不是机器人"
+    );
+    assert_eq!(
+        pick.candidates.len(),
+        room_service::room::CANDIDATE_COUNT,
+        "本人候选数量应与注册表一致"
+    );
+    assert!(!pick.deadline.is_empty(), "截止时刻不应为空");
+
+    let hero = first_candidate(&pick);
+    host.send("SelectHeroCard", json!({ "cardId": hero })).await;
+    let started = wait_game_started(&mut host).await;
+    assert_eq!(started.view.turn.get(), 1, "开局在第 1 回合");
+
+    // 机器人由服务端在开局后立即驱动：GameStarted 之后应收到第 1 回合的视图更新。
+    let update = tokio::time::timeout(Duration::from_secs(10), async {
+        loop {
+            let (_, message) = host
+                .recv_room()
+                .await
+                .expect("等待机器人招募回合时连接关闭");
+            match message {
+                ServerMessage::StateUpdate(update) => return update,
+                ServerMessage::Error(error) => {
+                    panic!("等待机器人回合时收到错误 {}: {}", error.code, error.message)
+                }
+                _ => {}
+            }
+        }
+    })
+    .await
+    .expect("10 秒内应收到机器人行动后的视图");
+    assert_eq!(update.view.turn.get(), 1, "机器人行动仍应在第 1 回合");
+    let bot_recruited = update
+        .view
+        .players
+        .iter()
+        .filter(|player| player.player_id.starts_with("bot:"))
+        .any(|player| player.recruited);
+    assert!(bot_recruited, "至少一个机器人应已结束第 1 回合招募");
+    println!("one human + 7 bots: turn={}", update.view.turn);
+}
+
+/// 8 名真人全员选完后才进入 `GameStarted`，每人开局英雄与本人选择一致。
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn eight_humans_choose_then_start() {
+    let addr = start_server().await;
+    let fixture = start_eight_raw_clients(addr).await;
+    assert_eq!(fixture.started.len(), 8, "8 名真人都应收到 GameStarted");
+    for (index, started) in fixture.started.iter().enumerate() {
+        assert_eq!(started.view.turn.get(), 1, "开局在第 1 回合");
+        assert_eq!(started.view.players.len(), 8, "开局视图应含 8 个座位");
+        assert_eq!(
+            started.view.self_.hero_card_id.as_deref(),
+            Some(fixture.picks[index].as_str()),
+            "座位 {index} 的开局英雄应与本人选择一致"
+        );
+        assert!(
+            started
+                .view
+                .players
+                .iter()
+                .all(|player| player.hero_card_id.is_some()),
+            "全员都应持有开局英雄"
+        );
+    }
+    println!("eight humans picked then started");
+}
+
+/// 补位关闭且真人不足 8 人时点开始被拒绝；房间仍可准备与离开。
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn bot_fill_off_requires_eight_humans() {
+    let addr = start_server().await;
+    let mut host = RawClient::connect(addr).await;
+    let (host_id, _token) = authenticate(&mut host, "nofill-host").await;
+    host.send("CreateRoom", json!({})).await;
+    let room = wait_room_update(&mut host).await;
+
+    let mut guest = RawClient::connect(addr).await;
+    let (guest_id, _guest_token) = authenticate(&mut guest, "nofill-guest").await;
+    guest.send("JoinRoom", json!({ "code": room.code })).await;
+    let joined = wait_room_update(&mut guest).await;
+    assert_eq!(joined.players.len(), 2);
+
+    host.send("Ready", json!({ "ready": true })).await;
+    guest.send("Ready", json!({ "ready": true })).await;
+    wait_all_ready(&mut host, 2).await;
+
+    host.send("SetBotFill", json!({ "enabled": false })).await;
+    let updated = wait_room_update_until(&mut host, |update| {
+        update.players.len() == 2 && !update.bot_fill
+    })
+    .await;
+    assert!(!updated.bot_fill, "补位应已关闭");
+
+    host.send("StartGame", json!({})).await;
+    let rejected = tokio::time::timeout(Duration::from_secs(10), async {
+        loop {
+            let (_, message) = host
+                .recv_room()
+                .await
+                .expect("等待 ROOM_NOT_READY 时连接关闭");
+            if let ServerMessage::Error(error) = message {
+                return error;
+            }
+        }
+    })
+    .await
+    .expect("10 秒内应收到开始被拒的错误");
+    assert_eq!(
+        rejected.code,
+        ErrorCode::RoomNotReady,
+        "补位关闭且真人不足 8 人应返回 ROOM_NOT_READY"
+    );
+
+    // 房间仍在 Lobby：取消准备与离开都应正常生效。
+    guest.send("Ready", json!({ "ready": false })).await;
+    let unready = wait_room_update_until(&mut host, |update| {
+        update.players.len() == 2
+            && update
+                .players
+                .iter()
+                .any(|player| player.player_id == guest_id && !player.ready)
+    })
+    .await;
+    assert!(!unready.bot_fill, "取消准备后补位开关保持关闭");
+
+    guest.send("LeaveRoom", json!({})).await;
+    let left = wait_room_update_until(&mut host, |update| update.players.len() == 1).await;
+    assert_eq!(left.players[0].player_id, host_id, "离开后只剩房主");
+    println!("bot fill off rejected start but room stayed usable");
+}
+
+/// `RoomUpdate` 的座位从 0 连续排列，补位开关可读。
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn room_update_has_seat_and_bot_fill() {
+    let addr = start_server().await;
+    let mut host = RawClient::connect(addr).await;
+    let _ = authenticate(&mut host, "seat-host2").await;
+    host.send("CreateRoom", json!({})).await;
+    let room = wait_room_update(&mut host).await;
+    assert!(room.bot_fill, "房主应能读到补位开关");
+    assert_eq!(room.players.len(), 1);
+    assert_eq!(room.players[0].seat, 0, "房主固定在 0 号座位");
+
+    for index in 1..=2 {
+        let mut client = RawClient::connect(addr).await;
+        let _ = authenticate(&mut client, &format!("seat-{index}")).await;
+        client.send("JoinRoom", json!({ "code": room.code })).await;
+        let _ = wait_room_update(&mut client).await;
+    }
+
+    let update = wait_room_update_until(&mut host, |update| update.players.len() == 3).await;
+    assert!(update.bot_fill, "补位开关在大厅里保持可读");
+    for (index, player) in update.players.iter().enumerate() {
+        assert_eq!(
+            player.seat, index as i64,
+            "第 {index} 位成员的座位号应为 {index}"
+        );
+    }
+    println!("seat/botFill: players={}", update.players.len());
+}
+
+/// 选英雄阶段的消息顺序：`HeroPickStarted` 一定先于 `GameStarted`，且开局视图可解析。
+///
+/// `wait_hero_pick` 在 `GameStarted` 先到时直接 panic，因此本用例通过即证明顺序正确。
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn hero_pick_message_order() {
+    let addr = start_server().await;
+    let fixture = start_eight_raw_clients(addr).await;
+    assert_eq!(fixture.started.len(), 8, "8 名真人都应先选英雄再开局");
+    for (index, started) in fixture.started.iter().enumerate() {
+        assert_eq!(
+            started.view.phase,
+            protocol::view::Phase::Recruit,
+            "GameStarted.view 应可解析且处于招募阶段"
+        );
+        assert_eq!(
+            started.view.room_id, fixture.room_id,
+            "开局视图应带上房间 id"
+        );
+        assert_eq!(
+            started.view.players[index].hero_card_id.as_deref(),
+            Some(fixture.picks[index].as_str()),
+            "座位 {index} 的英雄应与选择一致"
+        );
+    }
+    println!("hero pick precedes game started for all 8 seats");
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
@@ -585,8 +662,13 @@ async fn lobby_disconnect_keeps_seat_within_grace() {
     guest.send("JoinRoom", json!({ "code": room.code })).await;
     let joined = wait_room_update(&mut guest).await;
     assert_eq!(joined.players.len(), 2);
-    let guest_candidates = own_candidates(&joined, &guest_id);
-    assert_eq!(guest_candidates.len(), 4, "入房玩家应拿到 4 张候选");
+    let guest_seat = joined
+        .players
+        .iter()
+        .find(|player| player.player_id == guest_id)
+        .map(|player| player.seat)
+        .expect("入房玩家应有座位");
+    assert_eq!(guest_seat, 1, "第二人应拿到 1 号座位");
 
     // 大厅断线保留座位一个宽限期（`RECONNECT_GRACE_MS`），不再立即释放。
     drop(guest);
@@ -595,7 +677,7 @@ async fn lobby_disconnect_keeps_seat_within_grace() {
     let after = wait_room_update(&mut host).await;
     assert_eq!(after.players.len(), 2, "宽限期内座位必须保留");
 
-    // 宽限期内用 token 重连：回到同一座位，候选不重抽。
+    // 宽限期内用 token 重连：回到同一座位，座位号不变。
     let mut back = RawClient::connect(addr).await;
     let back_id = authenticate_with_token(&mut back, &guest_token).await;
     assert_eq!(back_id, guest_id, "重连应复用同一 player_id");
@@ -603,11 +685,13 @@ async fn lobby_disconnect_keeps_seat_within_grace() {
         .await;
     let restored = wait_room_update(&mut back).await;
     assert_eq!(restored.players.len(), 2, "重连应回到同一房间");
-    assert_eq!(
-        own_candidates(&restored, &guest_id),
-        guest_candidates,
-        "宽限期内重连必须取回同一组候选"
-    );
+    let restored_seat = restored
+        .players
+        .iter()
+        .find(|player| player.player_id == guest_id)
+        .map(|player| player.seat)
+        .expect("重连后仍应占同一座位");
+    assert_eq!(restored_seat, guest_seat, "重连必须回到同一座位号");
     println!("lobby seat kept through grace and reconnect");
 }
 

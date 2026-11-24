@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "crates/rule-engine",
+    "crates/bot-ai",
     "crates/sim",
     "crates/protocol-gen",
     "crates/protocol",

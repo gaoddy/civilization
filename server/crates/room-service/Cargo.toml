@@ -5,6 +5,7 @@ edition.workspace = true
 
 [dependencies]
 axum = { version = "0.8", features = ["ws"] }
+bot-ai = { path = "../bot-ai" }
 chrono = "0.4"
 futures-util = "0.3"
 protocol = { path = "../protocol" }

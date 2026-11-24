@@ -7,6 +7,8 @@ var _bottom: LobbyBottomBar
 var _friends: FriendsPanel
 var _queue: QueuePanel
 var _invite_popup: InvitePopup
+## 已经发出过一次离开大厅的导航；避免选英雄与开局两个信号重复切场景。
+var _leaving := false
 
 
 func _ready() -> void:
@@ -18,6 +20,7 @@ func _ready() -> void:
     GameStore.account_changed.connect(_render_rank)
     GameStore.social_changed.connect(_render_friends_entry)
     GameStore.match_found.connect(_on_match_found)
+    GameStore.hero_pick_started.connect(_on_hero_pick_started)
     GameStore.game_started.connect(_on_game_started)
     Net.disconnected.connect(_on_disconnected)
     if not Net.is_open():
@@ -135,8 +138,20 @@ func _on_match_found(_seat: int) -> void:
     _top.status.text = tr("ui.lobby.match_found")
 
 
-## 匹配房不下发大厅 `RoomUpdate`，以 `GameStarted` 作为进入对局的唯一信号。
+## 自动匹配局没有房间等待页：`HeroPickStarted` 先到，由大厅直接进入对局页的选英雄阶段；
+## 匹配房随后仍会下发 `GameStarted`，此时大厅已开始离开，不重复导航。
+func _on_hero_pick_started() -> void:
+    _navigate_to_game()
+
+
 func _on_game_started() -> void:
+    _navigate_to_game()
+
+
+func _navigate_to_game() -> void:
+    if _leaving or not is_inside_tree():
+        return
+    _leaving = true
     UINavigation.navigate(self, UINavigation.PAGE_GAME)
 
 

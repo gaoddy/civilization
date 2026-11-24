@@ -1,6 +1,6 @@
 class_name RoomInviteRow
 extends HBoxContainer
-## 选英雄页的邀请入口：只列出好友；不在线或已在房间的好友置灰。
+## 房间等待页的邀请入口：只列出好友；不在线或已在房间的好友置灰。
 
 signal invite_pressed(player_id: String, friend_name: String)
 

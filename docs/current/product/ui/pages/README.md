@@ -4,7 +4,7 @@
 
 | 页面 | 场景 | 文档 |
 | --- | --- | --- |
-| 选英雄（房间） | `client/pages/room/room.tscn` | [room.md](room.md) |
+| 房间等待区 | `client/pages/room/room.tscn` | [room.md](room.md) |
 | 对局 | `client/pages/game/game.tscn` | [game.md](game.md) |
 | 结算 | `client/pages/result/result.tscn` | [result.md](result.md) |
 | 卡牌图鉴 | `client/pages/gallery/gallery.tscn` | [gallery.md](gallery.md) |

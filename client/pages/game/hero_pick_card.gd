@@ -1,23 +1,26 @@
-class_name RoomHeroCard
+class_name HeroPickCard
 extends SelectableBox
-## 选英雄页候选卡：只负责呈现，选择由页面统一处理。
+## 对局页选英雄候选卡：只负责呈现，选择由覆盖层统一处理。
 ##
-## 选中态用外扩的金色边框表达，不额外加徽标；锁定只压暗卡面内容，
-## 选中框保持全亮，悬停详情仍可查看。外扩选中框与悬停描边由 `SelectableBox` 提供。
+## 选中态用外扩的金色边框表达；锁定只压暗卡面内容，选中框保持全亮，
+## 悬停详情仍可查看。外扩选中框与悬停描边由 `SelectableBox` 提供。
+## 宽度由候选行给出：桌面取 `hero-detail-width`，手机档位按同一令牌缩放。
 
 var _card_size := Vector2.ZERO
 
 var hero_id := ""
 var locked := false
+## 候选行按设备档位给出的展示宽度；小于等于 0 时按舞台令牌自行计算。
+var display_width := -1
 
 var _built := false
 
 
 func setup(id: String, is_selected: bool, is_locked: bool) -> void:
 	hero_id = id
-	name = "HeroCard_%s" % id
-	# 候选卡按卡面比例：宽度取详情宽度令牌，高度按 112:146 等比。
-	var width := UITheme.stage_metric("hero-detail-width")
+	name = "HeroPickCard_%s" % id
+	# 候选卡按卡面比例：宽度取候选行给出的值，高度按 112:146 等比。
+	var width := display_width if display_width > 0 else UITheme.stage_metric("hero-detail-width")
 	_card_size = Vector2(width, UITheme.card_face_height(width))
 	custom_minimum_size = _card_size
 	mouse_filter = Control.MOUSE_FILTER_STOP
