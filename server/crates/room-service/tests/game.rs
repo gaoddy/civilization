@@ -2407,3 +2407,218 @@ fn forfeit_from_eliminated_or_unknown_seat_returns_empty() {
         "未知玩家弃权应返回空更新"
     );
 }
+
+// ---------------------------------------------------------------------------
+// 随从主动技能
+// ---------------------------------------------------------------------------
+
+/// 测试用随从主动/被动技能 id。
+const MINION_ACTIVE_SKILL: &str = "test-minion-active";
+const MINION_PASSIVE_SKILL: &str = "test-minion-passive";
+
+/// 给全部 1 级商店随从换上「主动 + 被动」两个测试技能，并抬高首回合金币，
+/// 让买入（固定 3 金）后仍有金币发动技能；效果均不需要目标。
+fn catalog_with_minion_skills() -> Catalog {
+    let mut catalog = catalog();
+    catalog.config.gold_curve[0] = 8;
+    let active = catalog.insert_skill(Skill {
+        id: MINION_ACTIVE_SKILL.to_string(),
+        keyword: None,
+        effects: effects_of("OnActivate|RefreshShop|self|free=true"),
+        cost: Some(1),
+        uses_per_turn: Some(1),
+    });
+    let passive = catalog.insert_skill(Skill {
+        id: MINION_PASSIVE_SKILL.to_string(),
+        keyword: None,
+        effects: effects_of("OnPlay|RefreshShop|self|free=true"),
+        cost: None,
+        uses_per_turn: None,
+    });
+    for card in catalog.cards.values_mut() {
+        if card.card_type == CardType::Minion && card.level == 1 && card.in_shop_pool {
+            card.skills = vec![active, passive];
+        }
+    }
+    catalog
+}
+
+/// 让指定座位买入并打出一张 1 级随从，返回该随从的实例 id。
+fn play_first_minion(task: &mut GameTask, seat: Seat, tag: &str) -> String {
+    let player = format!("p{seat}");
+    let slot = first_nonempty_slot(task, seat);
+    let bought = task.handle(command(&player, &format!("{tag}-buy"), buy(slot)));
+    assert!(
+        error_codes(&bought).is_empty(),
+        "座位 {seat} 购买应成功：{:?}",
+        error_codes(&bought)
+    );
+    let view = task.player_view(seat).expect("视图应可用");
+    let minion_catalog = catalog();
+    let hand_index = view
+        .self_
+        .hand
+        .iter()
+        .find(|card| {
+            minion_catalog
+                .cards
+                .get(&card.card_id)
+                .is_some_and(|card| card.card_type == CardType::Minion)
+        })
+        .map(|card| card.index)
+        .expect("手牌中应有刚买入的随从");
+    let played = task.handle(command(
+        &player,
+        &format!("{tag}-play"),
+        ProtocolIntent::PlayCard {
+            hand_index,
+            position: None,
+            target: None,
+        },
+    ));
+    assert!(
+        error_codes(&played).is_empty(),
+        "座位 {seat} 打出随从应成功：{:?}",
+        error_codes(&played)
+    );
+    let view = task.player_view(seat).expect("视图应可用");
+    view.self_
+        .board
+        .first()
+        .expect("随从应上棋盘")
+        .minion_id
+        .clone()
+}
+
+#[test]
+fn player_view_exposes_minion_abilities_on_own_board() {
+    let (mut task, _clock) = task_with(catalog_with_minion_skills());
+    let minion_id = play_first_minion(&mut task, 0, "ability-view");
+
+    let view = task.player_view(0).expect("视图应可用");
+    let minion = view
+        .self_
+        .board
+        .iter()
+        .find(|minion| minion.minion_id == minion_id)
+        .expect("本人棋盘应包含刚打出的随从");
+    assert_eq!(minion.abilities.len(), 1, "只下发主动技能，被动不出现");
+    let ability = &minion.abilities[0];
+    assert_eq!(ability.skill_id, MINION_ACTIVE_SKILL);
+    assert_eq!(ability.cost, 1, "费用与引擎一致");
+    assert_eq!(ability.uses_left, 1, "剩余次数与引擎一致");
+    assert!(!ability.requires_target, "无需目标的技能");
+    assert!(ability.target_candidates.is_empty(), "无目标候选");
+    assert!(ability.can_use, "首回合金币足够，应可发动");
+    assert_eq!(ability.disabled_reason, None);
+
+    // 战斗回放走另一个映射入口：不暴露任何随从技能。
+    let replay_catalog = catalog_with_minion_skills();
+    let replay_minion =
+        rule_engine::state::MinionInstance::new(&replay_catalog, 1, &minion.card_id, false);
+    let replay = room_service::view::board_minion_from(&replay_catalog, 0, &replay_minion, false);
+    assert!(replay.abilities.is_empty(), "战斗回放不暴露随从技能");
+}
+
+#[test]
+fn use_minion_ability_spends_gold_and_consumes_use() {
+    let (mut task, _clock) = task_with(catalog_with_minion_skills());
+    let minion_id = play_first_minion(&mut task, 0, "ability-use");
+    let gold_before = task.player_view(0).expect("视图应可用").self_.gold;
+
+    let updates = task.handle(command(
+        "p0",
+        "ability-use-1",
+        ProtocolIntent::UseMinionAbility {
+            minion_id: minion_id.clone(),
+            skill_id: MINION_ACTIVE_SKILL.to_string(),
+            target: None,
+        },
+    ));
+    assert!(
+        error_codes(&updates).is_empty(),
+        "随从主动技能应能成功发动：{:?}",
+        error_codes(&updates)
+    );
+
+    let view = task.player_view(0).expect("视图应可用");
+    assert_eq!(view.self_.gold, gold_before - 1, "发动技能应按 cost 扣金币");
+    let ability = &view
+        .self_
+        .board
+        .iter()
+        .find(|minion| minion.minion_id == minion_id)
+        .expect("棋盘随从仍在")
+        .abilities[0];
+    assert_eq!(ability.uses_left, 0, "本回合次数应递减");
+    assert!(!ability.can_use, "次数用尽后不可再发动");
+}
+
+#[test]
+fn use_minion_ability_rejects_foreign_minion_and_passive_skill() {
+    let (mut task, _clock) = task_with(catalog_with_minion_skills());
+    let own_minion = play_first_minion(&mut task, 0, "ability-own");
+    let other_minion = play_first_minion(&mut task, 1, "ability-other");
+
+    // 用别人随从的实例 id：本人棋盘上不存在该实例。
+    let foreign = task.handle(command(
+        "p0",
+        "ability-foreign",
+        ProtocolIntent::UseMinionAbility {
+            minion_id: other_minion,
+            skill_id: MINION_ACTIVE_SKILL.to_string(),
+            target: None,
+        },
+    ));
+    assert_eq!(error_codes(&foreign), vec![ErrorCode::NoSuchMinion]);
+
+    // 技能属于该随从卡但是被动技能（无 cost）。
+    let passive = task.handle(command(
+        "p0",
+        "ability-passive",
+        ProtocolIntent::UseMinionAbility {
+            minion_id: own_minion,
+            skill_id: MINION_PASSIVE_SKILL.to_string(),
+            target: None,
+        },
+    ));
+    assert_eq!(error_codes(&passive), vec![ErrorCode::NotActiveSkill]);
+}
+
+#[test]
+fn use_minion_ability_after_uses_exhausted_is_rejected() {
+    let (mut task, _clock) = task_with(catalog_with_minion_skills());
+    let minion_id = play_first_minion(&mut task, 0, "ability-limit");
+
+    let first = task.handle(command(
+        "p0",
+        "ability-limit-1",
+        ProtocolIntent::UseMinionAbility {
+            minion_id: minion_id.clone(),
+            skill_id: MINION_ACTIVE_SKILL.to_string(),
+            target: None,
+        },
+    ));
+    assert!(error_codes(&first).is_empty(), "首次发动应成功");
+    let gold_after = task.player_view(0).expect("视图应可用").self_.gold;
+
+    let second = task.handle(command(
+        "p0",
+        "ability-limit-2",
+        ProtocolIntent::UseMinionAbility {
+            minion_id,
+            skill_id: MINION_ACTIVE_SKILL.to_string(),
+            target: None,
+        },
+    ));
+    assert_eq!(
+        error_codes(&second),
+        vec![ErrorCode::HeroPowerLimit],
+        "次数用尽后应返回 HERO_POWER_LIMIT"
+    );
+    assert_eq!(
+        task.player_view(0).expect("视图应可用").self_.gold,
+        gold_after,
+        "拒绝的意图不得扣金币"
+    );
+}

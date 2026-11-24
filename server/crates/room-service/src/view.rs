@@ -11,14 +11,16 @@ use protocol::view::{
     PlayerSummary, PlayerView, ShopAffordance, ShopSlot,
 };
 use protocol::{
-    HeroPower, MinionStatBreakdown, MinionStatSource, MinionStatSourceKind, MinionStatSourceLayer,
-    MinionStats, PlayerViewSelf, ProtocolError, TargetRef, TargetZone,
+    HeroPower, MinionAbility, MinionStatBreakdown, MinionStatSource, MinionStatSourceKind,
+    MinionStatSourceLayer, MinionStats, PlayerViewSelf, ProtocolError, TargetRef, TargetZone,
 };
 use rule_engine::combat;
 use rule_engine::data::Catalog;
 use rule_engine::effects::TargetRef as EngineTargetRef;
 use rule_engine::intent::RejectCode;
 use std::num::NonZeroU64;
+
+use crate::game::error_code_of;
 
 use rule_engine::state::{MinionInstance, Phase};
 use rule_engine::view::{
@@ -106,6 +108,8 @@ pub fn board_minion_from(
     sellable: bool,
 ) -> BoardMinion {
     BoardMinion {
+        // 战斗回放不暴露随从主动技能。
+        abilities: Vec::new(),
         attack: non_negative(combat::effective_attack(catalog, minion)),
         card_id: minion.card_id.clone(),
         golden: minion.golden,
@@ -171,6 +175,23 @@ fn self_to_protocol(
                 .iter()
                 .find(|candidate| candidate.index == minion.index);
             BoardMinion {
+                abilities: minion
+                    .abilities
+                    .iter()
+                    .map(|ability| MinionAbility {
+                        can_use: ability.can_use,
+                        cost: u64::from(ability.cost),
+                        disabled_reason: ability.disabled_reason.map(error_code_of),
+                        requires_target: ability.requires_target,
+                        skill_id: ability.skill_id.clone(),
+                        target_candidates: ability
+                            .target_candidates
+                            .iter()
+                            .map(target_to_protocol)
+                            .collect(),
+                        uses_left: u64::from(ability.uses_left),
+                    })
+                    .collect(),
                 attack: non_negative(minion.attack),
                 card_id: minion.card_id.clone(),
                 golden: minion.golden,

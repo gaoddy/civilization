@@ -2139,6 +2139,17 @@ fn map_intent(intent: protocol::intents::Intent) -> Result<EngineIntent, ErrorCo
             skill_id,
             target: parse_target(target)?,
         }),
+        Protocol::UseMinionAbility {
+            minion_id,
+            skill_id,
+            target,
+        } => Ok(EngineIntent::UseMinionAbility {
+            minion: minion_id
+                .parse::<InstanceId>()
+                .map_err(|_| ErrorCode::NoSuchMinion)?,
+            skill_id,
+            target: parse_target(target)?,
+        }),
         Protocol::EndRecruit => Ok(EngineIntent::EndRecruit),
         Protocol::ChooseDiscover { choice } => Ok(EngineIntent::ChooseDiscover {
             choice: to_u8(choice)?,
@@ -2151,7 +2162,7 @@ fn to_u8(value: i64) -> Result<u8, ErrorCode> {
 }
 
 /// 引擎拒绝码转协议错误码；两者取值一一对应。
-fn error_code_of(code: RejectCode) -> ErrorCode {
+pub(crate) fn error_code_of(code: RejectCode) -> ErrorCode {
     match code {
         RejectCode::NotEnoughGold => ErrorCode::NotEnoughGold,
         RejectCode::ShopSlotEmpty => ErrorCode::ShopSlotEmpty,
