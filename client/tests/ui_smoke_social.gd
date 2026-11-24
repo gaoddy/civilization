@@ -94,6 +94,22 @@ func _check_lobby_social() -> void:
     entry.pressed.emit()
     await get_tree().process_frame
     _expect(panel.visible, "点击好友入口应打开浮层")
+    _expect(panel.placement == PopupLayer.Placement.EDGE_LEFT, "好友面板应贴左边")
+    _expect(int(panel.content.size.y) == int(panel.size.y), "好友面板应占满整高")
+
+    # 邀请模式：在线好友可邀请，对局中的好友禁用。
+    panel.open_invite()
+    await get_tree().process_frame
+    var invite_online = instance.find_child("Invite_p_online", true, false)
+    var invite_game = instance.find_child("Invite_p_game", true, false)
+    _expect(invite_online != null and not invite_online.disabled, "在线好友应可邀请")
+    _expect(invite_game != null and invite_game.disabled, "对局中的好友应禁用邀请")
+    panel.open()
+    await get_tree().process_frame
+    _expect(
+        instance.find_child("Invite_p_online", true, false) == null,
+        "普通模式不应残留邀请按钮"
+    )
 
     labels = _node_text(instance)
     _expect(labels.contains("在线好友"), "好友浮层应列出好友")

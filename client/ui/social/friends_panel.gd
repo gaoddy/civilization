@@ -16,17 +16,20 @@ var _incoming_box: VBoxContainer
 var _friends_box: VBoxContainer
 var _recent_box: VBoxContainer
 var _outgoing: Label
+## 邀请模式：好友行出现邀请按钮，由房主从大厅座位列表打开。
+var _invite_mode := false
 
 
 func _init() -> void:
-    super(PopupLayer.Placement.CENTER, UITheme.opacity("scrim-alpha-friends"))
+    super(PopupLayer.Placement.EDGE_LEFT, UITheme.opacity("scrim-alpha-friends"))
     name = "FriendsPanel"
     mouse_filter = Control.MOUSE_FILTER_STOP
-    scrim.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    edge_margin = 0
+    dismiss_on_scrim = true
 
     _panel = UIControls.card_panel("raised")
     _panel.name = "FriendsPanelCard"
-    _panel.custom_minimum_size = Vector2(600, 0)
+    _panel.custom_minimum_size = Vector2(UITheme.metric("lobby-friends-drawer-width"), 0)
     set_content(_panel)
 
     var root := VBoxContainer.new()
@@ -113,6 +116,14 @@ func _exit_tree() -> void:
 
 ## 打开浮层；列表按当前社交状态重算。
 func open() -> void:
+    _invite_mode = false
+    _render()
+    open_layer()
+
+
+## 以邀请模式打开：每行好友出现邀请按钮，在线好友可用。
+func open_invite() -> void:
+    _invite_mode = true
     _render()
     open_layer()
 
@@ -136,10 +147,10 @@ func _unhandled_input(event: InputEvent) -> void:
         get_viewport().set_input_as_handled()
 
 
-## 浮层高度按视口收缩：头部与输入行固定，列表在剩余高度内滚动。
+## 左侧抽屉占满整高：头部与输入行固定，列表在剩余高度内滚动。
 func _sync_layout() -> void:
-    var width := mini(640, maxi(360, int(size.x) - UITheme.space("space-2xl") * 2))
-    _panel.custom_minimum_size.x = width
+    var width := mini(UITheme.metric("lobby-friends-drawer-width"), maxi(360, int(size.x)))
+    _panel.custom_minimum_size = Vector2(width, size.y)
     _scroll.custom_minimum_size.y = maxi(180, int(size.y) - 230)
 
 
@@ -163,6 +174,8 @@ func _render() -> void:
     for friend in GameStore.friends:
         var row := FriendRow.new(friend)
         row.removed.connect(_on_remove_pressed)
+        var handler := _on_invite_pressed if _invite_mode else Callable()
+        row.set_invite_handler(handler, str(friend.get("status", "offline")) == "online")
         _friends_box.add_child(row)
 
     UIControls.clear(_recent_box)
@@ -197,6 +210,16 @@ func _on_respond_pressed(player_id: String, accept: bool) -> void:
 
 func _on_remove_pressed(player_id: String) -> void:
     Net.send(Protocol.MSG_FRIEND_REMOVE, {"friendId": player_id})
+
+
+func _on_invite_pressed(player_id: String) -> void:
+    Net.send(Protocol.MSG_INVITE_TO_ROOM, {"friendId": player_id})
+    var name := player_id
+    for friend in GameStore.friends:
+        if str(friend.get("playerId", "")) == player_id:
+            name = str(friend.get("displayName", player_id))
+            break
+    _set_status(tr("ui.room.invite_sent") % name)
 
 
 func _set_status(text: String, is_error := false) -> void:
