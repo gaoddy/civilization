@@ -8,7 +8,7 @@
 
 统一全屏弹出层的「壳」：遮罩、内容宿主、定位、显隐与点击遮罩关闭。内容、按钮与业务状态仍由各业务组件自己构建，外壳不读取 `GameStore`，不发请求。
 
-覆盖的场景：邀请弹窗、好友浮层、选择浮层、战斗开场与图鉴筛选面板。
+覆盖的场景：邀请弹窗、好友抽屉、选择浮层、战斗开场、图鉴筛选面板、加入房间弹窗、大厅提示与断线弹窗。
 
 ## 2. 结构
 
@@ -46,12 +46,20 @@ PopupLayer（Control，全屏，默认隐藏）
 | `EDGE_TOP` / `EDGE_BOTTOM` | 内容块贴住上 / 下边，水平居中 |
 | `EDGE_LEFT` / `EDGE_RIGHT` | 内容块贴住左 / 右边，垂直居中 |
 
+### 4.1 贴左抽屉
+
+- `FriendsPanel` 使用 `EDGE_LEFT`，`edge_margin = 0`，内容块贴左整高：宽度由组件取 `lobby-friends-drawer-width` 并夹紧在视口内，高度跟随图层；列表在剩余高度内滚动。
+- 抽屉靠 `dismiss_on_scrim = true` 支持点遮罩关闭，Esc 与关闭按钮走组件自己的 `closed` 信号。
+
 ## 5. 使用方
 
 | 组件 | 定位 | 遮罩 | 备注 |
 | --- | --- | --- | --- |
 | `InvitePopup` | `CENTER` | 黑 0.55 | 无邀请时整体隐藏 |
-| `FriendsPanel` | `CENTER` | 黑 0.58，遮罩放行 | 根节点拦截点击；Esc 与关闭按钮走 `closed` |
+| `FriendsPanel` | `EDGE_LEFT` | 黑 0.58，遮罩放行 | 贴左整高抽屉，宽度 600；根节点拦截点击；Esc 与关闭按钮走 `closed` |
+| `ConnectionDialog` | `CENTER` | 黑 0.6 | 断线提示与重连入口，只有重连按钮接收点击 |
+| `LobbyJoinDialog` | `CENTER` | 黑 0.55 | 加入房间码输入；Esc 与取消关闭 |
+| `LobbyNoticeDialog` | `CENTER` | 黑 0.55 | 单段提示；点遮罩关闭 |
 | `GameChoiceOverlay` | `CENTER` | `color-bg` 0.72 | 拦截点击，待选状态由页面控制 |
 | `CombatIntro` | `CENTER` | `color-bg` 0.6 | 根节点与遮罩都放行，不抢详情与输入 |
 | `GameStatusModal` | `CENTER` | 黑 0.55，遮罩放行 | 面板与内部容器放行输入，只有「知道了」按钮接收点击，状态提示不锁对局 |

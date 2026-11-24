@@ -12,6 +12,10 @@
 | 卡片容器 | `UIControls.card_panel`（`client/ui/controls.gd`） | [card-panel.md](card-panel.md) |
 | 可选项框 | `SelectableBox`（`client/ui/selectable_box.gd`） | [selectable-box.md](selectable-box.md) |
 | 弹出层外壳 | `PopupLayer`（`client/ui/popup_layer.gd`） | [popup-layer.md](popup-layer.md) |
+| 好友入口 | `FriendsButton`（`client/ui/social/friends_button.gd`） | 本文件 |
+| 好友抽屉 | `FriendsPanel`（`client/ui/social/friends_panel.gd`） | [popup-layer.md](popup-layer.md) |
+| 好友行 / 申请行 / 最近队友行 | `FriendRow` / `FriendRequestRow` / `RecentPlayerRow`（`client/ui/social/`） | 本文件 |
+| 断线弹窗 | `ConnectionDialog`（`client/ui/connection_dialog.gd`） | [popup-layer.md](popup-layer.md) |
 | 区块标题 | `UIControls.section_title` | 本文件 |
 | 空态提示 | `UIControls.empty_hint` | 本文件 |
 | 血量条 | `HpBar.create`（`client/ui/hp_bar.gd`） | 本文件 |
@@ -38,6 +42,9 @@
 - 可选项框由 `SelectableBox`（`client/ui/selectable_box.gd`）承担内容承载、常态 / 悬停 / 选中三态描边与框内点击；`HeroPickCard` 与 `GalleryCardTile` 继承它，分别使用外扩与内联两种选中描边。
 - 头像框由 `AvatarFrame`（`client/ui/avatar_frame.gd`）承担圆角头像裁切、头像之上的圆角描边与首字回退；`GameHeroCard` 继承它，业务内容（生命牌）挂在 `content()`；`Avatar` 与 `GamePortrait` 同样基于它，满宽贴底的名字条挂在 `clipped_content()`。
 - 弹出层外壳由 `PopupLayer`（`client/ui/popup_layer.gd`）承担遮罩、居中 / 锚点 / 四向贴边定位与点击遮罩关闭；`InvitePopup`、`FriendsPanel`、`GameChoiceOverlay`、`CombatIntro` 与图鉴筛选面板 `GalleryFilterPanel` 继承它，内容仍由各自构建。
+- `FriendsButton`（`client/ui/social/friends_button.gd`）是大厅好友入口：左侧代码绘制的好友图标，右侧在线好友数；只发 `open_requested`，不携带待处理申请数。
+- `FriendsPanel`（`client/ui/social/friends_panel.gd`）是公共好友抽屉：`EDGE_LEFT` 贴左整高，宽度取 `lobby-friends-drawer-width` 并夹紧在视口内，点遮罩关闭；普通模式管理好友与申请，邀请模式由房主从大厅座位列表打开，给在线好友出现邀请按钮。`FriendRow`、`FriendRequestRow` 与 `RecentPlayerRow` 只服务该抽屉。
+- `ConnectionDialog`（`client/ui/connection_dialog.gd`）承担断线提示与重连入口：只发 `reconnect_requested`，由宿主决定重连时机；不直接调用 `Net`。
 
 - `UIControls.section_title(text)`：区块标题，`font-body` 字号、`color-text-dim` 颜色，单行不换行。
 - `UIControls.empty_hint(text)`：居中占位提示，`font-body-sm` 字号、`color-text-muted` 颜色，用于空棋盘、空手牌、无对手。
