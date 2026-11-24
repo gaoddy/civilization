@@ -74,6 +74,7 @@ impl Engine {
                 hand: Vec::new(),
                 hero: None,
                 hero_uses: BTreeMap::new(),
+                minion_uses: BTreeMap::new(),
                 damage_dealt: 0,
                 eliminated: false,
                 first_refresh_used: false,
@@ -189,6 +190,7 @@ impl Engine {
         state.phase = Phase::Recruit;
         for player in &mut state.players {
             player.hero_uses.clear();
+            player.minion_uses.clear();
             player.recruit_done = false;
             // 解冻只在冻结的当回合可用；冻结标记本身保留，见 `recruit::roll_player`。
             player.froze_this_turn = false;

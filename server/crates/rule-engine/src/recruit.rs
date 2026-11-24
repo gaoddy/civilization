@@ -103,6 +103,11 @@ pub(crate) fn apply(
         Intent::UseHeroPower { skill_id, target } => {
             use_hero_power(engine, state, seat, &skill_id, target)
         }
+        Intent::UseMinionAbility {
+            minion,
+            skill_id,
+            target,
+        } => use_minion_ability(engine, state, seat, minion, &skill_id, target),
         Intent::EndRecruit => unreachable!("EndRecruit 在分派前处理"),
         Intent::ChooseDiscover { choice } => choose_discover(engine, state, seat, choice),
         Intent::ChooseTarget { target } => choose_target(engine, state, seat, target),
@@ -967,6 +972,153 @@ fn use_hero_power(
             target,
             event_target: None,
             golden: false,
+            level_override: None,
+        },
+    );
+    Ok(Outcome::with(events))
+}
+
+/// `UseMinionAbility` 的只读预检：随从在本人棋盘上、技能属于该随从卡、是主动技能、
+/// 次数未用尽且金币足够。不修改状态、不消耗随机流。
+///
+/// **不校验** `Recruit` 阶段、`recruit_done`、`eliminated` 与 `target`；调用方（视图层）
+/// 必须自行门控阶段与玩家状态，不能仅凭返回 `Ok` 认定该意图可操作。
+///
+/// `target` 只影响效果结算，不参与意图能否提交的判定，因此不在参数中。
+/// 次数按（随从实例，技能 id）独立计，`uses_per_turn` 缺省 1。
+pub(crate) fn check_minion_ability(
+    engine: &Engine,
+    state: &GameState,
+    seat: Seat,
+    minion: InstanceId,
+    skill_id: &str,
+) -> Result<(), Reject> {
+    let player = player(state, seat)?;
+    let instance = player
+        .board
+        .iter()
+        .find(|candidate| candidate.instance_id == minion)
+        .ok_or_else(|| {
+            Reject::new(
+                RejectCode::NoSuchMinion,
+                format!("棋盘上不存在随从 {minion}"),
+            )
+        })?;
+    let card = engine.catalog.cards.get(&instance.card_id).ok_or_else(|| {
+        Reject::new(
+            RejectCode::NoSuchMinion,
+            format!("随从 {minion} 的卡牌 {} 不在目录中", instance.card_id),
+        )
+    })?;
+    let Some(skill_ref) = engine.catalog.skill_id(skill_id) else {
+        return Err(Reject::new(
+            RejectCode::HeroPowerLimit,
+            format!("技能 {skill_id} 不在目录中"),
+        ));
+    };
+    if !card.skills.contains(&skill_ref) {
+        return Err(Reject::new(
+            RejectCode::HeroPowerLimit,
+            format!(
+                "技能 {skill_id} 不属于随从 {minion} 的卡牌 {}",
+                instance.card_id
+            ),
+        ));
+    }
+    let skill = engine.catalog.skill(skill_ref);
+    let cost = skill.cost.ok_or_else(|| {
+        Reject::new(
+            RejectCode::NotActiveSkill,
+            format!("技能 {skill_id} 是被动技能，不能主动使用"),
+        )
+    })?;
+    let used = player
+        .minion_uses
+        .get(&(minion, skill_id.to_string()))
+        .copied()
+        .unwrap_or(0);
+    let limit = skill.uses_per_turn.unwrap_or(1);
+    if used >= limit {
+        return Err(Reject::new(
+            RejectCode::HeroPowerLimit,
+            format!("随从技能 {skill_id} 本回合已用尽（{limit} 次）"),
+        ));
+    }
+    player
+        .gold
+        .checked_sub(cost)
+        .ok_or_else(|| Reject::new(RejectCode::NotEnoughGold, format!("技能需要 {cost} 金币")))?;
+    Ok(())
+}
+
+fn use_minion_ability(
+    engine: &Engine,
+    state: &mut GameState,
+    seat: Seat,
+    minion: InstanceId,
+    skill_id: &str,
+    target: Option<TargetRef>,
+) -> Result<Outcome, Reject> {
+    check_minion_ability(engine, state, seat, minion, skill_id)?;
+    check_target_zone(state, seat, target)?;
+    let target = target.map(|target| target.id);
+
+    let golden = player(state, seat)
+        .expect("check_minion_ability 已保证座位存在")
+        .board
+        .iter()
+        .find(|candidate| candidate.instance_id == minion)
+        .map(|candidate| candidate.golden)
+        .expect("check_minion_ability 已保证随从在棋盘上");
+    let ctx = EffectCtx {
+        seat,
+        source: Some(minion),
+        target,
+        event_target: None,
+        golden,
+        level_override: None,
+    };
+    // 主动技能只结算被选中的技能；一张卡可有多个主动技能，各自独立计数。
+    engine.check_targets(
+        state,
+        &engine.skill_effects_of(skill_id, Trigger::OnActivate),
+        &ctx,
+        true,
+    )?;
+
+    let player = player(state, seat).expect("check_minion_ability 已保证座位存在");
+    let cost = engine
+        .catalog
+        .skill_by_name(skill_id)
+        .expect("check_minion_ability 已保证技能在目录中")
+        .cost
+        .expect("check_minion_ability 已保证技能是主动技能");
+    let remaining_gold = player
+        .gold
+        .checked_sub(cost)
+        .expect("check_minion_ability 已保证金币足够");
+
+    let player = state
+        .players
+        .get_mut(usize::from(seat))
+        .expect("check_minion_ability 已保证座位存在");
+    player.gold = remaining_gold;
+    let uses = player
+        .minion_uses
+        .entry((minion, skill_id.to_string()))
+        .or_insert(0);
+    *uses = uses.saturating_add(1);
+
+    let events = engine.fire_skill(
+        state,
+        skill_id,
+        Trigger::OnActivate,
+        EffectCtx {
+            seat,
+            source: Some(minion),
+            target,
+            event_target: None,
+            golden,
             level_override: None,
         },
     );

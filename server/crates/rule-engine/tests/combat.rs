@@ -933,13 +933,14 @@ fn combat_state_hash_matches_golden_baseline() {
     // 随从新增 pool_copies（抽取占用的共享池份数）后哈希多写一个字节，金标准同步。
     // 新增 seven_voyages（七下西洋航程状态）后玩家哈希再写入一个标记与三个整数，金标准同步。
     // 新增成就进度后玩家哈希再写入解锁集合、成长计数与奖励状态，金标准同步；战斗行为不变。
+    // 新增 minion_uses（随从主动技能本回合次数）后玩家哈希再写入一个映射，金标准同步。
     // 行为不变，任何 GameState 字段或随机流消耗顺序变化仍会使该值改变。
     let (engine, mut state) = real_combat_state();
     let outcome = engine.resolve_combat(&mut state).unwrap();
     assert_eq!(outcome.reports.len(), 2);
     assert_eq!(
         format!("{:016x}", state_hash(&state)),
-        "f9a835e67bdfbfa7",
+        "a6bd26475ba79a27",
         "固定场景的 state_hash 金标准"
     );
 }

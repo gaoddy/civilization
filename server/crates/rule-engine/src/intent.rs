@@ -7,7 +7,7 @@ use crate::effects::TargetRef;
 use crate::events::GameEvent;
 use crate::state::InstanceId;
 
-/// 招募阶段玩家可以提交的十三种意图。
+/// 招募阶段玩家可以提交的十四种意图。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Intent {
     /// 购买商店槽位；买到的牌进入手牌，不需要目标。
@@ -33,6 +33,12 @@ pub enum Intent {
     UnfreezeShop { slot: Option<u8> },
     /// 使用英雄主动技能；`target` 是技能效果的目标（区域 + 实例编号）。
     UseHeroPower {
+        skill_id: String,
+        target: Option<TargetRef>,
+    },
+    /// 使用棋盘随从的主动技能；`target` 是技能效果的目标。
+    UseMinionAbility {
+        minion: InstanceId,
         skill_id: String,
         target: Option<TargetRef>,
     },

@@ -479,6 +479,8 @@ pub struct PlayerState {
     pub hand: Vec<HandCard>,
     pub hero: Option<String>,
     pub hero_uses: BTreeMap<String, u8>,
+    /// 棋盘随从主动技能的本回合使用次数：键为（随从实例，技能 id）。
+    pub minion_uses: BTreeMap<(InstanceId, String), u8>,
     pub damage_dealt: i32,
     pub eliminated: bool,
     pub first_refresh_used: bool,

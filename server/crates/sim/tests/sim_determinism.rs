@@ -233,6 +233,10 @@ fn same_seed_reproduces_event_sequence_hash() {
 /// 2026-11-25 第二十九次重定：最终评审修复轮把 8 张随从引用不可达效果牌技能改为
 /// 战吼/光环，海龟 6/11 降为 6/9，另有两个亡语技能补登记关键词；只有第 4 局
 /// （下标 3）的购买与战斗路径命中这些卡，该局哈希改变，其余 19 局不变。
+///
+/// 2026-11-25 第三十次重定：玩家状态新增 `minion_uses`（随从主动技能本回合
+/// 使用次数）并计入状态哈希；机器人不发动随从技能，对局路径、事件流与排名
+/// 均不变，仅因玩家哈希多写一个映射使本批次 20 局最终哈希全部改变。
 #[test]
 fn batch_final_hashes_match_golden_baseline() {
     let golden: Value = serde_json::from_str(include_str!("golden/seed-1-games-20.json"))

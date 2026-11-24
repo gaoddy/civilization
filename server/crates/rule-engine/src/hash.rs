@@ -332,6 +332,13 @@ fn hash_player(hasher: &mut Hasher, player: &PlayerState) {
         hasher.u8(*uses);
     }
 
+    hasher.len(player.minion_uses.len());
+    for ((instance_id, skill_id), uses) in &player.minion_uses {
+        hasher.u64(*instance_id);
+        hasher.str(skill_id);
+        hasher.u8(*uses);
+    }
+
     hasher.i32(player.damage_dealt);
     hasher.bool(player.eliminated);
     hasher.bool(player.first_refresh_used);

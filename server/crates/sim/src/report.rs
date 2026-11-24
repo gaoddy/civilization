@@ -291,6 +291,14 @@ pub fn intent_to_json(intent: &Intent) -> Value {
         Intent::UseHeroPower { skill_id, target } => json!({
             "kind": "use_hero_power", "skill_id": skill_id, "target": target_to_json(*target),
         }),
+        Intent::UseMinionAbility {
+            minion,
+            skill_id,
+            target,
+        } => json!({
+            "kind": "use_minion_ability", "minion": minion, "skill_id": skill_id,
+            "target": target_to_json(*target),
+        }),
         Intent::EndRecruit => json!({ "kind": "end_recruit" }),
         Intent::ChooseDiscover { choice } => json!({
             "kind": "choose_discover", "choice": choice,
@@ -502,6 +510,18 @@ fn intent_from_json(value: &Value) -> Result<Intent, String> {
                 .and_then(|slot| u8::try_from(slot).ok()),
         },
         "use_hero_power" => Intent::UseHeroPower {
+            skill_id: value
+                .get("skill_id")
+                .and_then(Value::as_str)
+                .ok_or("缺少 skill_id")?
+                .to_string(),
+            target,
+        },
+        "use_minion_ability" => Intent::UseMinionAbility {
+            minion: value
+                .get("minion")
+                .and_then(Value::as_u64)
+                .ok_or("缺少 minion")?,
             skill_id: value
                 .get("skill_id")
                 .and_then(Value::as_str)
