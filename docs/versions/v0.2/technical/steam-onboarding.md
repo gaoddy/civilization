@@ -80,7 +80,7 @@ make client-export PLATFORM=steam \
 ```
 
 通过标准：
-- 命令退出 0，产出 `output/steam/Civilization.app`；
+- 命令退出 0，产出 `output/client/Civilization-steam-<构建号>.app`；
 - 日志显示 `libsteam_api.dylib` 同时包含 `x86_64` 与 `arm64`；
 - `client/generated/build_config.gd` 在命令结束后恢复为空配置（发布配置已嵌入产物）。
 
@@ -98,9 +98,9 @@ make client-notarize \
 - `notarytool submit --wait` 返回 `Accepted`；
 - `stapler validate` 与 `spctl -a -vv -t exec` 通过。
 
-注意：公证会修改 `.app` 内容。**公证后不要重新执行 `make client-export PLATFORM=steam`**，否则签名被覆盖，需要重新签名与公证。
+注意：公证会修改 `.app` 内容。源码与渠道参数未变时重新执行 `make client-export PLATFORM=steam` 会命中戳记并复用已签名产物；一旦源码或参数变化就会重建并覆盖签名，需要重新签名与公证。
 
-本地调试（可选）：把 `steam_appid.txt` 放到 `Civilization.app/Contents/MacOS/` 下可直接运行未由 Steam 启动的包；该文件已被 `.gitignore` 与 depot 配置排除，不得进入发布包。
+本地调试（可选）：把 `steam_appid.txt` 放到 `Civilization-steam-<构建号>.app/Contents/MacOS/` 下可直接运行未由 Steam 启动的包；该文件已被 `.gitignore` 与 depot 配置排除，不得进入发布包。
 
 ## 4. SteamPipe 上传
 
@@ -114,8 +114,8 @@ make steam-upload \
 ```
 
 - `steamcmd` 会交互询问密码与 Steam Guard，密码不写入仓库或命令行。
-- 上传要求 `output/steam/Civilization.app` 已签名；未签名时命令会在构建前直接失败并提示先执行 `make client-notarize`。
-- `deploy/steam/app_build.vdf` 的 `setlive` 为空，表示只上传构建、不自动切分支。需要上线时，在 Steamworks 后台把目标构建设为 `default` 分支，或在渲染后的 `output/steam/app_build.vdf` 中填入分支名后重跑。
+- 上传要求 `output/client/Civilization-steam-<构建号>.app` 已签名；未签名时命令会在构建前直接失败并提示先执行 `make client-notarize`。
+- `deploy/steam/app_build.vdf` 的 `setlive` 为空，表示只上传构建、不自动切分支。需要上线时，在 Steamworks 后台把目标构建设为 `default` 分支，或在渲染后的 `output/client/app_build.vdf` 中填入分支名后重跑。
 - 首次上线建议先发到 beta 分支，用两个 Steam 账号完成第 6 节验收后再切 `default`。
 
 ## 5. 服务端发布与验票

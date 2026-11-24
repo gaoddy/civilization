@@ -285,14 +285,22 @@ client/
 | `make client-check` | 协议/数据/文本表漂移 + 客户端边界断言 + 国际化断言 + 工程导入 |
 | `make client-env-check` | 校验客户端构建环境只能是 `local`、`dev` 或 `prod`，默认 `local`；`ENV` 与 `env` 等价，同时传且值不同直接失败；`dev`/`prod` 分别要求 `CLIENT_DEV_SERVER_URL` / `CLIENT_PROD_SERVER_URL`，未配置直接失败 |
 | `make client-smoke` | 用 glob 逐个运行 `ui_smoke*.tscn` 冒烟场景，要求各自输出 `UI_SMOKE_OK` 且无 `SCRIPT ERROR`；任一场景断言失败时不输出 `UI_SMOKE_OK`，目标以非 0 退出；`SMOKE=<名称>` 只跑 `ui_smoke_<名称>.tscn` |
-| `make client-export PLATFORM=local` | 依赖 `client-export-templates`、`client-import` 与 `server-build`；导出调试用 `output/desktop-local/Civilization.app`，并把 debug 的 `room-service`、`sim` 复制进 `Contents/MacOS/`；仅 macOS、仅本机调试，见 §8 |
+| `make client-export PLATFORM=local` | 依赖 `client-export-templates`、`client-import` 与 `server-build`；导出调试用 `output/client/Civilization-local-<构建号>.app`，并把 debug 的 `room-service`、`sim` 复制进 `Contents/MacOS/`；仅 macOS、仅本机调试，见 §8 |
 | `make ui-preview` | 真实窗口装载指定页面/场景并注入夹具，`FOCUS` 高亮子节点；不截图，窗口保持打开；见 §5 |
 | `make ui-preview-check` | 与 `ui-preview` 参数相同但自动退出，按 `VIEW_PREVIEW_OK` / `VIEW_PREVIEW_FAIL` 判定；只用于本机 GUI 冒烟 |
-| `make client-export PLATFORM=ios` | 按 `ENV`/`env` 写入对应环境地址（默认 `local` 写空配置）后导出 Xcode 工程，并用 `xcodebuild` 自动签名，打包 `output/ios/Civilization-ios.ipa`；见 §9 |
-| `make client-export PLATFORM=android` | 导出 arm64 APK 到 `output/android/Civilization.apk`；签名参数从 `ANDROID_KEYSTORE_*` 环境变量读取，缺失时失败；见 §9 |
-| `make client-export PLATFORM=android AAB=1` | 导出 arm64 AAB 到 `output/android/Civilization.aab`；同一 keystore 签名，走 Gradle 构建；见 §9 |
+| `make client-export PLATFORM=ios` | 按 `ENV`/`env` 写入对应环境地址（默认 `local` 写空配置）后导出 Xcode 工程，并用 `xcodebuild` 自动签名，打包 `output/client/Civilization-ios-<构建号>.ipa`；见 §9 |
+| `make client-export PLATFORM=android` | 导出 arm64 APK 到 `output/client/Civilization-android-<构建号>.apk`；签名参数从 `ANDROID_KEYSTORE_*` 环境变量读取，缺失时失败；见 §9 |
+| `make client-export PLATFORM=android AAB=1` | 导出 arm64 AAB 到 `output/client/Civilization-android-<构建号>-aab.aab`；同一 keystore 签名，走 Gradle 构建；见 §9 |
 | `make client-e2e` | 启动服务端、Godot 无头客户端与 7 个 `sim bot`，要求输出 `CLIENT_E2E_OK` |
 | `make dev-bots` | 启动服务端（监听 `0.0.0.0`，手机可直连）与 7 个机器人并打印房间码，一局结束后自动准备下一局，供开发者用客户端作为第 8 人反复联调 |
+
+### 构建号与产物复用
+
+- 构建号 = `<git 短号>[-dirty]-<环境>`：环境取 `CLIENT_ENV`（`local` / `dev` / `prod`），Steam 固定 `steam`，`PLATFORM=local` 调试包固定 `local`，Android AAB 追加 `-aab`。
+- 直接产物统一在 `output/client/`，文件名 `Civilization-<平台>-<构建号>.<扩展名>`；中间产物在 `output/client/build/<平台>/<构建号>/`；戳记在 `output/client/stamps/<产物基名>.json`。
+- 戳记记录提交、分支、dirty、源码指纹、`SERVER_URL`、`STEAM_APP_ID`、Godot 版本与产物清单。macOS 系 `.app` 还把戳记复制进 `Contents/Resources/build-stamp.json`，iOS 包内的 `Civilization.app` 为 app 根的 `build-stamp.json`。
+- `make export-*` 与 `make run-ios-*` 每次先比对戳记：源码指纹（HEAD + `git status` + 变更文件大小/mtime）与配置一致且产物齐全时直接复用，打印「复用 …」并跳过 Godot 导出与 `xcodebuild`；否则重建并覆盖同名产物。dirty 工作区同样可复用，内容一变戳记即失效。
+- `BuildConfig` 同时写入 `BUILD_ENV`、`GIT_COMMIT`、`GIT_DIRTY`、`BUILD_TIME`，安装包内可直接读到构建来源；提交版 `client/generated/build_config.gd` 保留这些常量的空默认值。
 
 Godot 可执行文件通过 `GODOT` 变量覆盖，默认自动探测 `godot` 或 `/Applications/Godot.app/Contents/MacOS/Godot`。引擎补丁版本固定为 `4.7.2`（`Makefile` 的 `GODOT_VERSION`）；`make client-import` 及所有依赖它的客户端目标会先校验本机引擎，版本不符直接失败。
 
@@ -399,13 +407,13 @@ make ui-preview SETUP=res://tests/previews/game_rail.gd     # 无 .tscn 的组�
 
 ## 8. 桌面端导出
 
-`client/export_presets.cfg` 提供 macOS 预设 `macOS`：Universal（`x86_64` + `arm64`）、bundle id `com.civilization.banner`、应用名 `Civilization`、不签名（`codesign/codesign=0`、`codesign/identity=""`）。预设的 `export_path` 为 `../output/desktop/Civilization.app`；`make client-export` 以命令行传入绝对路径，二者一致。
+`client/export_presets.cfg` 提供 macOS 预设 `macOS`：Universal（`x86_64` + `arm64`）、bundle id `com.civilization.banner`、应用名 `Civilization`、不签名（`codesign/codesign=0`、`codesign/identity=""`）。预设里的 `export_path` 只给编辑器手动导出用；`make client-export` 以命令行传入 `output/client/Civilization-macos-<构建号>.app` 的实际路径。
 
 | 命令 | 内容 |
 | --- | --- |
 | `make client-export-templates` | 按 `make/client.mk` 固定的 `4.7.2` 检查 `$HOME/Library/Application Support/Godot/export_templates/4.7.2.stable/`；缺失时下载并解压官方 `Godot_v4.7.2-stable_export_templates.tpz`，只安装其中的 `templates/` |
 | `make client-env-check` | 校验客户端构建环境只能是 `local`、`dev` 或 `prod`，默认 `local`；`ENV` 与 `env` 等价，同时传且值不同直接失败；`dev`/`prod` 分别要求 `CLIENT_DEV_SERVER_URL` / `CLIENT_PROD_SERVER_URL`，未配置直接失败 |
-| `make client-export` | 默认 `PLATFORM=macos`，依赖 `client-env-check`、`client-export-templates` 与 `client-import`；按 `ENV`/`env` 临时写入对应环境地址后清空旧产物、导出 `output/desktop/Civilization.app`，校验 `Contents/MacOS/Civilization` 可执行，再用 `ditto` 打包 `output/desktop/Civilization-macos.zip`。`PLATFORM` 取 `macos`、`local`、`steam`、`ios`、`android`，其余值直接报错 |
+| `make client-export` | 默认 `PLATFORM=macos`，依赖 `client-env-check`、`client-export-templates` 与 `client-import`；按 `ENV`/`env` 临时写入对应环境地址后导出 `output/client/Civilization-macos-<构建号>.app`，校验 `Contents/MacOS/Civilization` 可执行，再用 `ditto` 打包同名 `.zip`。产物带 `build-stamp.json` 戳记，同号同环境且源码指纹一致时直接复用。`PLATFORM` 取 `macos`、`local`、`steam`、`ios`、`android`，其余值直接报错 |
 
 - 客户端构建环境分 `local`、`dev`、`prod` 三档，默认 `local`；参数可写 `ENV=` 或 `env=`，两者等价，同时传且值不同直接失败。`local` 写入空配置，客户端运行时按平台回落本机调试地址；`dev` 写入 `CLIENT_DEV_SERVER_URL`，默认 `wss://civilization.satori.host/ws`；`prod` 写入 `CLIENT_PROD_SERVER_URL`，当前为空，配置前导出直接失败。`dev`/`prod` 必须提供非空地址，`prod` 还必须是 `wss://`；`dev` 可用 `ws://` 连局域网调试端口。导出过程用 `trap` 恢复仓库内的空配置，失败也不会留下脏文件。
 
@@ -416,9 +424,9 @@ make ui-preview SETUP=res://tests/previews/game_rail.gd     # 无 .tscn 的组�
 
 ### 单机调试包
 
-`client/export_presets.cfg` 另提供只用于本机自测的预设 `macOS Local Debug`（`preset.3`）：`platform="macOS"`、`custom_features="embedded_server"`、Universal、bundle id 与应用名同发行预设、不签名，`export_path` 为 `../output/desktop-local/Civilization.app`，用 `--export-debug` 导出。
+`client/export_presets.cfg` 另提供只用于本机自测的预设 `macOS Local Debug`（`preset.3`）：`platform="macOS"`、`custom_features="embedded_server"`、Universal、bundle id 与应用名同发行预设、不签名，用 `--export-debug` 导出。
 
-- `make client-export PLATFORM=local` 清空 `output/desktop-local/` 后导出，再复制 `server/target/debug/room-service` 与 `server/target/debug/sim` 到 `Civilization.app/Contents/MacOS/` 并校验可执行；不 zip、不签名。
+- `make client-export PLATFORM=local` 导出 `output/client/Civilization-local-<构建号>.app`，再复制 `server/target/debug/room-service` 与 `server/target/debug/sim` 到 `Contents/MacOS/` 并校验可执行；不 zip、不签名。复用判定同时看 `client/` 与 `server/` 指纹，sidecar 重建后不会复用旧包。
 - `LocalServer` autoload 的启用条件：调试包由导出特性 `embedded_server` 启用；编辑器运行由环境变量 `CIVILIZATION_LOCAL_SERVER=1` 启用（Godot 4.7.2 没有命令行注入自定义特性的参数）。sidecar 目录取 `CIVILIZATION_LOCAL_SERVER_DIR`，为空时回退到可执行文件同级目录；`make client-run LOCAL_SERVER=1` 传入 `server/target/debug`。
 - 启用后先探测 `127.0.0.1:8080`，已有进程监听则复用（不启动自己的服务端），否则启动 `room-service --listen 127.0.0.1:8080` 并等待最多 10 秒；服务端就绪后启动 `sim dev --connect ws://127.0.0.1:8080/ws --intent-seed 0`，最多 15 秒内从 stdout 读取 `ROOM_CODE=<码>`。server 与 sim 的 stdout/stderr 写入 `user://local_debug.log`。
 - 登录页在服务端就绪后用预填的开发账号（`13900000000` / `123456` / `玩家A`）自动登录；大厅拿到房间码后填入并自动加入。先到大厅后到房间码时订阅 `room_code_ready` 补发，房间码只消费一次。启动失败时状态标签显示 ASCII 失败原因（如 `server_timeout`、`sidecar_missing`），登录按钮恢复可用。
@@ -462,14 +470,14 @@ make ui-preview SETUP=res://tests/previews/game_rail.gd     # 无 .tscn 的组�
 
 | 命令 | 内容 |
 | --- | --- |
-| `make client-export PLATFORM=ios` | 依赖 `client-export-templates` 与 `client-import`；按 `ENV`/`env` 写入对应环境地址（默认 `local` 写空配置），导出 `output/ios/Civilization.xcodeproj`，用 `xcodebuild`（scheme `Civilization`、`-allowProvisioningUpdates`）构建 Release，再把 `Civilization.app` 装入 `Payload/` 打包为 `output/ios/Civilization-ios.ipa` |
-| `make client-run PLATFORM=ios` | 依赖 `client-export PLATFORM=ios`，用 `xcrun devicectl` 把 `output/ios/build/Build/Products/Release-iphoneos/Civilization.app` 安装到 iPhone 并启动 `com.civilization.banner` |
+| `make client-export PLATFORM=ios` | 依赖 `client-export-templates` 与 `client-import`；按 `ENV`/`env` 写入对应环境地址（默认 `local` 写空配置），导出 `output/client/build/ios/<构建号>/Civilization.xcodeproj`，用 `xcodebuild`（scheme `Civilization`、`-allowProvisioningUpdates`）构建 Release，再把 `Civilization.app` 装入 `Payload/` 打包为 `output/client/Civilization-ios-<构建号>.ipa` |
+| `make client-run PLATFORM=ios` | 依赖 `client-export PLATFORM=ios`，用 `xcrun devicectl` 把 `output/client/build/ios/<构建号>/build/Build/Products/Release-iphoneos/Civilization.app` 安装到 iPhone 并启动 `com.civilization.banner`；导出被复用时直接安装已有产物 |
 
 - 只在 macOS 上可用；模板目录缺少 `ios.zip` 时直接退出非 0。
 - 构建环境与桌面导出一致：`make client-export PLATFORM=ios` 与 `make client-run PLATFORM=ios` 接受 `ENV`/`env`（默认 `local`）。`local` 写空配置，真机按移动端回落 `ws://cooter.local:8080/ws`；`ENV=dev` 写入 dev 公网入口，`ENV=prod` 取 `CLIENT_PROD_SERVER_URL`。
 - 导出前必须存在 `application/config/icon`（当前 `res://icon.png`）；缺少图标时 Godot 导出失败。图标由 `scripts/gen_app_icon.py` 生成，随源提交。
 - 签名依赖 Xcode 登录 Apple 团队账号并登记目标真机；缺少账号或描述文件时 `xcodebuild` 失败并打印签名错误，不产出未签名包。
-- 构建产物在 `output/ios/build/Build/Products/Release-iphoneos/`；`output/` 不提交。
+- 构建产物在 `output/client/build/ios/<构建号>/`，ipa 在 `output/client/`；`output/` 不提交。
 - `make client-run PLATFORM=ios` 默认取 `devicectl` 中第一台已连接（`connected`）的 iPhone，并打印所选设备名与 UDID；`IOS_DEVICE=<设备名|UDID>` 指定其他设备，`IOS_LAUNCH=0` 只安装不启动（设备锁屏或未解锁时启动失败，安装不受影响）。
 - 安装要求设备已在 Xcode 中信任并开启开发者模式；没有已连接的 iPhone 时目标直接失败并列出当前设备。
 
