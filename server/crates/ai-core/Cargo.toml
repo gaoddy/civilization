@@ -4,3 +4,5 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
+rule-engine = { path = "../rule-engine" }
+serde = { version = "1", features = ["derive"] }
