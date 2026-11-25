@@ -134,7 +134,7 @@ pub fn fit(
 ///
 /// candle 的默认初始化取全局随机源，同一份配置两次训练会得到不同权重；
 /// 这里按名字排序后逐个用 `RandomPolicy` 生成 `±1/√fan_in` 的均匀分布。
-fn seed_weights(var_map: &VarMap, seed: u64) -> candle_core::Result<()> {
+pub(crate) fn seed_weights(var_map: &VarMap, seed: u64) -> candle_core::Result<()> {
     let device = Device::Cpu;
     let mut rng = RandomPolicy::new(seed ^ 0x5DEE_D1CE_2026);
     let mut data = var_map.data().lock().expect("VarMap 锁");

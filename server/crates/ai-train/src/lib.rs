@@ -8,6 +8,8 @@ pub mod env;
 pub mod env_recruit;
 #[cfg(feature = "train")]
 pub mod model;
+#[cfg(feature = "train")]
+pub mod ppo;
 pub mod random_policy;
 #[cfg(feature = "train")]
 pub mod train_c0;
