@@ -49,6 +49,7 @@ version = "0.1.0"
 dependencies = [
  "ai-core",
  "ai-model",
+ "bot-ai",
  "candle-core",
  "candle-nn",
  "rule-engine",
@@ -212,6 +213,7 @@ dependencies = [
  "ai-core",
  "ai-model",
  "rule-engine",
+ "serde_json",
 ]
 
 [[package]]

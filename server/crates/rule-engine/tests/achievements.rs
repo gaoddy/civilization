@@ -265,13 +265,7 @@ fn genetics_with_full_hand_registers_no_discover() {
     }
     let hand_slots = engine.catalog.config.hand_slots;
     state.players[0].hand = (0..hand_slots)
-        .map(|index| {
-            HandCard::Minion(minion(
-                &engine.catalog,
-                9_000 + index as u64,
-                "ganlanshu",
-            ))
-        })
+        .map(|index| HandCard::Minion(minion(&engine.catalog, 9_000 + index as u64, "ganlanshu")))
         .collect();
     // 棋盘三连：金色留在战场，手牌仍满。
     engine.check_triple(&mut state, 0);

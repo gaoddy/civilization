@@ -15,7 +15,7 @@ use rule_engine::playstyles;
 use rule_engine::state::Seat;
 
 use crate::data_c0::BoardSample;
-use crate::env::PLAYER_COUNT;
+use crate::env::{PLAYER_COUNT, placement_reward};
 use crate::env_full::FullEnv;
 use crate::env_recruit::{RecruitEnv, RewardMode};
 use crate::eval::DECISIONS_PER_TURN;
@@ -436,10 +436,7 @@ fn run_c2_episode(
         && !learner_recorded_done
         && let Some((obs, choice, mask, logp, value, features)) = learner_sample
     {
-        let reward = env
-            .placement(learner)
-            .map(|place| (PLAYER_COUNT as f32 + 1.0 - f32::from(place)) / PLAYER_COUNT as f32)
-            .unwrap_or(0.0);
+        let reward = env.placement(learner).map(placement_reward).unwrap_or(0.0);
         episode_return += reward;
         record(
             batch, obs, choice, mask, logp, value, reward, true, features,
@@ -694,7 +691,7 @@ mod tests {
             assert_eq!(dones.len(), 1, "第 {episode} 局应恰有一条终局 transition");
             assert_eq!(dones[0], batch.len() - 1, "终局 transition 应在最末");
             let place = placement.expect("终局应有名次");
-            let expected = (PLAYER_COUNT as f32 + 1.0 - f32::from(place)) / PLAYER_COUNT as f32;
+            let expected = (PLAYER_COUNT as f32 - f32::from(place)) / (PLAYER_COUNT as f32 - 1.0);
             assert!(
                 (batch.rewards[dones[0]] - expected).abs() < 1e-6,
                 "终局奖励应等于名次奖励：{} vs {expected}",

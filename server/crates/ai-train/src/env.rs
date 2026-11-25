@@ -19,6 +19,14 @@ use rule_engine::view::{placement_of, view};
 /// 固定 8 人对局。
 pub const PLAYER_COUNT: usize = 8;
 
+/// 名次奖励：第 1 名 1.0，第 8 名 0.0，线性递减。
+///
+/// 环境自身的 `Step::terminal_reward` 与 C2 补记的终局 transition 都从这里取，
+/// 两条路径用同一公式，名次目标才不会因出口不同而缩放不一致。
+pub fn placement_reward(place: u8) -> f32 {
+    (PLAYER_COUNT as f32 - f32::from(place)) / (PLAYER_COUNT as f32 - 1.0)
+}
+
 /// 一次 `step` 的结果。
 #[derive(Debug, Clone, PartialEq)]
 pub struct Step {
@@ -283,7 +291,7 @@ impl Env {
         let mut terminal_reward = [0.0; PLAYER_COUNT];
         for seat in 0..PLAYER_COUNT as Seat {
             if let Some(place) = self.placement(seat) {
-                terminal_reward[usize::from(seat)] = (8.0 - f32::from(place)) / 7.0;
+                terminal_reward[usize::from(seat)] = placement_reward(place);
             }
         }
         Step {
