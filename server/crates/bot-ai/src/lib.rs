@@ -14,6 +14,35 @@ use rule_engine::engine::Engine;
 use rule_engine::intent::{Intent, Reject, RejectCode};
 use rule_engine::state::{GameState, MinionInstance, PendingChoice, Phase, PlayerState, Seat};
 
+pub mod neural;
+
+/// 策略抽象：房间服务按同一接口切换启发式与神经策略。
+pub trait Policy {
+    /// 给出该座位下一条意图；无法决策时返回 `None`，由调用方回退启发式。
+    fn plan(
+        &self,
+        state: &GameState,
+        seat: Seat,
+        engine: &Engine,
+        blocked: &[Intent],
+    ) -> Option<Intent>;
+}
+
+/// 现有启发式策略的 trait 包装。
+pub struct HeuristicPolicy;
+
+impl Policy for HeuristicPolicy {
+    fn plan(
+        &self,
+        state: &GameState,
+        seat: Seat,
+        engine: &Engine,
+        blocked: &[Intent],
+    ) -> Option<Intent> {
+        crate::plan(state, seat, engine, blocked)
+    }
+}
+
 /// 手动刷新商店的金币价格：本回合首次刷新免费，之后每次 1 金币（与引擎一致）。
 const REROLL_PRICE: u8 = 1;
 

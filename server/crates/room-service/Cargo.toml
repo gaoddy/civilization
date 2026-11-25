@@ -27,6 +27,8 @@ tokio = { version = "1", features = ["full"] }
 uuid = { version = "1", features = ["v4"] }
 
 [dev-dependencies]
+ai-core = { path = "../ai-core" }
+ai-model = { path = "../ai-model" }
 sim = { path = "../sim" }
 tokio-tungstenite = "0.29"
 tower = { version = "0.5", features = ["util"] }

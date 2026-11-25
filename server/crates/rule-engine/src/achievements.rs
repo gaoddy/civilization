@@ -379,7 +379,12 @@ impl Engine {
     }
 
     /// 遗传学：以当前时代为星级（6 星封顶）发现一张植物随从。
+    ///
+    /// 手牌已满时与其它发现来源同口径：直接作废，不登记待选（不消耗发现随机流）。
     fn grant_plant_discover(&self, state: &mut GameState, seat: Seat) {
+        if !self.discover_has_hand_space(state, seat) {
+            return;
+        }
         let level = state
             .players
             .get(usize::from(seat))

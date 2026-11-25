@@ -23,6 +23,7 @@
 //!   视图；战斗结果只走逐座位 `CombatResult`。
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::path::Path;
 use std::sync::Arc;
 
 use protocol::server::{
@@ -286,6 +287,8 @@ pub struct GameTask {
     /// 只存在 `GameTask` 上，不写入 [`GameState`]，因此不影响 `state_hash` 与
     /// 确定性重放；重连快照从当前视图自然带出。
     combat_log: Vec<CombatLogEntry>,
+    /// 机器人策略；默认启发式，可按环境变量换成神经策略。
+    policy: Box<dyn bot_ai::Policy + Send + Sync>,
     /// 本局主动弃权的玩家；座位保留到本局结束，仅用于停止推送。
     departed: BTreeSet<String>,
     /// 每个座位当前连接的下行发送端；首次建连经 [`GameTask::bind_sender`] 注册，
@@ -311,7 +314,35 @@ pub struct GameTask {
     pending_forfeits: BTreeSet<Seat>,
 }
 
+/// 按环境变量构造机器人策略。
+///
+/// `BOT_POLICY=neural` 时从 `BOT_MODEL_DIR`（默认 `output/models/c2`）加载；
+/// 加载失败或取值未知时记录日志并回退启发式，保证房间照常推进。
+pub fn bot_policy_from_env(catalog: &Catalog) -> Box<dyn bot_ai::Policy + Send + Sync> {
+    let mode = std::env::var("BOT_POLICY").unwrap_or_else(|_| "heuristic".to_string());
+    if mode == "neural" {
+        let dir = std::env::var("BOT_MODEL_DIR").unwrap_or_else(|_| "output/models/c2".to_string());
+        match bot_ai::neural::NeuralPolicy::load(Path::new(&dir), catalog) {
+            Ok(policy) => return Box::new(policy),
+            Err(error) => println!("room-service: 神经策略加载失败 dir={dir}: {error}；回退启发式"),
+        }
+    } else if mode != "heuristic" {
+        println!("room-service: 未知 BOT_POLICY={mode}；回退启发式");
+    }
+    Box::new(bot_ai::HeuristicPolicy)
+}
+
 impl GameTask {
+    /// 按环境变量替换机器人策略；生产入口在构造对局后调用。
+    pub fn apply_env_policy(&mut self) {
+        self.policy = bot_policy_from_env(&self.engine.catalog);
+    }
+
+    /// 直接替换机器人策略；测试注入与后续难度表切换都用它。
+    pub fn set_policy(&mut self, policy: Box<dyn bot_ai::Policy + Send + Sync>) {
+        self.policy = policy;
+    }
+
     /// 以已确定的英雄表与玩法开局并构造驱动。
     ///
     /// `players` 必须是按座位号升序排列的 8 个座位（`Room::players` 的约定）；
@@ -397,6 +428,7 @@ impl GameTask {
             combat_acks: [false; SEAT_COUNT],
             combat_participants: [false; SEAT_COUNT],
             combat_log: Vec::new(),
+            policy: Box::new(bot_ai::HeuristicPolicy),
             departed: BTreeSet::new(),
             senders: BTreeMap::new(),
             connected: [true; SEAT_COUNT],
@@ -494,6 +526,7 @@ impl GameTask {
             combat_acks: [false; SEAT_COUNT],
             combat_participants: [false; SEAT_COUNT],
             combat_log: Vec::new(),
+            policy: Box::new(bot_ai::HeuristicPolicy),
             departed: BTreeSet::new(),
             senders: BTreeMap::new(),
             connected: [true; SEAT_COUNT],
@@ -1007,7 +1040,12 @@ impl GameTask {
             let mut blocked: Vec<EngineIntent> = Vec::new();
             let mut replans = 0usize;
             loop {
-                let Some(intent) = bot_ai::plan(&self.state, seat, &self.engine, &blocked) else {
+                // 神经策略推理失败或拒绝决策时回退启发式；启发式也返回 `None` 才停手。
+                let intent = self
+                    .policy
+                    .plan(&self.state, seat, &self.engine, &blocked)
+                    .or_else(|| bot_ai::plan(&self.state, seat, &self.engine, &blocked));
+                let Some(intent) = intent else {
                     break;
                 };
                 let ends = matches!(intent, EngineIntent::EndRecruit);

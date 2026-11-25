@@ -25,6 +25,89 @@ use crate::state::{
     StatSourceLayer, StatSourceOrigin, StatSystemSource,
 };
 
+/// 英雄主动技能是否需要目标，以及当前合法目标。
+///
+/// 视图、合法动作枚举与出牌预检共用这一份口径，避免三处各算一遍产生漂移。
+pub(crate) fn hero_power_targets(
+    engine: &Engine,
+    state: &GameState,
+    seat: Seat,
+    skill_id: &str,
+) -> (bool, Vec<TargetRef>) {
+    let requires_target = engine.skill_requires_target(skill_id, Trigger::OnActivate);
+    if !requires_target {
+        return (false, Vec::new());
+    }
+    let ctx = EffectCtx {
+        seat,
+        source: None,
+        target: None,
+        event_target: None,
+        golden: false,
+        level_override: None,
+    };
+    let effects = engine.skill_effects_of(skill_id, Trigger::OnActivate);
+    (true, engine.target_candidates(state, &effects, &ctx, false))
+}
+
+/// 手牌是否需要目标，以及当前合法目标。
+///
+/// 与出牌预检同源：牌自身声明了单一目标选择器，或预检（含 `OnUse` 响应）在
+/// 未指定目标时因缺目标而失败，都算需要目标；候选按预检口径计算，因此候选
+/// 为空时该牌不可打出。
+pub(crate) fn hand_card_targets(
+    engine: &Engine,
+    state: &GameState,
+    seat: Seat,
+    hand_card: &crate::state::HandCard,
+) -> (bool, Vec<TargetRef>) {
+    if hand_card.minion().is_some() {
+        return (false, Vec::new());
+    }
+    let ctx = EffectCtx {
+        seat,
+        source: None,
+        target: None,
+        event_target: None,
+        golden: false,
+        level_override: hand_card.reward_level(),
+    };
+    let effects = engine.effects_of(hand_card.card_id(), Trigger::OnPlayEffect);
+    // 需要目标有两种来源：牌自身声明了单一目标选择器，或出牌预检（含 OnUse 响应）
+    // 在未指定目标时因缺目标而失败。两者任一成立，玩家都必须先选目标。
+    let declared = engine.requires_target(hand_card.card_id(), Trigger::OnPlayEffect);
+    let blocked_without_target = engine.check_targets(state, &effects, &ctx, false).is_err()
+        || engine.check_on_use_targets(state, &ctx).is_err();
+    if !declared && !blocked_without_target {
+        return (false, Vec::new());
+    }
+    (true, engine.target_candidates(state, &effects, &ctx, true))
+}
+
+/// 棋盘随从主动技能是否需要目标，以及当前合法目标。
+pub(crate) fn minion_ability_targets(
+    engine: &Engine,
+    state: &GameState,
+    seat: Seat,
+    minion: &MinionInstance,
+    skill_id: &str,
+) -> (bool, Vec<TargetRef>) {
+    let requires_target = engine.skill_requires_target(skill_id, Trigger::OnActivate);
+    if !requires_target {
+        return (false, Vec::new());
+    }
+    let ctx = EffectCtx {
+        seat,
+        source: Some(minion.instance_id),
+        target: None,
+        event_target: None,
+        golden: minion.golden,
+        level_override: None,
+    };
+    let effects = engine.skill_effects_of(skill_id, Trigger::OnActivate);
+    (true, engine.target_candidates(state, &effects, &ctx, false))
+}
+
 /// 一个座位当前可见的全部状态。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SeatView {
@@ -366,22 +449,8 @@ pub fn view(engine: &Engine, state: &GameState, seat: Seat) -> Option<SeatView> 
                     let limit = skill.uses_per_turn.unwrap_or(1);
                     let used = player.hero_uses.get(skill_id).copied().unwrap_or(0);
                     let uses_left = limit.saturating_sub(used);
-                    let requires_target =
-                        engine.skill_requires_target(skill_id, Trigger::OnActivate);
-                    let target_candidates = if requires_target {
-                        let ctx = EffectCtx {
-                            seat,
-                            source: None,
-                            target: None,
-                            event_target: None,
-                            golden: false,
-                            level_override: None,
-                        };
-                        let effects = engine.skill_effects_of(skill_id, Trigger::OnActivate);
-                        engine.target_candidates(state, &effects, &ctx, false)
-                    } else {
-                        Vec::new()
-                    };
+                    let (requires_target, target_candidates) =
+                        hero_power_targets(engine, state, seat, skill_id);
                     let (can_use, disabled_reason) = match gate {
                         Some(code) => (false, Some(code)),
                         // 需要目标而候选为空：该技能没有合法落点，按不可使用处理。
@@ -438,28 +507,9 @@ pub fn view(engine: &Engine, state: &GameState, seat: Seat) -> Option<SeatView> 
         .enumerate()
         .map(|(index, hand_card)| {
             let minion = hand_card.minion();
-            let requires_target = minion.is_none()
-                && engine
-                    .requires_target(hand_card.card_id(), crate::effects::Trigger::OnPlayEffect);
             // 效果牌的合法目标与出牌预检同源：候选为空时该牌不可打出。
-            let target_candidates = if requires_target {
-                let ctx = EffectCtx {
-                    seat,
-                    source: None,
-                    target: None,
-                    event_target: None,
-                    golden: false,
-                    level_override: hand_card.reward_level(),
-                };
-                engine.target_candidates(
-                    state,
-                    &engine.effects_of(hand_card.card_id(), Trigger::OnPlayEffect),
-                    &ctx,
-                    true,
-                )
-            } else {
-                Vec::new()
-            };
+            let (requires_target, target_candidates) =
+                hand_card_targets(engine, state, seat, hand_card);
             HandCardView {
                 index: u8::try_from(index).unwrap_or(u8::MAX),
                 instance_id: hand_card.instance_id(),
@@ -539,23 +589,8 @@ pub fn view(engine: &Engine, state: &GameState, seat: Seat) -> Option<SeatView> 
                                 .copied()
                                 .unwrap_or(0);
                             let uses_left = limit.saturating_sub(used);
-                            let requires_target =
-                                engine.skill_requires_target(skill_id, Trigger::OnActivate);
-                            let target_candidates = if requires_target {
-                                let ctx = EffectCtx {
-                                    seat,
-                                    source: Some(minion.instance_id),
-                                    target: None,
-                                    event_target: None,
-                                    golden: minion.golden,
-                                    level_override: None,
-                                };
-                                let effects =
-                                    engine.skill_effects_of(skill_id, Trigger::OnActivate);
-                                engine.target_candidates(state, &effects, &ctx, false)
-                            } else {
-                                Vec::new()
-                            };
+                            let (requires_target, target_candidates) =
+                                minion_ability_targets(engine, state, seat, minion, skill_id);
                             let (can_use, disabled_reason) = match gate {
                                 Some(code) => (false, Some(code)),
                                 // 需要目标而候选为空：该技能没有合法落点，按不可使用处理。

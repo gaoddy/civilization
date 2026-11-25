@@ -8,12 +8,13 @@
 //! - 房间码由注册表的单调计数器派生，6 位大写字母数字，排除易混字符 `0O1I`。
 //! - 本模块不读系统时间；邀请 token 使用进程内随机 UUID，不影响对局确定性。
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 use std::fmt;
 
 use protocol::RoomUpdatePlayersItem;
 use protocol::server::RoomUpdate;
-use rule_engine::data::{Catalog, Playstyle, hero_in_pool};
+use rule_engine::candidates::allocate_candidates;
+use rule_engine::data::{Catalog, Playstyle};
 use rule_engine::state::{Phase, Seat};
 use uuid::Uuid;
 
@@ -21,17 +22,13 @@ use crate::auth::Session;
 use crate::envelope::SeatChannel;
 use crate::game::RECONNECT_GRACE_MS;
 
-/// 每局固定 8 个座位。
-pub const SEAT_COUNT: usize = 8;
+pub use rule_engine::candidates::{CANDIDATE_COUNT, SEAT_COUNT};
 
 /// 房间码字母表：去掉 `0`、`O`、`1`、`I`，共 32 个可读字符。
 const CODE_ALPHABET: &[u8] = b"23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
 
 /// 房间码长度。
 const CODE_LEN: usize = 6;
-
-/// 每名玩家分到的候选英雄数量。
-pub const CANDIDATE_COUNT: usize = 4;
 
 /// 房间邀请 token 有效期：60 秒。
 pub const ROOM_INVITE_TTL_MS: u64 = 60_000;
@@ -863,56 +860,6 @@ impl Default for RoomRegistry {
     }
 }
 
-/// 按房间种子为 8 个座位分配候选英雄。
-///
-/// 候选只取 [`hero_in_pool`] 通过的英雄；池为空时回退到全部英雄卡。洗牌与切段
-/// 都是确定性的，段号即座位号：
-/// - 池 ≥ 满座总需求时每座位 4 张、房间内互不重复；
-/// - 池不足时按 `(seat * 4 + i) % len` 取 `min(4, len)` 张，允许跨座位重复；
-/// - 池小于 4 时每座位取整个池并至少 1 张。
-fn allocate_candidates(
-    seed: u64,
-    playstyles: &[Playstyle; 5],
-    catalog: &Catalog,
-) -> BTreeMap<Seat, Vec<String>> {
-    let enabled: BTreeSet<Playstyle> = playstyles.iter().copied().collect();
-    let mut heroes: Vec<String> = catalog
-        .heroes
-        .values()
-        .filter(|hero| hero_in_pool(hero, &enabled))
-        .map(|hero| hero.id.clone())
-        .collect();
-    // 产品兜底：本局玩法过滤后一张英雄都没有时，回退到全部英雄卡。
-    if heroes.is_empty() {
-        heroes = catalog.heroes.keys().cloned().collect();
-    }
-    heroes.sort();
-    shuffle(&mut heroes, seed);
-
-    let mut candidates = BTreeMap::new();
-    for seat in 0..SEAT_COUNT as Seat {
-        let picked = if heroes.is_empty() {
-            Vec::new()
-        } else if heroes.len() >= SEAT_COUNT * CANDIDATE_COUNT {
-            let start = usize::from(seat) * CANDIDATE_COUNT;
-            let end = (start + CANDIDATE_COUNT).min(heroes.len());
-            heroes
-                .get(start..end)
-                .map(<[_]>::to_vec)
-                .unwrap_or_default()
-        } else {
-            let take = CANDIDATE_COUNT.min(heroes.len());
-            (0..take)
-                .map(|offset| {
-                    heroes[(usize::from(seat) * CANDIDATE_COUNT + offset) % heroes.len()].clone()
-                })
-                .collect()
-        };
-        candidates.insert(seat, picked);
-    }
-    candidates
-}
-
 /// 房间码派生的确定性种子（FNV-1a 64 位）。
 ///
 /// 房间码在同一进程内唯一且确定，因此「同房间码 → 同种子 → 同候选分组」成立，
@@ -929,17 +876,6 @@ pub fn seed_for_code(code: &str) -> u64 {
 /// 用 `seed` 做确定性 Fisher–Yates 洗牌。
 ///
 /// 只用整数线性同余推进种子，不引入随机源；同种子同输入得到同顺序。
-fn shuffle(items: &mut [String], seed: u64) {
-    let mut state = seed | 1;
-    for index in (1..items.len()).rev() {
-        state = state
-            .wrapping_mul(6_364_136_223_846_793_005)
-            .wrapping_add(1_442_695_040_888_963_407);
-        let swap_with = (state >> 33) as usize % (index + 1);
-        items.swap(index, swap_with);
-    }
-}
-
 /// 把房间码计数器编码成固定 6 位、排除易混字符的大写串。
 fn encode_code(mut value: u64) -> String {
     let radix = CODE_ALPHABET.len() as u64;

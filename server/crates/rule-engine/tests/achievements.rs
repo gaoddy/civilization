@@ -254,6 +254,39 @@ fn genetics_triggers_on_plant_triple_and_offers_plant_discover() {
     }
 }
 
+/// 手牌已满时遗传学的发现无处落手：不登记发现待选，否则该座位会卡在
+/// 无法消费的选择上（`ChooseDiscover` 恒判 `NO_SPACE`）。
+#[test]
+fn genetics_with_full_hand_registers_no_discover() {
+    let (engine, mut state) = setup(8);
+    state.enabled_playstyles = BTreeSet::from([Playstyle::Plant]);
+    for index in 0..3u64 {
+        place(&engine.catalog, &mut state, 0, 200 + index, "ganlanshu");
+    }
+    let hand_slots = engine.catalog.config.hand_slots;
+    state.players[0].hand = (0..hand_slots)
+        .map(|index| HandCard::Minion(minion(&engine.catalog, 9_000 + index as u64, "ganlanshu")))
+        .collect();
+    // 棋盘三连：金色留在战场，手牌仍满。
+    engine.check_triple(&mut state, 0);
+
+    assert!(
+        state.players[0]
+            .achievements
+            .unlocked
+            .contains(&Achievement::Genetics),
+        "植物三连应解锁遗传学"
+    );
+    assert!(
+        !state
+            .pending
+            .iter()
+            .any(|choice| matches!(choice, PendingChoice::Discover { .. })),
+        "手牌已满时不应登记发现待选：{:?}",
+        state.pending
+    );
+}
+
 #[test]
 fn machines_roar_triggers_and_discounts_machine_purchases_this_turn() {
     let (engine, mut state) = setup(6);

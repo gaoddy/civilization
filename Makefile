@@ -3,6 +3,7 @@
 #   make/client.mk   客户端构建、运行、检查与导出
 #   make/content.mk  内容、协议、资产与文档生成/校验
 #   make/server.mk   服务端测试、模拟器、压测与本地联调
+#   make/ai.mk       RL 训练、评测与检查
 #   make/deploy.mk   服务端部署
 # 命令说明见 AGENTS.md 与 docs/current/technical/。
 
@@ -22,6 +23,7 @@ OUTPUT_LOG_DIR ?= output/logs/$(OUTPUT_LOG_BRANCH)
 include make/client.mk
 include make/content.mk
 include make/server.mk
+include make/ai.mk
 include make/deploy.mk
 
 .PHONY: check-core check
@@ -34,7 +36,8 @@ check-core:
 		"$(MAKE) --no-print-directory lint" \
 		"$(MAKE) --no-print-directory sim-determinism"
 
-# 全量验收：协议生成物、文档数据、测试、静态检查与确定性。
+# 全量验收：协议生成物、文档数据、测试、静态检查与确定性，外加训练 feature
+# 下的 AI 测试与静态检查（默认 workspace 目标不编译训练代码）。
 # e2e 由 `make test` 的 `cargo test --workspace` 覆盖，不在此单独再跑：
 # 那会用真实 WebSocket 起 8 个 bot 跑两次。
 check:
@@ -44,4 +47,6 @@ check:
 		"$(MAKE) --no-print-directory data-check" \
 		"$(MAKE) --no-print-directory test" \
 		"$(MAKE) --no-print-directory lint" \
+		"$(MAKE) --no-print-directory ai-test" \
+		"$(MAKE) --no-print-directory ai-check" \
 		"$(MAKE) --no-print-directory sim-determinism"
