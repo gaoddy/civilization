@@ -192,9 +192,13 @@ func _build_preview(card_id: String, entry: Dictionary, hero: bool) -> Control:
         placeholder.mouse_filter = Control.MOUSE_FILTER_IGNORE
         holder.add_child(placeholder)
 
-    # 公共卡框压在封面之上：描边与星级和网格、对局卡面一致；英雄没有星级。
-    var level := 0 if hero else int(entry.get("level", 1))
-    holder.add_child(CardFrame.create(level))
+    # 公共卡框压在封面之上：描边与网格、对局卡面一致；英雄没有等级。
+    holder.add_child(CardFrame.create())
+    if not hero:
+        # 顶栏只展示等级与时代：详情封面不卖卡，没有费用位。
+        holder.add_child(CardTopRow.create(
+            int(entry.get("level", 1)), str(entry.get("era", ""))
+        ))
     return holder
 
 

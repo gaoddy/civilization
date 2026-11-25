@@ -10,8 +10,8 @@ static func build(card: Dictionary, measure_host: Node = null) -> Control:
     var entry := CardDB.card(card_id)
     var golden := bool(card.get("golden", false))
     var reward_level: Variant = card.get("rewardLevel")
-    # 奖励牌在角标行显示锁定的发现星级；金色随从优先显示「★」。
-    var badge_text := "★" if golden else ""
+    # 奖励牌在顶栏显示锁定的发现星级；金色不再单独出角标，由金框与金色星点表达。
+    var badge_text := ""
     if not golden and reward_level != null:
         badge_text = str(int(reward_level))
     var face_node := CardFaceBase.create_face(card_id, true)
@@ -29,13 +29,12 @@ static func build(card: Dictionary, measure_host: Node = null) -> Control:
         false,
         golden,
     )
-    CardFaceBase.add_frame(face_node, card_id)
-    # 角标最后添加：介绍需要时信息区会向上扩展，角标必须压在信息区之上。
+    CardFaceBase.add_frame(face_node)
+    # 顶栏最后添加：介绍需要时信息区会向上扩展，顶栏必须压在信息区之上。
     CardFaceBase.add_corner_badges(
         face_node,
         str(CardDB.display_cost(card_id)),
         str(entry.get("era", "")),
         badge_text,
-        false,
     )
     return face_node

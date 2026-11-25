@@ -287,12 +287,13 @@ func skill(id: String) -> Dictionary:
     return skills.get(id, {})
 
 
-## 技能展示费用；技能不存在或缺少 `cost` 时返回 -1，供界面隐藏费用角标。
+## 技能展示费用；技能不存在、缺少 `cost` 或 `cost` 为 null（触发式/常驻技能）时返回 -1，
+## 供界面隐藏费用角标。
 func skill_cost(id: String) -> int:
-    var entry := skill(id)
-    if not entry.has("cost"):
+    var value: Variant = skill(id).get("cost")
+    if value == null:
         return -1
-    return int(entry.get("cost", -1))
+    return int(value)
 
 
 ## 技能展示信息：名称、文本、触发、费用与次数，供技能列表逐条渲染。

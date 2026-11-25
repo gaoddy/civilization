@@ -98,27 +98,33 @@ func _ready() -> void:
             var cost_rect: Rect2 = (cost as Control).get_global_rect()
             var era_rect: Rect2 = (era as Control).get_global_rect()
             var name_rect: Rect2 = (name_node as Control).get_global_rect()
-            _expect(cost_rect.position.x < card_rect.get_center().x, "费用角标应在卡片左上")
-            _expect(cost_rect.position.y < card_rect.get_center().y, "费用角标应在卡片左上")
-            _expect(era_rect.position.x > card_rect.get_center().x, "时代角标应在卡片右上")
-            _expect(era_rect.position.y < card_rect.get_center().y, "时代角标应在卡片右上")
-            _expect(not cost_rect.intersects(era_rect), "费用与时代角标不应相交")
-            _expect(not cost_rect.intersects(name_rect), "费用角标不应与卡名相交")
-            _expect(not era_rect.intersects(name_rect), "时代角标不应与卡名相交")
+            _expect(era_rect.position.x < card_rect.get_center().x, "时代节点应在卡片左侧")
+            _expect(era_rect.position.y < card_rect.get_center().y, "时代节点应在顶栏")
+            _expect(cost_rect.position.x > card_rect.get_center().x, "费用旋钮应在卡片右侧")
+            _expect(cost_rect.position.y < card_rect.get_center().y, "费用旋钮应在顶栏")
+            _expect(not cost_rect.intersects(era_rect), "费用与时代节点不应相交")
+            _expect(not cost_rect.intersects(name_rect), "费用节点不应与卡名相交")
+            _expect(not era_rect.intersects(name_rect), "时代节点不应与卡名相交")
         var frame := open_card.find_child("CardFrame", true, false)
         _expect(frame is CardFrame, "卡面应有 CardFrame")
         if frame is CardFrame:
-            var level := int(CardDB.card("aolinpike-jidian").get("level", 1))
-            _expect((frame as CardFrame).level == level, "卡框星级应取卡表 level")
-            _expect((frame as CardFrame).star_count == level, "卡框星数应等于 level")
             _expect(
                 (frame as Control).size == (face_node as Control).size,
                 "卡框应铺满卡面",
             )
-            var corners := open_card.find_child("CardCorners", true, false)
+        var top_row := open_card.find_child("CardTopRow", true, false) as CardTopRow
+        _expect(top_row != null, "卡面应有顶栏 CardTopRow")
+        if top_row != null:
+            var level := int(CardDB.card("aolinpike-jidian").get("level", 1))
+            _expect(top_row.level == level, "顶栏星级应取卡表 level")
+            _expect(top_row.era == "classical", "顶栏应显示该卡的时代")
             _expect(
-                corners is Control and (frame as Control).get_index() < (corners as Control).get_index(),
-                "卡框应绘制在角标之下",
+                top_row.cost == str(CardDB.display_cost("aolinpike-jidian")),
+                "顶栏费用应等于展示费用",
+            )
+            _expect(
+                (frame as Control).get_index() < top_row.get_index(),
+                "卡框应绘制在顶栏之下",
             )
         _expect(open_card.find_child("AttackPlate", true, false) is StatPlate, "卡面应有攻击底牌")
         _expect(open_card.find_child("HealthPlate", true, false) is StatPlate, "卡面应有血量底牌")
@@ -505,18 +511,20 @@ func _ready() -> void:
     _finish()
 
 
-## 卡框独立可建：记录星级、星数等于星级、不拦截鼠标。
+## 顶栏独立可建：记录等级、时代、费用与奖励星级，不拦截鼠标。
 func _check_card_frame() -> void:
-    var frame := CardFrame.create(5)
-    frame.name = "StandaloneFrame"
-    add_child(frame)
-    frame.set_anchors_preset(Control.PRESET_TOP_LEFT)
-    frame.size = Vector2(112, 146)
+    var row := CardTopRow.create(5, "classical", "3", "4", true)
+    row.name = "StandaloneTopRow"
+    add_child(row)
+    row.set_anchors_preset(Control.PRESET_TOP_LEFT)
+    row.size = Vector2(112, 146)
     await get_tree().process_frame
-    _expect(frame.level == 5, "CardFrame 应记录星级")
-    _expect(frame.star_count == 5, "CardFrame 星数应等于星级")
-    _expect(frame.mouse_filter == Control.MOUSE_FILTER_IGNORE, "卡框不应拦截鼠标")
-    frame.queue_free()
+    _expect(row.level == 5, "顶栏应记录星级")
+    _expect(row.era == "classical", "顶栏应记录时代")
+    _expect(row.cost == "3", "顶栏应记录费用")
+    _expect(row.reward == "4", "顶栏应记录奖励星级")
+    _expect(row.mouse_filter == Control.MOUSE_FILTER_IGNORE, "顶栏不应拦截鼠标")
+    row.queue_free()
 
 
 ## 攻防底牌：记录类型、尺寸随字号、内含带描边的数字。
@@ -612,7 +620,7 @@ func _check_hand_fit() -> void:
     var desc_box: Control = panel.find_child("CardDescBox", true, false)
     var desc: Label = panel.find_child("CardDesc", true, false)
     var name_label: Control = panel.find_child("CardName", true, false)
-    var corners: Control = panel.find_child("CardCorners", true, false)
+    var corners: Control = panel.find_child("CardTopRow", true, false)
     _expect(info != null and info.size.y > 90.0, "手牌信息区应向封面扩展，实际 %s" % (info.size.y if info else -1.0))
     _expect(desc != null and desc.is_visible_in_tree(), "手牌卡应显示介绍")
     if desc != null and desc_box != null and name_label != null and corners != null:
@@ -636,13 +644,17 @@ func _check_hand_fit() -> void:
             desc_box.get_global_rect().end.y <= name_label.get_global_rect().position.y + 1.0,
             "介绍应在名称上方",
         )
+        var band := Rect2()
+        if corners is CardTopRow:
+            var local: Rect2 = (corners as CardTopRow).band_rect()
+            band = Rect2(corners.get_global_rect().position + local.position, local.size)
         _expect(
-            not desc_box.get_global_rect().intersects(corners.get_global_rect()),
-            "介绍不应压住角标",
+            band.has_area() and not desc_box.get_global_rect().intersects(band),
+            "介绍不应压住顶栏",
         )
         _expect(
-            corners.get_global_rect().position.y < desc_box.get_global_rect().position.y,
-            "角标应位于介绍上方",
+            band.position.y < desc_box.get_global_rect().position.y,
+            "顶栏应位于介绍上方",
         )
     panel.queue_free()
     await get_tree().process_frame

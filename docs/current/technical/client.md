@@ -52,12 +52,12 @@ client/
     selectable_box.gd        # 可选项框：内容容器 + 常态/悬停/选中描边与框内点击（class_name SelectableBox）
     icons.gd                 # 代码绘制的矢量图标（class_name Icons）
     stat_plate.gd            # 攻防底牌（class_name StatPlate）
-    card_frame.gd            # 卡框与星级（class_name CardFrame）
-    corner_badge.gd          # 卡面角标小牌：深底、铜边与顶部高光（class_name CornerBadge）
+    card_frame.gd            # 卡框三条嵌套描边（class_name CardFrame）
+    card_top_row.gd          # 卡面顶栏：时代在左、等级星居中、费用在右（class_name CardTopRow）
     frame_material.gd        # 框体材质：给控件叠 shader 倒角边框与内侧阴影（class_name FrameMaterial）
     frame_material.gdshader  # 黄铜浮雕边框：时代合金色、三连足金与引导流光
     era_glyph.gd             # 时代象形（class_name EraGlyph）
-    card_face_base.gd        # 卡面共享绘制：圆角封面、美术内缩、角标行、自适应信息区、冻结蒙层与就地改身材
+    card_face_base.gd        # 卡面共享绘制：圆角封面、美术内缩、顶栏、自适应信息区、冻结与潜行蒙版、就地改身材
     card_text.gd             # 卡牌与卡面周边的显示文本格式化
     detail_layer.gd          # 详情层（class_name DetailLayer）：命中、定位与装配；内容由 detail_sections/ 渲染
     detail_kit.gd            # 详情内容公共辅助：标题、文本块、分类与关联行（class_name DetailKit）
@@ -212,7 +212,7 @@ client/
 - 房间页的邀请入口只列 `status == "online"` 的好友，其余按钮禁用；点击发 `InviteToRoom{friendId}`，结果由 `FriendInviteResult` 回写状态栏（已接受/未接受）。邀请成功的提示不改变房间成员，受邀者按普通 `JoinRoom` 入房后才出现在座位列表。
 - 商店使用 `HFlowContainer` 自动换行，左侧内容放入 `ScrollContainer`，1280×720 下不会因商店变长而溢出；手牌行同样使用 `HFlowContainer`，但槽位按 `card-width - hand-card-overlap` 步进排列（桌面 80、手机 46）、行内 `h_separation` 为 0，1–10 张保持单行，卡片自身桌面 112×146、手机 70×91 向右溢出并与下一槽重叠；棋盘与商店的随从卡改用 `minion-card-*`（桌面 112×146、手机 78×102），手机比手牌大一档。
 - 手牌卡使用与商店/棋盘一致的卡面语言（由 `HandCardFace` 构建；介绍、费用、时代象形与底部名称、攻击/类型/生命信息区），介绍不截断：信息区按文本向上扩展，字号在 11–8 之间逐档缩小、行距为 0，直到全文放下，角标最后添加并压在信息区之上；只能拖拽出牌（`HandCard._get_drag_data`），点击不产生意图；落点由 `BoardDrop` 判定：随从牌按指针位置换算插入下标、棋盘已满时任何落点都不接收，需要目标的效果牌只有落在服务端下发的候选（`targetCandidates`，区域为棋盘或手牌）上才提交，落点候选即目标；其它落点静默取消。拖拽数据带 `epoch`（`_view_epoch`）与 `targets`（候选的 `{zone, id}` 列表），视图重建后松手按取消处理。
-- 手牌的随从数值读服务端视图 `attack` / `health`（当前值，含成长等全部层数），不读 `CardDB` 卡面值；金色随从带「★」并显示金色技能文案（`skill.<id>.text.golden`，缺键回落普通文案），奖励牌在角标行显示锁定的发放星级，并用「获得一张 N 星随从」作为原生 tooltip。拖拽 payload 带 `instanceId` 与 `golden` 供落点与预览判断，不参与意图。
+- 手牌的随从数值读服务端视图 `attack` / `health`（当前值，含成长等全部层数），不读 `CardDB` 卡面值；金色随从以金框与金色等级星表达并显示金色技能文案（`skill.<id>.text.golden`，缺键回落普通文案），奖励牌在顶栏费用左侧显示锁定的发放星级，并用「获得一张 N 星随从」作为原生 tooltip。拖拽 payload 带 `instanceId` 与 `golden` 供落点与预览判断，不参与意图。
 - 手牌悬停由 `HandSlot` 承担：进入时槽位 `z_index = 1`，卡片以底边中点为轴放大 `hand-hover-scale`（1.12）；放大后的矩形包含原矩形，不会在卡片下缘反复触发 `mouse_exited`。悬停不读取 `drag_allowed`，禁用与战斗阶段同样生效；不改顺序、`handIndex` 或 payload。`HandCard` 在拖拽真正开始时发出 `drag_started`，槽位同步复位缩放与层级后才复制拖拽预览，保证预览为原始尺寸。`HandScroll` 关闭 `clip_contents`，让放大后的卡顶越过 154 高的滚动行继续绘制与命中；悬停卡会盖住「手牌」标题，属已接受的视觉取舍。Godot 的 GUI 拾取按树序逆序、不比较 `z_index`，因此悬停期间 `HandSlot` 把右侧槽位卡片的 `mouse_filter` 临时设为 `IGNORE`、复位时恢复 `STOP`：否则放大卡被揭示出来的右侧交叠带仍会命中并拖起下一张卡。左侧槽位不用处理，它在树序中本来就晚于本槽被拾取。拖拽取消或视图刷新后不自动恢复悬停，指针需移出再移入。
 - 拖拽预览定位统一走 `UIDrag.preview(card, at_position)`：Godot 的 `Viewport` 在拖拽中每帧把预览控件的位置设成指针位置，直接偏移预览会被覆盖；helper 用包裹 `Control` 承载被拖卡片，并按起手点反向偏移（手牌先把 `at_position` 换算到画布，再按复位悬停后的卡片取起手点），指针因此停在按下时的卡片位置。手牌、棋盘与商店三种卡的 `_get_drag_data` 都使用这一路径。预览由 `duplicate()` 生成，只复制导出属性：卡面里依赖脚本变量自绘的控件（`StatPlate.kind`、`EraGlyph.era_id`、`CardFrame.level`）必须声明为 `@export`，否则拖拽预览与战斗克隆会回退默认样式；原卡不能直接放进预览层，Godot 会在发出 `NOTIFICATION_DRAG_END` 之前连同预览层一起释放。
 - 手牌拖拽期间 `BoardDrop` 逐帧按指针位置复查落点（`hand_drop_accepted`）：棋盘行空白仍可放置；棋盘外、棋盘已满或需要目标却不在候选上判为无效，指针切换为禁止光标（`CURSOR_FORBIDDEN`），松手不产生意图，卡牌留在手牌。指针离开棋盘矩形时不设置禁止光标，交还给手牌卡的 `_can_drop_data`。
@@ -233,7 +233,7 @@ client/
 - 手牌可拖动的前提是阶段为招募、视图未过期、倒计时未归零、`Net` 已连接、队首待选不是 `target`、且该卡 `playable`；任一不满足时 `_get_drag_data` 返回 `null`，拖拽根本不开始。
 - 队首待选为 `target` 时由 `GameAimLayer` 进入待选模式：候选卡（棋盘、手牌、商店）靠建卡时写入的 `target_zone` / `target_id` 元数据被命中，候选显示金色角标（触控端按下前也常驻，并画出入场随从的起点圆环）；按住拖出弧线，松手命中发 `ChooseTarget { target }`，落空或 `Esc` 发 `AbandonTarget`；期间购买/刷新/升时代/冻结/结束招募/主动技能/出售/换位/拖拽全部禁用。页面每次刷新按队首待选调用 `begin_pending`，视图过期、归零、已结束招募、非招募阶段或离线时关闭瞄准。
 - 英雄技能瞄准：`GameHeroRow` 每个主动技能按钮的 `button_down` 发出 `hero_power_down(skill_id)`；页面按 id 取对应 `heroPowers` 条目，`requiresTarget` 为假时 `pressed` 直接发 `UseHeroPower { skillId }`；为真且候选非空时页面调用 `begin_skill(power_rect(skill_id), candidates)`，命中候选后补 `target` 发 `UseHeroPower`，落空或 `Esc` 取消、不发意图、不扣金币与次数；候选为空时该按钮禁用，原因为 `NO_VALID_TARGET`。多技能各自计次，一个技能用尽不影响另一个。
-- 棋盘随从技能角标：`GameRecruitView._minion_card` 把 `BoardAbilityBadge` 叠在卡片外层（`AbilityBadges`，右上纵向排列，避开 ★/潜行角标行与底部攻血数值），文本 `◆<费用>×<剩余次数>`，悬停显示技能名与文本；可用性取服务端 `abilities[].canUse` 且与拖拽同批的 `can_rearrange`。`minion_ability_pressed` / `minion_ability_down` 由页面处理：`requiresTarget` 为假时点击直接发 `UseMinionAbility { minionId, skillId }`；为真且可用时按下缓存含 `minionId` / `skillId` 的意图，从 `ability_rect()` 起手复用 `GameAimLayer.begin_skill`，命中候选后补 `target` 提交；拖动仍从卡身开始，角标不参与拖拽。`HERO_POWER_LIMIT` 在随从技能语境取 `error.HERO_POWER_LIMIT.minion`，其它错误回退通用文案。
+- 棋盘随从技能角标：`GameRecruitView._minion_card` 把 `BoardAbilityBadge` 叠在卡片外层（`AbilityBadges`，右上纵向排列，避开车面顶栏与底部攻血数值），文本 `◆<费用>×<剩余次数>`，悬停显示技能名与文本；可用性取服务端 `abilities[].canUse` 且与拖拽同批的 `can_rearrange`。`minion_ability_pressed` / `minion_ability_down` 由页面处理：`requiresTarget` 为假时点击直接发 `UseMinionAbility { minionId, skillId }`；为真且可用时按下缓存含 `minionId` / `skillId` 的意图，从 `ability_rect()` 起手复用 `GameAimLayer.begin_skill`，命中候选后补 `target` 提交；拖动仍从卡身开始，角标不参与拖拽。`HERO_POWER_LIMIT` 在随从技能语境取 `error.HERO_POWER_LIMIT.minion`，其它错误回退通用文案。
 - 效果牌拖拽的瞄准视觉由 `GameAimLayer` 的 `DRAG` 模式提供：`_process` 读 `gui_is_dragging()` 与 `gui_get_drag_data()`，拖拽数据带 `targets` 时按手牌实例编号定位起点并绘制；只画视觉，落点提交仍由 `BoardDrop` 与 `HandCard` 完成。拖拽数据里的 `targets` 必须复制后持有——瞄准层 `clear()` 会清空数组，直接引用会污染卡片的载荷。
 - 战斗开场与开始音效同一判定：`_start_combat` 按 `startedAt` 算出 `elapsed_ms`，小于 `CombatPlayback.PACE_MS` 才显示 `CombatIntro` 并播开始音；续播进入中段不补。`CombatIntro`（`INTRO_MS = 1200`、`ENTER_MS = EXIT_MS = 160`）与 `CombatFx` 一样按帧驱动，身份取 `players` 中的本人条目与 `opponentPlayerId`，圆角头像与底色复用 `CardDB` 与 `GamePortrait`，幽灵战压暗并加角标。身份列放在 `CombatIntroCard` 底板上（`panel_style("raised")`），避免与河道回合数、随从卡文字重叠；底板随整体缩放淡入淡出。开场显示期间 `GameCombatView.advance` 只推进开场并直接返回，播放器与碰撞演出都停在起点，首条动作从开场结束的下一帧开始计数。覆盖层最后挂载、铺满战斗组合、`mouse_filter = IGNORE`，`reset()` 收起。
 - 战斗演示由 `CombatPlayback` 驱动（`PACE_MS = 320`、`TAIL_MS = 2000`，节奏只在客户端，服务端不估算演示时长）：第 i 条动作在 `(i + 1) × 320ms` 应用，数值只取 `source`/`target`/`summon` 的服务端下发值，客户端不做加减；动作序列只含主动攻击，反击伤害已并入该条动作下发的快照。写入哪一行按动作的 `sourceSide`/`targetSide`（缺失时退回按 `minionId` 双侧查找）。幽灵战改为随机出局者的最终阵容，实例编号只在克隆内与己方重号时按需改写，因此两侧编号仍可判。动作播完并经过 `TAIL_MS` 后进入英雄对冲演出，胜负与伤害由演出表达，河道不再追加文字。

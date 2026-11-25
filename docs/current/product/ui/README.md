@@ -57,9 +57,9 @@
 | 好友入口 | `FriendsButton`（`client/ui/social/friends_button.gd`） | [pages/lobby.md](pages/lobby.md) |
 | 好友抽屉 | `FriendsPanel`（`client/ui/social/friends_panel.gd`） | [pages/lobby.md](pages/lobby.md) |
 | 断线弹窗 | `ConnectionDialog`（`client/ui/connection_dialog.gd`） | [pages/lobby.md](pages/lobby.md) |
-| 卡框与星级 | `CardFrame`（`client/ui/card_frame.gd`） | [tokens.md](tokens.md) |
+| 卡框描边 | `CardFrame`（`client/ui/card_frame.gd`） | [tokens.md](tokens.md) |
 | 框体材质 | `FrameMaterial`（`client/ui/frame_material.gd`） | [components/frame-material.md](components/frame-material.md) |
-| 卡牌角标 | `CornerBadge`（`client/ui/corner_badge.gd`） | [tokens.md](tokens.md) |
+| 卡面顶栏 | `CardTopRow`（`client/ui/card_top_row.gd`） | [tokens.md](tokens.md) |
 | 攻防底牌 | `StatPlate`（`client/ui/stat_plate.gd`） | [tokens.md](tokens.md) |
 | 时代象形 | `EraGlyph`（`client/ui/era_glyph.gd`） | [icons.md](icons.md) |
 | 卡牌图鉴 | `CardGallery`（`client/ui/card_gallery.gd`） | [components/card-gallery.md](components/card-gallery.md) |

@@ -1283,8 +1283,12 @@ func _check_hand_shows_server_stats() -> void:
         var health_label = face.find_child("CardHealth", true, false) if face != null else null
         _expect(attack_label != null and attack_label.text == "7", "手牌金色应显示继承后的攻击力 7")
         _expect(health_label != null and health_label.text == "12", "手牌金色应显示继承后的生命值 12")
-        var badge = face.find_child("CardBadge", true, false) if face != null else null
-        _expect(badge != null and badge.text == "★", "手牌金色应带金色标识")
+        var top_row := face.find_child("CardTopRow", true, false) as CardTopRow if face != null else null
+        _expect(top_row != null and top_row.golden, "手牌金色应由顶栏的金色星点表达")
+        _expect(
+            face.find_child("CardBadge", true, false) == null,
+            "金色不再单独出角标",
+        )
         _expect(bool(golden_card.payload.get("golden", false)), "手牌拖拽数据应带金色标记")
         _expect(str(golden_card.payload.get("instanceId", "")) == "2001", "手牌拖拽数据应带实例编号")
     var effect_card = instance.find_child("HandCard1", true, false)
@@ -1706,7 +1710,7 @@ func _check_summon_inserts_at_alive_rank() -> void:
     _expect(ids == ["mi_0", "mi_1", "mi_9", "mi_2"], "召唤应按存活下标插入，实际顺序 %s" % [ids])
 
 
-## 潜行随从在棋盘卡上显示状态标识；未潜行的随从没有该标识。
+## 潜行随从在棋盘卡封面压一层蒙版；未潜行的随从没有蒙版。
 func _check_board_stealth_badge() -> void:
     GameStore.player_id = "p0"
     GameStore.phase = "Recruit"
@@ -1726,13 +1730,15 @@ func _check_board_stealth_badge() -> void:
         return
     var stealth_card = instance.find_child("BoardMinion0", true, false)
     var plain_card = instance.find_child("BoardMinion1", true, false)
-    var badge = stealth_card.find_child("StealthBadge", true, false) if stealth_card != null else null
-    _expect(badge != null, "潜行随从应显示潜行标识")
-    if badge != null:
-        _expect(badge.text == "潜", "潜行标识文案应为「潜」，实为 %s" % badge.text)
+    var veil = stealth_card.find_child("StealthVeil", true, false) if stealth_card != null else null
+    _expect(veil != null, "潜行随从应在封面上压蒙版")
+    if veil != null:
+        var veil_rect: Rect2 = (veil as Control).get_global_rect()
+        var card_rect: Rect2 = (stealth_card as Control).get_global_rect()
+        _expect(veil_rect.size.y < card_rect.size.y, "潜行蒙版只盖封面，不到信息区")
     _expect(
-        plain_card != null and plain_card.find_child("StealthBadge", true, false) == null,
-        "未潜行随从不应显示潜行标识"
+        plain_card != null and plain_card.find_child("StealthVeil", true, false) == null,
+        "未潜行随从不应有蒙版"
     )
     instance.queue_free()
     await get_tree().process_frame
@@ -2769,25 +2775,23 @@ func _expect_preview_offset(instance: Node, card: Control, grab: Vector2) -> voi
     if holder != null and holder.get_child_count() == 1:
         var preview := holder.get_child(0) as Control
         # 预览是 `duplicate()` 副本：卡面自绘状态必须导出才能随复制保留，
-        # 否则血量底牌退回攻击圆、时代图标为空、卡框星级回到 1 星。
+        # 否则血量底牌退回攻击圆、顶栏星级回到 1 星、时代与费用丢失。
         var health := preview.find_child("HealthPlate", true, false)
         if health != null:
             _expect(health.kind == StatPlate.HEALTH, "%s 拖拽预览的血量底牌应保持血量样式" % card.name)
-        var era := preview.find_child("EraGlyph", true, false)
-        var source_era := card.find_child("EraGlyph", true, false)
-        if era != null and source_era != null:
+        var top_row := preview.find_child("CardTopRow", true, false) as CardTopRow
+        var source_row := card.find_child("CardTopRow", true, false) as CardTopRow
+        if top_row != null and source_row != null:
             _expect(
-                era.era_id == source_era.era_id,
-                "%s 拖拽预览的时代图标应与原卡一致，实际 %s / %s"
-                    % [card.name, era.era_id, source_era.era_id],
-            )
-        var frame := preview.find_child("CardFrame", true, false)
-        var source_frame := card.find_child("CardFrame", true, false)
-        if frame != null and source_frame != null:
-            _expect(
-                frame.level == source_frame.level,
-                "%s 拖拽预览的卡框星级应与原卡一致，实际 %d / %d"
-                    % [card.name, frame.level, source_frame.level],
+                top_row.level == source_row.level
+                    and top_row.era == source_row.era
+                    and top_row.cost == source_row.cost,
+                "%s 拖拽预览的顶栏应与原卡一致，实际 %d/%s/%s 与 %d/%s/%s"
+                    % [
+                        card.name,
+                        top_row.level, top_row.era, top_row.cost,
+                        source_row.level, source_row.era, source_row.cost,
+                    ],
             )
         _expect(
             preview.position.distance_to(-grab) <= 1.0,

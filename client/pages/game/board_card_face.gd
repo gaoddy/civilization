@@ -1,6 +1,6 @@
 class_name BoardCardFace
 extends RefCounted
-## 棋盘随从卡面：★、潜行与当前身材；无费用、时代与介绍。
+## 棋盘随从卡面：等级星、潜行蒙版与当前身材；无费用、时代与介绍。
 ##
 ## 招募棋盘与战斗只读共用同一卡面与卡容器；战斗演示通过 `set_stats`
 ## 就地更新身材，不重建整张卡。
@@ -24,8 +24,12 @@ static func build_card(minion: Dictionary, minion_index: int) -> BoardCard:
 static func build(minion: Dictionary) -> Control:
     var card_id := str(minion.get("cardId", ""))
     var entry := CardDB.card(card_id)
+    var golden := bool(minion.get("golden", false))
     var face_node := CardFaceBase.create_face(card_id, false)
-    face_node.set_meta("golden", bool(minion.get("golden", false)))
+    face_node.set_meta("golden", golden)
+    # 潜行只给封面压蒙版：先于信息区添加，数值与名称保持在蒙版之上。
+    if bool(minion.get("stealth", false)):
+        CardFaceBase.add_stealth_veil(face_node)
     CardFaceBase.add_info(
         face_node,
         card_id,
@@ -34,16 +38,27 @@ static func build(minion: Dictionary) -> Control:
         CardText.playstyle_text(entry),
         false,
     )
-    CardFaceBase.add_frame(face_node, card_id)
-    # 卡框压在信息区之上、角标之下：角标最后添加。
+    CardFaceBase.add_frame(face_node)
+    # 卡框压在信息区之上、顶栏之下。费用位显示主动技能的发动费用：对手棋盘
+    # 不下发 `abilities`，无主动技能的随从也没有该字段，两种情况都留空。
     CardFaceBase.add_corner_badges(
         face_node,
+        _skill_cost(minion),
         "",
         "",
-        "★" if bool(minion.get("golden", false)) else "",
-        bool(minion.get("stealth", false)),
     )
     return face_node
+
+
+## 第一个主动技能的发动费用；没有主动技能时返回空串，费用位留空。
+static func _skill_cost(minion: Dictionary) -> String:
+    for skill in minion.get("abilities", []):
+        if not skill is Dictionary:
+            continue
+        var value: Variant = skill.get("cost")
+        if value != null:
+            return str(int(value))
+    return ""
 
 
 ## 战斗演示的就地身材更新，按卡面子节点名改文本。

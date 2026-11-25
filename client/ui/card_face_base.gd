@@ -5,8 +5,8 @@ extends RefCounted
 ## 只构造通用部件，不决定场景显示哪些元素；商店、手牌、棋盘与图鉴的卡面
 ## 组件各自组合本文件的构造入口。
 
-## 角标行在胶囊高度之外留的余量，避免文字贴边被裁切。
-const CORNER_BADGE_EXTRA_HEIGHT := 2
+## 潜行蒙版的压暗程度：盖住立绘但仍能看出生物轮廓。
+const STEALTH_VEIL_ALPHA := 0.42
 ## 冰晶细线的不透明度与条数；角度固定 45°，间距取主题令牌。
 const FREEZE_CRYSTAL_ALPHA := 0.55
 const FREEZE_CRYSTAL_LINES := 10
@@ -80,54 +80,26 @@ static func create_face(card_id: String, show_desc: bool, hero := false) -> Cont
     return face_node
 
 
-## 左上费用、金色/奖励角标与右上时代的角标行；窄卡上左右贴边、互不重叠。
-## 潜行状态标识放在右侧时代角标之前，与金色角标分列两端。全部为空时不建行。
+## 顶栏：时代在左、等级居中、费用在右，由共享 `CardTopRow` 绘制并压在封面之上。
+## 等级取卡表 level；棋盘卡没有时代与购买费用，只显示等级星或发动技能费用。
+## 金色与潜行都不再占顶栏：金色由金框与金色星点表达，潜行由封面蒙版表达。
 static func add_corner_badges(
     face_node: Control,
     cost_text: String,
     era_id: String,
     badge_text: String,
-    stealth := false,
 ) -> void:
-    if cost_text == "" and era_id == "" and badge_text == "" and not stealth:
+    var entry := CardDB.card(str(face_node.get_meta("card_id", "")))
+    var level := int(entry.get("level", 0))
+    if cost_text == "" and era_id == "" and badge_text == "" and level <= 0:
         return
-    var margin := UITheme.space("space-xs")
-    var row := HBoxContainer.new()
-    row.name = "CardCorners"
-    row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    row.set_anchors_preset(Control.PRESET_TOP_WIDE)
-    row.offset_left = margin
-    row.offset_right = -margin
-    row.offset_top = margin
-    row.offset_bottom = margin + _badge_height()
-    face_node.add_child(row)
-
-    if cost_text != "":
-        var cost := _corner_badge(cost_text, "accent")
-        cost.name = "CostBadge"
-        row.add_child(cost)
-
-    if badge_text != "":
-        var badge := _corner_badge(badge_text, "accent")
-        badge.name = "CardBadge"
-        row.add_child(badge)
-
-    var spacer := Control.new()
-    spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    row.add_child(spacer)
-
-    if stealth:
-        var stealth_badge := _corner_badge(
-            TranslationServer.translate("ui.game.card.stealth_glyph"), "info"
-        )
-        stealth_badge.name = "StealthBadge"
-        row.add_child(stealth_badge)
-
-    if era_id != "":
-        var era := EraGlyph.create(era_id, UITheme.stage_metric("era-glyph-size"))
-        era.name = "EraGlyph"
-        row.add_child(era)
+    face_node.add_child(CardTopRow.create(
+        level,
+        era_id,
+        cost_text,
+        badge_text,
+        bool(face_node.get_meta("golden", false)),
+    ))
 
 
 ## 底部信息区：介绍、居中名称与「攻击 · 类型 · 生命」。
@@ -264,21 +236,17 @@ static func add_info(
     face_node.add_child(info)
 
 
-## 卡框：按卡表等级画三条嵌套描边与顶部星级。英雄卡没有等级，不建卡框。
-## 在 `add_info` 之后、冻结蒙层与角标之前调用：卡框要压在信息区之上，
-## 又要在冻结蒙层之下。
-static func add_frame(face_node: Control, card_id: String, hero := false) -> void:
+## 卡框：三条嵌套描边，压在信息区之上；等级星由顶栏 `CardTopRow` 承载。
+## 英雄卡没有等级，不建卡框。在 `add_info` 之后、冻结蒙层与顶栏之前调用。
+static func add_frame(face_node: Control, hero := false) -> void:
     if hero:
         return
-    var entry := CardDB.card(card_id)
-    var level := int(entry.get("level", 1))
-    face_node.add_child(CardFrame.create(
-        level, str(entry.get("era", "")), bool(face_node.get_meta("golden", false))
-    ))
+    face_node.add_child(CardFrame.create())
     # 框体材质叠在卡面最外层：按时代取合金色，三连换成足金；卡内信息条等子面板
     # 由 `_collect` 跳过，保证一张卡只有一圈边框。
+    var era := str(CardDB.card(str(face_node.get_meta("card_id", ""))).get("era", ""))
     FrameMaterial.apply(face_node, FrameMaterial.Style.BEVEL, {
-        "tint": FrameMaterial.tint_for_era(str(entry.get("era", ""))),
+        "tint": FrameMaterial.tint_for_era(era),
         "golden": bool(face_node.get_meta("golden", false)),
     })
 
@@ -406,11 +374,20 @@ static func _line_height(font_size: int, host: Node) -> int:
     return height
 
 
-## 窄卡角标：比胶囊更紧凑，避免两角标在 112 宽的商店卡上相撞。
-static func _corner_badge(text: String, variant: String) -> Control:
-    # 角标统一走 CornerBadge：深底 + 铜边 + 顶部高光，和卡框同一套厚度语言。
-    return CornerBadge.create(text, variant)
-
-
-static func _badge_height() -> int:
-    return UITheme.font_size("font-caption") + UITheme.space("space-2xs") * 2 + CORNER_BADGE_EXTRA_HEIGHT
+## 潜行表现：只给封面压一层深色蒙版，信息区与顶栏保持清晰，数值照常可读。
+## 上两角随卡面圆角，下沿停在信息区上沿。必须在 `add_info` 之前调用，
+## 让信息区、卡框与顶栏压在蒙版之上。
+static func add_stealth_veil(face_node: Control) -> void:
+    var veil := Panel.new()
+    veil.name = "StealthVeil"
+    var style := StyleBoxFlat.new()
+    style.bg_color = UITheme.alpha("color-bg", STEALTH_VEIL_ALPHA)
+    style.set_content_margin_all(0)
+    var radius := UITheme.radius("radius-md")
+    style.corner_radius_top_left = radius
+    style.corner_radius_top_right = radius
+    veil.add_theme_stylebox_override("panel", style)
+    veil.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    veil.set_anchors_preset(Control.PRESET_FULL_RECT)
+    veil.offset_bottom = -UITheme.stage_metric("card-info-compact-height")
+    face_node.add_child(veil)

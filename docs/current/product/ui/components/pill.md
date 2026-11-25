@@ -5,7 +5,7 @@
 
 ## 用途
 
-对局的数值与状态标签：招募倒计时、战斗状态、河道金币、幽灵与名次标记，以及商店卡的费用角标。
+对局的数值与状态标签：招募倒计时、战斗状态、河道金币、幽灵与名次标记。
 
 ## 属性
 
@@ -39,4 +39,4 @@
 
 - 招募河道的 `RecruitTimerLabel` 倒计时与 `RecruitGoldTile` 金币、战斗河道的 `CombatStatusPill` 与 `CombatGoldTile` 金币。
 - 战斗对手身份块的幽灵与名次标记。
-- 商店卡的 `CostBadge`；图标按钮与英雄技能的 `CostBadge` / `UsesBadge` 由 `GameIconButton` 另行绘制。卡面右上角的时代改为无框 `EraGlyph`，不再使用胶囊角标。
+- 图标按钮与英雄技能的 `CostBadge` / `UsesBadge` 由 `GameIconButton` 另行绘制。卡面顶栏的时代象形与费用旋钮由 `CardTopRow` 直接绘制，不使用胶囊底。
