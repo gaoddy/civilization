@@ -21,13 +21,14 @@ fn main() {
         Some("train-c0") => train_c0(&args[1..]),
         Some("train-c1") => train_c1(&args[1..]),
         Some("train-c2") => train_c2(&args[1..]),
+        Some("eval") => eval(&args[1..]),
         Some(other) => Err(format!("未知子命令：{other}")),
         None => Err("缺少子命令".to_string()),
     };
     if let Err(message) = result {
         eprintln!("{message}");
         eprintln!(
-            "用法：ai-train data-c0 --out <路径> [--games 2000] [--seed 0]\n      ai-train train-c0 [--pairs 路径] [--out-dir 目录] [--steps 20000] [--seed 0]\n      ai-train train-c1 [--pairs 路径] [--c0 权重路径] [--out-dir 目录] [--episodes 200] [--distribution 200] [--seed 0]\n      ai-train train-c2 [--pairs 路径] [--c0 权重路径] [--c1 权重路径] [--out-dir 目录] [--episodes 1000] [--c1-mix 0.3] [--distribution 200] [--seed 0]"
+            "用法：ai-train data-c0 --out <路径> [--games 2000] [--seed 0]\n      ai-train train-c0 [--pairs 路径] [--out-dir 目录] [--steps 20000] [--seed 0]\n      ai-train train-c1 [--pairs 路径] [--c0 权重路径] [--out-dir 目录] [--episodes 200] [--distribution 200] [--seed 0]\n      ai-train train-c2 [--pairs 路径] [--c0 权重路径] [--c1 权重路径] [--out-dir 目录] [--episodes 1000] [--c1-mix 0.3] [--distribution 200] [--seed 0]\n      ai-train eval [--dir 目录] [--seeds 2000] [--learner-seats 8] [--anchor 权重路径]"
         );
         std::process::exit(2);
     }
@@ -39,7 +40,6 @@ fn main() {
 ///
 /// `make` 目标在 `server/` 下执行，产物目录统一按仓库根解析，避免把
 /// `output/` 写到 `server/` 里。
-#[cfg(feature = "train")]
 fn repo_root() -> std::path::PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .ancestors()
@@ -529,4 +529,119 @@ fn train_c2(args: &[String]) -> Result<(), String> {
 #[cfg(not(feature = "train"))]
 fn train_c2(_args: &[String]) -> Result<(), String> {
     Err("train-c2 需要 --features train".to_string())
+}
+
+fn eval(args: &[String]) -> Result<(), String> {
+    use ai_train::eval_full::{EvalConfig, eval_full};
+    use ai_train::league::{League, PolicyId};
+
+    let root = repo_root();
+    let mut dir = root.join("output/models/c2");
+    let mut seeds = 2000usize;
+    let mut learner_seats = 8usize;
+    let mut anchor_path: Option<std::path::PathBuf> = None;
+    let mut iter = args.iter();
+    while let Some(flag) = iter.next() {
+        let value = iter
+            .next()
+            .ok_or_else(|| format!("{flag} 缺少取值"))?
+            .clone();
+        match flag.as_str() {
+            "--dir" => dir = value.into(),
+            "--seeds" => {
+                seeds = value
+                    .parse()
+                    .map_err(|_| format!("--seeds 不是整数：{value}"))?;
+            }
+            "--learner-seats" => {
+                learner_seats = value
+                    .parse()
+                    .map_err(|_| format!("--learner-seats 不是整数：{value}"))?;
+            }
+            "--anchor" => anchor_path = Some(value.into()),
+            other => return Err(format!("未知参数：{other}")),
+        }
+    }
+
+    let catalog = catalog();
+    let mut league = League::new(0, 0);
+    let anchors = match anchor_path {
+        Some(path) => {
+            let weights = ai_model::Weights::load(&path).map_err(|error| error.to_string())?;
+            league.set_anchor(weights);
+            vec![PolicyId::Anchor]
+        }
+        None => Vec::new(),
+    };
+
+    let mut checkpoints = Vec::new();
+    let root_weights = dir.join("weights.json");
+    if root_weights.is_file() {
+        checkpoints.push(root_weights);
+    }
+    for entry in fs::read_dir(&dir).map_err(|error| format!("读取目录失败：{error}"))? {
+        let path = entry.map_err(|error| error.to_string())?.path();
+        let candidate = path.join("weights.json");
+        if candidate.is_file() {
+            checkpoints.push(candidate);
+        }
+    }
+    checkpoints.sort();
+    if checkpoints.is_empty() {
+        return Err(format!("{} 下没有检查点", dir.display()));
+    }
+
+    let mut rows = Vec::new();
+    let mut best: Option<(f32, std::path::PathBuf)> = None;
+    for path in checkpoints {
+        let weights = ai_model::Weights::load(&path).map_err(|error| error.to_string())?;
+        let cfg = EvalConfig {
+            seeds: (0..seeds as u64).collect(),
+            learner_seats,
+            anchors: anchors.clone(),
+            ..EvalConfig::default()
+        };
+        let report = eval_full(&catalog, &weights, &league, &cfg)
+            .map_err(|error| error.to_string())?;
+        println!(
+            "{}：{} 局，平均名次 {:.2}，吃鸡 {:.2}，前四 {:.2}，±{:.2}",
+            path.display(),
+            report.games,
+            report.mean_placement,
+            report.win_rate,
+            report.top4_rate,
+            report.ci95
+        );
+        let better = best
+            .as_ref()
+            .map(|(mean, _)| report.mean_placement < *mean)
+            .unwrap_or(true);
+        if better {
+            best = Some((report.mean_placement, path.clone()));
+        }
+        rows.push(serde_json::json!({
+            "path": path.display().to_string(),
+            "report": report,
+        }));
+    }
+
+    let best_path = best
+        .as_ref()
+        .map(|(_, path)| path.clone())
+        .expect("至少一个检查点");
+    let summary = serde_json::json!({
+        "schema": DATA_SCHEMA_VERSION,
+        "seeds": seeds,
+        "learner_seats": learner_seats,
+        "anchors": anchors.len(),
+        "checkpoints": rows,
+        "best": best_path.display().to_string(),
+    });
+    fs::write(
+        dir.join("eval.json"),
+        serde_json::to_vec_pretty(&summary).map_err(|error| error.to_string())?,
+    )
+    .map_err(|error| format!("写入失败：{error}"))?;
+    println!("最佳检查点：{}", best_path.display());
+    Ok(())
 }
