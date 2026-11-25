@@ -70,5 +70,6 @@
 ## 相关文档
 
 - [Godot 客户端](client.md)：素材生成、纹理压缩、导入与渲染后端。
+- [客户端图片素材索引](image-asset-index.md)：卡面与头像之外各图的页面位置、尺寸与重新出图要求。
 - [卡片封面美术生成](card-cover-art.md)：卡面风格基线、prompt 模板与去水印约束。
 - [跨设备一致性](cross-device-consistency.md)：页面背景与内容框在多种尺寸下的行为。
