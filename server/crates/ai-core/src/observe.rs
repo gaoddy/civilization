@@ -257,7 +257,8 @@ fn pending_code(pending: Option<&PendingChoiceView>) -> u8 {
     }
 }
 
-fn playstyle_mask(enabled: &[String]) -> u16 {
+/// 本局玩法集合的位掩码；位序与 [`Playstyle::ALL`] 一致。
+pub fn playstyle_mask(enabled: &[String]) -> u16 {
     let mut mask = 0u16;
     for (bit, playstyle) in Playstyle::ALL.iter().enumerate() {
         if enabled.iter().any(|id| id == playstyle.id()) {

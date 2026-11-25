@@ -11,7 +11,7 @@ pub use action::Action;
 pub use catalog::CardIndex;
 pub use history::{BoardSnapshot, History};
 pub use observe::{
-    BOARD_SLOTS, Encoder, HAND_SLOTS, OBS_DIM, Observation, SEATS, SHOP_SLOTS, Slot,
+    BOARD_SLOTS, Encoder, HAND_SLOTS, OBS_DIM, Observation, SEATS, SHOP_SLOTS, Slot, playstyle_mask,
 };
 
 /// 观测/动作编码的 schema 版本；字段顺序或语义变更时递增。

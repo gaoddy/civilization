@@ -10,7 +10,6 @@ path = "src/lib.rs"
 [[bin]]
 name = "ai-train"
 path = "src/main.rs"
-required-features = ["train"]
 
 [features]
 default = []
