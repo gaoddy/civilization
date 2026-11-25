@@ -10,7 +10,7 @@ use rule_engine::data::Catalog;
 use rule_engine::engine::Engine;
 use rule_engine::playstyles;
 use rule_engine::rng::seed_from_u64;
-use rule_engine::state::Seat;
+use rule_engine::state::{HandCard, MinionInstance, PendingChoice, Seat};
 
 fn catalog() -> Catalog {
     Catalog::from_json(
@@ -139,4 +139,42 @@ fn load_rejects_weights_from_another_catalog() {
     NeuralPolicy::load(&dir, &catalog).expect("指纹一致时应加载成功");
 
     std::fs::remove_dir_all(&dir).expect("清理");
+}
+
+/// 有待选且没有合法动作时（手牌满 + 发现待选），不能猜 `EndRecruit`——引擎会拒绝，
+/// 应该返回 `None` 让上层按超时放弃。
+#[test]
+fn neural_policy_returns_none_while_a_pending_is_open() {
+    let catalog = catalog();
+    let (engine, mut state) = started_state(&catalog);
+    let minion_id = catalog
+        .cards
+        .values()
+        .find(|card| card.in_shop_pool && card.attack.is_some())
+        .expect("有随从卡")
+        .id
+        .clone();
+    let hand_slots = engine.catalog.config.hand_slots;
+    state.players[0].hand = (0..hand_slots)
+        .map(|index| {
+            HandCard::Minion(MinionInstance::new(
+                &catalog,
+                9_000 + index as u64,
+                &minion_id,
+                false,
+            ))
+        })
+        .collect();
+    state.pending.push_back(PendingChoice::Discover {
+        seat: 0,
+        candidates: vec![minion_id],
+        source: 0,
+    });
+
+    let policy = NeuralPolicy::from_weights(zero_weights(&catalog), &catalog).expect("策略");
+    assert_eq!(
+        policy.plan(&state, 0, &engine, &[]),
+        None,
+        "有待选时不能返回会被引擎拒绝的意图"
+    );
 }

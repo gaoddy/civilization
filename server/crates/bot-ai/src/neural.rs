@@ -11,7 +11,7 @@ use rule_engine::data::Catalog;
 use rule_engine::engine::Engine;
 use rule_engine::intent::Intent;
 use rule_engine::legal::legal_actions;
-use rule_engine::state::{GameState, Phase, Seat};
+use rule_engine::state::{GameState, PendingChoice, Phase, Seat};
 use rule_engine::view::view;
 
 use crate::Policy;
@@ -147,10 +147,25 @@ impl Policy for NeuralPolicy {
             ));
         }
         if features.is_empty() {
+            // 有待选时引擎拒绝 `EndRecruit`（也拒绝与待选类型不匹配的选择）：这里
+            // 猜任何一个意图都会被拒，交给上层按超时放弃。
+            let pending_open = state.pending.iter().any(|choice| seat_of(choice) == seat);
+            if pending_open {
+                return None;
+            }
             return (!blocked.contains(&Intent::EndRecruit)).then_some(Intent::EndRecruit);
         }
         let (logits, _) = forward(&self.weights, &self.model, &obs, &features).ok()?;
         intents.get(argmax(&logits)).cloned()
+    }
+}
+
+/// 待选所属座位。
+fn seat_of(choice: &PendingChoice) -> Seat {
+    match choice {
+        PendingChoice::Discover { seat, .. }
+        | PendingChoice::Evolve { seat, .. }
+        | PendingChoice::Target { seat, .. } => *seat,
     }
 }
 
