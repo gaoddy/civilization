@@ -4,6 +4,32 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use rule_engine::data::Catalog;
 
+/// 目录指纹：卡牌、英雄与技能 id 的 FNV-1a 哈希，写成 16 位十六进制。
+///
+/// 训练产物清单里记录它，加载权重时与当前卡表比对，避免旧权重大摇大摆地
+/// 套到新卡表上。索引按 id 字典序生成，因此同一份目录在任何进程里哈希一致。
+pub fn catalog_hash(catalog: &Catalog) -> String {
+    let mut hash = 0xcbf2_9ce4_8422_2325u64;
+    let mut feed = |bytes: &[u8]| {
+        for byte in bytes {
+            hash ^= u64::from(*byte);
+            hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
+        }
+        hash ^= 0xff;
+        hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
+    };
+    for id in catalog.cards.keys() {
+        feed(id.as_bytes());
+    }
+    for id in catalog.heroes.keys() {
+        feed(id.as_bytes());
+    }
+    for skill in catalog.skills() {
+        feed(skill.id.as_bytes());
+    }
+    format!("{hash:016x}")
+}
+
 /// 目录索引；找不到的 id 一律返回 `-1`。
 ///
 /// 编号按目录的 `BTreeMap` 顺序（即 id 字典序）生成，技能按被引用的 id 排序，

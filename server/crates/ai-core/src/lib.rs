@@ -9,7 +9,7 @@ pub mod history;
 pub mod observe;
 
 pub use action::Action;
-pub use catalog::CardIndex;
+pub use catalog::{CardIndex, catalog_hash};
 pub use features::{ACTION_FEATURE_DIM, ActionFeatures};
 pub use history::{BoardSnapshot, History};
 pub use observe::{

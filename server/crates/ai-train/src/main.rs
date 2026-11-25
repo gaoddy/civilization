@@ -159,7 +159,7 @@ fn write_pairs(
     let header = Header {
         kind: "header",
         schema: DATA_SCHEMA_VERSION,
-        catalog_hash: format!("{:016x}", catalog_hash(catalog)),
+        catalog_hash: ai_core::catalog_hash(catalog),
         games,
         seed,
         pairs: pairs.len(),
@@ -191,28 +191,6 @@ fn write_pairs(
 }
 
 /// 目录内容哈希：FNV-1a 覆盖卡牌、英雄与技能 id。
-fn catalog_hash(catalog: &Catalog) -> u64 {
-    let mut hash = 0xcbf2_9ce4_8422_2325u64;
-    let mut feed = |bytes: &[u8]| {
-        for byte in bytes {
-            hash ^= u64::from(*byte);
-            hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
-        }
-        hash ^= 0xff;
-        hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
-    };
-    for id in catalog.cards.keys() {
-        feed(id.as_bytes());
-    }
-    for id in catalog.heroes.keys() {
-        feed(id.as_bytes());
-    }
-    for skill in catalog.skills() {
-        feed(skill.id.as_bytes());
-    }
-    hash
-}
-
 #[cfg(feature = "train")]
 fn train_c0(args: &[String]) -> Result<(), String> {
     use ai_train::model::C0Config;
@@ -263,7 +241,7 @@ fn train_c0(args: &[String]) -> Result<(), String> {
     let manifest = serde_json::json!({
         "schema": DATA_SCHEMA_VERSION,
         "weights_version": ai_model::WEIGHTS_VERSION,
-        "catalog_hash": format!("{:016x}", catalog_hash(&catalog)),
+        "catalog_hash": ai_core::catalog_hash(&catalog),
         "obs_dim": ai_core::OBS_DIM,
         "hidden": cfg.hidden,
         "layers": cfg.layers,
@@ -358,7 +336,7 @@ fn train_c1(args: &[String]) -> Result<(), String> {
     let manifest = serde_json::json!({
         "schema": DATA_SCHEMA_VERSION,
         "weights_version": ai_model::WEIGHTS_VERSION,
-        "catalog_hash": format!("{:016x}", catalog_hash(&catalog)),
+        "catalog_hash": ai_core::catalog_hash(&catalog),
         "obs_dim": cfg.model.obs_dim,
         "hidden": cfg.model.hidden,
         "layers": cfg.model.layers,
@@ -498,7 +476,7 @@ fn train_c2(args: &[String]) -> Result<(), String> {
     let manifest = serde_json::json!({
         "schema": DATA_SCHEMA_VERSION,
         "weights_version": ai_model::WEIGHTS_VERSION,
-        "catalog_hash": format!("{:016x}", catalog_hash(&catalog)),
+        "catalog_hash": ai_core::catalog_hash(&catalog),
         "obs_dim": cfg.model.obs_dim,
         "hidden": cfg.model.hidden,
         "layers": cfg.model.layers,

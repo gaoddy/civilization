@@ -10,3 +10,4 @@ name = "bot_ai"
 ai-core = { path = "../ai-core" }
 ai-model = { path = "../ai-model" }
 rule-engine = { path = "../rule-engine" }
+serde_json = "1"

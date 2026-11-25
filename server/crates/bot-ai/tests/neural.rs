@@ -5,7 +5,7 @@ use std::collections::BTreeMap;
 use ai_core::OBS_DIM;
 use ai_model::{ModelConfig, Weights};
 use bot_ai::Policy;
-use bot_ai::neural::NeuralPolicy;
+use bot_ai::neural::{NeuralPolicy, PolicyError};
 use rule_engine::data::Catalog;
 use rule_engine::engine::Engine;
 use rule_engine::playstyles;
@@ -111,4 +111,32 @@ fn policy_trait_wraps_heuristic() {
         wrapped.plan(&state, 0, &engine, &[]),
         bot_ai::plan(&state, 0, &engine, &[])
     );
+}
+
+/// 清单记录了训练时的卡表指纹：与当前卡表不符必须拒绝加载，避免嵌入查错。
+#[test]
+fn load_rejects_weights_from_another_catalog() {
+    let catalog = catalog();
+    let dir = std::env::temp_dir().join(format!("bot-ai-catalog-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).expect("建目录");
+    zero_weights(&catalog)
+        .save(&dir.join("weights.json"))
+        .expect("写权重");
+    let manifest = dir.join("manifest.json");
+
+    std::fs::write(&manifest, r#"{"catalog_hash":"0000000000000000"}"#).expect("写清单");
+    let error = match NeuralPolicy::load(&dir, &catalog) {
+        Ok(_) => panic!("旧卡表的权重必须被拒绝"),
+        Err(error) => error,
+    };
+    assert!(
+        matches!(error, PolicyError::Catalog(ref message) if message.contains("catalog_hash")),
+        "应是卡表指纹不符：{error:?}"
+    );
+
+    let hash = ai_core::catalog_hash(&catalog);
+    std::fs::write(&manifest, format!(r#"{{"catalog_hash":"{hash}"}}"#)).expect("写清单");
+    NeuralPolicy::load(&dir, &catalog).expect("指纹一致时应加载成功");
+
+    std::fs::remove_dir_all(&dir).expect("清理");
 }
