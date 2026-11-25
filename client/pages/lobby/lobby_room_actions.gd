@@ -51,4 +51,6 @@ func _action_button(text: String, variant: String, node_name: String) -> Button:
         text, variant, UITheme.stage_metric("lobby-room-action-height")
     )
     button.name = node_name
+    # 创建模式没有「开始匹配」，房间操作按钮保持静态边框。
+    FrameMaterial.set_guide_preference(button, false)
     return button
