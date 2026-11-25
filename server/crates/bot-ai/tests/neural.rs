@@ -93,7 +93,9 @@ fn neural_policy_loads_weights_from_dir() {
     let catalog = catalog();
     let dir = std::env::temp_dir().join(format!("bot-ai-neural-{}", std::process::id()));
     std::fs::create_dir_all(&dir).expect("建目录");
-    zero_weights(&catalog).save(&dir.join("weights.json")).expect("写权重");
+    zero_weights(&catalog)
+        .save(&dir.join("weights.json"))
+        .expect("写权重");
     let policy = NeuralPolicy::load(&dir, &catalog).expect("加载");
     let (engine, state) = started_state(&catalog);
     assert!(policy.plan(&state, 0, &engine, &[]).is_some());

@@ -321,13 +321,10 @@ pub struct GameTask {
 pub fn bot_policy_from_env(catalog: &Catalog) -> Box<dyn bot_ai::Policy + Send + Sync> {
     let mode = std::env::var("BOT_POLICY").unwrap_or_else(|_| "heuristic".to_string());
     if mode == "neural" {
-        let dir = std::env::var("BOT_MODEL_DIR")
-            .unwrap_or_else(|_| "output/models/c2".to_string());
+        let dir = std::env::var("BOT_MODEL_DIR").unwrap_or_else(|_| "output/models/c2".to_string());
         match bot_ai::neural::NeuralPolicy::load(Path::new(&dir), catalog) {
             Ok(policy) => return Box::new(policy),
-            Err(error) => println!(
-                "room-service: 神经策略加载失败 dir={dir}: {error}；回退启发式"
-            ),
+            Err(error) => println!("room-service: 神经策略加载失败 dir={dir}: {error}；回退启发式"),
         }
     } else if mode != "heuristic" {
         println!("room-service: 未知 BOT_POLICY={mode}；回退启发式");

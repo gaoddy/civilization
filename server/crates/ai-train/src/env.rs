@@ -120,12 +120,8 @@ impl Env {
         self.legal(seat)
             .into_iter()
             .map(|action| {
-                let features = ActionFeatures::from_action(
-                    &action,
-                    &self.state,
-                    seat,
-                    self.encoder.index(),
-                );
+                let features =
+                    ActionFeatures::from_action(&action, &self.state, seat, self.encoder.index());
                 (action, features)
             })
             .collect()
@@ -139,9 +135,7 @@ impl Env {
                 .map(|heroes| {
                     heroes
                         .iter()
-                        .map(|hero| Action::PickHero {
-                            hero: hero.clone(),
-                        })
+                        .map(|hero| Action::PickHero { hero: hero.clone() })
                         .collect()
                 })
                 .unwrap_or_default();
@@ -206,9 +200,7 @@ impl Env {
         };
         let allowed = self.candidates.get(&seat).cloned().unwrap_or_default();
         if !allowed.contains(&hero) {
-            return Err(EngineError(format!(
-                "座位 {seat} 的英雄 {hero} 不在候选内"
-            )));
+            return Err(EngineError(format!("座位 {seat} 的英雄 {hero} 不在候选内")));
         }
         self.state.players[usize::from(seat)].hero = Some(hero);
         let heroes: BTreeMap<Seat, String> = self

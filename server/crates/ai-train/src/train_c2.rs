@@ -300,8 +300,7 @@ fn run_c1_episode(
         } else {
             None
         };
-        let choice =
-            forced.unwrap_or_else(|| sample_action(&masked_probs(&logits, &mask), rng));
+        let choice = forced.unwrap_or_else(|| sample_action(&masked_probs(&logits, &mask), rng));
         let logp = log_prob(&logits, &mask, choice);
         let stepped = env.step(candidates[choice].0.clone())?;
         episode_return += stepped.reward;
@@ -395,7 +394,17 @@ fn run_c2_episode(
         };
         episode_return += reward;
         if let Some((mask, logp, value)) = recorded {
-            record(batch, obs, choice, mask, logp, value, reward, stepped.done, features);
+            record(
+                batch,
+                obs,
+                choice,
+                mask,
+                logp,
+                value,
+                reward,
+                stepped.done,
+                features,
+            );
         }
         steps += 1;
         per_turn[index] += 1;
@@ -504,13 +513,7 @@ pub fn train_c2(
                 )?,
                 EnvMix::C2 => {
                     let (episode_return, placement) = run_c2_episode(
-                        catalog,
-                        &mut env,
-                        &mut model,
-                        episodes,
-                        seed,
-                        &mut rng,
-                        &mut batch,
+                        catalog, &mut env, &mut model, episodes, seed, &mut rng, &mut batch,
                     )?;
                     if let Some(place) = placement {
                         placements.push(f32::from(place));

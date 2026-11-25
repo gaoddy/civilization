@@ -76,8 +76,10 @@ mod tests {
 
     #[test]
     fn weights_determine_the_same_config() {
-        let mut weights = Weights::default();
-        weights.card_count = 4;
+        let mut weights = Weights {
+            card_count: 4,
+            ..Weights::default()
+        };
         weights.set("trunk.0.weight", vec![0.0; 8 * ai_core::OBS_DIM]);
         weights.set("trunk.0.bias", vec![0.0; 8]);
         weights.set("card.emb", vec![0.0; 4 * 3]);

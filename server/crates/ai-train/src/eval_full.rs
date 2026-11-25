@@ -98,9 +98,9 @@ fn resolve_opponent(league: &League, policy: PolicyId) -> Result<Opponent, EvalE
         // 当前策略的权重不在联盟里，评测侧没有训练模型，只能落到随机兜底。
         PolicyId::Current | PolicyId::Random => Opponent::Random,
         PolicyId::Snapshot(_) | PolicyId::Anchor => {
-            let weights = league.weights(policy).ok_or_else(|| {
-                EvalError::NoData(format!("联盟缺少对手 {policy:?} 的权重"))
-            })?;
+            let weights = league
+                .weights(policy)
+                .ok_or_else(|| EvalError::NoData(format!("联盟缺少对手 {policy:?} 的权重")))?;
             Opponent::weights(weights)?
         }
     })

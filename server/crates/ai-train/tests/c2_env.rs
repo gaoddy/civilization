@@ -6,9 +6,7 @@ use ai_core::Action;
 use ai_model::Weights;
 use ai_train::env_full::FullEnv;
 use ai_train::league::{League, PolicyId};
-use rule_engine::candidates::{
-    CANDIDATE_COUNT, SEAT_COUNT, allocate_candidates,
-};
+use rule_engine::candidates::{CANDIDATE_COUNT, SEAT_COUNT, allocate_candidates};
 use rule_engine::data::{Catalog, Playstyle, hero_in_pool};
 use rule_engine::playstyles;
 use rule_engine::state::Seat;
@@ -45,7 +43,11 @@ fn hero_pick_is_the_first_decision_and_has_four_options() {
         assert_eq!(env.current_seat(), Some(seat), "按座位升序发放英雄选择");
         assert_eq!(env.observe(seat).hero, -1, "选英雄前观测里没有英雄");
         let legal = env.legal(seat);
-        assert_eq!(legal.len(), CANDIDATE_COUNT, "每个座位 {CANDIDATE_COUNT} 个候选");
+        assert_eq!(
+            legal.len(),
+            CANDIDATE_COUNT,
+            "每个座位 {CANDIDATE_COUNT} 个候选"
+        );
         let heroes: Vec<String> = legal
             .iter()
             .map(|action| match action {
@@ -66,7 +68,9 @@ fn hero_pick_is_the_first_decision_and_has_four_options() {
     assert_eq!(env.current_seat(), Some(0));
     let legal = env.legal(0);
     assert!(
-        legal.iter().all(|action| !matches!(action, Action::PickHero { .. })),
+        legal
+            .iter()
+            .all(|action| !matches!(action, Action::PickHero { .. })),
         "开局后不再出现 PickHero"
     );
     assert!(
@@ -89,9 +93,7 @@ fn pick_hero_outside_candidates_is_rejected() {
         .find(|hero| !candidates[&0].contains(hero))
         .expect("存在候选外英雄")
         .clone();
-    assert!(env
-        .step(Action::PickHero { hero: outside })
-        .is_err());
+    assert!(env.step(Action::PickHero { hero: outside }).is_err());
     assert_eq!(env.current_seat(), Some(0), "拒绝后状态不变");
 }
 
