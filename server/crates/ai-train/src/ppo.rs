@@ -134,11 +134,29 @@ impl TrainModel {
     /// 用于把 C0 的主干与价值头、或上一个检查点的策略参数带进新网络。
     /// 返回实际覆盖的张量数；形状不同的张量报错，避免静默半初始化。
     pub fn load_matching(&mut self, weights: &Weights) -> candle_core::Result<usize> {
+        self.load_matching_filtered(weights, |_| true)
+    }
+
+    /// 同 [`TrainModel::load_matching`]，但只覆盖 `keep` 认可的张量名。
+    ///
+    /// C0 只提供价值头，装载时必须按名字过滤，否则同名的随机主干会把演员的
+    /// 主干覆盖掉。
+    pub fn load_matching_filtered<F>(
+        &mut self,
+        weights: &Weights,
+        keep: F,
+    ) -> candle_core::Result<usize>
+    where
+        F: Fn(&str) -> bool,
+    {
         let device = Device::Cpu;
         let mut loaded = 0usize;
         {
             let mut data = self.var_map.data().lock().expect("VarMap 锁");
             for (name, values) in &weights.tensors {
+                if !keep(name) {
+                    continue;
+                }
                 let Some(var) = data.get_mut(name) else {
                     continue;
                 };

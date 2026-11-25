@@ -200,7 +200,8 @@ pub fn load_critic(model: &mut TrainModel, weights: &Weights) -> Result<(), C2Er
             return Err(C2Error::MissingTensor(name.clone()));
         }
     }
-    model.load_matching(weights)?;
+    // 只装 value.*；直接 load_matching 会把同名主干一并覆盖成 C0 的随机权重。
+    model.load_matching_filtered(weights, |name| name.starts_with("value."))?;
     Ok(())
 }
 
@@ -594,6 +595,47 @@ mod tests {
             include_str!("../../../data/v0.1/taxonomy.json"),
         )
         .expect("卡表")
+    }
+
+    /// C0 只提供价值头；装载 C0 权重不得把演员（C1）主干覆盖成 C0 的随机主干。
+    #[test]
+    fn load_critic_keeps_actor_trunk() {
+        let cfg = C2Config::default();
+        let index = ai_core::CardIndex::build(&catalog());
+        let mut model = TrainModel::new(
+            &cfg.model,
+            index.card_count(),
+            index.hero_count(),
+            index.skill_count(),
+            1,
+        )
+        .expect("模型");
+        let actor = model.weights().expect("演员权重");
+
+        let c0 = TrainModel::new(
+            &cfg.model,
+            index.card_count(),
+            index.hero_count(),
+            index.skill_count(),
+            999,
+        )
+        .expect("模型")
+        .weights()
+        .expect("C0 权重");
+        assert_ne!(
+            actor.tensors["trunk.0.weight"], c0.tensors["trunk.0.weight"],
+            "两个种子应产生不同主干"
+        );
+
+        load_critic(&mut model, &c0).expect("装入价值头");
+        let after = model.weights().expect("装载后权重");
+        assert_eq!(
+            after.tensors["trunk.0.weight"], actor.tensors["trunk.0.weight"],
+            "装载 C0 价值头不得覆盖演员主干"
+        );
+        for name in ["value.0.weight", "value.1.bias"] {
+            assert_eq!(after.tensors[name], c0.tensors[name], "{name} 应来自 C0");
+        }
     }
 
     /// 学习者不是最后行动者时，也必须恰有一条带名次奖励的终局 transition，
