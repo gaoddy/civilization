@@ -9,7 +9,9 @@ use room_service::envelope::SeatChannel;
 use room_service::game::{GameStage, GameTask, RoomCommand, SeatUpdate, UpdateKind};
 use room_service::room::PlayerSlot;
 use rule_engine::data::{Catalog, Playstyle};
-use rule_engine::state::Seat;
+use rule_engine::engine::Engine;
+use rule_engine::intent::Intent;
+use rule_engine::state::{GameState, Seat};
 
 const CARDS_JSON: &str = include_str!("../../../data/v0.1/cards.json");
 const HEROES_JSON: &str = include_str!("../../../data/v0.1/heroes.json");
@@ -171,6 +173,34 @@ fn heuristic_default_is_unchanged() {
         drive_to_end(&mut plain, &plain_clock),
         drive_to_end(&mut explicit, &explicit_clock),
         "显式 heuristic 与默认策略必须打出完全相同的一局"
+    );
+}
+
+/// 永远拒绝决策的策略：驱动方必须回退启发式，而不是让机器人卡住。
+struct NeverPolicy;
+
+impl bot_ai::Policy for NeverPolicy {
+    fn plan(
+        &self,
+        _state: &GameState,
+        _seat: Seat,
+        _engine: &Engine,
+        _blocked: &[Intent],
+    ) -> Option<Intent> {
+        None
+    }
+}
+
+#[test]
+fn policy_returning_none_falls_back_to_heuristic() {
+    let (mut plain, plain_clock) = all_bot_task();
+    let (mut injected, injected_clock) = all_bot_task();
+    injected.set_policy(Box::new(NeverPolicy));
+
+    assert_eq!(
+        drive_to_end(&mut plain, &plain_clock),
+        drive_to_end(&mut injected, &injected_clock),
+        "策略返回 None 时必须回退启发式，结果与默认策略一致"
     );
 }
 

@@ -341,6 +341,11 @@ impl GameTask {
         self.policy = bot_policy_from_env(&self.engine.catalog);
     }
 
+    /// 直接替换机器人策略；测试注入与后续难度表切换都用它。
+    pub fn set_policy(&mut self, policy: Box<dyn bot_ai::Policy + Send + Sync>) {
+        self.policy = policy;
+    }
+
     /// 以已确定的英雄表与玩法开局并构造驱动。
     ///
     /// `players` 必须是按座位号升序排列的 8 个座位（`Room::players` 的约定）；
@@ -1038,8 +1043,12 @@ impl GameTask {
             let mut blocked: Vec<EngineIntent> = Vec::new();
             let mut replans = 0usize;
             loop {
-                let Some(intent) = self.policy.plan(&self.state, seat, &self.engine, &blocked)
-                else {
+                // 神经策略推理失败或拒绝决策时回退启发式；启发式也返回 `None` 才停手。
+                let intent = self
+                    .policy
+                    .plan(&self.state, seat, &self.engine, &blocked)
+                    .or_else(|| bot_ai::plan(&self.state, seat, &self.engine, &blocked));
+                let Some(intent) = intent else {
                     break;
                 };
                 let ends = matches!(intent, EngineIntent::EndRecruit);
