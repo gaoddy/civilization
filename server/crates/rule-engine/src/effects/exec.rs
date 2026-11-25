@@ -679,7 +679,9 @@ impl Engine {
             target: None,
             ..*ctx
         };
-        if self.check_targets(state, effects, &probe, false).is_ok() {
+        if self.check_targets(state, effects, &probe, false).is_ok()
+            && (!include_on_use || self.check_on_use_targets(state, &probe).is_ok())
+        {
             return Vec::new();
         }
 
