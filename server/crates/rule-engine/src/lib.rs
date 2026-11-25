@@ -10,6 +10,7 @@ pub mod events;
 pub mod hash;
 pub mod intent;
 pub mod keyword;
+pub mod legal;
 pub mod playstyles;
 pub mod rating;
 pub mod recruit;

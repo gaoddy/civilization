@@ -1,0 +1,89 @@
+mod common;
+
+use common::{minion_id, place, started, test_catalog};
+use rule_engine::engine::Engine;
+use rule_engine::intent::Intent;
+use rule_engine::legal::legal_actions;
+use rule_engine::state::{GameState, HandCard, MinionInstance, PendingChoice, Seat};
+
+/// 枚举出的每条动作都必须能被引擎接受；用克隆状态验证，不污染原状态。
+fn assert_every_action_accepted(engine: &Engine, state: &GameState, seat: Seat) {
+    for intent in legal_actions(engine, state, seat) {
+        let mut clone = state.clone();
+        let result = engine.apply(&mut clone, seat, intent.clone());
+        assert!(
+            result.is_ok(),
+            "合法动作被引擎拒绝：{intent:?} -> {:?}",
+            result.err()
+        );
+    }
+}
+
+#[test]
+fn every_legal_action_is_accepted_by_engine() {
+    let (engine, state) = started(7);
+    let actions = legal_actions(&engine, &state, 0);
+    assert!(!actions.is_empty());
+    assert_every_action_accepted(&engine, &state, 0);
+}
+
+#[test]
+fn order_is_stable() {
+    let (engine, state) = started(7);
+    assert_eq!(
+        legal_actions(&engine, &state, 0),
+        legal_actions(&engine, &state, 0)
+    );
+}
+
+#[test]
+fn recruit_done_has_no_actions() {
+    let (engine, mut state) = started(7);
+    state.players[0].recruit_done = true;
+    assert!(legal_actions(&engine, &state, 0).is_empty());
+}
+
+#[test]
+fn pending_target_offers_choose_and_abandon_only() {
+    let (engine, mut state) = started(7);
+    let catalog = test_catalog();
+    // 棋盘上先放一个可被指定的友方随从。
+    place(&catalog, &mut state, 0, 9001, &minion_id(1));
+    // 手牌放一张带目标战吼的随从（bisheng：战吼使一个友方随从成长一次）。
+    state.players[0]
+        .hand
+        .push(HandCard::Minion(MinionInstance::new(
+            &catalog, 9002, "bisheng", false,
+        )));
+    state.next_instance_id = 9003;
+    engine
+        .apply(
+            &mut state,
+            0,
+            Intent::PlayCard {
+                hand_index: 0,
+                position: None,
+                target: None,
+            },
+        )
+        .expect("带目标战吼的随从可以入场");
+    assert!(
+        matches!(state.pending.front(), Some(PendingChoice::Target { .. })),
+        "入场后应留下目标待选"
+    );
+
+    let actions = legal_actions(&engine, &state, 0);
+    assert!(actions.iter().any(|a| matches!(a, Intent::AbandonTarget)));
+    assert!(
+        actions
+            .iter()
+            .any(|a| matches!(a, Intent::ChooseTarget { .. })),
+        "应给出至少一个目标候选"
+    );
+    assert!(
+        actions
+            .iter()
+            .all(|a| matches!(a, Intent::ChooseTarget { .. } | Intent::AbandonTarget))
+    );
+    assert_every_action_accepted(&engine, &state, 0);
+}
