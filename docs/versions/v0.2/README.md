@@ -6,18 +6,27 @@
 
 ## 主题
 
-在 v0.1 的桌面端与 iOS 房间制对局之上完成 Android 端适配、服务端上线与首版上线，并加入成就、自动匹配与天梯。
+在 v0.1 的桌面端与 iOS 房间制对局之上加入自动匹配与天梯，并保留 Android 端适配；服务端上线、发行与商店配置、成就真实验收与卡池增量待定。
 
 ## 相对 v0.1 的增量
 
 | 内容 | 范围 |
 | --- | --- |
-| Android 端适配 | Android 手机与平板横屏适配；缩放、触控、安全区、返回键与键盘规则沿用 iOS；APK 侧载与 Google Play AAB 并存，见[Android 端适配](product/ui/android-adaptation.md) |
-| 服务端上线 | prod 环境部署、域名与 TLS、数据库迁移与健康检查；沿用 `make deploy` 发布通道 |
+| Android 端适配 | Android 手机与平板横屏适配；缩放、触控、安全区、返回键与键盘规则沿用 iOS；APK 侧载与 Google Play AAB 并存；真机验收与 godotsteam 扩展处理待定，见[Android 端适配](product/ui/android-adaptation.md) |
 | 发行渠道与账号 | macOS Steam 国际版构建、Steam 自动登录、手机号绑定、Steam 成就同步与 Steam 好友邀请；契约与适配已实现，见[当前发行渠道与账号](../../current/product/accounts-and-distribution.md) |
-| 成就 | 6 个局内成就接入运行时；触发、奖励、Steam 下发与账号级解锁已实现 |
+| 成就 | 6 个局内成就接入运行时；触发、奖励、Steam 下发与账号级解锁已实现；真实 Steamworks 票据下的验收待定 |
 | 自动匹配 | 8 人凑齐即成局，按积分优先选人，积分差不阻止成局；房间局仍不计分 |
 | 天梯 | 会战自动匹配局计分，动态积分差、8 段位与全服榜；房间局仍不计分 |
+
+## 待定项
+
+以下需求的实现版本在[需求总表](../../requirements/README.md)中为「待定」，不计入当前版本：
+
+- 服务端上线 `R-PLAT-SRV-001`、生产短信通道 `R-PLAT-SRV-004`
+- Steamworks 后台与商店页 `R-PLAT-REL-005`、Steam 成就真实同步验收 `R-PLAT-REL-006`
+- Apple 签名与公证 `R-PLAT-REL-007`、Google Play 发布配置 `R-PLAT-REL-008`
+- Android 真机验收 `R-PLAT-CLI-002`、Android 的 godotsteam 扩展处理 `R-PLAT-CLI-003`
+- v0.2 卡池增量 `R-CONT-DATA-011`
 
 ## 文档导航
 

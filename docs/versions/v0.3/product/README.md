@@ -4,6 +4,6 @@
 
 | 文档 | 内容 |
 | --- | --- |
-| [好友榜与好友小队](systems/friends-ranked.md) | 好友榜、2–4 人好友小队匹配与计分 |
+| [好友榜与好友小队](systems/friends-ranked.md) | 好友榜、2–4 人好友小队匹配与计分（待定） |
 
-状态：场景、大决战、赛季、商业化、陨落、遗嘱与英雄坐镇尚未建立产品文档，见 [R-DOC-DOCS-045 v0.3 扩展项产品文档](../../../requirements/docs-v03-product-docs.md)。
+状态：好友榜与好友小队的实现需求在[需求总表](../../../requirements/README.md)中为「待定」；赛季、场景、大决战、商业化、陨落、遗嘱与英雄坐镇尚未建立产品文档，见 [R-DOC-DOCS-045 v0.3 扩展项产品文档](../../../requirements/docs-v03-product-docs.md)。
