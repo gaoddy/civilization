@@ -178,3 +178,28 @@ fn neural_policy_returns_none_while_a_pending_is_open() {
         "有待选时不能返回会被引擎拒绝的意图"
     );
 }
+
+/// 同一权重目录与同一卡表在进程内只加载一次：重复取用得到同一个策略实例，
+/// 避免每个 `GameTask` 都重新读一遍权重。
+#[test]
+fn shared_load_reuses_one_instance_per_directory_and_catalog() {
+    let catalog = catalog();
+    let dir = std::env::temp_dir().join(format!("bot-ai-shared-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).expect("建目录");
+    zero_weights(&catalog)
+        .save(&dir.join("weights.json"))
+        .expect("写权重");
+
+    let first = NeuralPolicy::load_shared(&dir, &catalog).expect("第一次加载");
+    let second = NeuralPolicy::load_shared(&dir, &catalog).expect("第二次加载");
+    assert!(
+        std::sync::Arc::ptr_eq(&first, &second),
+        "同一目录应复用同一个实例"
+    );
+
+    let (engine, state) = started_state(&catalog);
+    let boxed: Box<dyn Policy + Send + Sync> = Box::new(first);
+    assert!(boxed.plan(&state, 0, &engine, &[]).is_some());
+
+    std::fs::remove_dir_all(&dir).expect("清理");
+}

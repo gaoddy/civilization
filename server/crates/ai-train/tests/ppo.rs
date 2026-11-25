@@ -1,11 +1,14 @@
 #![cfg(feature = "train")]
 
-use ai_core::{ACTION_FEATURE_DIM, ActionFeatures, BOARD_SLOTS, OBS_DIM, Observation, Slot};
+use ai_core::{
+    ACTION_FEATURE_DIM, Action, ActionFeatures, BOARD_SLOTS, OBS_DIM, Observation, Slot,
+};
 use ai_model::ModelConfig;
 use ai_train::ppo::{
     Batch, PpoConfig, TrainModel, log_prob, masked_probs, sample_action, train_step,
 };
 use ai_train::random_policy::RandomPolicy;
+use candle_core::{Device, Tensor};
 
 fn model_config() -> ModelConfig {
     ModelConfig {
@@ -151,4 +154,93 @@ fn training_forward_matches_inference_forward() {
         (trained_value - inference_value).abs() < 1e-5,
         "价值不一致：训练侧 {trained_value}，推理侧 {inference_value}"
     );
+
+    // 选英雄整批走独立头（D2）：训练侧与推理侧必须仍然逐值一致。
+    let heroes = pick_hero_features();
+    let (trained_hero, _) = model.logits(&obs, &heroes).expect("训练侧选英雄前向");
+    let (inference_hero, _) =
+        ai_model::forward(&weights, &cfg, &obs, &heroes).expect("推理侧选英雄前向");
+    for (trained, inference) in trained_hero.iter().zip(&inference_hero) {
+        assert!(
+            (trained - inference).abs() < 1e-5,
+            "选英雄 logit 不一致：训练侧 {trained}，推理侧 {inference}"
+        );
+    }
+}
+
+/// 4 个候选英雄的特征，`PickHero` 位点亮。
+fn pick_hero_features() -> Vec<ActionFeatures> {
+    (0..4)
+        .map(|hero| {
+            let mut values = [0.0; ACTION_FEATURE_DIM];
+            values[usize::from(
+                ActionFeatures::of(&Action::PickHero {
+                    hero: String::new(),
+                })
+                .kind,
+            )] = 1.0;
+            ActionFeatures {
+                kind: ActionFeatures::of(&Action::PickHero {
+                    hero: String::new(),
+                })
+                .kind,
+                card: -1,
+                target_card: -1,
+                skill: -1,
+                hero,
+                values,
+            }
+        })
+        .collect()
+}
+
+/// 一个批次里同时有选英雄与招募决策时，混合前向的每一段都与逐条前向一致。
+#[test]
+fn mixed_batch_forward_matches_single_decisions() {
+    let cfg = model_config();
+    let model = TrainModel::new(&cfg, 5, 4, 3, 13).expect("建模型");
+    let heroes = pick_hero_features();
+    let recruits = vec![
+        ActionFeatures {
+            kind: 0,
+            card: 1,
+            target_card: -1,
+            skill: -1,
+            hero: -1,
+            values: [0.0; ACTION_FEATURE_DIM],
+        },
+        ActionFeatures {
+            kind: 4,
+            card: -1,
+            target_card: -1,
+            skill: -1,
+            hero: -1,
+            values: [0.0; ACTION_FEATURE_DIM],
+        },
+    ];
+    let first = zero_obs();
+    let second = zero_obs();
+    let batch = Tensor::cat(
+        &[
+            Tensor::from_vec(first.to_vec(), (1, ai_core::OBS_DIM), &Device::Cpu).expect("观测"),
+            Tensor::from_vec(second.to_vec(), (1, ai_core::OBS_DIM), &Device::Cpu).expect("观测"),
+        ],
+        0,
+    )
+    .expect("拼批次");
+    let candidates: Vec<ActionFeatures> = heroes.iter().chain(recruits.iter()).copied().collect();
+    let (logits, _) = model
+        .forward(&batch, &candidates, &[0, 4, 6])
+        .expect("混合批次前向");
+    let logits = logits.to_vec1::<f32>().expect("logits");
+
+    let (hero_only, _) = model.logits(&first, &heroes).expect("选英雄");
+    let (recruit_only, _) = model.logits(&second, &recruits).expect("招募");
+    for (index, expected) in hero_only.iter().chain(recruit_only.iter()).enumerate() {
+        assert!(
+            (logits[index] - expected).abs() < 1e-5,
+            "第 {index} 个候选：混合批次 {} vs 逐条 {expected}",
+            logits[index]
+        );
+    }
 }

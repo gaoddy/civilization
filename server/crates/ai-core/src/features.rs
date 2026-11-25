@@ -13,10 +13,16 @@ use crate::catalog::CardIndex;
 pub const ACTION_FEATURE_DIM: usize = 24;
 /// 动作类别 one-hot 占用的前 16 位。
 pub const ACTION_KIND_SLOTS: usize = 16;
-/// 位置特征：`position / 7`。
+/// 位置特征：`position / BOARD_POSITION_DIVISOR`。
 pub const FEATURE_POSITION: usize = ACTION_KIND_SLOTS;
-/// 发现选项特征：`choice / 3`。
+/// 发现/进化选项特征：`choice / (候选数 - 1)`。
 pub const FEATURE_CHOICE: usize = ACTION_KIND_SLOTS + 1;
+/// 位置特征的分母：最大合法插入下标。
+///
+/// 棋盘默认 7 槽位（`GameConfig::board_slots`），打牌与站位的合法下标是 `0..槽位`，
+/// 因此最大值为 6；测试 `position_and_choice_features_reach_one_at_the_last_legal_value`
+/// 钉住「最大合法下标归一化为 1.0」。
+pub const BOARD_POSITION_DIVISOR: f32 = 6.0;
 /// 是否有目标。
 pub const FEATURE_HAS_TARGET: usize = ACTION_KIND_SLOTS + 2;
 /// 目标攻击力 `/ 50`。
@@ -29,6 +35,17 @@ pub const FEATURE_ENTITY_ATTACK: usize = ACTION_KIND_SLOTS + 5;
 pub const FEATURE_ENTITY_HEALTH: usize = ACTION_KIND_SLOTS + 6;
 /// 实体是否金色。
 pub const FEATURE_ENTITY_GOLDEN: usize = ACTION_KIND_SLOTS + 7;
+
+/// 这批候选是否整批都是选英雄。
+///
+/// 选英雄是独立头（设计 D2）：整批都是 `PickHero` 时，训练与推理都必须走
+/// `hero_head.*` 的参数，其余情况走通用候选头。
+pub fn is_hero_choice_batch(features: &[ActionFeatures]) -> bool {
+    !features.is_empty()
+        && features
+            .iter()
+            .all(|feature| feature.kind == Action::PICK_HERO_KIND)
+}
 
 /// 一条候选动作的特征。
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -64,14 +81,13 @@ impl ActionFeatures {
                 position: Some(position),
                 ..
             } => {
-                features.values[FEATURE_POSITION] = f32::from(*position) / 7.0;
+                features.values[FEATURE_POSITION] = f32::from(*position) / BOARD_POSITION_DIVISOR;
             }
             Action::Rearrange { to, .. } => {
-                features.values[FEATURE_POSITION] = f32::from(*to) / 6.0;
+                features.values[FEATURE_POSITION] = f32::from(*to) / BOARD_POSITION_DIVISOR;
             }
-            Action::ChooseDiscover { choice } => {
-                features.values[FEATURE_CHOICE] = f32::from(*choice) / 3.0;
-            }
+            // 发现/进化的候选数由待选决定（发现 3 个、进化 4 个），分母要按实际
+            // 候选数算，只能在拿到状态的 `from_action` 里填。
             _ => {}
         }
         features
@@ -140,8 +156,12 @@ impl ActionFeatures {
                 features.card = -1;
             }
             Action::ChooseDiscover { choice } => {
-                if let Some(card_id) = discover_candidate(state, seat, *choice) {
-                    features.card = index.card(card_id);
+                if let Some(candidate) = discover_candidates(state, seat) {
+                    if let Some(card_id) = candidate.get(usize::from(*choice)) {
+                        features.card = index.card(card_id);
+                    }
+                    let divisor = candidate.len().saturating_sub(1).max(1) as f32;
+                    features.values[FEATURE_CHOICE] = f32::from(*choice) / divisor;
                 }
             }
             Action::Freeze { slot: None } | Action::Unfreeze { slot: None } => {}
@@ -162,15 +182,14 @@ fn shop_slot(state: &GameState, seat: Seat, slot: u8) -> Option<&rule_engine::st
 /// 本座位队首发现待选的第 `choice` 个候选卡 id。
 ///
 /// 进化待选没有具体卡牌候选（选项是固定的进化类别），不提供卡索引。
-fn discover_candidate(state: &GameState, seat: Seat, choice: u8) -> Option<&str> {
+/// 该座位当前发现/进化待选的候选表。
+fn discover_candidates(state: &GameState, seat: Seat) -> Option<&[String]> {
     state.pending.iter().find_map(|pending| match pending {
         PendingChoice::Discover {
             seat: pending_seat,
             candidates,
             ..
-        } if *pending_seat == seat => candidates
-            .get(usize::from(choice))
-            .map(std::string::String::as_str),
+        } if *pending_seat == seat => Some(candidates.as_slice()),
         _ => None,
     })
 }

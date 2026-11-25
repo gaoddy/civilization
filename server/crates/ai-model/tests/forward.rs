@@ -174,3 +174,37 @@ fn hero_head_scores_candidates_independently() {
     let logits = forward_hero(&weights, &cfg, &zero_obs(), &[0, 1]).expect("英雄头");
     assert_eq!(logits, vec![2.0, 4.0]);
 }
+
+/// 选英雄走独立的 `hero_head`（设计 D2）：只改英雄头的参数，PickHero 候选的
+/// logit 必须跟着变，否则说明选英雄仍然走的是通用候选头。
+#[test]
+fn pick_hero_candidates_are_scored_by_the_hero_head() {
+    let cfg = ModelConfig {
+        obs_dim: OBS_DIM,
+        card_emb: 1,
+        hidden: 2,
+        layers: 1,
+    };
+    let obs = zero_obs();
+    let candidates: Vec<ActionFeatures> = (1..=4)
+        .map(|hero: i32| {
+            let mut features = ActionFeatures::of(&Action::PickHero {
+                hero: format!("hero-{hero}"),
+            });
+            features.hero = hero;
+            features
+        })
+        .collect();
+
+    let weights = zeros(&cfg, 8, 8, 2);
+    let (base, _) = forward(&weights, &cfg, &obs, &candidates).expect("前向");
+
+    let mut changed = weights.clone();
+    changed.set("hero_head.1.bias", vec![5.0]);
+    let (after, _) = forward(&changed, &cfg, &obs, &candidates).expect("前向");
+
+    assert_ne!(
+        base, after,
+        "PickHero 的 logit 应由 hero_head 决定，改 hero_head 必须改变结果"
+    );
+}

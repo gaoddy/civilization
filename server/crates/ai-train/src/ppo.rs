@@ -87,6 +87,8 @@ pub struct TrainModel {
     value_out: Linear,
     candidate_hidden: Linear,
     candidate_out: Linear,
+    hero_head_hidden: Linear,
+    hero_head_out: Linear,
     card: Tensor,
     hero: Tensor,
     skill: Tensor,
@@ -119,6 +121,8 @@ impl TrainModel {
             value_out: layers.value_out,
             candidate_hidden: layers.candidate_hidden,
             candidate_out: layers.candidate_out,
+            hero_head_hidden: layers.hero_head_hidden,
+            hero_head_out: layers.hero_head_out,
             card: layers.card,
             hero: layers.hero,
             skill: layers.skill,
@@ -191,6 +195,8 @@ impl TrainModel {
         self.value_out = layers.value_out;
         self.candidate_hidden = layers.candidate_hidden;
         self.candidate_out = layers.candidate_out;
+        self.hero_head_hidden = layers.hero_head_hidden;
+        self.hero_head_out = layers.hero_head_out;
         self.card = layers.card;
         self.hero = layers.hero;
         self.skill = layers.skill;
@@ -288,19 +294,71 @@ impl TrainModel {
             values.extend_from_slice(&feature.values);
         }
         let values = Tensor::from_vec(values, (total, ACTION_FEATURE_DIM), device)?;
+        // 英雄头要用英雄嵌入与主干行，这里先克隆，避免被候选头的拼接消费掉。
         let input = Tensor::cat(
             &[
                 card_rows,
-                hero_rows,
+                hero_rows.clone(),
                 skill_rows,
                 target_rows,
                 values,
-                trunk_rows,
+                trunk_rows.clone(),
             ],
             1,
         )?;
-        let scored = self.candidate_hidden.forward(&input)?.relu()?;
-        let logits = self.candidate_out.forward(&scored)?.squeeze(1)?;
+        // 选英雄的决策走独立头（设计 D2）；批次里可以混有选英雄与招募决策，
+        // 按决策分组打分后再按原顺序拼回去，梯度才能落到对应头的参数上。
+        let mut hero_positions = Vec::new();
+        let mut other_positions = Vec::new();
+        for decision in 0..batch {
+            let (start, end) = (offsets[decision], offsets[decision + 1]);
+            let hero_choice = end > start
+                && (start..end)
+                    .all(|position| candidates[position].kind == ai_core::Action::PICK_HERO_KIND);
+            for position in start..end {
+                if hero_choice {
+                    hero_positions.push(position as i64);
+                } else {
+                    other_positions.push(position as i64);
+                }
+            }
+        }
+        let candidate_logits = |rows: &[i64]| -> candle_core::Result<Tensor> {
+            let index = Tensor::from_vec(rows.to_vec(), rows.len(), device)?;
+            let selected = input.index_select(&index, 0)?;
+            let scored = self.candidate_hidden.forward(&selected)?.relu()?;
+            self.candidate_out.forward(&scored)?.squeeze(1)
+        };
+        let hero_head_logits = |rows: &[i64]| -> candle_core::Result<Tensor> {
+            let index = Tensor::from_vec(rows.to_vec(), rows.len(), device)?;
+            let heroes = hero_rows.index_select(&index, 0)?;
+            let trunks = trunk_rows.index_select(&index, 0)?;
+            let selected = Tensor::cat(&[heroes, trunks], 1)?;
+            let scored = self.hero_head_hidden.forward(&selected)?.relu()?;
+            self.hero_head_out.forward(&scored)?.squeeze(1)
+        };
+
+        let logits = if hero_positions.is_empty() {
+            candidate_logits(&other_positions)?
+        } else if other_positions.is_empty() {
+            hero_head_logits(&hero_positions)?
+        } else {
+            let merged = Tensor::cat(
+                &[
+                    candidate_logits(&other_positions)?,
+                    hero_head_logits(&hero_positions)?,
+                ],
+                0,
+            )?;
+            let mut order = vec![0i64; total];
+            for (rank, slot) in other_positions.iter().enumerate() {
+                order[*slot as usize] = rank as i64;
+            }
+            for (rank, slot) in hero_positions.iter().enumerate() {
+                order[*slot as usize] = (other_positions.len() + rank) as i64;
+            }
+            merged.index_select(&Tensor::from_vec(order, total, device)?, 0)?
+        };
         Ok((logits, value))
     }
 
@@ -325,6 +383,8 @@ struct Layers {
     value_out: Linear,
     candidate_hidden: Linear,
     candidate_out: Linear,
+    hero_head_hidden: Linear,
+    hero_head_out: Linear,
     card: Tensor,
     hero: Tensor,
     skill: Tensor,
@@ -351,6 +411,9 @@ fn build_layers(
     let value_out = candle_nn::linear(cfg.hidden, 1, vb.pp("value.1"))?;
     let candidate_hidden = candle_nn::linear(cfg.candidate_input(), cfg.hidden, vb.pp("cand.0"))?;
     let candidate_out = candle_nn::linear(cfg.hidden, 1, vb.pp("cand.1"))?;
+    let hero_head_hidden =
+        candle_nn::linear(cfg.card_emb + cfg.hidden, cfg.hidden, vb.pp("hero_head.0"))?;
+    let hero_head_out = candle_nn::linear(cfg.hidden, 1, vb.pp("hero_head.1"))?;
     let card = vb.get((card_count, cfg.card_emb), "card.emb")?;
     let hero = vb.get((hero_count, cfg.card_emb), "hero.emb")?;
     let skill = vb.get((skill_count, cfg.card_emb), "skill.emb")?;
@@ -360,6 +423,8 @@ fn build_layers(
         value_out,
         candidate_hidden,
         candidate_out,
+        hero_head_hidden,
+        hero_head_out,
         card,
         hero,
         skill,

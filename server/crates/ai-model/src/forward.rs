@@ -27,6 +27,15 @@ pub fn forward(
     let trunk = trunk(weights, cfg, &obs_vec)?;
     let value = value(weights, cfg, &trunk)?;
 
+    // 选英雄整批走独立头（设计 D2），与训练侧的分派规则一致。
+    if ai_core::features::is_hero_choice_batch(features) {
+        let heroes: Vec<i32> = features
+            .iter()
+            .map(|feature| hero_index(obs, feature))
+            .collect();
+        return Ok((hero_head_scores(weights, cfg, &trunk, &heroes)?, value));
+    }
+
     let card_table = tensor(weights, "card.emb")?;
     let hero_table = tensor(weights, "hero.emb")?;
     let skill_table = tensor(weights, "skill.emb")?;
@@ -95,6 +104,16 @@ pub fn forward_hero(
     heroes: &[i32],
 ) -> Result<Vec<f32>, ModelError> {
     let trunk = trunk(weights, cfg, &obs.to_vec())?;
+    hero_head_scores(weights, cfg, &trunk, heroes)
+}
+
+/// 英雄头本体：输入为「英雄嵌入 + 主干」，逐候选打分。
+fn hero_head_scores(
+    weights: &Weights,
+    cfg: &ModelConfig,
+    trunk: &[f32],
+    heroes: &[i32],
+) -> Result<Vec<f32>, ModelError> {
     let table = tensor(weights, "hero.emb")?;
     let inner = cfg.card_emb + cfg.hidden;
     let weight = tensor(weights, "hero_head.0.weight")?;
@@ -111,7 +130,7 @@ pub fn forward_hero(
     for hero in heroes {
         input.clear();
         input.extend(embedding(table, cfg.card_emb, *hero, "hero.emb")?);
-        input.extend_from_slice(&trunk);
+        input.extend_from_slice(trunk);
         let hidden = relu_layer(weight, bias, &input, cfg.hidden, inner);
         logits.push(dot(&hidden, out_weight) + out_bias[0]);
     }

@@ -59,6 +59,7 @@ fn eval_is_deterministic_and_reports_confidence_interval() {
         learner_seats: 4,
         anchors: vec![Anchor::Weights(PolicyId::Anchor)],
         max_decisions_per_turn: 16,
+        max_steps_per_game: 200_000,
     };
 
     let first = eval_full(&catalog, &learner, &league, &cfg).expect("第一次评测");
@@ -81,6 +82,7 @@ fn heuristic_anchor_plays_whole_games_and_reports_paired_advantage() {
         learner_seats: 8,
         anchors: vec![Anchor::Heuristic],
         max_decisions_per_turn: 16,
+        max_steps_per_game: 200_000,
     };
 
     let first = eval_full(&catalog, &learner, &league, &cfg).expect("启发式锚点评测");
@@ -109,4 +111,25 @@ fn heuristic_anchor_plays_whole_games_and_reports_paired_advantage() {
         "8 人局名次互不相同，学习者每局要么优于要么劣于锚点均值"
     );
     assert!(first.advantage_ci95 >= 0.0);
+}
+
+/// 单局被步数上限截断时跳过该局并计数；整批都截断则报错，而不是返回一个空报告。
+#[test]
+fn truncated_games_are_skipped_and_counted() {
+    let catalog = tiny_catalog();
+    let learner = weights_for(&catalog, 5);
+    let league = League::new(0, 0);
+    let cfg = EvalConfig {
+        seeds: (EVAL_SEED_BASE..EVAL_SEED_BASE + 2).collect(),
+        learner_seats: 8,
+        anchors: vec![Anchor::Heuristic],
+        max_decisions_per_turn: 16,
+        max_steps_per_game: 4,
+    };
+
+    let error = eval_full(&catalog, &learner, &league, &cfg).expect_err("全部截断应报错");
+    assert!(
+        format!("{error}").contains("截断"),
+        "错误信息应说明截断：{error}"
+    );
 }
