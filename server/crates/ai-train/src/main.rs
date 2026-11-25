@@ -20,13 +20,14 @@ fn main() {
         Some("data-c0") => data_c0(&args[1..]),
         Some("train-c0") => train_c0(&args[1..]),
         Some("train-c1") => train_c1(&args[1..]),
+        Some("train-c2") => train_c2(&args[1..]),
         Some(other) => Err(format!("未知子命令：{other}")),
         None => Err("缺少子命令".to_string()),
     };
     if let Err(message) = result {
         eprintln!("{message}");
         eprintln!(
-            "用法：ai-train data-c0 --out <路径> [--games 2000] [--seed 0]\n      ai-train train-c0 [--pairs 路径] [--out-dir 目录] [--steps 20000] [--seed 0]\n      ai-train train-c1 [--pairs 路径] [--c0 权重路径] [--out-dir 目录] [--episodes 200] [--distribution 200] [--seed 0]"
+            "用法：ai-train data-c0 --out <路径> [--games 2000] [--seed 0]\n      ai-train train-c0 [--pairs 路径] [--out-dir 目录] [--steps 20000] [--seed 0]\n      ai-train train-c1 [--pairs 路径] [--c0 权重路径] [--out-dir 目录] [--episodes 200] [--distribution 200] [--seed 0]\n      ai-train train-c2 [--pairs 路径] [--c0 权重路径] [--c1 权重路径] [--out-dir 目录] [--episodes 1000] [--c1-mix 0.3] [--distribution 200] [--seed 0]"
         );
         std::process::exit(2);
     }
@@ -416,4 +417,116 @@ fn distribution_boards(pairs: &[BoardPair], wanted: usize) -> Vec<BoardSample> {
         boards.push(sample.clone());
     }
     boards
+}
+
+#[cfg(feature = "train")]
+fn train_c2(args: &[String]) -> Result<(), String> {
+    use ai_train::train_c2::{C2Config, train_c2 as train};
+
+    let root = repo_root();
+    let mut pairs_path = root.join("output/models/c0/pairs.jsonl");
+    let mut c0_path = root.join("output/models/c0/weights.json");
+    let mut c1_path = root.join("output/models/c1/weights.json");
+    let mut out_dir = root.join("output/models/c2");
+    let mut episodes = 1000usize;
+    let mut c1_mix = 0.3f32;
+    let mut distribution = 200usize;
+    let mut seed = 0u64;
+    let mut iter = args.iter();
+    while let Some(flag) = iter.next() {
+        let value = iter
+            .next()
+            .ok_or_else(|| format!("{flag} 缺少取值"))?
+            .clone();
+        match flag.as_str() {
+            "--pairs" => pairs_path = value.into(),
+            "--c0" => c0_path = value.into(),
+            "--c1" => c1_path = value.into(),
+            "--out-dir" => out_dir = value.into(),
+            "--episodes" => {
+                episodes = value
+                    .parse()
+                    .map_err(|_| format!("--episodes 不是整数：{value}"))?;
+            }
+            "--c1-mix" => {
+                c1_mix = value
+                    .parse()
+                    .map_err(|_| format!("--c1-mix 不是小数：{value}"))?;
+            }
+            "--distribution" => {
+                distribution = value
+                    .parse()
+                    .map_err(|_| format!("--distribution 不是整数：{value}"))?;
+            }
+            "--seed" => {
+                seed = value
+                    .parse()
+                    .map_err(|_| format!("--seed 不是整数：{value}"))?;
+            }
+            other => return Err(format!("未知参数：{other}")),
+        }
+    }
+
+    let catalog = catalog();
+    let pairs =
+        ai_train::train_c0::read_pairs(&pairs_path, &catalog).map_err(|error| error.to_string())?;
+    let c0 = ai_model::Weights::load(&c0_path).map_err(|error| error.to_string())?;
+    // C1 权重缺失时允许从随机初始化开始，便于只跑 C2 的冒烟。
+    let c1 = ai_model::Weights::load(&c1_path).ok();
+    if c1.is_none() {
+        eprintln!("没有读到 C1 权重（{}），演员从随机初始化开始", c1_path.display());
+    }
+    let pool = distribution_boards(&pairs, distribution);
+    let cfg = C2Config {
+        episodes,
+        c1_mix,
+        seed,
+        ..C2Config::default()
+    };
+    let output = train(&catalog, &pool, Some(&c0), c1.as_ref(), &cfg)
+        .map_err(|error| error.to_string())?;
+    output
+        .weights
+        .save(&out_dir.join("weights.json"))
+        .map_err(|error| error.to_string())?;
+
+    let manifest = serde_json::json!({
+        "schema": DATA_SCHEMA_VERSION,
+        "weights_version": ai_model::WEIGHTS_VERSION,
+        "obs_dim": cfg.model.obs_dim,
+        "hidden": cfg.model.hidden,
+        "layers": cfg.model.layers,
+        "card_emb": cfg.model.card_emb,
+        "episodes": output.episodes,
+        "c1_mix": cfg.c1_mix,
+        "league_size": cfg.league_size,
+        "snapshot_every": cfg.snapshot_every,
+        "snapshots": output.snapshots,
+        "seed": cfg.seed,
+        "distribution": pool.len(),
+        "mean_placement": output.mean_placement,
+        "mean_return": output.mean_return,
+        "last_metrics": {
+            "policy_loss": output.last_metrics.policy_loss,
+            "value_loss": output.last_metrics.value_loss,
+            "entropy": output.last_metrics.entropy,
+            "clip_fraction": output.last_metrics.clip_fraction,
+        },
+    });
+    fs::create_dir_all(&out_dir).map_err(|error| format!("创建目录失败：{error}"))?;
+    fs::write(
+        out_dir.join("manifest.json"),
+        serde_json::to_vec_pretty(&manifest).map_err(|error| error.to_string())?,
+    )
+    .map_err(|error| format!("写入失败：{error}"))?;
+    println!(
+        "C2 训练完成：{} 局，平均名次 {:.2}，平均回报 {:.3}，快照 {}",
+        output.episodes, output.mean_placement, output.mean_return, output.snapshots
+    );
+    Ok(())
+}
+
+#[cfg(not(feature = "train"))]
+fn train_c2(_args: &[String]) -> Result<(), String> {
+    Err("train-c2 需要 --features train".to_string())
 }

@@ -18,6 +18,8 @@ pub mod random_policy;
 pub mod train_c0;
 #[cfg(feature = "train")]
 pub mod train_c1;
+#[cfg(feature = "train")]
+pub mod train_c2;
 
 /// 训练功能所在的 feature 名。
 pub const TRAIN_FEATURE: &str = "train";

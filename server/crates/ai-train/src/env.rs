@@ -5,7 +5,7 @@
 
 use std::collections::BTreeMap;
 
-use ai_core::{Action, CardIndex, Encoder, History, Observation};
+use ai_core::{Action, ActionFeatures, CardIndex, Encoder, History, Observation};
 use rule_engine::data::Catalog;
 use rule_engine::engine::Engine;
 use rule_engine::error::EngineError;
@@ -115,6 +115,22 @@ impl Env {
     }
 
     /// 指定座位当前全部合法动作，顺序与 `legal_actions` 一致。
+    /// 指定座位当前的合法动作及其特征，顺序与 [`Env::legal`] 一致。
+    pub fn action_candidates(&self, seat: Seat) -> Vec<(Action, ActionFeatures)> {
+        self.legal(seat)
+            .into_iter()
+            .map(|action| {
+                let features = ActionFeatures::from_action(
+                    &action,
+                    &self.state,
+                    seat,
+                    self.encoder.index(),
+                );
+                (action, features)
+            })
+            .collect()
+    }
+
     pub fn legal(&self, seat: Seat) -> Vec<Action> {
         if !self.started {
             return self

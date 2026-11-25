@@ -4,7 +4,7 @@
 
 use std::collections::BTreeMap;
 
-use ai_core::{Action, Observation};
+use ai_core::{Action, ActionFeatures, Observation};
 use rule_engine::data::Catalog;
 use rule_engine::error::EngineError;
 use rule_engine::state::{Phase, Seat};
@@ -48,6 +48,10 @@ impl FullEnv {
         self.env.legal(seat)
     }
 
+    pub fn action_candidates(&self, seat: Seat) -> Vec<(Action, ActionFeatures)> {
+        self.env.action_candidates(seat)
+    }
+
     pub fn current_seat(&self) -> Option<Seat> {
         self.env.current_seat()
     }
@@ -59,6 +63,11 @@ impl FullEnv {
 
     pub fn turn(&self) -> u8 {
         self.env.turn()
+    }
+
+    /// 该座位的最终名次；对局未结束时为 `None`。
+    pub fn placement(&self, seat: Seat) -> Option<u8> {
+        self.env.placement(seat)
     }
 
     pub fn is_done(&self) -> bool {

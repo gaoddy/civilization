@@ -13,7 +13,7 @@ train-c1:
 	cd server && cargo run -p ai-train --features train -- train-c1
 
 train-c2:
-	cd server && cargo run -p ai-train --features train -- train-c2
+	cd server && cargo run --release -p ai-train --features train -- train-c2 --episodes $(or $(EPISODES),1000)
 
 ai-eval:
 	cd server && cargo run -p ai-train --features train -- eval
