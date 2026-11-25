@@ -35,8 +35,8 @@ make train-c0            # 训练估值网络并校准
 make train-c1            # 用 C0 权重初始化，训练单座位构筑
 make train-c2            # 8 人自博弈混训（release；EPISODES 可调）
 make ai-eval             # 固定种子评测检查点并挑最佳（SEEDS、RUN 可调）
-make ai-test             # ai-core / ai-model / ai-train 测试
-make ai-check            # 训练 feature 的 cargo check
+make ai-test             # ai-core / ai-model / ai-train 测试（开启 train feature）
+make ai-check            # format + clippy（开启 train feature，警告即错误）
 ```
 
 参数：
@@ -51,6 +51,8 @@ make ai-check            # 训练 feature 的 cargo check
 | `RUN` | 空 | `ai-eval --run <dir>`，把评测指向某个检查点目录 |
 
 阶段顺序固定：C0 产出的 `pairs.jsonl` 与 `weights.json` 是 C1 的输入，C1 的 `weights.json` 是 C2 的演员初始化；C2 缺 C1 权重时允许从随机初始化开始（冒烟用）。
+
+训练代码全部在 `train` feature 后，`cargo test --workspace` 与 `make lint` 默认不编译它们；`make check` 额外并行跑 `ai-test` 与 `ai-check`，`make check-core` 不跑（基础门禁保持轻量）。
 
 ## 4. 产物
 

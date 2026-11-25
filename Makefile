@@ -36,7 +36,8 @@ check-core:
 		"$(MAKE) --no-print-directory lint" \
 		"$(MAKE) --no-print-directory sim-determinism"
 
-# 全量验收：协议生成物、文档数据、测试、静态检查与确定性。
+# 全量验收：协议生成物、文档数据、测试、静态检查与确定性，外加训练 feature
+# 下的 AI 测试与静态检查（默认 workspace 目标不编译训练代码）。
 # e2e 由 `make test` 的 `cargo test --workspace` 覆盖，不在此单独再跑：
 # 那会用真实 WebSocket 起 8 个 bot 跑两次。
 check:
@@ -46,4 +47,6 @@ check:
 		"$(MAKE) --no-print-directory data-check" \
 		"$(MAKE) --no-print-directory test" \
 		"$(MAKE) --no-print-directory lint" \
+		"$(MAKE) --no-print-directory ai-test" \
+		"$(MAKE) --no-print-directory ai-check" \
 		"$(MAKE) --no-print-directory sim-determinism"
