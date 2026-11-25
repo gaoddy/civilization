@@ -50,10 +50,11 @@ pub(crate) fn hero_power_targets(
     (true, engine.target_candidates(state, &effects, &ctx, false))
 }
 
-/// 手牌是否需要目标，以及当前合法目标；效果牌按出牌时机计算。
+/// 手牌是否需要目标，以及当前合法目标。
 ///
-/// 与 `play_card` 的预检同源：除牌自身 `OnPlayEffect` 的目标要求外，打出效果牌
-/// 还会触发本座位随从的 `OnUse` 响应，响应需要目标时也必须一并给出。
+/// 与出牌预检同源：牌自身声明了单一目标选择器，或预检（含 `OnUse` 响应）在
+/// 未指定目标时因缺目标而失败，都算需要目标；候选按预检口径计算，因此候选
+/// 为空时该牌不可打出。
 pub(crate) fn hand_card_targets(
     engine: &Engine,
     state: &GameState,
@@ -61,11 +62,6 @@ pub(crate) fn hand_card_targets(
     hand_card: &crate::state::HandCard,
 ) -> (bool, Vec<TargetRef>) {
     if hand_card.minion().is_some() {
-        return (false, Vec::new());
-    }
-    // 与出牌预检同一口径：只看效果是否声明了单一目标选择器。
-    let requires_target = engine.requires_target(hand_card.card_id(), Trigger::OnPlayEffect);
-    if !requires_target {
         return (false, Vec::new());
     }
     let ctx = EffectCtx {
@@ -77,6 +73,14 @@ pub(crate) fn hand_card_targets(
         level_override: hand_card.reward_level(),
     };
     let effects = engine.effects_of(hand_card.card_id(), Trigger::OnPlayEffect);
+    // 需要目标有两种来源：牌自身声明了单一目标选择器，或出牌预检（含 OnUse 响应）
+    // 在未指定目标时因缺目标而失败。两者任一成立，玩家都必须先选目标。
+    let declared = engine.requires_target(hand_card.card_id(), Trigger::OnPlayEffect);
+    let blocked_without_target = engine.check_targets(state, &effects, &ctx, false).is_err()
+        || engine.check_on_use_targets(state, &ctx).is_err();
+    if !declared && !blocked_without_target {
+        return (false, Vec::new());
+    }
     (true, engine.target_candidates(state, &effects, &ctx, true))
 }
 
