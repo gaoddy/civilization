@@ -114,3 +114,33 @@ fn observation_layout_is_stable() {
     // 金样本：字段顺序或归一化常数一改，这里必然失败。
     assert_eq!(fnv(&values), 0x4dd7_7eda_1aba_56eb);
 }
+
+/// 观测只能来自公开信息：改动其它座位的手牌与金币后，同一个座位的观测必须不变。
+#[test]
+fn observation_ignores_hidden_state_of_other_seats() {
+    use rule_engine::state::{HandCard, MinionInstance};
+
+    let (engine, state, catalog) = started();
+    let encoder = Encoder::new(CardIndex::build(&catalog));
+    let history = History::new();
+    let before = encoder.encode(&view(&engine, &state, 0).expect("视图"), &history);
+
+    let mut mutated = state.clone();
+    let other = usize::from(3u8);
+    let card = catalog
+        .cards
+        .values()
+        .find(|card| card.in_shop_pool)
+        .expect("卡表应有可购买卡")
+        .id
+        .clone();
+    mutated.players[other]
+        .hand
+        .push(HandCard::Minion(MinionInstance::new(
+            &catalog, 90_001, &card, false,
+        )));
+    mutated.players[other].gold = 99;
+    let after = encoder.encode(&view(&engine, &mutated, 0).expect("视图"), &history);
+
+    assert_eq!(before, after, "座位 0 的观测不应看到座位 3 的隐藏状态");
+}

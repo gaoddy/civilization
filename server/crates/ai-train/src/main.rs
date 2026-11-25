@@ -382,10 +382,14 @@ fn train_c1(_args: &[String]) -> Result<(), String> {
     Err("train-c1 需要 --features train".to_string())
 }
 
-/// 从棋盘对里取冻结的对手分布：按顺序交替取两侧棋盘，去重英雄无关的重复。
+/// 从棋盘对里取冻结的对手分布：按顺序交替取两侧棋盘，跳过重复棋盘。
+///
+/// 重复按「玩法 + 随从集合（卡、金币色、当前攻血）」判定：只在英雄或实例编号上
+/// 不同的棋盘算同一份对手，取先出现的那一份。
 #[cfg(feature = "train")]
 fn distribution_boards(pairs: &[BoardPair], wanted: usize) -> Vec<BoardSample> {
     let mut boards = Vec::with_capacity(wanted);
+    let mut seen = std::collections::BTreeSet::new();
     for (index, pair) in pairs.iter().enumerate() {
         if boards.len() >= wanted {
             break;
@@ -394,9 +398,31 @@ fn distribution_boards(pairs: &[BoardPair], wanted: usize) -> Vec<BoardSample> {
         if sample.board.is_empty() {
             continue;
         }
+        if !seen.insert(board_key(sample)) {
+            continue;
+        }
         boards.push(sample.clone());
     }
     boards
+}
+
+/// 去重键：玩法掩码与排序后的随从 `(卡, 金币色, 攻击, 生命)`；实例编号不参与。
+#[cfg(feature = "train")]
+fn board_key(sample: &BoardSample) -> (u16, Vec<(String, bool, i32, i32)>) {
+    let mut minions: Vec<(String, bool, i32, i32)> = sample
+        .board
+        .iter()
+        .map(|minion| {
+            (
+                minion.card_id.clone(),
+                minion.golden,
+                minion.attack(),
+                minion.health(),
+            )
+        })
+        .collect();
+    minions.sort();
+    (sample.playstyles, minions)
 }
 
 #[cfg(feature = "train")]
@@ -643,4 +669,69 @@ fn eval(args: &[String]) -> Result<(), String> {
     .map_err(|error| format!("写入失败：{error}"))?;
     println!("最佳检查点：{}", best_path.display());
     Ok(())
+}
+
+#[cfg(all(test, feature = "train"))]
+mod tests {
+    use super::*;
+    use rule_engine::data::Catalog;
+    use rule_engine::state::MinionInstance;
+
+    fn catalog() -> Catalog {
+        Catalog::from_json(
+            include_str!("../../../data/v0.1/cards.json"),
+            include_str!("../../../data/v0.1/heroes.json"),
+            include_str!("../../../data/v0.1/skills.json"),
+            include_str!("../../../data/v0.1/config.json"),
+            include_str!("../../../data/v0.1/taxonomy.json"),
+        )
+        .expect("卡表")
+    }
+
+    /// 造一份棋盘：实例编号从 `first_instance` 起，英雄与实例编号都不参与去重。
+    fn board(catalog: &Catalog, hero: &str, cards: &[&str], first_instance: u64) -> BoardSample {
+        BoardSample {
+            hero: hero.to_string(),
+            playstyles: 0,
+            board: cards
+                .iter()
+                .enumerate()
+                .map(|(index, card)| {
+                    MinionInstance::new(catalog, first_instance + index as u64, card, false)
+                })
+                .collect(),
+        }
+    }
+
+    fn pair(a: BoardSample, b: BoardSample) -> BoardPair {
+        BoardPair { a, b, a_wins: true }
+    }
+
+    /// 只在英雄与实例编号上不同的棋盘算重复；顺序保持「先到先得」，取满即止。
+    #[test]
+    fn distribution_boards_dedupes_boards_differing_only_in_hero_and_instances() {
+        let catalog = catalog();
+        let x = board(&catalog, "hero-a", &["adam-smith", "agi"], 1);
+        let dup = board(&catalog, "hero-b", &["adam-smith", "agi"], 101);
+        let z = board(&catalog, "hero-c", &["airplane"], 200);
+        let q = board(&catalog, "hero-d", &["alan-turing"], 300);
+        let pairs = vec![
+            pair(x.clone(), z.clone()),
+            pair(board(&catalog, "hero-e", &["albatross"], 400), q.clone()),
+            pair(dup, board(&catalog, "hero-g", &["ammonite-token"], 500)),
+            pair(
+                board(&catalog, "hero-h", &["amoeba"], 600),
+                board(&catalog, "hero-f", &["ammonite"], 700),
+            ),
+        ];
+
+        let boards = distribution_boards(&pairs, 10);
+        let heroes: Vec<&str> = boards.iter().map(|board| board.hero.as_str()).collect();
+        assert_eq!(
+            heroes,
+            vec!["hero-a", "hero-d", "hero-f"],
+            "重复棋盘（仅英雄与实例编号不同）应被跳过"
+        );
+        assert_eq!(distribution_boards(&pairs, 2).len(), 2, "取满即止");
+    }
 }

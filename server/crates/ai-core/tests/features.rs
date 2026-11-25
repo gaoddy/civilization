@@ -155,3 +155,57 @@ fn discover_candidates_carry_their_card_index() {
         );
     }
 }
+
+/// 位置与选项特征都按各自的合法上界归一化：最大合法取值恒为 1.0，
+/// 发现/进化的候选数不同也不能让特征尺度漂移。
+#[test]
+fn position_and_choice_features_reach_one_at_the_last_legal_value() {
+    use ai_core::features::{BOARD_POSITION_DIVISOR, FEATURE_CHOICE, FEATURE_POSITION};
+
+    let last_position = Action::PlayCard {
+        hand: 0,
+        position: Some(BOARD_POSITION_DIVISOR as u8),
+        target: None,
+    };
+    let features = ActionFeatures::of(&last_position);
+    assert_eq!(
+        features.values[FEATURE_POSITION], 1.0,
+        "最后一个合法插入点应为 1.0"
+    );
+
+    let catalog = catalog();
+    let engine = Engine::from_catalog(catalog.clone());
+    let mut state = engine.initial_state([0; 32], playstyles::draw(0));
+    engine
+        .start_game(&mut state, &heroes(&catalog))
+        .expect("开局");
+    let index = CardIndex::build(&catalog);
+
+    for count in [3usize, 4] {
+        let candidates: Vec<String> = catalog
+            .cards
+            .values()
+            .filter(|card| card.in_shop_pool)
+            .take(count)
+            .map(|card| card.id.clone())
+            .collect();
+        state.pending.clear();
+        state.pending.push_back(PendingChoice::Discover {
+            seat: 0,
+            candidates,
+            source: count as u64,
+        });
+        let last = ActionFeatures::from_action(
+            &Action::ChooseDiscover {
+                choice: (count - 1) as u8,
+            },
+            &state,
+            0,
+            &index,
+        );
+        assert_eq!(
+            last.values[FEATURE_CHOICE], 1.0,
+            "候选数 {count} 时最后一个选项应为 1.0"
+        );
+    }
+}

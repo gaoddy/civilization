@@ -83,6 +83,8 @@ pub struct C2Config {
     pub checkpoint_every: usize,
     /// 对局种子池；按对局序号循环取用。
     pub seeds: Range<u64>,
+    /// 单局最多推进的决策数；超过视为截断，该局不计入名次与回报。
+    pub max_steps_per_episode: usize,
     pub episodes: usize,
     pub batch_episodes: usize,
     pub model: ModelConfig,
@@ -99,6 +101,7 @@ impl Default for C2Config {
             checkpoint_dir: None,
             checkpoint_every: 0,
             seeds: 0..10_000,
+            max_steps_per_episode: EPISODE_GUARD,
             episodes: 1000,
             batch_episodes: 8,
             model: ModelConfig {
@@ -121,6 +124,8 @@ pub struct C2Output {
     pub mean_placement: f32,
     pub mean_return: f32,
     pub snapshots: usize,
+    /// 被步数上限截断、未跑完的对局数；这些局不计入 `mean_placement` 与 `mean_return`。
+    pub truncated_episodes: usize,
     pub last_metrics: Metrics,
 }
 
@@ -336,6 +341,7 @@ fn run_c1_episode(
 type LearnerSample = (Observation, usize, Vec<bool>, f32, f32, Vec<ActionFeatures>);
 
 /// 跑一局 C2 完整对局，学习者座位轮换，其余座位按联盟对手出招。
+#[allow(clippy::too_many_arguments)]
 fn run_c2_episode(
     catalog: &Catalog,
     env: &mut FullEnv,
@@ -344,6 +350,7 @@ fn run_c2_episode(
     seed: u64,
     rng: &mut RandomPolicy,
     batch: &mut Batch,
+    max_steps: usize,
 ) -> Result<(f32, Option<u8>), C2Error> {
     let candidates = allocate_candidates(seed, &playstyles::draw(seed), catalog);
     env.reset(seed, &candidates)?;
@@ -365,7 +372,7 @@ fn run_c2_episode(
     // 学习者最后一次采样；若对局在别人手里结束，要用它补一条终局 transition。
     let mut learner_sample: Option<LearnerSample> = None;
     let mut learner_recorded_done = false;
-    while !env.is_done() && steps < EPISODE_GUARD {
+    while !env.is_done() && steps < max_steps {
         let Some(seat) = env.current_seat() else {
             break;
         };
@@ -522,6 +529,7 @@ pub fn train_c2(
     let mut placements = Vec::new();
     let mut episodes = 0usize;
     let mut updates = 0usize;
+    let mut truncated_episodes = 0usize;
     let mut last_metrics = Metrics {
         policy_loss: 0.0,
         value_loss: 0.0,
@@ -533,28 +541,48 @@ pub fn train_c2(
         let wanted = cfg.batch_episodes.min(cfg.episodes - episodes);
         for _ in 0..wanted {
             let seed = cfg.seeds.start + (episodes as u64 % span);
-            let episode_return = match mix.pick() {
-                EnvMix::C1 => run_c1_episode(
-                    &mut c1_env,
-                    &mut model,
-                    distribution,
-                    &heroes,
-                    episodes,
-                    seed,
-                    &mut rng,
-                    &mut batch,
-                )?,
+            let (episode_return, completed) = match mix.pick() {
+                EnvMix::C1 => (
+                    run_c1_episode(
+                        &mut c1_env,
+                        &mut model,
+                        distribution,
+                        &heroes,
+                        episodes,
+                        seed,
+                        &mut rng,
+                        &mut batch,
+                    )?,
+                    true,
+                ),
                 EnvMix::C2 => {
                     let (episode_return, placement) = run_c2_episode(
-                        catalog, &mut env, &mut model, episodes, seed, &mut rng, &mut batch,
+                        catalog,
+                        &mut env,
+                        &mut model,
+                        episodes,
+                        seed,
+                        &mut rng,
+                        &mut batch,
+                        cfg.max_steps_per_episode,
                     )?;
-                    if let Some(place) = placement {
-                        placements.push(f32::from(place));
+                    match placement {
+                        Some(place) => {
+                            placements.push(f32::from(place));
+                            (episode_return, true)
+                        }
+                        // 截断局没有名次，也没有终点奖励：回报与名次都不计入均值，
+                        // 只记数，避免统计被半局样本拉低。
+                        None => {
+                            truncated_episodes += 1;
+                            (0.0, false)
+                        }
                     }
-                    episode_return
                 }
             };
-            returns.push(episode_return);
+            if completed {
+                returns.push(episode_return);
+            }
             episodes += 1;
         }
         if !batch.is_empty() {
@@ -588,6 +616,7 @@ pub fn train_c2(
         mean_placement: mean(&placements),
         mean_return: mean(&returns),
         snapshots: env.league().snapshots().len(),
+        truncated_episodes,
         last_metrics,
     })
 }
@@ -648,6 +677,25 @@ mod tests {
         }
     }
 
+    /// 步数上限把对局截断时，该局只记数，不进入名次与回报均值。
+    #[test]
+    fn truncated_episodes_are_counted_and_kept_out_of_the_means() {
+        let catalog = catalog();
+        let cfg = C2Config {
+            seeds: 0..4,
+            episodes: 4,
+            batch_episodes: 2,
+            c1_mix: 0.0,
+            max_steps_per_episode: 1,
+            ..C2Config::default()
+        };
+        let output = train_c2(&catalog, &[], None, None, &cfg).expect("训练应能跑完");
+        assert_eq!(output.episodes, 4);
+        assert_eq!(output.truncated_episodes, 4, "每局都应在上限处被截断");
+        assert_eq!(output.mean_placement, 0.0, "截断局没有名次");
+        assert_eq!(output.mean_return, 0.0, "截断局回报不计入均值");
+    }
+
     /// 学习者不是最后行动者时，也必须恰有一条带名次奖励的终局 transition，
     /// 否则 GAE 会跨局 bootstrap，名次目标根本不进入损失。
     #[test]
@@ -679,6 +727,7 @@ mod tests {
                 episode as u64,
                 &mut rng,
                 &mut batch,
+                cfg.max_steps_per_episode,
             )
             .expect("对局应能跑完");
             let dones: Vec<usize> = batch

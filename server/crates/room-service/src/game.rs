@@ -322,7 +322,8 @@ pub fn bot_policy_from_env(catalog: &Catalog) -> Box<dyn bot_ai::Policy + Send +
     let mode = std::env::var("BOT_POLICY").unwrap_or_else(|_| "heuristic".to_string());
     if mode == "neural" {
         let dir = std::env::var("BOT_MODEL_DIR").unwrap_or_else(|_| "output/models/c2".to_string());
-        match bot_ai::neural::NeuralPolicy::load(Path::new(&dir), catalog) {
+        // 进程级共享：同一权重目录只读一次，后续对局复用同一份只读策略。
+        match bot_ai::neural::NeuralPolicy::load_shared(Path::new(&dir), catalog) {
             Ok(policy) => return Box::new(policy),
             Err(error) => println!("room-service: 神经策略加载失败 dir={dir}: {error}；回退启发式"),
         }

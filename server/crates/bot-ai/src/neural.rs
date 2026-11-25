@@ -3,7 +3,9 @@
 //! 不依赖 candle：训练产物是扁平 `f32` 权重，推理走 [`ai_model::forward`]。
 //! 任何推理失败或候选为空都返回 `None`，由调用方回退启发式策略。
 
-use std::path::Path;
+use std::collections::HashMap;
+use std::path::{Path, PathBuf};
+use std::sync::{Arc, Mutex, OnceLock};
 
 use ai_core::{Action, ActionFeatures, CardIndex, Encoder, History};
 use ai_model::{ModelConfig, ModelError, Weights, forward};
@@ -43,6 +45,9 @@ impl From<ModelError> for PolicyError {
         Self::Model(error)
     }
 }
+
+/// 进程级共享缓存：键为（权重目录，卡表指纹）。
+type SharedCache = Mutex<HashMap<(PathBuf, String), Arc<NeuralPolicy>>>;
 
 /// 由训练产物驱动的策略。
 pub struct NeuralPolicy {
@@ -87,6 +92,36 @@ impl NeuralPolicy {
         verify_catalog_hash(dir, catalog)?;
         let weights = Weights::load(&dir.join("weights.json"))?;
         Self::from_weights(weights, catalog)
+    }
+
+    /// 进程级共享加载：同一（目录，卡表指纹）只读一次权重，之后复用同一实例。
+    ///
+    /// 缓存不失效：换了权重文件需要重启进程才会重读。进程内的所有对局共用
+    /// 一份只读策略，避免每个 `GameTask` 各加载一次。
+    pub fn load_shared(dir: &Path, catalog: &Catalog) -> Result<Arc<Self>, PolicyError> {
+        static CACHE: OnceLock<SharedCache> = OnceLock::new();
+        let key = (dir.to_path_buf(), ai_core::catalog_hash(catalog));
+        let cache = CACHE.get_or_init(|| Mutex::new(HashMap::new()));
+        let mut guard = cache.lock().expect("神经策略缓存锁");
+        if let Some(policy) = guard.get(&key) {
+            return Ok(policy.clone());
+        }
+        let policy = Arc::new(Self::load(dir, catalog)?);
+        guard.insert(key, policy.clone());
+        Ok(policy)
+    }
+}
+
+/// 共享实例也能直接当策略用（`GameTask` 持有 `Box<dyn Policy>`）。
+impl Policy for Arc<NeuralPolicy> {
+    fn plan(
+        &self,
+        state: &GameState,
+        seat: Seat,
+        engine: &Engine,
+        blocked: &[Intent],
+    ) -> Option<Intent> {
+        Policy::plan(self.as_ref(), state, seat, engine, blocked)
     }
 }
 

@@ -44,6 +44,8 @@ pub struct EvalConfig {
     pub anchors: Vec<Anchor>,
     /// 每座位每回合的决策上限；超过后强制结束回合（贪心策略会原地打转）。
     pub max_decisions_per_turn: usize,
+    /// 单局最多推进的决策数；超过视为截断，该局跳过并计入 `truncated`。
+    pub max_steps_per_game: usize,
 }
 
 impl Default for EvalConfig {
@@ -53,6 +55,7 @@ impl Default for EvalConfig {
             learner_seats: SEAT_COUNT,
             anchors: Vec::new(),
             max_decisions_per_turn: DECISIONS_PER_TURN,
+            max_steps_per_game: GUARD,
         }
     }
 }
@@ -76,6 +79,8 @@ pub struct EvalReport {
     pub anchor_wins: usize,
     /// 名次劣于同桌锚点均值的局数。
     pub anchor_losses: usize,
+    /// 被步数上限截断、未计入统计的局数。
+    pub truncated: usize,
 }
 
 /// 评测错误。
@@ -186,6 +191,7 @@ pub fn eval_full(
     let mut anchor_means = Vec::with_capacity(cfg.seeds.len());
     let mut anchor_wins = 0usize;
     let mut anchor_losses = 0usize;
+    let mut truncated = 0usize;
 
     for (seed_index, seed) in cfg.seeds.iter().copied().enumerate() {
         let learner = (seed_index % cfg.learner_seats) as Seat;
@@ -197,7 +203,7 @@ pub fn eval_full(
         let mut turn = env.turn();
         let mut per_turn = vec![0usize; PLAYER_COUNT];
         let mut steps = 0usize;
-        while steps < GUARD {
+        while steps < cfg.max_steps_per_game {
             let Some(seat) = env.current_seat() else {
                 break;
             };
@@ -247,9 +253,11 @@ pub fn eval_full(
             per_turn[index] += 1;
         }
 
-        let placement = env
-            .placement(learner)
-            .ok_or_else(|| EvalError::NoData(format!("种子 {seed} 的对局没有结束")))?;
+        // 截断局没有名次：跳过该局并计数，不让一局异常把整批评测打掉。
+        let Some(placement) = env.placement(learner) else {
+            truncated += 1;
+            continue;
+        };
         placements.push(f32::from(placement));
         let anchor_placements: Vec<f32> = (0..PLAYER_COUNT as Seat)
             .filter(|seat| *seat != learner)
@@ -269,7 +277,18 @@ pub fn eval_full(
         }
     }
 
-    Ok(report(placements, anchor_means, anchor_wins, anchor_losses))
+    if placements.is_empty() {
+        return Err(EvalError::NoData(format!(
+            "评测对局全部被截断（{truncated} 局），请提高 max_steps_per_game"
+        )));
+    }
+    Ok(report(
+        placements,
+        anchor_means,
+        anchor_wins,
+        anchor_losses,
+        truncated,
+    ))
 }
 
 fn argmax(logits: &[f32]) -> usize {
@@ -302,6 +321,7 @@ fn report(
     anchor_means: Vec<f32>,
     anchor_wins: usize,
     anchor_losses: usize,
+    truncated: usize,
 ) -> EvalReport {
     let games = placements.len();
     let mean = placements.iter().sum::<f32>() / games as f32;
@@ -336,5 +356,6 @@ fn report(
         advantage_ci95: half_ci95(&diffs),
         anchor_wins,
         anchor_losses,
+        truncated,
     }
 }

@@ -56,6 +56,9 @@ pub enum Action {
 }
 
 impl Action {
+    /// 选英雄的类别编号；选英雄走独立头（设计 D2），训练与推理都按它分派。
+    pub const PICK_HERO_KIND: u8 = 14;
+
     /// 动作类别编号，供候选特征的 one-hot 使用。
     pub fn kind_index(&self) -> u8 {
         match self {
@@ -73,7 +76,7 @@ impl Action {
             Self::ChooseDiscover { .. } => 11,
             Self::ChooseTarget { .. } => 12,
             Self::AbandonTarget => 13,
-            Self::PickHero { .. } => 14,
+            Self::PickHero { .. } => Self::PICK_HERO_KIND,
         }
     }
 
