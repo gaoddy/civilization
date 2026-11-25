@@ -209,6 +209,8 @@ dependencies = [
 name = "bot-ai"
 version = "0.1.0"
 dependencies = [
+ "ai-core",
+ "ai-model",
  "rule-engine",
 ]
 
