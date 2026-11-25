@@ -39,4 +39,4 @@
 
 - 对局页：[game.md](../pages/game.md)
 - 通用交互：[interactions.md](../interactions.md) §3.1
-- 客户端技术现状：[client.md](../../../technical/client.md)
+- 客户端技术现状：[client.md](../../../technical/client/client.md)

@@ -312,7 +312,7 @@ client-export-platform-check:
 _client-export-invalid:
 	@exit 2
 
-# 未签名 Universal .app 与 zip 产物。Gatekeeper 放行方式见 docs/current/technical/client.md。
+# 未签名 Universal .app 与 zip 产物。Gatekeeper 放行方式见 docs/current/technical/client/client.md。
 # 命中戳记时直接复用同名产物；戳记先写产物清单，再嵌进 .app 的 Resources，最后打包 zip。
 _client-export-macos: client-env-check client-export-templates client-import
 	@[ "$$(uname -s)" = "Darwin" ] || { echo "client-export PLATFORM=macos 仅支持 macOS（当前 $$(uname -s)）" >&2; exit 1; }

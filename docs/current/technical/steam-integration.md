@@ -1,7 +1,7 @@
 # Steam 接入
 
 > 状态：已实现（Steam 契约与适配、6 个成就运行时）；签名/公证/上传与真实验票待外部配置
-> 关联：[发行渠道与账号](../product/accounts-and-distribution.md)、[Godot 客户端](client.md)、[房间服务与联网](room-service/README.md)、[部署与接入](deployment/README.md)
+> 关联：[发行渠道与账号](../product/accounts-and-distribution.md)、[Godot 客户端](client/client.md)、[房间服务与联网](room-service/README.md)、[部署与接入](deployment/README.md)
 
 本文记录 Steam 渠道在客户端、协议、服务端与构建发布上的落点、边界和验证方式。
 

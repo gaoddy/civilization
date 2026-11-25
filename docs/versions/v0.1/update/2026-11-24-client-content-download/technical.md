@@ -65,7 +65,7 @@
 
 ## 文档
 
-- `docs/current/technical/client.md`：`CardDB` 数据来源、缓存与状态。
+- `docs/current/technical/client/client.md`：`CardDB` 数据来源、缓存与状态。
 - `docs/current/product/ui/pages/gallery.md`：图鉴数据来源与加载/失败态。
 - `docs/current/technical/rule-engine-and-simulator.md`：客户端生成物位置。
 - `AGENTS.md`：卡牌数据生成物位置。

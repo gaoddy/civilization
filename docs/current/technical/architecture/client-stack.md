@@ -2,7 +2,7 @@
 
 > 状态：已实现（v0.1 M1b）
 > 依赖：[设计总纲](../../product/overview/design-overview.md)（§8）、[联网与技术架构](network-architecture.md)
-> 实现现状：[Godot 客户端](../client.md)
+> 实现现状：[Godot 客户端](../client/client.md)
 
 本文记录 v0.1 客户端已确定的技术选型与运行边界；不描述服务端选型、页面布局与具体实现。未确定事项见[待确认事项](../../../versions/v0.1/open-questions.md)。
 
@@ -31,12 +31,12 @@
 
 - 工程目录：`client/`，Godot 4.7.2，GDScript；主场景 `client/scenes/login.tscn`。
 - 测试：`make client-smoke` 无头实例化五个场景；`tests/test_client_boundary.py` 断言客户端不引用规则实现；`make client-e2e` 用 1 个无头客户端 + 7 个 `sim bot` 打完一局。
-- 构建与导出：本机运行与 macOS 桌面端导出均已落地，命令与产物见[Godot 客户端](../client.md) §4 与 §8。
+- 构建与导出：本机运行与 macOS 桌面端导出均已落地，命令与产物见[Godot 客户端](../client/client.md) §4 与 §8。
 - 未确定事项见[待确认事项](../../../versions/v0.1/open-questions.md)。
 
 ## 相关文档
 
-- [Godot 客户端](../client.md)
+- [Godot 客户端](../client/client.md)
 - [服务端技术基线](server-stack.md)
 - [联网与技术架构](network-architecture.md)
 - [设计总纲](../../product/overview/design-overview.md)

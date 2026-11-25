@@ -9,7 +9,7 @@
 ## 1. 视觉语言
 
 - 深色酒馆基调：近黑的背景、分层卡片、金色强调，状态色只表达结果（成功、危险、信息）。
-- 资源约束：工程没有字体与主题资源文件，界面由 Godot 内置控件与 `StyleBoxFlat` 构建；位图资源只有卡牌立绘、头像、卡面、页面背景与大厅图（所有页面共用的软件背景 `assets/ui/bg/bg_main.png`；对局页另有挂在 `PageBody.PageSurface`、按真实控件矩形构图的分区背景 `bg_game_desktop.png` / `bg_game_phone.png`；大厅左栏另有按 cover 裁切的 `assets/ui/lobby/lobby_hall.png`），清单与回退规则见 [client.md](../../technical/client.md#10-美术素材层)。英雄「头像」无素材时仍是玩法色块加名字首字的排版块。
+- 资源约束：工程没有字体与主题资源文件，界面由 Godot 内置控件与 `StyleBoxFlat` 构建；位图资源只有卡牌立绘、头像、卡面、页面背景与大厅图，槽位、尺寸、使用组件与回退规则见[纹理登记册](../../technical/client/textures.md)。英雄「头像」无素材时仍是玩法色块加名字首字的排版块。
 - 代码绘制：卡框（`CardFrame`）、顶部星级、时代象形（`EraGlyph`）与攻防底牌（`StatPlate`）由代码绘制，不占位图；入口见第 4 节组件表。稀有度不是展示维度，卡面以 `level` 的 1–7 星表达成长档位。
 - 深浅色：只有深色一套，不实现浅色主题与主题切换，UI 评审不做浅色检查。
 
@@ -26,7 +26,7 @@
 | `client/ui/avatar.gd`、`hp_bar.gd`、`rank_badge.gd`、`skill_list.gd` | 单组件：头像块、血量条、名次角标、技能列表 |
 | `client/ui/selectable_box.gd`（`SelectableBox`） | 可选项框：内容容器、常态 / 悬停 / 选中描边与框内点击；见 [components/selectable-box.md](components/selectable-box.md) |
 | `client/ui/icons.gd`（`Icons`） | 代码绘制的矢量图标；清单与绘制约定见 [icons.md](icons.md) |
-| `client/text/zh_CN.csv` | 唯一的运行时中文文本表：卡牌与技能名称、效果、枚举展示、错误与页面文案；来源与取用规则见 [client.md](../../technical/client.md)「国际化与文本表」 |
+| `client/text/zh_CN.csv` | 唯一的运行时中文文本表：卡牌与技能名称、效果、枚举展示、错误与页面文案；来源与取用规则见 [client.md](../../technical/client/client.md)「国际化与文本表」 |
 
 - 页面通过 `UIControls` 等共享构件与 `UITheme.metric` 取值，不直接写颜色、字号、间距与圆角。
 - `UITheme` 的原子层与语义层按刻度扩展，不因单个页面新增。

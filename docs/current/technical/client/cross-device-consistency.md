@@ -1,7 +1,7 @@
 # 跨设备一致性设计
 
 > 状态：已实现
-> 关联：[移动端适配](../product/ui/mobile-adaptation.md)、[客户端技术现状](client.md) §9、[v0.1 验收](../../versions/v0.1/acceptance.md) §3
+> 关联：[移动端适配](../../product/ui/mobile-adaptation.md)、[客户端技术现状](client.md) §9、[v0.1 验收](../../../versions/v0.1/acceptance.md) §3
 
 ## 设计目标
 
@@ -233,7 +233,7 @@ func _ready() -> void:
 - **iPad 真机**：1280×720 基准，图鉴按可用宽度分列（基准 9 列）
 - **全触控完成一局**：8 人房间招募、战斗、结算走完，不依赖鼠标
 
-验收记录见 [v0.1 验收](../../versions/v0.1/acceptance.md) §3。
+验收记录见 [v0.1 验收](../../../versions/v0.1/acceptance.md) §3。
 
 ## 窗口策略
 
@@ -265,7 +265,7 @@ make client-run WIDTH=1280 HEIGHT=800                # 只模拟 16:10 窗口尺
 - **iPhone**：逻辑视口 ~1920×878（19.5:9），内容框 16:9 居中，左右各约 9% 背景
 - **iPad**：逻辑视口 ~2048×1536（4:3），内容框 16:9 居中，上下各 12.5% 背景
 
-只做横屏，竖屏移出范围（见[移动端适配](../product/ui/mobile-adaptation.md) §1）。
+只做横屏，竖屏移出范围（见[移动端适配](../../product/ui/mobile-adaptation.md) §1）。
 
 ## 安全区处理
 
@@ -412,6 +412,6 @@ make client-run WIDTH=1280 HEIGHT=800
 
 ## 相关文档
 
-- [移动端适配](../product/ui/mobile-adaptation.md)：产品层面的适配规则
+- [移动端适配](../../product/ui/mobile-adaptation.md)：产品层面的适配规则
 - [客户端技术现状](client.md) §9：移动端适配实现
-- [v0.1 验收](../../versions/v0.1/acceptance.md) §3：iOS 适配验收记录
+- [v0.1 验收](../../../versions/v0.1/acceptance.md) §3：iOS 适配验收记录

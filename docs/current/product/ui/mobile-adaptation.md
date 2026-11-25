@@ -1,7 +1,7 @@
 # 移动端适配（iOS）
 
 > 状态：已实现
-> 代码：`client/autoload/screen_profile.gd`、`client/ui/safe_area.gd`；实现细节见[客户端技术现状](../../technical/client.md) §9
+> 代码：`client/autoload/screen_profile.gd`、`client/ui/safe_area.gd`；实现细节见[客户端技术现状](../../technical/client/client.md) §9
 
 本文记录 iOS 端（iPhone 与 iPad）已实现的产品表现：屏幕方向、缩放基准、触控映射、安全区与命中尺寸。桌面端规则见[交互约定](interactions.md)，不在此重复。
 
@@ -69,4 +69,4 @@
 - [交互约定](interactions.md)
 - [对局页](pages/game.md)
 - [图鉴页](pages/gallery.md)
-- [客户端技术现状](../../technical/client.md)
+- [客户端技术现状](../../technical/client/client.md)

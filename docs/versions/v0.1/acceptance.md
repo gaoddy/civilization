@@ -25,7 +25,7 @@ cd server && cargo test -p room-service --test reconnect
 
 ## 3. iOS 移动端适配
 
-适配规则见[移动端适配](../../current/product/ui/mobile-adaptation.md)，实现见[客户端技术现状](../../current/technical/client.md) §9。验收分自动化与真机两部分。
+适配规则见[移动端适配](../../current/product/ui/mobile-adaptation.md)，实现见[客户端技术现状](../../current/technical/client/client.md) §9。验收分自动化与真机两部分。
 
 ### 3.1 自动化（可复跑）
 

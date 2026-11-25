@@ -2,7 +2,7 @@
 
 > 状态：已实现（Android 导出、返回路由与设备判定；Android 真机对局未验证）
 > 依赖：[v0.1 客户端技术基线](../../../../current/technical/architecture/client-stack.md)、[联网与技术架构](../../../../current/technical/architecture/network-architecture.md)
-> 实现现状：[Godot 客户端](../../../../current/technical/client.md) §9 Android 端
+> 实现现状：[Godot 客户端](../../../../current/technical/client/client.md) §9 Android 端
 
 本文记录 v0.2 客户端相对 v0.1 的增量：Android 端适配与验收；不重复 v0.1 已确定的引擎、语言、协议与 iOS 适配。
 

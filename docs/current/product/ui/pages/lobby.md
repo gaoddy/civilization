@@ -178,4 +178,4 @@
 - 组件：[popup-layer.md](../components/popup-layer.md)、[button.md](../components/button.md)、[pill.md](../components/pill.md)
 - 房间等待区：[room.md](room.md)
 - 房间与邀请规则：[rooms-and-invites.md](../../systems/rooms-and-invites.md)
-- 美术素材：[client.md](../../../technical/client.md#10-美术素材层)
+- 美术素材：[纹理登记册](../../../technical/client/textures.md)

@@ -94,4 +94,4 @@
 - 对局页：[game.md](game.md)
 - 通用交互：[interactions.md](../interactions.md)
 - 组件：[button.md](../components/button.md)、[card-panel.md](../components/card-panel.md)
-- 客户端实现：[Godot 客户端](../../../technical/client.md)
+- 客户端实现：[Godot 客户端](../../../technical/client/client.md)

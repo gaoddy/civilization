@@ -38,5 +38,5 @@
 
 ## 关联文档
 
-- [Godot 客户端](../current/technical/client.md) §11
+- [Godot 客户端](../current/technical/client/client.md) §11
 - [对局页](../current/product/ui/pages/game.md) §8

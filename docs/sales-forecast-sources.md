@@ -244,7 +244,7 @@ Steam 硬件与软件调查，2026-10：
 | 结论 | 核对位置 |
 | --- | --- |
 | 432 张卡面、63 张立绘、44 个头像已存在 | `client/assets/cards/faces`、`client/assets/characters/` |
-| 卡面统一风格基线已定义 | `docs/current/technical/card-cover-art.md` |
+| 卡面统一风格基线已定义 | `docs/current/technical/client/card-cover-art.md` |
 | 机器人补位已实现且默认开启 | `protocol/schema/v1/messages.schema.json`（`botFill`）、`server/crates/room-service/src/room.rs`（`bot_fill: true`）、`prepare_start` |
 | 机器人只有一套策略、无难度分级 | `server/crates/sim/src/bot/brain.rs` |
 | UI 已接入 `tr()`，但只有 zh_CN | `client/` 内 115 个 `.gd` 文件；`client/text/zh_CN.zh_CN.translation` |
