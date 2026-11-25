@@ -4,7 +4,7 @@
 //! `EndRecruit` 后直接对采样棋盘模拟一场战斗。其余座位在开局前标记为出局，
 //! 商店与牌池只由学习座位消耗，等价于单人池。
 
-use ai_core::{Action, CardIndex, Encoder, History, Observation};
+use ai_core::{Action, ActionFeatures, CardIndex, Encoder, History, Observation};
 use ai_model::{ModelConfig, Weights, board_value};
 use rule_engine::combat::{self, CombatLog, CombatSetup};
 use rule_engine::data::Catalog;
@@ -162,6 +162,22 @@ impl RecruitEnv {
         legal_actions(&self.engine, &self.state, LEARNING_SEAT)
             .iter()
             .filter_map(Action::from_intent)
+            .collect()
+    }
+
+    /// 当前合法动作与各自的候选特征；训练与评测共用同一份打分输入。
+    pub fn action_candidates(&self) -> Vec<(Action, ActionFeatures)> {
+        self.legal()
+            .into_iter()
+            .map(|action| {
+                let features = ActionFeatures::from_action(
+                    &action,
+                    &self.state,
+                    LEARNING_SEAT,
+                    self.encoder.index(),
+                );
+                (action, features)
+            })
             .collect()
     }
 

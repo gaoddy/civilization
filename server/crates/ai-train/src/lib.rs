@@ -6,6 +6,7 @@
 pub mod data_c0;
 pub mod env;
 pub mod env_recruit;
+pub mod eval;
 #[cfg(feature = "train")]
 pub mod model;
 #[cfg(feature = "train")]
@@ -13,6 +14,8 @@ pub mod ppo;
 pub mod random_policy;
 #[cfg(feature = "train")]
 pub mod train_c0;
+#[cfg(feature = "train")]
+pub mod train_c1;
 
 /// 训练功能所在的 feature 名。
 pub const TRAIN_FEATURE: &str = "train";

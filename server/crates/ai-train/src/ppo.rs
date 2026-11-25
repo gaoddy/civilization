@@ -129,6 +129,56 @@ impl TrainModel {
         })
     }
 
+    /// 用权重文件里同名同形状的张量覆盖当前变量；其余张量保持不动。
+    ///
+    /// 用于把 C0 的主干与价值头、或上一个检查点的策略参数带进新网络。
+    /// 返回实际覆盖的张量数；形状不同的张量报错，避免静默半初始化。
+    pub fn load_matching(&mut self, weights: &Weights) -> candle_core::Result<usize> {
+        let device = Device::Cpu;
+        let mut loaded = 0usize;
+        {
+            let mut data = self.var_map.data().lock().expect("VarMap 锁");
+            for (name, values) in &weights.tensors {
+                let Some(var) = data.get_mut(name) else {
+                    continue;
+                };
+                let dims = var.as_tensor().dims().to_vec();
+                if var.as_tensor().elem_count() != values.len() {
+                    return Err(candle_core::Error::Msg(format!(
+                        "张量 {name} 形状 {dims:?} 与权重 {} 个元素不符",
+                        values.len()
+                    )));
+                }
+                var.set(&Tensor::from_vec(values.clone(), dims, &device)?)?;
+                loaded += 1;
+            }
+        }
+        self.rebuild()?;
+        Ok(loaded)
+    }
+
+    /// 变量被原地修改后重建模块引用（`Linear` 持有的是旧存储的克隆）。
+    fn rebuild(&mut self) -> candle_core::Result<()> {
+        let device = Device::Cpu;
+        let vb = VarBuilder::from_varmap(&self.var_map, DType::F32, &device);
+        let layers = build_layers(
+            vb,
+            &self.cfg,
+            self.card_count,
+            self.hero_count,
+            self.skill_count,
+        )?;
+        self.trunk = layers.trunk;
+        self.value_hidden = layers.value_hidden;
+        self.value_out = layers.value_out;
+        self.candidate_hidden = layers.candidate_hidden;
+        self.candidate_out = layers.candidate_out;
+        self.card = layers.card;
+        self.hero = layers.hero;
+        self.skill = layers.skill;
+        Ok(())
+    }
+
     pub fn config(&self) -> &ModelConfig {
         &self.cfg
     }

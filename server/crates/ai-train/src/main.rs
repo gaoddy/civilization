@@ -19,16 +19,32 @@ fn main() {
     let result = match args.first().map(String::as_str) {
         Some("data-c0") => data_c0(&args[1..]),
         Some("train-c0") => train_c0(&args[1..]),
+        Some("train-c1") => train_c1(&args[1..]),
         Some(other) => Err(format!("未知子命令：{other}")),
         None => Err("缺少子命令".to_string()),
     };
     if let Err(message) = result {
         eprintln!("{message}");
         eprintln!(
-            "用法：ai-train data-c0 --out <路径> [--games 2000] [--seed 0]\n      ai-train train-c0 [--pairs 路径] [--out-dir 目录] [--steps 20000] [--seed 0]"
+            "用法：ai-train data-c0 --out <路径> [--games 2000] [--seed 0]\n      ai-train train-c0 [--pairs 路径] [--out-dir 目录] [--steps 20000] [--seed 0]\n      ai-train train-c1 [--pairs 路径] [--c0 权重路径] [--out-dir 目录] [--episodes 200] [--distribution 200] [--seed 0]"
         );
         std::process::exit(2);
     }
+}
+
+/// 仓库根目录：`server/crates/ai-train` 往上三级。
+///
+/// 只在训练子命令里用到；`data-c0` 的产物路径由调用方显式给出。
+///
+/// `make` 目标在 `server/` 下执行，产物目录统一按仓库根解析，避免把
+/// `output/` 写到 `server/` 里。
+#[cfg(feature = "train")]
+fn repo_root() -> std::path::PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+        .ancestors()
+        .nth(3)
+        .expect("仓库根应存在")
+        .to_path_buf()
 }
 
 fn data_c0(args: &[String]) -> Result<(), String> {
@@ -201,8 +217,9 @@ fn train_c0(args: &[String]) -> Result<(), String> {
     use ai_train::model::C0Config;
     use ai_train::train_c0::{calibrate, read_pairs, split_pairs, train_c0 as train};
 
-    let mut pairs_path = Path::new("output/models/c0/pairs.jsonl").to_path_buf();
-    let mut out_dir = Path::new("output/models/c0").to_path_buf();
+    let root = repo_root();
+    let mut pairs_path = root.join("output/models/c0/pairs.jsonl");
+    let mut out_dir = root.join("output/models/c0");
     let mut steps = 20000usize;
     let mut seed = 0u64;
     let mut iter = args.iter();
@@ -275,4 +292,128 @@ fn train_c0(args: &[String]) -> Result<(), String> {
 #[cfg(not(feature = "train"))]
 fn train_c0(_args: &[String]) -> Result<(), String> {
     Err("train-c0 需要 --features train".to_string())
+}
+
+#[cfg(feature = "train")]
+fn train_c1(args: &[String]) -> Result<(), String> {
+    use ai_train::eval::eval_c1;
+    use ai_train::train_c1::{C1Config, train_c1 as train};
+
+    let root = repo_root();
+    let mut pairs_path = root.join("output/models/c0/pairs.jsonl");
+    let mut c0_path = root.join("output/models/c0/weights.json");
+    let mut out_dir = root.join("output/models/c1");
+    let mut episodes = 200usize;
+    let mut distribution = 200usize;
+    let mut seed = 0u64;
+    let mut iter = args.iter();
+    while let Some(flag) = iter.next() {
+        let value = iter
+            .next()
+            .ok_or_else(|| format!("{flag} 缺少取值"))?
+            .clone();
+        match flag.as_str() {
+            "--pairs" => pairs_path = value.into(),
+            "--c0" => c0_path = value.into(),
+            "--out-dir" => out_dir = value.into(),
+            "--episodes" => {
+                episodes = value
+                    .parse()
+                    .map_err(|_| format!("--episodes 不是整数：{value}"))?;
+            }
+            "--distribution" => {
+                distribution = value
+                    .parse()
+                    .map_err(|_| format!("--distribution 不是整数：{value}"))?;
+            }
+            "--seed" => {
+                seed = value
+                    .parse()
+                    .map_err(|_| format!("--seed 不是整数：{value}"))?;
+            }
+            other => return Err(format!("未知参数：{other}")),
+        }
+    }
+
+    let catalog = catalog();
+    let pairs =
+        ai_train::train_c0::read_pairs(&pairs_path, &catalog).map_err(|error| error.to_string())?;
+    let c0 = ai_model::Weights::load(&c0_path).map_err(|error| error.to_string())?;
+    let pool = distribution_boards(&pairs, distribution);
+    let cfg = C1Config {
+        episodes,
+        seed,
+        ..C1Config::default()
+    };
+    let output = train(&catalog, &pool, Some(&c0), &cfg).map_err(|error| error.to_string())?;
+    output
+        .weights
+        .save(&out_dir.join("weights.json"))
+        .map_err(|error| error.to_string())?;
+
+    let seeds: Vec<u64> = (0..32).collect();
+    let report = eval_c1(&catalog, &output.weights, &pool, &seeds);
+    let manifest = serde_json::json!({
+        "schema": DATA_SCHEMA_VERSION,
+        "weights_version": ai_model::WEIGHTS_VERSION,
+        "obs_dim": cfg.model.obs_dim,
+        "hidden": cfg.model.hidden,
+        "layers": cfg.model.layers,
+        "card_emb": cfg.model.card_emb,
+        "episodes": output.episodes,
+        "seed": cfg.seed,
+        "distribution": pool.len(),
+        "mean_return": output.mean_return,
+        "last_metrics": {
+            "policy_loss": output.last_metrics.policy_loss,
+            "value_loss": output.last_metrics.value_loss,
+            "entropy": output.last_metrics.entropy,
+            "clip_fraction": output.last_metrics.clip_fraction,
+        },
+    });
+    let eval = serde_json::json!({
+        "schema": DATA_SCHEMA_VERSION,
+        "win_rate": report.win_rate,
+        "mean_margin": report.mean_margin,
+        "games": report.games,
+        "seeds": seeds.len(),
+    });
+    fs::create_dir_all(&out_dir).map_err(|error| format!("创建目录失败：{error}"))?;
+    fs::write(
+        out_dir.join("manifest.json"),
+        serde_json::to_vec_pretty(&manifest).map_err(|error| error.to_string())?,
+    )
+    .map_err(|error| format!("写入失败：{error}"))?;
+    fs::write(
+        out_dir.join("eval.json"),
+        serde_json::to_vec_pretty(&eval).map_err(|error| error.to_string())?,
+    )
+    .map_err(|error| format!("写入失败：{error}"))?;
+    println!(
+        "C1 训练完成：{} 局，平均回报 {:.3}，胜率 {:.3}，均差 {:.3}",
+        output.episodes, output.mean_return, report.win_rate, report.mean_margin
+    );
+    Ok(())
+}
+
+#[cfg(not(feature = "train"))]
+fn train_c1(_args: &[String]) -> Result<(), String> {
+    Err("train-c1 需要 --features train".to_string())
+}
+
+/// 从棋盘对里取冻结的对手分布：按顺序交替取两侧棋盘，去重英雄无关的重复。
+#[cfg(feature = "train")]
+fn distribution_boards(pairs: &[BoardPair], wanted: usize) -> Vec<BoardSample> {
+    let mut boards = Vec::with_capacity(wanted);
+    for (index, pair) in pairs.iter().enumerate() {
+        if boards.len() >= wanted {
+            break;
+        }
+        let sample = if index % 2 == 0 { &pair.a } else { &pair.b };
+        if sample.board.is_empty() {
+            continue;
+        }
+        boards.push(sample.clone());
+    }
+    boards
 }
