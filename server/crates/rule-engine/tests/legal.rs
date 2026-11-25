@@ -50,16 +50,19 @@ fn effect_card_targets_include_on_use_responses() {
     // 岩画师：每使用一张效果牌，使一个友方随从 +0/+1，需要目标。
     place(&catalog, &mut state, 0, 9001, "yanhuashi");
     // aolinpike-jidian 自身（friendly:all）不需要目标，但 OnUse 响应需要。
-    state
-        .players[0]
+    state.players[0]
         .hand
         .push(HandCard::effect(9002, "aolinpike-jidian"));
 
     let actions = legal_actions(&engine, &state, 0);
     assert!(
-        actions
-            .iter()
-            .any(|action| matches!(action, Intent::PlayCard { target: Some(_), .. })),
+        actions.iter().any(|action| matches!(
+            action,
+            Intent::PlayCard {
+                target: Some(_),
+                ..
+            }
+        )),
         "岩画师在场时效果牌应带目标枚举出来：{actions:?}"
     );
     assert_every_action_accepted(&engine, &state, 0);

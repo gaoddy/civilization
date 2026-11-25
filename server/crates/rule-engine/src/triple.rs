@@ -151,6 +151,17 @@ impl Engine {
         chosen
     }
 
+    /// 手牌是否还有位置放下发现结果。
+    ///
+    /// `ChooseDiscover` 在手牌已满时恒判 `NO_SPACE`，登记待选只会让该座位卡在
+    /// 无法消费的选择上（只能等超时丢弃），所以所有发现登记点都先问这里。
+    pub(crate) fn discover_has_hand_space(&self, state: &GameState, seat: Seat) -> bool {
+        state
+            .players
+            .get(usize::from(seat))
+            .is_some_and(|player| player.hand.len() < self.catalog.config.hand_slots)
+    }
+
     /// 执行招募侧 `Discover{pool, choose}`：抽取候选并登记一条发现待选。
     ///
     /// - `pool` 只认 `playstyle`；省略或其它取值等价，候选始终按本局启用玩法过滤。
@@ -178,13 +189,8 @@ impl Engine {
         if params.choose == 0 {
             return Vec::new();
         }
-        // 手牌已满时发现无处落手：`ChooseDiscover` 会被判 `NO_SPACE`，
-        // 登记成待选只会让该座位卡在无法消费的选择上（只能等超时丢弃）。
-        let hand_full = state
-            .players
-            .get(usize::from(ctx.seat))
-            .is_none_or(|player| player.hand.len() >= self.catalog.config.hand_slots);
-        if hand_full {
+        // 手牌已满时发现无处落手（见 [`Engine::discover_has_hand_space`]）。
+        if !self.discover_has_hand_space(state, ctx.seat) {
             return Vec::new();
         }
         let candidates = self.draw_discover_candidates(state, level);
