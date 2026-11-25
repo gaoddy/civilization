@@ -44,4 +44,4 @@
 
 - [好友](../../../../current/product/systems/friends.md)
 - [天梯与匹配](../../../v0.2/product/systems/ranked-and-matchmaking.md)
-- [待确认事项](../../open-questions.md)
+- [待定夺事项](../../../../requirements/social-friends-rank-squad.md)

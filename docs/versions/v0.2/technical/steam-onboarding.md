@@ -1,7 +1,7 @@
 # Steam 上线操作清单
 
 > 状态：待执行（Steamworks、Apple 证书与生产环境就绪后按本文操作）
-> 关联：[Steam 接入技术现状](../../../current/technical/steam-integration.md)、[发行渠道与账号](../../../current/product/accounts-and-distribution.md)、[待确认事项](../open-questions.md)
+> 关联：[Steam 接入技术现状](../../../current/technical/steam-integration.md)、[发行渠道与账号](../../../current/product/accounts-and-distribution.md)、[R005 Steamworks 后台与商店页](../../../requirements/steamworks-store.md)
 
 代码侧的 Steam 契约与适配已完成。本文是真正接入 Steam 时的一次性操作清单：外部后台配置、服务端配置、客户端构建签名、SteamPipe 上传与端到端验收。各命令的实际行为见[Steam 接入技术现状](../../../current/technical/steam-integration.md) §4。
 
