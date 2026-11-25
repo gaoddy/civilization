@@ -237,6 +237,10 @@ fn same_seed_reproduces_event_sequence_hash() {
 /// 2026-11-25 第三十次重定：玩家状态新增 `minion_uses`（随从主动技能本回合
 /// 使用次数）并计入状态哈希；机器人不发动随从技能，对局路径、事件流与排名
 /// 均不变，仅因玩家哈希多写一个映射使本批次 20 局最终哈希全部改变。
+///
+/// 2026-11-26 第三十一次重定：手牌已满时发现不再登记待选（原先会登记成无法
+/// 消费的待选，座位此后所有意图都被拒，只能等超时）；发现触发点不再进入
+/// 待选队列，对局路径随之改变，本批次 20 局最终哈希全部改变。
 #[test]
 fn batch_final_hashes_match_golden_baseline() {
     let golden: Value = serde_json::from_str(include_str!("golden/seed-1-games-20.json"))
