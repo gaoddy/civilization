@@ -4,7 +4,7 @@
 //! 特征的实体、目标与技能都用 [`CardIndex`] 的整数编号表示，模型负责查表嵌入。
 
 use rule_engine::effects::{TargetRef, Zone};
-use rule_engine::state::{GameState, HandCard, InstanceId, MinionInstance, Seat};
+use rule_engine::state::{GameState, HandCard, InstanceId, MinionInstance, PendingChoice, Seat};
 
 use crate::action::Action;
 use crate::catalog::CardIndex;
@@ -139,12 +139,13 @@ impl ActionFeatures {
                 features.hero = index.hero(hero);
                 features.card = -1;
             }
+            Action::ChooseDiscover { choice } => {
+                if let Some(card_id) = discover_candidate(state, seat, *choice) {
+                    features.card = index.card(card_id);
+                }
+            }
             Action::Freeze { slot: None } | Action::Unfreeze { slot: None } => {}
-            Action::Reroll
-            | Action::Upgrade
-            | Action::End
-            | Action::AbandonTarget
-            | Action::ChooseDiscover { .. } => {}
+            Action::Reroll | Action::Upgrade | Action::End | Action::AbandonTarget => {}
         }
         features
     }
@@ -156,6 +157,22 @@ fn player(state: &GameState, seat: Seat) -> Option<&rule_engine::state::PlayerSt
 
 fn shop_slot(state: &GameState, seat: Seat, slot: u8) -> Option<&rule_engine::state::ShopSlot> {
     player(state, seat)?.shop.get(usize::from(slot))?.as_ref()
+}
+
+/// 本座位队首发现待选的第 `choice` 个候选卡 id。
+///
+/// 进化待选没有具体卡牌候选（选项是固定的进化类别），不提供卡索引。
+fn discover_candidate(state: &GameState, seat: Seat, choice: u8) -> Option<&str> {
+    state.pending.iter().find_map(|pending| match pending {
+        PendingChoice::Discover {
+            seat: pending_seat,
+            candidates,
+            ..
+        } if *pending_seat == seat => candidates
+            .get(usize::from(choice))
+            .map(std::string::String::as_str),
+        _ => None,
+    })
 }
 
 fn hand_card(state: &GameState, seat: Seat, hand: u8) -> Option<&HandCard> {
