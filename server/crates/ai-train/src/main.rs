@@ -263,6 +263,7 @@ fn train_c0(args: &[String]) -> Result<(), String> {
     let manifest = serde_json::json!({
         "schema": DATA_SCHEMA_VERSION,
         "weights_version": ai_model::WEIGHTS_VERSION,
+        "catalog_hash": format!("{:016x}", catalog_hash(&catalog)),
         "obs_dim": ai_core::OBS_DIM,
         "hidden": cfg.hidden,
         "layers": cfg.layers,
@@ -357,6 +358,7 @@ fn train_c1(args: &[String]) -> Result<(), String> {
     let manifest = serde_json::json!({
         "schema": DATA_SCHEMA_VERSION,
         "weights_version": ai_model::WEIGHTS_VERSION,
+        "catalog_hash": format!("{:016x}", catalog_hash(&catalog)),
         "obs_dim": cfg.model.obs_dim,
         "hidden": cfg.model.hidden,
         "layers": cfg.model.layers,
@@ -474,7 +476,10 @@ fn train_c2(args: &[String]) -> Result<(), String> {
     // C1 权重缺失时允许从随机初始化开始，便于只跑 C2 的冒烟。
     let c1 = ai_model::Weights::load(&c1_path).ok();
     if c1.is_none() {
-        eprintln!("没有读到 C1 权重（{}），演员从随机初始化开始", c1_path.display());
+        eprintln!(
+            "没有读到 C1 权重（{}），演员从随机初始化开始",
+            c1_path.display()
+        );
     }
     let pool = distribution_boards(&pairs, distribution);
     let cfg = C2Config {
@@ -483,8 +488,8 @@ fn train_c2(args: &[String]) -> Result<(), String> {
         seed,
         ..C2Config::default()
     };
-    let output = train(&catalog, &pool, Some(&c0), c1.as_ref(), &cfg)
-        .map_err(|error| error.to_string())?;
+    let output =
+        train(&catalog, &pool, Some(&c0), c1.as_ref(), &cfg).map_err(|error| error.to_string())?;
     output
         .weights
         .save(&out_dir.join("weights.json"))
@@ -493,6 +498,7 @@ fn train_c2(args: &[String]) -> Result<(), String> {
     let manifest = serde_json::json!({
         "schema": DATA_SCHEMA_VERSION,
         "weights_version": ai_model::WEIGHTS_VERSION,
+        "catalog_hash": format!("{:016x}", catalog_hash(&catalog)),
         "obs_dim": cfg.model.obs_dim,
         "hidden": cfg.model.hidden,
         "layers": cfg.model.layers,
@@ -547,7 +553,7 @@ fn eval(args: &[String]) -> Result<(), String> {
             .ok_or_else(|| format!("{flag} 缺少取值"))?
             .clone();
         match flag.as_str() {
-            "--dir" => dir = value.into(),
+            "--dir" | "--run" => dir = value.into(),
             "--seeds" => {
                 seeds = value
                     .parse()
@@ -601,8 +607,8 @@ fn eval(args: &[String]) -> Result<(), String> {
             anchors: anchors.clone(),
             ..EvalConfig::default()
         };
-        let report = eval_full(&catalog, &weights, &league, &cfg)
-            .map_err(|error| error.to_string())?;
+        let report =
+            eval_full(&catalog, &weights, &league, &cfg).map_err(|error| error.to_string())?;
         println!(
             "{}：{} 局，平均名次 {:.2}，吃鸡 {:.2}，前四 {:.2}，±{:.2}",
             path.display(),
