@@ -1,6 +1,7 @@
 #![forbid(unsafe_code)]
 
 pub mod achievements;
+pub mod candidates;
 pub mod combat;
 pub mod data;
 pub mod effects;

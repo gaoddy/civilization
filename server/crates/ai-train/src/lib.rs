@@ -5,8 +5,10 @@
 
 pub mod data_c0;
 pub mod env;
+pub mod env_full;
 pub mod env_recruit;
 pub mod eval;
+pub mod league;
 #[cfg(feature = "train")]
 pub mod model;
 #[cfg(feature = "train")]

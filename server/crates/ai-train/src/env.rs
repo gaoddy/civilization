@@ -38,11 +38,16 @@ impl Step {
 }
 
 /// 八人对局环境。
+///
+/// 支持两种开局：直接给定英雄（[`Env::reset`]），或先走选英雄步骤
+/// （[`Env::reset_with_candidates`]，`PickHero` 是每个座位的第一个决策）。
 pub struct Env {
     engine: Engine,
     state: GameState,
     history: History,
     encoder: Encoder,
+    candidates: BTreeMap<Seat, Vec<String>>,
+    started: bool,
 }
 
 impl Env {
@@ -55,7 +60,32 @@ impl Env {
             state,
             history: History::new(),
             encoder,
+            candidates: BTreeMap::new(),
+            started: true,
         }
+    }
+
+    /// 以候选英雄重置：先逐个座位选英雄，全部选完后才发英雄并进入第 1 回合。
+    pub fn reset_with_candidates(
+        &mut self,
+        seed: u64,
+        candidates: &BTreeMap<Seat, Vec<String>>,
+    ) -> Result<(), EngineError> {
+        let playstyles = playstyles::draw(seed);
+        self.state = self.engine.initial_state(seed_from_u64(seed), playstyles);
+        self.history = History::new();
+        self.candidates = candidates.clone();
+        self.started = false;
+        Ok(())
+    }
+
+    /// 本局已选定的英雄；未开始时为对应座位的候选列表。
+    pub fn candidates(&self) -> &BTreeMap<Seat, Vec<String>> {
+        &self.candidates
+    }
+
+    pub fn started(&self) -> bool {
+        self.started
     }
 
     /// 用给定种子与座位英雄重置对局，并进入第 1 回合招募。
@@ -63,12 +93,18 @@ impl Env {
         let playstyles = playstyles::draw(seed);
         self.state = self.engine.initial_state(seed_from_u64(seed), playstyles);
         self.history = History::new();
+        self.candidates = BTreeMap::new();
         self.engine.start_game(&mut self.state, heroes)?;
+        self.started = true;
         Ok(())
     }
 
     /// 下一个需要决策的座位；全部结束或对局结束时为 `None`。
     pub fn current_seat(&self) -> Option<Seat> {
+        if !self.started {
+            return (0..PLAYER_COUNT as Seat)
+                .find(|seat| self.state.players[usize::from(*seat)].hero.is_none());
+        }
         if self.state.phase != Phase::Recruit {
             return None;
         }
@@ -80,6 +116,20 @@ impl Env {
 
     /// 指定座位当前全部合法动作，顺序与 `legal_actions` 一致。
     pub fn legal(&self, seat: Seat) -> Vec<Action> {
+        if !self.started {
+            return self
+                .candidates
+                .get(&seat)
+                .map(|heroes| {
+                    heroes
+                        .iter()
+                        .map(|hero| Action::PickHero {
+                            hero: hero.clone(),
+                        })
+                        .collect()
+                })
+                .unwrap_or_default();
+        }
         legal_actions(&self.engine, &self.state, seat)
             .iter()
             .filter_map(Action::from_intent)
@@ -112,6 +162,9 @@ impl Env {
         let seat = self
             .current_seat()
             .ok_or_else(|| EngineError("当前没有待决策座位".to_string()))?;
+        if !self.started {
+            return self.pick_hero(seat, action);
+        }
         let intent = action
             .to_intent()
             .ok_or_else(|| EngineError("该动作在招募阶段没有对应意图".to_string()))?;
@@ -126,6 +179,33 @@ impl Env {
             })?;
         self.advance_if_complete()?;
         Ok(self.result())
+    }
+
+    /// 开局选英雄：只接受候选内的 `PickHero`；全员选完后开局。
+    fn pick_hero(&mut self, seat: Seat, action: Action) -> Result<Step, EngineError> {
+        let Action::PickHero { hero } = action else {
+            return Err(EngineError(format!(
+                "座位 {seat} 处于选英雄阶段，只接受 PickHero"
+            )));
+        };
+        let allowed = self.candidates.get(&seat).cloned().unwrap_or_default();
+        if !allowed.contains(&hero) {
+            return Err(EngineError(format!(
+                "座位 {seat} 的英雄 {hero} 不在候选内"
+            )));
+        }
+        self.state.players[usize::from(seat)].hero = Some(hero);
+        let heroes: BTreeMap<Seat, String> = self
+            .state
+            .players
+            .iter()
+            .filter_map(|player| player.hero.clone().map(|hero| (player.seat, hero)))
+            .collect();
+        if heroes.len() == PLAYER_COUNT {
+            self.engine.start_game(&mut self.state, &heroes)?;
+            self.started = true;
+        }
+        Ok(Step::empty())
     }
 
     fn recruit_complete(&self) -> bool {
