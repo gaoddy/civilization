@@ -475,7 +475,7 @@ make ui-preview SETUP=res://tests/previews/game_rail.gd     # 无 .tscn 的组�
 
 - 只在 macOS 上可用；模板目录缺少 `ios.zip` 时直接退出非 0。
 - 构建环境与桌面导出一致：`make client-export PLATFORM=ios` 与 `make client-run PLATFORM=ios` 接受 `ENV`/`env`（默认 `local`）。`local` 写空配置，真机按移动端回落 `ws://cooter.local:8080/ws`；`ENV=dev` 写入 dev 公网入口，`ENV=prod` 取 `CLIENT_PROD_SERVER_URL`。
-- 导出前必须存在 `application/config/icon`（当前 `res://icon.png`）；缺少图标时 Godot 导出失败。图标由 `scripts/gen_app_icon.py` 生成，随源提交。
+- 导出前必须存在 `application/config/icon`（当前 `res://icon.png`）；缺少图标时 Godot 导出失败。图标为 AI 出图后随源提交的 `client/icon.png`，设计原则与尺寸见[客户端图片素材索引](image-asset-index.md#25-应用图标)。
 - 签名依赖 Xcode 登录 Apple 团队账号并登记目标真机；缺少账号或描述文件时 `xcodebuild` 失败并打印签名错误，不产出未签名包。
 - 构建产物在 `output/client/build/ios/<构建号>/`，ipa 在 `output/client/`；`output/` 不提交。
 - `make client-run PLATFORM=ios` 默认取 `devicectl` 中第一台已连接（`connected`）的 iPhone，并打印所选设备名与 UDID；`IOS_DEVICE=<设备名|UDID>` 指定其他设备，`IOS_LAUNCH=0` 只安装不启动（设备锁屏或未解锁时启动失败，安装不受影响）。

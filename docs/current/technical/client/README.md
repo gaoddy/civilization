@@ -6,7 +6,7 @@
 | --- | --- | --- |
 | [Godot 客户端](client.md) | 工程结构、`GameStore`/`Net`/`CardDB` 职责、六场景、生成物与命令、运行方式、验收、桌面端与移动端导出、美术素材层与音效层 | `client/`、`Makefile` |
 | [纹理登记册](textures.md) | 运行时纹理槽、铺纹理的组件、替换与新增流程、自动校验 | `client/assets/`、`scripts/validate_textures.py` |
-| [客户端图片素材索引](image-asset-index.md) | 卡面与头像之外 5 张图片的页面位置、尺寸、画面目的、构图裁切与重新生成方式 | `client/assets/ui/`、`client/icon.png`、`scripts/gen_ui_assets.py`、`scripts/gen_app_icon.py` |
+| [客户端图片素材索引](image-asset-index.md) | 卡面与头像之外 5 张图片的页面位置、尺寸、画面目的、构图裁切与重新生成方式 | `client/assets/ui/`、`client/icon.png`、`scripts/gen_ui_assets.py` |
 | [跨设备一致性](cross-device-consistency.md) | 桌面、iPhone 与 iPad 的布局、内容框、安全区与页面背景行为 | `client/ui/layout.gd`、`client/ui/screen_profile.gd` |
 | [卡片封面美术生成](card-cover-art.md) | 已落盘卡面素材的风格基线、prompt 模板、主题符号映射与去水印约束 | `scripts/process_assets.py`、`client/assets/` |
 
