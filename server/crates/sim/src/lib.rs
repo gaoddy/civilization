@@ -29,6 +29,36 @@ pub const PLAYER_COUNT: Seat = 8;
 /// 单局最大驱动步数上限：防止 AI 缺陷导致死循环。正常对局远低于此值。
 pub const MAX_STEPS_PER_GAME: usize = 200_000;
 
+/// 整局驱动在每一步选动作的策略。
+///
+/// 返回 `None` 表示该座位当前没有任何可执行意图，驱动会以错误结束。
+/// 默认实现是 [`HeuristicPolicy`]；训练环境可注入别的策略做对照或回放。
+pub trait TurnPolicy {
+    fn plan(
+        &mut self,
+        state: &GameState,
+        seat: Seat,
+        engine: &Engine,
+        blocked: &[Intent],
+    ) -> Option<Intent>;
+}
+
+/// 现有的确定性启发式策略。
+#[derive(Debug, Clone, Copy, Default)]
+pub struct HeuristicPolicy;
+
+impl TurnPolicy for HeuristicPolicy {
+    fn plan(
+        &mut self,
+        state: &GameState,
+        seat: Seat,
+        engine: &Engine,
+        blocked: &[Intent],
+    ) -> Option<Intent> {
+        ai::plan(state, seat, engine, blocked)
+    }
+}
+
 /// 一局中按顺序执行的一条意图。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct IntentRecord {
@@ -183,11 +213,22 @@ pub fn play_game(
     seed: u64,
     players: usize,
 ) -> Result<GameLog, EngineError> {
+    play_game_with(engine, state, seed, players, &mut HeuristicPolicy)
+}
+
+/// 与 [`play_game`] 相同，但由调用方注入选动作的策略。
+pub fn play_game_with<P: TurnPolicy>(
+    engine: &mut Engine,
+    state: &mut GameState,
+    seed: u64,
+    players: usize,
+    policy: &mut P,
+) -> Result<GameLog, EngineError> {
     check_players(players)?;
     let heroes = assign_heroes(&engine.catalog, &state.enabled_playstyles)?;
     let mut event_hasher = EventHasher::new();
     event_hasher.extend(&engine.start_game(state, &heroes)?);
-    drive(engine, state, seed, &mut event_hasher)
+    drive(engine, state, seed, policy, &mut event_hasher)
 }
 
 /// 批量跑 `games` 局：第 i 局种子为 `seed + i`。`players` 只允许 8。
@@ -213,10 +254,11 @@ fn run_seed(engine: &mut Engine, seed: u64) -> Result<GameLog, EngineError> {
 /// 驱动主循环：`Recruit` 阶段逐座位执行 AI 意图直到 `EndRecruit`，
 /// 然后 `finish_recruit` → `resolve_combat` → `resolve_settle` → `start_turn`，
 /// 直到 `GameOver`。
-fn drive(
+fn drive<P: TurnPolicy>(
     engine: &mut Engine,
     state: &mut GameState,
     seed: u64,
+    policy: &mut P,
     event_hasher: &mut EventHasher,
 ) -> Result<GameLog, EngineError> {
     let mut steps = Vec::new();
@@ -225,7 +267,7 @@ fn drive(
         stats.survivors_at_turn_20 = Some(alive_count(state));
     }
     while state.phase != Phase::GameOver {
-        run_turn(engine, state, &mut steps, &mut stats, event_hasher)?;
+        run_turn(engine, state, &mut steps, &mut stats, event_hasher, policy)?;
         // 第 20 回合招募结束、`finish_recruit` 与战斗结算之前采样：与
         // `docs/current/technical/rule-engine-and-simulator.md` 的口径一致。
         if state.turn == 20 && stats.survivors_at_turn_20.is_none() {
@@ -306,12 +348,13 @@ fn finish_stats(engine: &Engine, state: &GameState, stats: &mut GameStats) {
 ///
 /// 引擎的 `EndRecruit` 只标记该座位（`recruit_done`），全员未出局玩家结束后阶段才变为
 /// `Combat`；本函数退出时阶段必为 `Combat`，随后由 `finish_recruit` 生成配对。
-fn run_turn(
+fn run_turn<P: TurnPolicy>(
     engine: &mut Engine,
     state: &mut GameState,
     steps: &mut Vec<StepRecord>,
     stats: &mut GameStats,
     event_hasher: &mut EventHasher,
+    policy: &mut P,
 ) -> Result<(), EngineError> {
     let turn = state.turn;
     for seat in 0..PLAYER_COUNT {
@@ -324,7 +367,7 @@ fn run_turn(
         let mut replans = 0usize;
         let mut blocked: Vec<Intent> = Vec::new();
         loop {
-            let Some(intent) = ai::plan(state, seat, engine, &blocked) else {
+            let Some(intent) = policy.plan(state, seat, engine, &blocked) else {
                 return Err(EngineError(format!(
                     "座位 {seat} 在回合 {turn} 无可执行意图（阶段 {:?}）",
                     state.phase
