@@ -5,6 +5,7 @@
 
 pub mod data_c0;
 pub mod env;
+pub mod env_recruit;
 #[cfg(feature = "train")]
 pub mod model;
 pub mod random_policy;

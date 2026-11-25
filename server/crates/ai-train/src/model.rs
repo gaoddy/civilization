@@ -1,11 +1,10 @@
 //! C0 网络：与 `ai_model` 同构的主干 + 价值头，只在训练侧用 candle。
 
-use ai_core::{BOARD_SLOTS, CardIndex, OBS_DIM, Observation, Slot};
+use ai_core::OBS_DIM;
 use ai_model::{ModelConfig, Weights};
 use candle_core::{DType, Device, Tensor};
 use candle_nn::{AdamW, Linear, Module, Optimizer, ParamsAdamW, VarBuilder, VarMap};
 
-use crate::data_c0::BoardSample;
 use crate::random_policy::RandomPolicy;
 
 /// C0 训练配置。
@@ -48,42 +47,7 @@ impl C0Config {
     }
 }
 
-/// 把一份棋盘样本编码成与 C2 相同布局的观测：只填本人英雄、玩法与棋盘槽位。
-pub fn board_observation(sample: &BoardSample, index: &CardIndex) -> Observation {
-    let mut obs = Observation {
-        seat: 0,
-        turn: 0,
-        phase: 1,
-        hero: index.hero(&sample.hero),
-        playstyles: sample.playstyles,
-        hp: 0,
-        gold: 0,
-        era: 0,
-        shop: [empty_slot(); 6],
-        hand: [empty_slot(); 10],
-        board: [empty_slot(); BOARD_SLOTS],
-        players: [Default::default(); 8],
-        pending: 0,
-    };
-    for (slot, minion) in obs.board.iter_mut().zip(&sample.board) {
-        *slot = Slot {
-            card: index.card(&minion.card_id),
-            attack: minion.attack() as f32,
-            health: minion.health() as f32,
-            golden: if minion.golden { 1.0 } else { 0.0 },
-            frozen: 0.0,
-            valid: 1.0,
-        };
-    }
-    obs
-}
-
-fn empty_slot() -> Slot {
-    Slot {
-        card: -1,
-        ..Slot::default()
-    }
-}
+pub use crate::data_c0::board_observation;
 
 /// 与 `ai_model` 同构的 candle 网络。
 pub struct C0Net {
