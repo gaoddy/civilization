@@ -42,6 +42,7 @@ func _ready() -> void:
         lobby.queue_free()
         await get_tree().process_frame
 
+    await _check_queue_prefill()
     await _check_room_mode()
     await _check_room_phone_height()
     await _check_steam_share()
@@ -300,6 +301,21 @@ func _check_error(lobby: Node) -> void:
     GameStore.error_received.emit()
     await get_tree().process_frame
     _expect(notice != null and notice.visible, "服务端错误应弹出提示")
+
+
+## 装载时已处于排队：计时器子节点在父节点 `_enter_tree` 之后才进树，
+## 首次刷新必须等它进树再启动，否则计时不会走。
+func _check_queue_prefill() -> void:
+    _seed()
+    GameStore.queueing = true
+    var lobby := await _check_scene("res://pages/lobby/lobby.tscn", false)
+    if lobby != null:
+        await get_tree().process_frame
+        var timer := lobby.find_child("QueueRefresh", true, false) as Timer
+        _expect(timer != null and not timer.is_stopped(), "装载时已排队时排队计时器应已启动")
+        lobby.queue_free()
+    GameStore.queueing = false
+    await get_tree().process_frame
 
 
 func _check_room_mode() -> void:

@@ -53,7 +53,8 @@ func _init() -> void:
 func _enter_tree() -> void:
     if not GameStore.queue_changed.is_connected(_refresh):
         GameStore.queue_changed.connect(_refresh)
-    _refresh()
+    # Timer 子节点晚于父节点进树，刷新延后到本帧末，启动计时时它已在树内。
+    _refresh.call_deferred()
 
 
 func _exit_tree() -> void:
@@ -69,14 +70,14 @@ func set_matched() -> void:
 
 
 func _refresh() -> void:
-    if _clock == null:
+    if _clock == null or not is_inside_tree():
         return
     if not GameStore.queueing:
         _matched = false
         _timer.stop()
         return
     _matched = false
-    if _timer.is_stopped():
+    if _timer.is_stopped() and _timer.is_inside_tree():
         _timer.start()
     _clock.text = _clock_text(GameStore.queue_wait_seconds())
     _count.text = tr("ui.queue.players") % int(GameStore.queue_state.get("waitingPlayers", 0))
