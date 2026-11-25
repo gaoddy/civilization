@@ -538,7 +538,7 @@ fn train_c2(_args: &[String]) -> Result<(), String> {
 }
 
 fn eval(args: &[String]) -> Result<(), String> {
-    use ai_train::eval_full::{EvalConfig, eval_full};
+    use ai_train::eval_full::{Anchor, EVAL_SEED_BASE, EvalConfig, eval_full};
     use ai_train::league::{League, PolicyId};
 
     let root = repo_root();
@@ -575,9 +575,9 @@ fn eval(args: &[String]) -> Result<(), String> {
         Some(path) => {
             let weights = ai_model::Weights::load(&path).map_err(|error| error.to_string())?;
             league.set_anchor(weights);
-            vec![PolicyId::Anchor]
+            vec![Anchor::Weights(PolicyId::Anchor)]
         }
-        None => Vec::new(),
+        None => vec![Anchor::Heuristic],
     };
 
     let mut checkpoints = Vec::new();
@@ -602,7 +602,8 @@ fn eval(args: &[String]) -> Result<(), String> {
     for path in checkpoints {
         let weights = ai_model::Weights::load(&path).map_err(|error| error.to_string())?;
         let cfg = EvalConfig {
-            seeds: (0..seeds as u64).collect(),
+            // 与训练种子池（0..10_000）不相交，避免在训练过的种子上评测。
+            seeds: (EVAL_SEED_BASE..EVAL_SEED_BASE + seeds as u64).collect(),
             learner_seats,
             anchors: anchors.clone(),
             ..EvalConfig::default()
@@ -610,13 +611,16 @@ fn eval(args: &[String]) -> Result<(), String> {
         let report =
             eval_full(&catalog, &weights, &league, &cfg).map_err(|error| error.to_string())?;
         println!(
-            "{}：{} 局，平均名次 {:.2}，吃鸡 {:.2}，前四 {:.2}，±{:.2}",
+            "{}：{} 局，平均名次 {:.2} ±{:.2}，锚点 {:.2}，优势 {:+.2} ±{:.2}，吃鸡 {:.2}，前四 {:.2}",
             path.display(),
             report.games,
             report.mean_placement,
+            report.ci95,
+            report.anchor_mean,
+            report.advantage,
+            report.advantage_ci95,
             report.win_rate,
-            report.top4_rate,
-            report.ci95
+            report.top4_rate
         );
         let better = best
             .as_ref()
@@ -638,6 +642,7 @@ fn eval(args: &[String]) -> Result<(), String> {
     let summary = serde_json::json!({
         "schema": DATA_SCHEMA_VERSION,
         "seeds": seeds,
+        "seed_base": EVAL_SEED_BASE,
         "learner_seats": learner_seats,
         "anchors": anchors.len(),
         "checkpoints": rows,

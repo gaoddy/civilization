@@ -1,13 +1,15 @@
 //! 固定种子评测：每局 1 个学习者座位 + 7 个锚点座位，贪心策略，座位轮换。
 //!
 //! 同一份权重、同一组种子必须逐字段复现；所有随机都从种子派生，不读时钟。
+//! 默认锚点是启发式机器人，报告学习者相对锚点的名次优势（配对差的 95% 置信区间）。
 
 use ai_core::{Action, ActionFeatures};
 use ai_model::{ModelConfig, Weights, forward};
 use rule_engine::candidates::{SEAT_COUNT, allocate_candidates};
 use rule_engine::data::Catalog;
+use rule_engine::engine::Engine;
 use rule_engine::playstyles;
-use rule_engine::state::Seat;
+use rule_engine::state::{GameState, Seat};
 use serde::Serialize;
 
 use crate::env::PLAYER_COUNT;
@@ -19,14 +21,27 @@ use crate::random_policy::RandomPolicy;
 /// 单局最多推进的决策数；超过视为异常并报错，避免评测挂死。
 const GUARD: usize = 200_000;
 
+/// 评测种子起点：与训练种子池（`C2Config::seeds`，默认 `0..10_000`）不相交，
+/// 避免「在训练过的种子上评测」。
+pub const EVAL_SEED_BASE: u64 = 1_000_000;
+
+/// 评测对手锚点。
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Anchor {
+    /// 启发式机器人（`bot_ai::plan`），即验收门槛里的「启发式锚点」。
+    Heuristic,
+    /// 联盟里的权重（快照或外部权重）。
+    Weights(PolicyId),
+}
+
 /// 评测配置。
 #[derive(Debug, Clone)]
 pub struct EvalConfig {
     pub seeds: Vec<u64>,
     /// 学习者座位在 `0..learner_seats` 内轮换；默认 8（全部座位）。
     pub learner_seats: usize,
-    /// 对手锚点；为空时用学习者自己的权重做同桌自博弈。
-    pub anchors: Vec<PolicyId>,
+    /// 对手锚点；为空时等价于只有启发式锚点。
+    pub anchors: Vec<Anchor>,
     /// 每座位每回合的决策上限；超过后强制结束回合（贪心策略会原地打转）。
     pub max_decisions_per_turn: usize,
 }
@@ -34,7 +49,7 @@ pub struct EvalConfig {
 impl Default for EvalConfig {
     fn default() -> Self {
         Self {
-            seeds: (0..2000).collect(),
+            seeds: (EVAL_SEED_BASE..EVAL_SEED_BASE + 2000).collect(),
             learner_seats: SEAT_COUNT,
             anchors: Vec::new(),
             max_decisions_per_turn: DECISIONS_PER_TURN,
@@ -51,6 +66,12 @@ pub struct EvalReport {
     pub top4_rate: f32,
     /// 平均名次的 95% 置信区间半宽（1.96 · sd / √n）。
     pub ci95: f32,
+    /// 同桌锚点座位在全部评测局上的平均名次。
+    pub anchor_mean: f32,
+    /// 名次优势：`anchor_mean - mean_placement`，为正表示比锚点打得好。
+    pub advantage: f32,
+    /// 名次优势的 95% 置信区间半宽（按局配对差的 1.96 · sd / √n）。
+    pub advantage_ci95: f32,
     /// 名次优于同桌锚点均值的局数。
     pub anchor_wins: usize,
     /// 名次劣于同桌锚点均值的局数。
@@ -83,6 +104,7 @@ impl From<ai_model::ModelError> for EvalError {
 
 enum Opponent {
     Weights(Box<(Weights, ModelConfig)>),
+    Heuristic,
     Random,
 }
 
@@ -93,17 +115,44 @@ impl Opponent {
     }
 }
 
-fn resolve_opponent(league: &League, policy: PolicyId) -> Result<Opponent, EvalError> {
+fn resolve_opponent(league: &League, anchor: Anchor) -> Result<Opponent, EvalError> {
+    let policy = match anchor {
+        Anchor::Heuristic => return Ok(Opponent::Heuristic),
+        Anchor::Weights(policy) => policy,
+    };
     Ok(match policy {
         // 当前策略的权重不在联盟里，评测侧没有训练模型，只能落到随机兜底。
         PolicyId::Current | PolicyId::Random => Opponent::Random,
-        PolicyId::Snapshot(_) | PolicyId::Anchor => {
-            let weights = league
+        PolicyId::Snapshot(_) | PolicyId::Anchor => Opponent::weights(
+            league
                 .weights(policy)
-                .ok_or_else(|| EvalError::NoData(format!("联盟缺少对手 {policy:?} 的权重")))?;
-            Opponent::weights(weights)?
-        }
+                .ok_or_else(|| EvalError::NoData(format!("联盟缺少对手 {policy:?} 的权重")))?,
+        )?,
     })
+}
+
+/// 启发式锚点把 `bot_ai::plan` 的意图映射成候选下标。
+///
+/// 计划不可用、或意图不在候选里时退回 `End`（没有就退回第一条候选）：评测
+/// 不因某个座位的一次决策失败而中断。
+fn heuristic_choice(
+    state: &GameState,
+    engine: &Engine,
+    seat: Seat,
+    candidates: &[(Action, ActionFeatures)],
+) -> usize {
+    if let Some(intent) = bot_ai::plan(state, seat, engine, &[])
+        && let Some(action) = Action::from_intent(&intent)
+        && let Some(index) = candidates
+            .iter()
+            .position(|(candidate, _)| *candidate == action)
+    {
+        return index;
+    }
+    candidates
+        .iter()
+        .position(|(candidate, _)| matches!(candidate, Action::End))
+        .unwrap_or(0)
 }
 
 /// 用固定种子集评测一份权重。
@@ -129,11 +178,12 @@ pub fn eval_full(
         .map(|policy| resolve_opponent(league, *policy))
         .collect::<Result<_, _>>()?;
     if anchors.is_empty() {
-        anchors.push(Opponent::weights(weights)?);
+        anchors.push(Opponent::Heuristic);
     }
 
     let mut env = FullEnv::new(catalog, League::new(0, 0));
     let mut placements = Vec::with_capacity(cfg.seeds.len());
+    let mut anchor_means = Vec::with_capacity(cfg.seeds.len());
     let mut anchor_wins = 0usize;
     let mut anchor_losses = 0usize;
 
@@ -184,6 +234,9 @@ pub fn eval_full(
                             let (logits, _) = forward(opp_weights, opp_model, &obs, &features)?;
                             argmax(&logits)
                         }
+                        Opponent::Heuristic => {
+                            heuristic_choice(env.state(), env.engine(), seat, &candidates)
+                        }
                         Opponent::Random => rng.below(features.len() as u64) as usize,
                     }
                 }
@@ -206,6 +259,7 @@ pub fn eval_full(
         if !anchor_placements.is_empty() {
             let anchor_mean =
                 anchor_placements.iter().sum::<f32>() / anchor_placements.len() as f32;
+            anchor_means.push(anchor_mean);
             let own = f32::from(placement);
             if own < anchor_mean {
                 anchor_wins += 1;
@@ -215,7 +269,7 @@ pub fn eval_full(
         }
     }
 
-    Ok(report(placements, anchor_wins, anchor_losses))
+    Ok(report(placements, anchor_means, anchor_wins, anchor_losses))
 }
 
 fn argmax(logits: &[f32]) -> usize {
@@ -228,19 +282,47 @@ fn argmax(logits: &[f32]) -> usize {
     best
 }
 
-fn report(placements: Vec<f32>, anchor_wins: usize, anchor_losses: usize) -> EvalReport {
+/// 半宽 95% 置信区间：`1.96 · sd / √n`（样本标准差）。
+fn half_ci95(samples: &[f32]) -> f32 {
+    let n = samples.len();
+    if n < 2 {
+        return 0.0;
+    }
+    let mean = samples.iter().sum::<f32>() / n as f32;
+    let variance = samples
+        .iter()
+        .map(|value| (value - mean).powi(2))
+        .sum::<f32>()
+        / (n - 1) as f32;
+    1.96 * variance.sqrt() / (n as f32).sqrt()
+}
+
+fn report(
+    placements: Vec<f32>,
+    anchor_means: Vec<f32>,
+    anchor_wins: usize,
+    anchor_losses: usize,
+) -> EvalReport {
     let games = placements.len();
     let mean = placements.iter().sum::<f32>() / games as f32;
-    let variance = if games > 1 {
-        placements
-            .iter()
-            .map(|place| (place - mean).powi(2))
-            .sum::<f32>()
-            / (games - 1) as f32
-    } else {
+    let ci95 = half_ci95(&placements);
+    // 名次优势按局配对：同一局里学习者与锚点共享商店、对局强度等共同方差，
+    // 配对差的方差远小于两组独立均值之差。
+    let diffs: Vec<f32> = anchor_means
+        .iter()
+        .zip(&placements)
+        .map(|(anchor, own)| anchor - own)
+        .collect();
+    let advantage = if diffs.is_empty() {
         0.0
+    } else {
+        diffs.iter().sum::<f32>() / diffs.len() as f32
     };
-    let ci95 = 1.96 * variance.sqrt() / (games as f32).sqrt();
+    let anchor_mean = if anchor_means.is_empty() {
+        0.0
+    } else {
+        anchor_means.iter().sum::<f32>() / anchor_means.len() as f32
+    };
     let win_rate = placements.iter().filter(|place| **place == 1.0).count() as f32 / games as f32;
     let top4_rate = placements.iter().filter(|place| **place <= 4.0).count() as f32 / games as f32;
     EvalReport {
@@ -249,6 +331,9 @@ fn report(placements: Vec<f32>, anchor_wins: usize, anchor_losses: usize) -> Eva
         win_rate,
         top4_rate,
         ci95,
+        anchor_mean,
+        advantage,
+        advantage_ci95: half_ci95(&diffs),
         anchor_wins,
         anchor_losses,
     }

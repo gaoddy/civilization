@@ -163,6 +163,16 @@ impl Env {
         self.state.phase
     }
 
+    /// 只读对局状态，供启发式锚点直接下棋（评测用）。
+    pub fn state(&self) -> &GameState {
+        &self.state
+    }
+
+    /// 只读引擎，供启发式锚点读取卡表与规则。
+    pub fn engine(&self) -> &Engine {
+        &self.engine
+    }
+
     pub fn state_hash(&self) -> u64 {
         state_hash(&self.state)
     }

@@ -52,6 +52,16 @@ impl FullEnv {
         self.env.action_candidates(seat)
     }
 
+    /// 只读对局状态，供启发式锚点直接下棋（评测用）。
+    pub fn state(&self) -> &rule_engine::state::GameState {
+        self.env.state()
+    }
+
+    /// 只读引擎，供启发式锚点读取卡表与规则。
+    pub fn engine(&self) -> &rule_engine::engine::Engine {
+        self.env.engine()
+    }
+
     pub fn current_seat(&self) -> Option<Seat> {
         self.env.current_seat()
     }

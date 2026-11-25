@@ -1,10 +1,11 @@
-//! 固定种子评测：同一权重与种子两次结果一致，且报告 95% 置信区间。
+//! 固定种子评测：同一权重与种子两次结果一致，报告 95% 置信区间、配对名次优势，
+//! 且默认以启发式机器人为锚点。
 
 #![cfg(feature = "train")]
 
 use ai_core::CardIndex;
 use ai_model::{ModelConfig, Weights};
-use ai_train::eval_full::{EvalConfig, eval_full};
+use ai_train::eval_full::{Anchor, EVAL_SEED_BASE, EvalConfig, eval_full};
 use ai_train::league::{League, PolicyId};
 use ai_train::ppo::TrainModel;
 use rule_engine::data::Catalog;
@@ -56,7 +57,7 @@ fn eval_is_deterministic_and_reports_confidence_interval() {
     let cfg = EvalConfig {
         seeds: (0..8).collect(),
         learner_seats: 4,
-        anchors: vec![PolicyId::Anchor],
+        anchors: vec![Anchor::Weights(PolicyId::Anchor)],
         max_decisions_per_turn: 16,
     };
 
@@ -67,4 +68,45 @@ fn eval_is_deterministic_and_reports_confidence_interval() {
     assert_eq!(first.games, 8, "每个种子一局");
     assert!(first.mean_placement >= 1.0 && first.mean_placement <= 8.0);
     assert!(first.ci95 > 0.0, "名次有波动时置信区间宽度应大于 0");
+}
+
+/// 默认锚点是启发式机器人：整局跑完不中断，优势按局配对计算。
+#[test]
+fn heuristic_anchor_plays_whole_games_and_reports_paired_advantage() {
+    let catalog = tiny_catalog();
+    let learner = weights_for(&catalog, 3);
+    let league = League::new(0, 0);
+    let cfg = EvalConfig {
+        seeds: (EVAL_SEED_BASE..EVAL_SEED_BASE + 4).collect(),
+        learner_seats: 8,
+        anchors: vec![Anchor::Heuristic],
+        max_decisions_per_turn: 16,
+    };
+
+    let first = eval_full(&catalog, &learner, &league, &cfg).expect("启发式锚点评测");
+    let second = eval_full(&catalog, &learner, &league, &cfg).expect("第二次评测");
+
+    assert_eq!(
+        first, second,
+        "启发式锚点不引入额外随机，两次必须逐字段一致"
+    );
+    assert_eq!(first.games, 4, "每个种子一局");
+    assert!(
+        first.anchor_mean >= 1.0 && first.anchor_mean <= 8.0,
+        "锚点平均名次应在 1..=8：{}",
+        first.anchor_mean
+    );
+    assert!(
+        (first.advantage - (first.anchor_mean - first.mean_placement)).abs() < 1e-4,
+        "优势应等于锚点均名次减学习者均名次：{} vs {} - {}",
+        first.advantage,
+        first.anchor_mean,
+        first.mean_placement
+    );
+    assert_eq!(
+        first.anchor_wins + first.anchor_losses,
+        first.games,
+        "8 人局名次互不相同，学习者每局要么优于要么劣于锚点均值"
+    );
+    assert!(first.advantage_ci95 >= 0.0);
 }

@@ -18,6 +18,7 @@ train = ["dep:candle-core", "dep:candle-nn"]
 [dependencies]
 ai-core = { path = "../ai-core" }
 ai-model = { path = "../ai-model" }
+bot-ai = { path = "../bot-ai" }
 rule-engine = { path = "../rule-engine" }
 sim = { path = "../sim" }
 serde = { version = "1", features = ["derive"] }

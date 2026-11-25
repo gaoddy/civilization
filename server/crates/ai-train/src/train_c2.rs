@@ -322,6 +322,9 @@ fn run_c1_episode(
     Ok(episode_return)
 }
 
+/// 学习者一步采样的完整记录：观测、动作下标、掩码、对数概率、价值与动作特征。
+type LearnerSample = (Observation, usize, Vec<bool>, f32, f32, Vec<ActionFeatures>);
+
 /// 跑一局 C2 完整对局，学习者座位轮换，其余座位按联盟对手出招。
 fn run_c2_episode(
     catalog: &Catalog,
@@ -350,8 +353,7 @@ fn run_c2_episode(
     let mut turn = env.turn();
     let mut per_turn = vec![0usize; PLAYER_COUNT];
     // 学习者最后一次采样；若对局在别人手里结束，要用它补一条终局 transition。
-    let mut learner_sample: Option<(Observation, usize, Vec<bool>, f32, f32, Vec<ActionFeatures>)> =
-        None;
+    let mut learner_sample: Option<LearnerSample> = None;
     let mut learner_recorded_done = false;
     while !env.is_done() && steps < EPISODE_GUARD {
         let Some(seat) = env.current_seat() else {
@@ -401,14 +403,7 @@ fn run_c2_episode(
             // 对局回报只统计学习者自己的奖励；最后行动者的名次奖励与学习者无关。
             episode_return += reward;
             learner_recorded_done = stepped.done;
-            learner_sample = Some((
-                obs.clone(),
-                choice,
-                mask.clone(),
-                logp,
-                value,
-                features.clone(),
-            ));
+            learner_sample = Some((obs, choice, mask.clone(), logp, value, features.clone()));
             record(
                 batch,
                 obs,
@@ -433,12 +428,12 @@ fn run_c2_episode(
     {
         let reward = env
             .placement(learner)
-            .map(|place| {
-                (PLAYER_COUNT as f32 + 1.0 - f32::from(place)) / PLAYER_COUNT as f32
-            })
+            .map(|place| (PLAYER_COUNT as f32 + 1.0 - f32::from(place)) / PLAYER_COUNT as f32)
             .unwrap_or(0.0);
         episode_return += reward;
-        record(batch, obs, choice, mask, logp, value, reward, true, features);
+        record(
+            batch, obs, choice, mask, logp, value, reward, true, features,
+        );
     }
     Ok((episode_return, env.placement(learner)))
 }
@@ -585,7 +580,7 @@ pub fn train_c2(
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     fn catalog() -> Catalog {
         Catalog::from_json(
             include_str!("../../../data/v0.1/cards.json"),
