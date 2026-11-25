@@ -25,7 +25,7 @@ pub struct C0Config {
 impl Default for C0Config {
     fn default() -> Self {
         Self {
-            steps: 2000,
+            steps: 20_000,
             batch: 64,
             lr: 0.001,
             hidden: 64,
@@ -135,6 +135,7 @@ pub fn fit(
     let var_map = VarMap::new();
     let vb = VarBuilder::from_varmap(&var_map, DType::F32, &device);
     let net = C0Net::build(vb, cfg)?;
+    seed_weights(&var_map, cfg.seed)?;
     let mut optimizer = AdamW::new(
         var_map.all_vars(),
         ParamsAdamW {
@@ -163,6 +164,33 @@ pub fn fit(
         optimizer.backward_step(&loss)?;
     }
     extract_weights(&var_map)
+}
+
+/// 用种子初始化全部权重。
+///
+/// candle 的默认初始化取全局随机源，同一份配置两次训练会得到不同权重；
+/// 这里按名字排序后逐个用 `RandomPolicy` 生成 `±1/√fan_in` 的均匀分布。
+fn seed_weights(var_map: &VarMap, seed: u64) -> candle_core::Result<()> {
+    let device = Device::Cpu;
+    let mut rng = RandomPolicy::new(seed ^ 0x5DEE_D1CE_2026);
+    let mut data = var_map.data().lock().expect("VarMap 锁");
+    let mut names: Vec<String> = data.keys().cloned().collect();
+    names.sort();
+    for name in names {
+        let var = data.get_mut(&name).expect("变量存在");
+        let dims = var.as_tensor().dims().to_vec();
+        let fan_in = dims.last().copied().unwrap_or(1).max(1);
+        let bound = 1.0 / (fan_in as f32).sqrt();
+        let size = var.as_tensor().elem_count();
+        let values: Vec<f32> = (0..size)
+            .map(|_| {
+                let unit = rng.below(1 << 24) as f32 / (1u64 << 24) as f32;
+                (unit * 2.0 - 1.0) * bound
+            })
+            .collect();
+        var.set(&Tensor::from_vec(values, dims, &device)?)?;
+    }
+    Ok(())
 }
 
 /// 数值稳定的带 logit 二元交叉熵。

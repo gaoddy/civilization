@@ -25,7 +25,7 @@ fn main() {
     if let Err(message) = result {
         eprintln!("{message}");
         eprintln!(
-            "用法：ai-train data-c0 --out <路径> [--games 2000] [--seed 0]\n      ai-train train-c0 [--pairs 路径] [--out-dir 目录] [--steps 500] [--seed 0]"
+            "用法：ai-train data-c0 --out <路径> [--games 2000] [--seed 0]\n      ai-train train-c0 [--pairs 路径] [--out-dir 目录] [--steps 20000] [--seed 0]"
         );
         std::process::exit(2);
     }
@@ -203,7 +203,7 @@ fn train_c0(args: &[String]) -> Result<(), String> {
 
     let mut pairs_path = Path::new("output/models/c0/pairs.jsonl").to_path_buf();
     let mut out_dir = Path::new("output/models/c0").to_path_buf();
-    let mut steps = 500usize;
+    let mut steps = 20000usize;
     let mut seed = 0u64;
     let mut iter = args.iter();
     while let Some(flag) = iter.next() {

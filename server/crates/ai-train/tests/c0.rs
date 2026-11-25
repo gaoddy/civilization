@@ -100,6 +100,42 @@ fn separable_data_meets_calibration_targets() {
     assert!(calibration.ece <= 0.03, "ECE 过高：{calibration:?}");
 }
 
+/// 同一份数据、同一个种子必须得到同一份权重，否则产物不可复现。
+#[test]
+fn same_seed_trains_same_weights() {
+    let catalog = catalog();
+    let index = CardIndex::build(&catalog);
+    let card = minion_card(&catalog);
+    let pairs = vec![
+        BoardPair {
+            a: board(&catalog, &card, 30, 30),
+            b: board(&catalog, &card, 2, 2),
+            a_wins: true,
+        },
+        BoardPair {
+            a: board(&catalog, &card, 2, 2),
+            b: board(&catalog, &card, 30, 30),
+            a_wins: false,
+        },
+    ];
+    let cfg = C0Config {
+        steps: 2,
+        batch: 2,
+        lr: 0.001,
+        hidden: 8,
+        layers: 1,
+        card_emb: 1,
+        seed: 7,
+        held_out: 0.0,
+    };
+    let first = train_c0(&pairs, &index, &cfg).expect("第一次训练");
+    let second = train_c0(&pairs, &index, &cfg).expect("第二次训练");
+    assert_eq!(
+        first.tensors, second.tensors,
+        "同一随机种子的训练结果不一致"
+    );
+}
+
 /// candle 训练侧与纯 Rust 推理侧必须给出同一个价值。
 #[test]
 fn candle_and_handwritten_forward_agree() {
