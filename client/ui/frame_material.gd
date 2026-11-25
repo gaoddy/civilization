@@ -215,15 +215,16 @@ static func dress_page(page: Control, style: int = Style.BEVEL) -> void:
 
 
 ## 承担表面的控件：按钮、面板与面板容器；装饰性容器（无底色、无描边）不参与。
+## 隐藏的表面同样接入：排队卡、座位列表等按状态才出现的区块在页面装载时不可见，
+## 只在可见时扫描会让它们显示后一直没有边框。
 static func _is_surface(control: Control) -> bool:
 	if not (control is Button or control is PanelContainer or control is Panel):
 		return false
 	# 整屏底图不是「表面」：加边框会把画面圈成一整块。
 	if str(control.name) in [UIControls.PAGE_SURFACE_NAME, "PageBackground"]:
 		return false
-	if not control.is_visible_in_tree():
-		return false
-	if control.size.x < 18.0 or control.size.y < 14.0:
+	# 未布局的隐藏控件尺寸为 0，尺寸门槛只对已显示的控件生效；显示后由 resized 补齐矩形。
+	if control.is_visible_in_tree() and (control.size.x < 18.0 or control.size.y < 14.0):
 		return false
 	var box := _style_box(control)
 	if box == null:

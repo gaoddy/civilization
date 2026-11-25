@@ -206,6 +206,9 @@ func _check_queue_timer(lobby: Node) -> void:
     await get_tree().process_frame
     _expect(GameStore.queueing, "开始匹配后应进入排队")
     _expect(timer.text == "00:00", "刚入队应从 00:00 起算，实际 %s" % timer.text)
+    # 排队卡在页面装载时隐藏，进入排队后才显示；材质不能只在页面装载时接一次。
+    await get_tree().process_frame
+    _expect_frame_fill(lobby.find_child("LobbyQueueCard", true, false), "LobbyQueueCard")
 
     # 计时器每 0.5 秒刷新一次，采样留出一个刷新周期的余量。
     await get_tree().create_timer(1.8).timeout

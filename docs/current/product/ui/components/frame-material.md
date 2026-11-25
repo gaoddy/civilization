@@ -31,6 +31,7 @@
 
 - 材质节点命名为 `FrameMaterial`，挂在目标控件下的 `FrameMaterialHolder`（`Node2D`）上并铺满目标矩形；容器只排列 `Control` 子节点，材质层因此不会被 `PanelContainer` 的内容内边距挤进内容区，祖先缩放照常生效。`mouse_filter` 为 `IGNORE`。
 - 悬停提亮由目标控件的 `mouse_entered` / `mouse_exited` 驱动，不新增状态机。
+- 页面装载时隐藏的表面同样接入材质（例如排队卡、座位列表、战斗视图）：材质层随控件一起隐藏，显示后按 `resized` 补齐矩形；不按 `visible` 过滤，避免显示后一直没有边框。
 
 ## 需要材质的组件清单
 
