@@ -249,7 +249,7 @@ Steam 硬件与软件调查，2026-10：
 | 机器人只有一套策略、无难度分级 | `server/crates/sim/src/bot/brain.rs` |
 | UI 已接入 `tr()`，但只有 zh_CN | `client/` 内 115 个 `.gd` 文件；`client/text/zh_CN.zh_CN.translation` |
 | 无 Windows 导出预设 | `client/export_presets.cfg` |
-| 设计总纲与代码在"AI 补位"上冲突 | `docs/current/product/overview/design-overview.md` §3、`docs/version-roadmap.md` §4 |
+| 设计总纲、版本路线与代码的 AI 补位口径已对齐 | `docs/current/product/overview/design-overview.md` §3、`docs/version-roadmap.md` §4、`docs/decisions/0001-ai-bot-fill-and-no-takeover.md` |
 | 单人开发、11 天 1,199 次提交 | `git log` |
 
 ---

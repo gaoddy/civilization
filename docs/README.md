@@ -9,6 +9,8 @@
 | [versions/](versions/README.md) | 未实现版本的规划与目标形态 |
 | [current/](current/README.md) | 当前代码已实现的状态；只写现状，不复制版本规划 |
 | [releases/](releases/README.md) | 已发布版本的更新内容 |
+| [decisions/](decisions/README.md) | 跨版本的已采用决策与已否决请求 |
+| [requirements/](requirements/README.md) | 全部产品需求的总表与单个需求文档 |
 | `plan/` | 实施计划，本地保留、不提交 |
 
 仓库根目录 `.superpowers/` 存放 superpowers 生成的设计、计划与报告，本地保留、不提交；不属于 `docs/` 结构。
@@ -28,7 +30,6 @@
 | 文档 | 内容 |
 | --- | --- |
 | [版本路线与风险](version-roadmap.md) | 开发顺序、里程碑、各版本内容增量、风险与止损线 |
-| [产品需求总表](requirements-backlog.md) | 全项目未完成需求的状态、现有版本归属与来源，作为排期输入 |
 | [内容素材库](content-backlog.md) | 未进入首版卡池、保留给后续版本的素材与再评估方向 |
 | [销量预测](sales-forecast.md) | 分档销量预测、四层预测方法与达成目标的执行清单 |
 | [销量预测外部数据](sales-forecast-sources.md) | 预测引用的外部数据、原始值、获取方式与已知偏差 |

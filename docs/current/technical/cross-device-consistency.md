@@ -265,7 +265,7 @@ make client-run WIDTH=1280 HEIGHT=800                # 只模拟 16:10 窗口尺
 - **iPhone**：逻辑视口 ~1920×878（19.5:9），内容框 16:9 居中，左右各约 9% 背景
 - **iPad**：逻辑视口 ~2048×1536（4:3），内容框 16:9 居中，上下各 12.5% 背景
 
-只做横屏，竖屏移出范围（见 [移动端只做横屏](../../../.claude/projects/-Users-gaoddy-Projects-Civilization/memory/mobile-landscape-only.md)）。
+只做横屏，竖屏移出范围（见[移动端适配](../product/ui/mobile-adaptation.md) §1）。
 
 ## 安全区处理
 

@@ -149,4 +149,4 @@
 - [房间与邀请](../../../../current/product/systems/rooms-and-invites.md)
 - [模式](../../../../current/product/systems/modes.md)
 - [成就](achievements.md)
-- [待确认事项](../../open-questions.md)
+- [待定夺事项](../../../../requirements/balance-ranked-calibration.md)
