@@ -29,7 +29,7 @@
 | `clear(target)` / `clear_tree(root)` | 移除材质 |
 | `tint_for_era(era)` / `golden_tint()` | 取时代合金色与足金色，供绘制代码与预览共用 |
 
-- 材质节点命名为 `FrameMaterial`，是目标控件的子节点并铺满目标矩形，`mouse_filter` 为 `IGNORE`。
+- 材质节点命名为 `FrameMaterial`，挂在目标控件下的 `FrameMaterialHolder`（`Node2D`）上并铺满目标矩形；容器只排列 `Control` 子节点，材质层因此不会被 `PanelContainer` 的内容内边距挤进内容区，祖先缩放照常生效。`mouse_filter` 为 `IGNORE`。
 - 悬停提亮由目标控件的 `mouse_entered` / `mouse_exited` 驱动，不新增状态机。
 
 ## 需要材质的组件清单

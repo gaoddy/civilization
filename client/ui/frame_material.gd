@@ -14,6 +14,9 @@ enum Style {
 }
 
 const OVERLAY_NAME := "FrameMaterial"
+## 材质层挂在 Node2D 下：容器只排列 Control 子节点，这样 PanelContainer 的
+## 内容内边距不会把材质层挤进内容区；Node2D 仍是 CanvasItem，祖先缩放照常生效。
+const HOLDER_NAME := "FrameMaterialHolder"
 const SHADER_PATH := "res://ui/frame_material.gdshader"
 ## 线宽按短边比例取，夹在区间内：小按钮不掉到 1px，大面板不粗成色块。
 const BAND_RATIO := 0.022
@@ -59,8 +62,12 @@ static func golden_tint() -> Color:
 static func apply(target: Control, style: int, opts: Dictionary = {}) -> ColorRect:
 	if target == null or shader() == null:
 		return null
-	var overlay := target.get_node_or_null(OVERLAY_NAME) as ColorRect
+	var holder := target.get_node_or_null(HOLDER_NAME) as Node
+	var overlay := holder.get_node_or_null(OVERLAY_NAME) as ColorRect if holder != null else null
 	if overlay == null:
+		holder = Node2D.new()
+		holder.name = HOLDER_NAME
+		target.add_child(holder)
 		var material := ShaderMaterial.new()
 		material.shader = shader()
 		overlay = ColorRect.new()
@@ -68,14 +75,15 @@ static func apply(target: Control, style: int, opts: Dictionary = {}) -> ColorRe
 		overlay.color = UITheme.color("color-white")
 		overlay.material = material
 		overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
-		target.add_child(overlay)
+		overlay.position = Vector2.ZERO
+		overlay.size = target.size
+		holder.add_child(overlay)
 		overlay.ready.connect(func() -> void: _sync(overlay, target), CONNECT_ONE_SHOT)
 		target.resized.connect(func() -> void: _sync(overlay, target))
 		target.mouse_entered.connect(func() -> void: _hover(overlay, 1.0))
 		target.mouse_exited.connect(func() -> void: _hover(overlay, 0.0))
 		# 材质是叠在内容之上的装饰：始终保持在最后一个子节点，内容仍从索引 0 开始。
-		target.child_entered_tree.connect(func(_child: Node) -> void: _raise(overlay))
+		target.child_entered_tree.connect(func(_child: Node) -> void: _raise(holder))
 	overlay.set_meta("tint", opts.get("tint", default_tint()))
 	overlay.set_meta("golden", bool(opts.get("golden", false)))
 	overlay.set_meta("guide", bool(opts.get("guide", false)))
@@ -100,19 +108,20 @@ static func set_guide(target: Control, guide: bool) -> void:
 
 ## 新内容加入后把材质挪回最后一个子节点：装饰层永远压在内容上面，
 ## 容器内容的索引与顺序保持不变。
-static func _raise(overlay: ColorRect) -> void:
-	if not is_instance_valid(overlay):
+static func _raise(holder: Node) -> void:
+	if not is_instance_valid(holder):
 		return
-	var parent := overlay.get_parent()
-	if parent == null or overlay.get_index() == parent.get_child_count() - 1:
+	var parent := holder.get_parent()
+	if parent == null or holder.get_index() == parent.get_child_count() - 1:
 		return
-	parent.move_child.call_deferred(overlay, parent.get_child_count() - 1)
+	parent.move_child.call_deferred(holder, parent.get_child_count() - 1)
 
 
 ## 目标自身与其子树里的全部材质节点；清空内容后重挂、切拖拽态都走同一份清单。
 static func _overlays(root: Node) -> Array[ColorRect]:
 	var found: Array[ColorRect] = []
-	var own := root.get_node_or_null(OVERLAY_NAME) as ColorRect
+	var holder := root.get_node_or_null(HOLDER_NAME) as Node
+	var own := holder.get_node_or_null(OVERLAY_NAME) as ColorRect if holder != null else null
 	if own != null:
 		found.append(own)
 	for node in root.find_children(OVERLAY_NAME, "ColorRect", true, false):
@@ -123,16 +132,21 @@ static func _overlays(root: Node) -> Array[ColorRect]:
 static func clear(target: Control) -> void:
 	if target == null:
 		return
-	var overlay := target.get_node_or_null(OVERLAY_NAME)
-	if overlay != null:
-		overlay.queue_free()
+	var holder := target.get_node_or_null(HOLDER_NAME)
+	if holder != null:
+		target.remove_child(holder)
+		holder.queue_free()
 
 
 static func clear_tree(root: Node) -> void:
 	for node in root.find_children("*", "ColorRect", true, false):
 		if node.name == OVERLAY_NAME:
-			node.get_parent().remove_child(node)
-			node.queue_free()
+			var holder := node.get_parent()
+			var victim: Node = holder if holder != null and holder.name == HOLDER_NAME else node
+			var parent := victim.get_parent()
+			if parent != null:
+				parent.remove_child(victim)
+			victim.queue_free()
 
 
 ## 整棵子树统一接入：只给最外层承担表面的控件加材质，嵌套面板不重复描边。
@@ -246,6 +260,8 @@ static func _sync(overlay: ColorRect, target: Control) -> void:
 	# 面板重排时可能只剩信号：节点已释放就直接跳过，不让旧的连接报错。
 	if not is_instance_valid(overlay) or not is_instance_valid(target):
 		return
+	overlay.position = Vector2.ZERO
+	overlay.size = target.size
 	var material := overlay.material as ShaderMaterial
 	if material == null:
 		return

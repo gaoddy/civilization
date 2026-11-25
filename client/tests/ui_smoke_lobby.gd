@@ -30,6 +30,7 @@ func _ready() -> void:
     var lobby := await _check_scene("res://pages/lobby/lobby.tscn", false)
     if lobby != null:
         await _check_layout(lobby)
+        await _check_frame_fill(lobby)
         await _check_hall_texture(lobby)
         await _check_match_toggle(lobby)
         await _check_queue_timer(lobby)
@@ -68,6 +69,42 @@ func _seed() -> void:
             "status": "online",
         },
     ]
+
+
+func _check_frame_fill(lobby: Node) -> void:
+    # 页面级材质在首帧布局后统一接入，等两帧再断言。
+    for _frame in 3:
+        await get_tree().process_frame
+    for node_name in ["LobbyPlayerCard", "LobbyRankCard"]:
+        _expect_frame_fill(lobby.find_child(node_name, true, false), node_name)
+
+    var friends := lobby.find_child("FriendsPanel", true, false)
+    _expect(friends != null, "大厅应有好友抽屉")
+    if friends != null:
+        friends.open()
+        await get_tree().process_frame
+        _expect_frame_fill(
+            friends.find_child("FriendsPanelCard", true, false), "FriendsPanelCard"
+        )
+        friends.close()
+
+
+## 框体材质贴着面板外沿：PanelContainer 的内容内边距不能把材质层挤进内容区。
+func _expect_frame_fill(panel: Node, node_name: String) -> void:
+    _expect(panel != null, "大厅缺少 %s" % node_name)
+    if panel == null:
+        return
+    var overlay := panel.find_child(FrameMaterial.OVERLAY_NAME, true, false) as Control
+    _expect(overlay != null, "%s 应带框体材质" % node_name)
+    if overlay == null:
+        return
+    _expect(overlay.position == Vector2.ZERO, "%s 框体材质应从面板左上角开始" % node_name)
+    _expect(
+        overlay.size.is_equal_approx((panel as Control).size),
+        "%s 框体材质应铺满面板，实际 %s / %s" % [
+            node_name, str(overlay.size), str((panel as Control).size),
+        ],
+    )
 
 
 func _check_layout(lobby: Node) -> void:
