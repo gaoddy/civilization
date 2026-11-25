@@ -4,6 +4,7 @@
 //! 其余座位由联盟抽对手（当前策略 / 快照 / 锚点 / 随机）。
 
 use std::ops::Range;
+use std::path::PathBuf;
 
 use ai_core::{Action, ActionFeatures, CardIndex, Observation};
 use ai_model::{ModelConfig, Weights, forward};
@@ -73,6 +74,13 @@ pub struct C2Config {
     pub league_size: usize,
     /// 每多少次 PPO 更新加一份快照。
     pub snapshot_every: usize,
+    /// 检查点根目录；`None` 表示不落盘。
+    pub checkpoint_dir: Option<PathBuf>,
+    /// 每多少次 PPO 更新写一份检查点；0 表示不落盘。
+    ///
+    /// 只存权重（`<dir>/<更新次数>/weights.json`），不存优化器状态：崩了以后
+    /// 可以从最近检查点接着评测或继续训练，但不是一个逐位可复现的续训点。
+    pub checkpoint_every: usize,
     /// 对局种子池；按对局序号循环取用。
     pub seeds: Range<u64>,
     pub episodes: usize,
@@ -88,6 +96,8 @@ impl Default for C2Config {
             c1_mix: 0.3,
             league_size: 8,
             snapshot_every: 20,
+            checkpoint_dir: None,
+            checkpoint_every: 0,
             seeds: 0..10_000,
             episodes: 1000,
             batch_episodes: 8,
@@ -556,6 +566,14 @@ pub fn train_c2(
             if cfg.snapshot_every > 0 && updates.is_multiple_of(cfg.snapshot_every) {
                 let snapshot = model.weights()?;
                 env.league_mut().add_snapshot(snapshot);
+            }
+            if let Some(dir) = &cfg.checkpoint_dir
+                && cfg.checkpoint_every > 0
+                && updates.is_multiple_of(cfg.checkpoint_every)
+            {
+                model
+                    .weights()?
+                    .save(&dir.join(format!("{updates:05}")).join("weights.json"))?;
             }
         }
     }

@@ -412,6 +412,7 @@ fn train_c2(args: &[String]) -> Result<(), String> {
     let mut c1_mix = 0.3f32;
     let mut distribution = 200usize;
     let mut seed = 0u64;
+    let mut checkpoint_every = 20usize;
     let mut iter = args.iter();
     while let Some(flag) = iter.next() {
         let value = iter
@@ -443,6 +444,11 @@ fn train_c2(args: &[String]) -> Result<(), String> {
                     .parse()
                     .map_err(|_| format!("--seed 不是整数：{value}"))?;
             }
+            "--checkpoint-every" => {
+                checkpoint_every = value
+                    .parse()
+                    .map_err(|_| format!("--checkpoint-every 不是整数：{value}"))?;
+            }
             other => return Err(format!("未知参数：{other}")),
         }
     }
@@ -464,6 +470,9 @@ fn train_c2(args: &[String]) -> Result<(), String> {
         episodes,
         c1_mix,
         seed,
+        // 长训练按更新次数落盘，崩溃后最近的检查点还能拿去评测。
+        checkpoint_dir: (checkpoint_every > 0).then(|| out_dir.join("snapshots")),
+        checkpoint_every,
         ..C2Config::default()
     };
     let output =
@@ -485,6 +494,7 @@ fn train_c2(args: &[String]) -> Result<(), String> {
         "c1_mix": cfg.c1_mix,
         "league_size": cfg.league_size,
         "snapshot_every": cfg.snapshot_every,
+        "checkpoint_every": cfg.checkpoint_every,
         "snapshots": output.snapshots,
         "seed": cfg.seed,
         "distribution": pool.len(),

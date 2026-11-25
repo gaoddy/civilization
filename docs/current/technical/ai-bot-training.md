@@ -65,6 +65,7 @@ output/models/c1/weights.json(.bin) # C1 策略
 output/models/c2/weights.json(.bin) # C2 策略
 output/models/<phase>/manifest.json # schema、weights_version、catalog_hash、结构参数、seed、配置与训练指标
 output/models/c1/eval.json          # C1 冻结分布评测（胜率、均差）
+output/models/c2/snapshots/<更新次数>/weights.json # train-c2 的周期检查点（--checkpoint-every，默认每 20 次更新）
 output/models/c2/eval.json          # ai-eval 的检查点对比与最佳路径
 ```
 
@@ -93,7 +94,7 @@ output/models/c2/eval.json          # ai-eval 的检查点对比与最佳路径
 
 ## 6. 重训
 
-1. 卡表或规则变化后按 `make ai-data` → C0 → C1 → C2 顺序重跑；`catalog_hash` 变化即说明旧权重与旧棋盘对都不再对应。
+1. 卡表或规则变化后按 `make ai-data` → C0 → C1 → C2 顺序重跑；`catalog_hash` 变化即说明旧权重与旧棋盘对都不再对应。`train-c2` 每 `--checkpoint-every`（默认 20）次更新把权重写到 `output/models/c2/snapshots/`，崩溃后可从最近检查点继续评测或作为续训初始化；检查点只含权重，不含优化器状态，因此不是逐位可复现的断点续训。
 2. 权重格式变化时递增 `ai-model::WEIGHTS_VERSION`，加载端按版本拒绝。
 3. 训练可复现：初始化种子化（`seed_weights`），同一 seed 与步数得到同一份权重。
 4. 检查点选择只看固定种子集上的评测指标（平均名次），不看训练损失或训练内胜率。

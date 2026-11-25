@@ -92,3 +92,45 @@ fn train_c2_runs_a_short_budget_and_returns_weights() {
         output.mean_placement
     );
 }
+
+/// 长时间训练要在训练中把权重落盘：崩了还能从最近的检查点接着评测。
+#[test]
+fn training_writes_periodic_checkpoints() {
+    let catalog = tiny_catalog();
+    let dir = std::env::temp_dir().join(format!("c2-checkpoints-{}", std::process::id()));
+    let cfg = C2Config {
+        episodes: 2,
+        batch_episodes: 1,
+        c1_mix: 0.0,
+        league_size: 2,
+        snapshot_every: 1,
+        seeds: 0..64,
+        seed: 3,
+        checkpoint_dir: Some(dir.clone()),
+        checkpoint_every: 1,
+        ..C2Config::default()
+    };
+
+    train_c2(&catalog, &[], None, None, &cfg).expect("C2 训练");
+
+    let mut steps: Vec<String> = std::fs::read_dir(&dir)
+        .expect("检查点目录应存在")
+        .map(|entry| {
+            entry
+                .expect("目录项")
+                .file_name()
+                .to_string_lossy()
+                .into_owned()
+        })
+        .collect();
+    steps.sort();
+    assert_eq!(steps.len(), 2, "每批次一个检查点，实际 {steps:?}");
+    for step in &steps {
+        assert!(
+            dir.join(step).join("weights.json").is_file(),
+            "检查点 {step} 应有 weights.json"
+        );
+    }
+
+    std::fs::remove_dir_all(&dir).expect("清理");
+}
