@@ -3022,7 +3022,7 @@ fn player_has_target(player: &PlayerState, target: TargetRef) -> bool {
 }
 
 /// 本座位三个区域的实例编号，按「棋盘 → 手牌 → 商店」排列。
-fn own_target_refs(state: &GameState, seat: Seat) -> Vec<TargetRef> {
+pub(crate) fn own_target_refs(state: &GameState, seat: Seat) -> Vec<TargetRef> {
     let Some(player) = state.players.get(usize::from(seat)) else {
         return Vec::new();
     };

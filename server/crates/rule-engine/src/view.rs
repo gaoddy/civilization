@@ -12,7 +12,7 @@
 
 use crate::combat;
 use crate::data::{Catalog, Era};
-use crate::effects::{EVOLVE_CHOICES, EffectCtx, Op, TargetRef, Trigger};
+use crate::effects::{EVOLVE_CHOICES, EffectCtx, Op, TargetRef, Trigger, own_target_refs};
 use crate::engine::Engine;
 use crate::intent::RejectCode;
 use crate::recruit::{
@@ -51,15 +51,16 @@ pub(crate) fn hero_power_targets(
 }
 
 /// 手牌是否需要目标，以及当前合法目标；效果牌按出牌时机计算。
+///
+/// 与 `play_card` 的预检同源：除牌自身 `OnPlayEffect` 的目标要求外，打出效果牌
+/// 还会触发本座位随从的 `OnUse` 响应，响应需要目标时也必须一并给出。
 pub(crate) fn hand_card_targets(
     engine: &Engine,
     state: &GameState,
     seat: Seat,
     hand_card: &crate::state::HandCard,
 ) -> (bool, Vec<TargetRef>) {
-    let requires_target = hand_card.minion().is_none()
-        && engine.requires_target(hand_card.card_id(), Trigger::OnPlayEffect);
-    if !requires_target {
+    if hand_card.minion().is_some() {
         return (false, Vec::new());
     }
     let ctx = EffectCtx {
@@ -70,15 +71,24 @@ pub(crate) fn hand_card_targets(
         golden: false,
         level_override: hand_card.reward_level(),
     };
-    (
-        true,
-        engine.target_candidates(
-            state,
-            &engine.effects_of(hand_card.card_id(), Trigger::OnPlayEffect),
-            &ctx,
-            true,
-        ),
-    )
+    let effects = engine.effects_of(hand_card.card_id(), Trigger::OnPlayEffect);
+    let needs_target = |ctx: &EffectCtx| {
+        engine.check_targets(state, &effects, ctx, false).is_err()
+            || engine.check_on_use_targets(state, ctx).is_err()
+    };
+    if !needs_target(&ctx) {
+        return (false, Vec::new());
+    }
+    let candidates = own_target_refs(state, seat)
+        .into_iter()
+        .filter(|target| {
+            !needs_target(&EffectCtx {
+                target: Some(target.id),
+                ..ctx
+            })
+        })
+        .collect();
+    (true, candidates)
 }
 
 /// 棋盘随从主动技能是否需要目标，以及当前合法目标。
