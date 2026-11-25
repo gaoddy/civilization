@@ -12,7 +12,7 @@
 
 use crate::combat;
 use crate::data::{Catalog, Era};
-use crate::effects::{EVOLVE_CHOICES, EffectCtx, Op, TargetRef, Trigger, own_target_refs};
+use crate::effects::{EVOLVE_CHOICES, EffectCtx, Op, TargetRef, Trigger};
 use crate::engine::Engine;
 use crate::intent::RejectCode;
 use crate::recruit::{
@@ -63,6 +63,11 @@ pub(crate) fn hand_card_targets(
     if hand_card.minion().is_some() {
         return (false, Vec::new());
     }
+    // 与出牌预检同一口径：只看效果是否声明了单一目标选择器。
+    let requires_target = engine.requires_target(hand_card.card_id(), Trigger::OnPlayEffect);
+    if !requires_target {
+        return (false, Vec::new());
+    }
     let ctx = EffectCtx {
         seat,
         source: None,
@@ -72,23 +77,7 @@ pub(crate) fn hand_card_targets(
         level_override: hand_card.reward_level(),
     };
     let effects = engine.effects_of(hand_card.card_id(), Trigger::OnPlayEffect);
-    let needs_target = |ctx: &EffectCtx| {
-        engine.check_targets(state, &effects, ctx, false).is_err()
-            || engine.check_on_use_targets(state, ctx).is_err()
-    };
-    if !needs_target(&ctx) {
-        return (false, Vec::new());
-    }
-    let candidates = own_target_refs(state, seat)
-        .into_iter()
-        .filter(|target| {
-            !needs_target(&EffectCtx {
-                target: Some(target.id),
-                ..ctx
-            })
-        })
-        .collect();
-    (true, candidates)
+    (true, engine.target_candidates(state, &effects, &ctx, true))
 }
 
 /// 棋盘随从主动技能是否需要目标，以及当前合法目标。
