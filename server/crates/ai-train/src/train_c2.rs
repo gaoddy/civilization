@@ -348,6 +348,10 @@ fn run_c2_episode(
     let mut steps = 0usize;
     let mut turn = env.turn();
     let mut per_turn = vec![0usize; PLAYER_COUNT];
+    // 学习者最后一次采样；若对局在别人手里结束，要用它补一条终局 transition。
+    let mut learner_sample: Option<(Observation, usize, Vec<bool>, f32, f32, Vec<ActionFeatures>)> =
+        None;
+    let mut learner_recorded_done = false;
     while !env.is_done() && steps < EPISODE_GUARD {
         let Some(seat) = env.current_seat() else {
             break;
@@ -392,8 +396,18 @@ fn run_c2_episode(
         } else {
             0.0
         };
-        episode_return += reward;
         if let Some((mask, logp, value)) = recorded {
+            // 对局回报只统计学习者自己的奖励；最后行动者的名次奖励与学习者无关。
+            episode_return += reward;
+            learner_recorded_done = stepped.done;
+            learner_sample = Some((
+                obs.clone(),
+                choice,
+                mask.clone(),
+                logp,
+                value,
+                features.clone(),
+            ));
             record(
                 batch,
                 obs,
@@ -408,6 +422,22 @@ fn run_c2_episode(
         }
         steps += 1;
         per_turn[index] += 1;
+    }
+    // 学习者多半不是最后一个行动者：对局结束后必须为它补一条带名次奖励的
+    // 终局 transition，否则它的轨迹永远 `done = false`，GAE 会跨局 bootstrap，
+    // 名次奖励也从不进入损失。
+    if env.is_done()
+        && !learner_recorded_done
+        && let Some((obs, choice, mask, logp, value, features)) = learner_sample
+    {
+        let reward = env
+            .placement(learner)
+            .map(|place| {
+                (PLAYER_COUNT as f32 + 1.0 - f32::from(place)) / PLAYER_COUNT as f32
+            })
+            .unwrap_or(0.0);
+        episode_return += reward;
+        record(batch, obs, choice, mask, logp, value, reward, true, features);
     }
     Ok((episode_return, env.placement(learner)))
 }
@@ -549,4 +579,76 @@ pub fn train_c2(
         snapshots: env.league().snapshots().len(),
         last_metrics,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    
+    fn catalog() -> Catalog {
+        Catalog::from_json(
+            include_str!("../../../data/v0.1/cards.json"),
+            include_str!("../../../data/v0.1/heroes.json"),
+            include_str!("../../../data/v0.1/skills.json"),
+            include_str!("../../../data/v0.1/config.json"),
+            include_str!("../../../data/v0.1/taxonomy.json"),
+        )
+        .expect("卡表")
+    }
+
+    /// 学习者不是最后行动者时，也必须恰有一条带名次奖励的终局 transition，
+    /// 否则 GAE 会跨局 bootstrap，名次目标根本不进入损失。
+    #[test]
+    fn every_learner_episode_ends_with_one_terminal_transition() {
+        let catalog = catalog();
+        let cfg = C2Config {
+            seeds: 0..8,
+            ..C2Config::default()
+        };
+        let mut env = FullEnv::new(&catalog, League::new(cfg.seed, cfg.league_size));
+        let index = ai_core::CardIndex::build(&catalog);
+        let mut model = TrainModel::new(
+            &cfg.model,
+            index.card_count(),
+            index.hero_count(),
+            index.skill_count(),
+            cfg.seed,
+        )
+        .expect("模型");
+        let mut rng = RandomPolicy::new(cfg.seed);
+
+        for episode in 0..8usize {
+            let mut batch = empty_batch();
+            let (episode_return, placement) = run_c2_episode(
+                &catalog,
+                &mut env,
+                &mut model,
+                episode,
+                episode as u64,
+                &mut rng,
+                &mut batch,
+            )
+            .expect("对局应能跑完");
+            let dones: Vec<usize> = batch
+                .dones
+                .iter()
+                .enumerate()
+                .filter(|(_, done)| **done)
+                .map(|(row, _)| row)
+                .collect();
+            assert_eq!(dones.len(), 1, "第 {episode} 局应恰有一条终局 transition");
+            assert_eq!(dones[0], batch.len() - 1, "终局 transition 应在最末");
+            let place = placement.expect("终局应有名次");
+            let expected = (PLAYER_COUNT as f32 + 1.0 - f32::from(place)) / PLAYER_COUNT as f32;
+            assert!(
+                (batch.rewards[dones[0]] - expected).abs() < 1e-6,
+                "终局奖励应等于名次奖励：{} vs {expected}",
+                batch.rewards[dones[0]]
+            );
+            assert!(
+                (episode_return - expected).abs() < 1e-6,
+                "对局回报应只含终局名次奖励：{episode_return} vs {expected}，place {place}"
+            );
+        }
+    }
 }
