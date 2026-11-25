@@ -1,7 +1,7 @@
 # 客户端图片素材索引
 
 > 状态：已实现
-> 范围：本文登记卡面、售货员头像、英雄头像与立绘之外的 5 张客户端图片，按「页面位置 / 文件名 / 尺寸 / 画面目的 / 构图与裁切 / 重新生成方式」给出整包重出所需的全部信息。纹理槽位、铺图组件与自动校验以 [纹理登记册](textures.md) 为准；卡面、售货员头像与英雄头像见 [纹理登记册](textures.md) §1 与 [卡片封面美术生成](card-cover-art.md)。
+> 范围：本文登记卡面、售货员头像、英雄头像与立绘之外的 5 张客户端图片，按「页面位置 / 文件名 / 尺寸 / 画面目的 / 构图与裁切 / 重新生成方式」给出整包重出所需的全部信息。纹理槽位、铺图组件与自动校验以 [纹理登记册](textures.md) 为准；卡面、售货员头像与英雄头像见 [纹理登记册](textures.md) §1 与 [卡片封面美术生成](card-cover-art.md)。§2.5 另登记导出与商店素材规格，这些素材不进入客户端包。
 
 ## 1. 总览
 
@@ -75,6 +75,43 @@
 **构图**：深墨竖向渐变底、四角压暗，中央金色旗杆与燕尾旗，旗面带徽记，底部一条基线；2× 超采样后降采样抗锯齿。
 
 **重新生成**：由 `scripts/gen_app_icon.py` 生成，颜色取自 UITheme 原子层（`INK_950`、`INK_800`、`INK_700`、`GOLD_400`、`GOLD_600`）。改用 AI 出图时保持正方形满幅、四边不留空白、无文字、无透明边缘，缩小后主体占比不小于画面的 60%。
+
+**各渠道图标**
+
+客户端包内的 macOS、iOS 与 Android 应用图标由 Godot 从 `client/icon.png` 缩放生成；`client/export_presets.cfg` 的 `launcher_icons/main_192x192`、`adaptive_foreground_432x432`、`adaptive_background_432x432`、`adaptive_monochrome_432x432` 为空，Android 未配置自适应图标层。商店后台图标需另行导出，不进入客户端包。
+
+| 渠道 | 素材 | 尺寸 | 格式 | 仓库现状 |
+| --- | --- | --- | --- | --- |
+| iOS | App Store 营销图标 | 1024×1024 | PNG，无 alpha 通道 | 源图为 RGBA（alpha 全 255），提交前需去除 alpha 通道 |
+| iOS | 应用内图标档位 | 由 1024 源图按倍率生成 | — | 已实现 |
+| Android | 传统 launcher 图标 | 192×192 | PNG | 由 `client/icon.png` 缩放生成 |
+| Android | 自适应图标前景 / 背景 / 单色层 | 每层 432×432（108dp） | PNG | 预设字段为空，未配置 |
+| Android | Google Play 商店图标 | 512×512 | 32-bit PNG（允许 alpha，≤1024KB） | 待 [Google Play 发布配置](../../../requirements/google-play-release.md) |
+| Android | Google Play Feature Graphic | 1024×500 | JPEG 或 24-bit PNG，无 alpha | 待 [Google Play 发布配置](../../../requirements/google-play-release.md) |
+| Steam | Shortcut Icon | 256×256 或 512×512 | ICO 或 PNG | 待 [Steamworks 后台与商店页](../../../requirements/steamworks-store.md) |
+| Steam | macOS 快捷方式图标 | 由 1024 源图生成 | ICNS | 待 [Steamworks 后台与商店页](../../../requirements/steamworks-store.md) |
+| Steam | App Icon | 184×184 | JPG | 待 [Steamworks 后台与商店页](../../../requirements/steamworks-store.md) |
+
+- Android 自适应图标以 432×432 为画布，主体放在中央 264×264（66dp）安全区内，外圈 18dp 用于系统裁切与视差；主体不得小于 192×192（48dp），也不得超出 264×264。
+- Android 商店图标允许 alpha；Feature Graphic 与商店截图不允许 alpha。iOS 营销图标不允许 alpha。三者不能共用同一张带 alpha 的导出图。
+- Steam Shortcut Icon 传 PNG 时由 Steam 自动转 ICO；macOS 还需单独提供 ICNS，否则快捷方式使用默认 Steam 图标。
+
+**Steam 商店与库素材**
+
+以下素材在 Steamworks 后台按位图上传，不经过客户端导出流程，状态均为待 [Steamworks 后台与商店页](../../../requirements/steamworks-store.md)。
+
+| 素材 | 尺寸 | 要求 |
+| --- | --- | --- |
+| Header Capsule | 920×430 | 必需 |
+| Small Capsule | 462×174 | 必需，Steam 自动派生 120×45 与 184×69 |
+| Main Capsule | 1232×706 | 必需 |
+| Vertical Capsule | 748×896 | 必需，用于季节性促销页 |
+| Page Background | 1438×810 | 可选，不传时由最后一张截图生成 |
+| 截图 | ≥1920×1080，16:9 | 至少 5 张，必须是真实游戏画面 |
+| Library Capsule | 600×900 | 必需 |
+| Library Header | 920×430 | 必需 |
+| Library Hero | 3840×1240 | 必需，主体放在中央 860×380 安全区 |
+| Library Logo | 宽 1280 / 高 720 以内 | 必需，PNG 透明背景，只放 logo |
 
 ## 3. 排除项
 
