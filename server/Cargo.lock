@@ -36,6 +36,12 @@ dependencies = [
 [[package]]
 name = "ai-model"
 version = "0.1.0"
+dependencies = [
+ "ai-core",
+ "rule-engine",
+ "serde",
+ "serde_json",
+]
 
 [[package]]
 name = "ai-train"

@@ -9,7 +9,7 @@ pub mod weights;
 use std::fmt;
 
 pub use config::ModelConfig;
-pub use forward::{forward, forward_hero};
+pub use forward::{board_value, forward, forward_hero};
 pub use weights::{WEIGHTS_VERSION, Weights};
 
 /// 加载或前向过程中的错误。

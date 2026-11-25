@@ -65,6 +65,26 @@ pub fn forward(
     Ok((logits, value))
 }
 
+/// 只要状态价值：C0 的单棋盘强度 `s(board, hero)` 与 critic 初始化都走这里。
+///
+/// 只用主干预价值头，不读取任何嵌入表。
+pub fn board_value(
+    weights: &Weights,
+    cfg: &ModelConfig,
+    obs: &Observation,
+) -> Result<f32, ModelError> {
+    let obs_vec = obs.to_vec();
+    if obs_vec.len() != cfg.obs_dim {
+        return Err(ModelError::Shape(format!(
+            "观测长度 {} 与配置 {} 不符",
+            obs_vec.len(),
+            cfg.obs_dim
+        )));
+    }
+    let trunk = trunk(weights, cfg, &obs_vec)?;
+    value(weights, cfg, &trunk)
+}
+
 /// 选英雄专用头：对每个候选英雄打分。
 ///
 /// 与通用候选头分开参数（设计 D2=A），输入为英雄嵌入与主干的拼接。
