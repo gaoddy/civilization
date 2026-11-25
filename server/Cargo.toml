@@ -6,6 +6,9 @@ members = [
     "crates/protocol-gen",
     "crates/protocol",
     "crates/room-service",
+    "crates/ai-core",
+    "crates/ai-model",
+    "crates/ai-train",
 ]
 resolver = "3"
 

@@ -3,6 +3,7 @@
 #   make/client.mk   客户端构建、运行、检查与导出
 #   make/content.mk  内容、协议、资产与文档生成/校验
 #   make/server.mk   服务端测试、模拟器、压测与本地联调
+#   make/ai.mk       RL 训练、评测与检查
 #   make/deploy.mk   服务端部署
 # 命令说明见 AGENTS.md 与 docs/current/technical/。
 
@@ -22,6 +23,7 @@ OUTPUT_LOG_DIR ?= output/logs/$(OUTPUT_LOG_BRANCH)
 include make/client.mk
 include make/content.mk
 include make/server.mk
+include make/ai.mk
 include make/deploy.mk
 
 .PHONY: check-core check
