@@ -111,6 +111,8 @@ func _invite_button(text: String, node_name: String, style: String) -> Button:
         text, style, UITheme.stage_metric("lobby-room-invite-height")
     )
     button.name = node_name
+    # 创建模式的邀请行与座位操作保持静态边框，不参与引导流光。
+    FrameMaterial.set_guide_preference(button, false)
     return button
 
 
@@ -214,6 +216,7 @@ func _fill_player_row(row: PanelContainer, player: Dictionary, self_id: String, 
         # 座位行高度固定，移除入口按令牌取视觉高度，不撑高整行。
         kick.size_flags_vertical = Control.SIZE_SHRINK_CENTER
         kick.pressed.connect(func() -> void: kick_requested.emit(player_id))
+        FrameMaterial.set_guide_preference(kick, false)
         line.add_child(kick)
 
 

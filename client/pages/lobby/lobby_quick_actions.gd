@@ -32,6 +32,8 @@ func _init() -> void:
     create_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     create_button.pressed.connect(func() -> void: create_pressed.emit())
     add_child(create_button)
+    # 大厅只保留「开始匹配」的引导流光，创建房间等次要入口保持静态边框。
+    FrameMaterial.set_guide_preference(create_button, false)
 
 
 func set_state(state: Dictionary) -> void:
@@ -45,3 +47,5 @@ func set_state(state: Dictionary) -> void:
     )
     match_button.disabled = not connected or creating or joining or matched
     create_button.disabled = not connected or queueing or creating or joining
+    # 开始匹配后按钮变为取消，流光随之移除；取消排队回到开始匹配时再恢复。
+    FrameMaterial.set_guide_preference(match_button, not queueing)

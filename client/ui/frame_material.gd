@@ -14,6 +14,9 @@ enum Style {
 }
 
 const OVERLAY_NAME := "FrameMaterial"
+## 引导流光偏好：按钮默认可操作表面都带流光，页面可在创建后给次要按钮写 `false`。
+## 页面级 `dress_page` 还会整页再扫一遍，偏好写进 meta 才能在重扫后继续生效。
+const GUIDE_META := "frame_guide"
 ## 材质层挂在 Node2D 下：容器只排列 Control 子节点，这样 PanelContainer 的
 ## 内容内边距不会把材质层挤进内容区；Node2D 仍是 CanvasItem，祖先缩放照常生效。
 const HOLDER_NAME := "FrameMaterialHolder"
@@ -106,6 +109,14 @@ static func set_guide(target: Control, guide: bool) -> void:
 			material.set_shader_parameter("guide", value)
 
 
+## 设置控件是否跟随引导流光：同时写入 meta，页面级 `dress_page` 重扫时按偏好生效。
+static func set_guide_preference(target: Control, guide: bool) -> void:
+	if target == null:
+		return
+	target.set_meta(GUIDE_META, guide)
+	set_guide(target, guide)
+
+
 ## 新内容加入后把材质挪回最后一个子节点：装饰层永远压在内容上面，
 ## 容器内容的索引与顺序保持不变。
 static func _raise(holder: Node) -> void:
@@ -173,8 +184,11 @@ static func _options_for(target: Control, base: Dictionary) -> Dictionary:
 	return opts
 
 
-## 引导流光只给「现在就该操作」的表面：按钮，以及当前允许拖拽的卡。
+## 引导流光只给「现在就该操作」的表面：按钮，以及当前允许拖拽的卡；
+## 页面声明过偏好的控件按声明走。
 static func _wants_guide(control: Control) -> bool:
+	if control.has_meta(GUIDE_META):
+		return bool(control.get_meta(GUIDE_META))
 	if control is Button:
 		return true
 	if "drag_allowed" in control:

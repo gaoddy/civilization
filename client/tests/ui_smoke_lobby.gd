@@ -33,6 +33,7 @@ func _ready() -> void:
         await _check_frame_fill(lobby)
         await _check_hall_texture(lobby)
         await _check_match_toggle(lobby)
+        await _check_guide_scope(lobby)
         await _check_queue_timer(lobby)
         await _check_creating_blocks_match(lobby)
         await _check_disconnect(lobby)
@@ -193,6 +194,46 @@ func _check_match_toggle(lobby: Node) -> void:
     _expect(not GameStore.queueing, "再点应取消排队")
     _expect(match_button.text == tr("ui.lobby.start_match"), "取消后主按钮应回到开始匹配")
     _expect(queue_card != null and not queue_card.visible, "取消后应隐藏排队卡")
+
+
+## 大厅只保留「开始匹配」的引导流光：其余按钮静态，进入排队后匹配按钮的流光也移除。
+func _check_guide_scope(lobby: Node) -> void:
+    var match_button := lobby.find_child("MatchButton", true, false) as Button
+    if match_button == null:
+        _expect(false, "大厅缺少匹配按钮")
+        return
+    _expect(_guide_on(match_button), "未排队时开始匹配应带引导流光")
+    for node_name in [
+        "CreateRoomButton",
+        "FriendsButton",
+        "GalleryButton",
+        "LeaderboardButton",
+        "StartButton",
+        "DissolveButton",
+    ]:
+        var button := lobby.find_child(node_name, true, false) as Button
+        _expect(button != null, "大厅缺少 %s" % node_name)
+        if button != null:
+            _expect(not _guide_on(button), "大厅次要按钮不应带流光：%s" % node_name)
+
+    match_button.pressed.emit()
+    await get_tree().process_frame
+    _expect(GameStore.queueing, "开始匹配后应进入排队")
+    _expect(not _guide_on(match_button), "排队后匹配按钮应移除流光")
+
+    match_button.pressed.emit()
+    await get_tree().process_frame
+    _expect(not GameStore.queueing, "再点应取消排队")
+    _expect(_guide_on(match_button), "取消排队后开始匹配应恢复流光")
+
+
+## 按钮当前是否开启引导流光；材质未接入或参数缺失时视为关闭。
+func _guide_on(button: Button) -> bool:
+    var overlay := button.find_child(FrameMaterial.OVERLAY_NAME, true, false) as ColorRect
+    var material := overlay.material as ShaderMaterial if overlay != null else null
+    if material == null:
+        return false
+    return float(material.get_shader_parameter("guide") or 0.0) > 0.5
 
 
 ## 等待时长由客户端本地时钟累计：开始匹配即起算，服务端下发 `waitingMs` 不重置。

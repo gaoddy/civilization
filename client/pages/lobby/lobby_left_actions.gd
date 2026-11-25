@@ -17,6 +17,8 @@ func _init() -> void:
     friends_button = FriendsButton.new()
     friends_button.open_requested.connect(func() -> void: friends_pressed.emit())
     add_child(friends_button)
+    # 大厅只保留「开始匹配」的引导流光，左栏入口保持静态边框。
+    FrameMaterial.set_guide_preference(friends_button, false)
 
     add_child(_entry_button(tr("ui.gallery.entry"), "GalleryButton", gallery_pressed))
     if Platform.is_steam():
@@ -36,4 +38,5 @@ func _entry_button(text: String, node_name: String, forwarded: Signal) -> Button
     button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     button.custom_minimum_size.y = UITheme.stage_metric("lobby-left-action-height")
     button.pressed.connect(func() -> void: forwarded.emit())
+    FrameMaterial.set_guide_preference(button, false)
     return button

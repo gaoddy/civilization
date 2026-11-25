@@ -32,6 +32,7 @@
 - 事件：标准 `Button.pressed`，由页面连接意图发送。
 - 禁用时必须同时给出 `tooltip_text` 说明原因。
 - `apply_button_style` 会给按钮叠一层 [框体材质](frame-material.md)，按钮因此默认带引导流光；`PillButton` 走同一规则。
+- 页面需要收窄流光范围时，用 `FrameMaterial.set_guide_preference(button, false)` 关掉个别按钮；偏好随材质重扫保留。大厅只保留「开始匹配」的流光，开始匹配后移除。
 
 ## 禁用场景
 
