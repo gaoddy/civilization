@@ -9,6 +9,7 @@
 | [versions/](versions/README.md) | 未实现版本的规划与目标形态 |
 | [current/](current/README.md) | 当前代码已实现的状态；只写现状，不复制版本规划 |
 | [releases/](releases/README.md) | 已发布版本的更新内容 |
+| [decisions/](decisions/README.md) | 跨版本的已采用决策与已否决请求 |
 | `plan/` | 实施计划，本地保留、不提交 |
 
 仓库根目录 `.superpowers/` 存放 superpowers 生成的设计、计划与报告，本地保留、不提交；不属于 `docs/` 结构。
