@@ -5,7 +5,11 @@
 
 pub mod data_c0;
 pub mod env;
+#[cfg(feature = "train")]
+pub mod model;
 pub mod random_policy;
+#[cfg(feature = "train")]
+pub mod train_c0;
 
 /// 训练功能所在的 feature 名。
 pub const TRAIN_FEATURE: &str = "train";

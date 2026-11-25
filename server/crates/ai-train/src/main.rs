@@ -18,12 +18,15 @@ fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
     let result = match args.first().map(String::as_str) {
         Some("data-c0") => data_c0(&args[1..]),
+        Some("train-c0") => train_c0(&args[1..]),
         Some(other) => Err(format!("未知子命令：{other}")),
         None => Err("缺少子命令".to_string()),
     };
     if let Err(message) = result {
         eprintln!("{message}");
-        eprintln!("用法：ai-train data-c0 --out <路径> [--games 2000] [--seed 0]");
+        eprintln!(
+            "用法：ai-train data-c0 --out <路径> [--games 2000] [--seed 0]\n      ai-train train-c0 [--pairs 路径] [--out-dir 目录] [--steps 500] [--seed 0]"
+        );
         std::process::exit(2);
     }
 }
@@ -191,4 +194,85 @@ fn catalog_hash(catalog: &Catalog) -> u64 {
         feed(skill.id.as_bytes());
     }
     hash
+}
+
+#[cfg(feature = "train")]
+fn train_c0(args: &[String]) -> Result<(), String> {
+    use ai_train::model::C0Config;
+    use ai_train::train_c0::{calibrate, read_pairs, split_pairs, train_c0 as train};
+
+    let mut pairs_path = Path::new("output/models/c0/pairs.jsonl").to_path_buf();
+    let mut out_dir = Path::new("output/models/c0").to_path_buf();
+    let mut steps = 500usize;
+    let mut seed = 0u64;
+    let mut iter = args.iter();
+    while let Some(flag) = iter.next() {
+        let value = iter
+            .next()
+            .ok_or_else(|| format!("{flag} 缺少取值"))?
+            .clone();
+        match flag.as_str() {
+            "--pairs" => pairs_path = value.into(),
+            "--out-dir" => out_dir = value.into(),
+            "--steps" => {
+                steps = value
+                    .parse()
+                    .map_err(|_| format!("--steps 不是整数：{value}"))?;
+            }
+            "--seed" => {
+                seed = value
+                    .parse()
+                    .map_err(|_| format!("--seed 不是整数：{value}"))?;
+            }
+            other => return Err(format!("未知参数：{other}")),
+        }
+    }
+
+    let catalog = catalog();
+    let index = ai_core::CardIndex::build(&catalog);
+    let pairs = read_pairs(&pairs_path, &catalog).map_err(|error| error.to_string())?;
+    let cfg = C0Config {
+        steps,
+        seed,
+        ..C0Config::default()
+    };
+    let weights = train(&pairs, &index, &cfg).map_err(|error| error.to_string())?;
+    let (train_pairs, held) = split_pairs(&pairs, cfg.held_out);
+    let calibration = calibrate(&weights, &cfg, &index, &held);
+    weights
+        .save(&out_dir.join("weights.json"))
+        .map_err(|error| error.to_string())?;
+    let manifest = serde_json::json!({
+        "schema": DATA_SCHEMA_VERSION,
+        "weights_version": ai_model::WEIGHTS_VERSION,
+        "obs_dim": ai_core::OBS_DIM,
+        "hidden": cfg.hidden,
+        "layers": cfg.layers,
+        "steps": cfg.steps,
+        "lr": cfg.lr,
+        "seed": cfg.seed,
+        "pairs": pairs.len(),
+        "train": train_pairs.len(),
+        "held_out": held.len(),
+        "brier": calibration.brier,
+        "ece": calibration.ece,
+    });
+    fs::create_dir_all(&out_dir).map_err(|error| format!("创建目录失败：{error}"))?;
+    fs::write(
+        out_dir.join("manifest.json"),
+        serde_json::to_vec_pretty(&manifest).map_err(|error| error.to_string())?,
+    )
+    .map_err(|error| format!("写入失败：{error}"))?;
+    println!(
+        "C0 训练完成：{} 对，Brier {:.4}，ECE {:.4}",
+        pairs.len(),
+        calibration.brier,
+        calibration.ece
+    );
+    Ok(())
+}
+
+#[cfg(not(feature = "train"))]
+fn train_c0(_args: &[String]) -> Result<(), String> {
+    Err("train-c0 需要 --features train".to_string())
 }
