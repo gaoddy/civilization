@@ -1,9 +1,54 @@
-//! 网络结构与权重格式：纯 Rust 手写前向，训练与推理共用同一套权重。
+//! 纯 Rust 模型：结构配置、权重格式与前向计算。
 //!
-//! 不依赖 `candle` 或其他 ML 运行时；推理端只需字节级加载权重与一次前向。
+//! 训练侧用 candle 复现同一套张量；推理侧只用本 crate，不引入 ML 运行时。
 
-/// 权重格式版本；张量名或布局变更时递增。
-pub const WEIGHTS_VERSION: u32 = 1;
+pub mod config;
+pub mod forward;
+pub mod weights;
+
+use std::fmt;
+
+pub use config::ModelConfig;
+pub use forward::{forward, forward_hero};
+pub use weights::{WEIGHTS_VERSION, Weights};
+
+/// 加载或前向过程中的错误。
+#[derive(Debug)]
+pub enum ModelError {
+    Io(std::io::Error),
+    Json(serde_json::Error),
+    Version(u32),
+    MissingTensor(String),
+    Shape(String),
+    Index { table: String, index: i32 },
+}
+
+impl fmt::Display for ModelError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Io(error) => write!(f, "读写失败：{error}"),
+            Self::Json(error) => write!(f, "清单解析失败：{error}"),
+            Self::Version(version) => write!(f, "权重版本 {version} 不受支持"),
+            Self::MissingTensor(name) => write!(f, "缺少张量 {name}"),
+            Self::Shape(message) => write!(f, "形状不匹配：{message}"),
+            Self::Index { table, index } => write!(f, "{table} 索引越界：{index}"),
+        }
+    }
+}
+
+impl std::error::Error for ModelError {}
+
+impl From<std::io::Error> for ModelError {
+    fn from(error: std::io::Error) -> Self {
+        Self::Io(error)
+    }
+}
+
+impl From<serde_json::Error> for ModelError {
+    fn from(error: serde_json::Error) -> Self {
+        Self::Json(error)
+    }
+}
 
 #[cfg(test)]
 mod tests {

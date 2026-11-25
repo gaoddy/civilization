@@ -4,11 +4,13 @@
 
 pub mod action;
 pub mod catalog;
+pub mod features;
 pub mod history;
 pub mod observe;
 
 pub use action::Action;
 pub use catalog::CardIndex;
+pub use features::{ACTION_FEATURE_DIM, ActionFeatures};
 pub use history::{BoardSnapshot, History};
 pub use observe::{
     BOARD_SLOTS, Encoder, HAND_SLOTS, OBS_DIM, Observation, SEATS, SHOP_SLOTS, Slot, playstyle_mask,

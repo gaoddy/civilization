@@ -56,6 +56,27 @@ pub enum Action {
 }
 
 impl Action {
+    /// 动作类别编号，供候选特征的 one-hot 使用。
+    pub fn kind_index(&self) -> u8 {
+        match self {
+            Self::Buy { .. } => 0,
+            Self::Sell { .. } => 1,
+            Self::Reroll => 2,
+            Self::Upgrade => 3,
+            Self::End => 4,
+            Self::PlayCard { .. } => 5,
+            Self::Rearrange { .. } => 6,
+            Self::Freeze { .. } => 7,
+            Self::Unfreeze { .. } => 8,
+            Self::HeroPower { .. } => 9,
+            Self::MinionAbility { .. } => 10,
+            Self::ChooseDiscover { .. } => 11,
+            Self::ChooseTarget { .. } => 12,
+            Self::AbandonTarget => 13,
+            Self::PickHero { .. } => 14,
+        }
+    }
+
     /// 由协议意图构造动作；覆盖全部 14 种意图。
     pub fn from_intent(intent: &Intent) -> Option<Self> {
         Some(match intent {
