@@ -10,7 +10,7 @@ FONT_SOURCE ?= output/fonts/NotoSansSC[wght].ttf
 FONT_SOURCE_URL ?= https://github.com/google/fonts/raw/main/ofl/notosanssc/NotoSansSC%5Bwght%5D.ttf
 FONT_TOOLS_VENV ?= output/fonttools-venv
 
-.PHONY: audit data data-check docs-render assets assets-covers sfx font-source font-subset balance-check \
+.PHONY: audit data data-check texture-check docs-render assets assets-covers sfx font-source font-subset balance-check \
 	protocol protocol-check protocol-rs protocol-rs-check asset-compress asset-compress-check
 
 audit:
@@ -31,7 +31,12 @@ data-check:
 		"$(PYTHON) scripts/gen_achievement_data.py --check" \
 		"$(PYTHON) scripts/audit_effects.py" \
 		"$(PYTHON) scripts/gen_text.py --check" \
-		"$(PYTHON) scripts/render_docs.py --check"
+		"$(PYTHON) scripts/render_docs.py --check" \
+		"$(PYTHON) scripts/validate_textures.py"
+
+# 纹理使用点与 docs/current/technical/client/textures.md 的登记表比对。
+texture-check:
+	$(PYTHON) scripts/validate_textures.py
 
 # 重写技能实例与卡牌的派生小节（效果正文、属性派生行、技能索引文本列）。
 docs-render:
