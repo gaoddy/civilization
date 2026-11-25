@@ -2743,9 +2743,13 @@ impl RoomTask {
             self.state.clock.clone(),
             self.state.achievements.clone(),
         ) {
-            Ok(game) => game
-                .with_room_id(self.room_id.clone())
-                .with_ranked(plan.ranked),
+            Ok(game) => {
+                let mut game = game
+                    .with_room_id(self.room_id.clone())
+                    .with_ranked(plan.ranked);
+                game.apply_env_policy();
+                game
+            }
             Err(error) => {
                 // 阶段尚未提交，房间仍在 `Lobby`；错误只通知当前连接，玩家可重试或离开。
                 self.broadcast_lobby_error("INTERNAL_ERROR", &error.to_string())
@@ -2808,7 +2812,11 @@ impl RoomTask {
             self.state.clock.clone(),
             self.state.achievements.clone(),
         ) {
-            Ok(game) => game.with_room_id(self.room_id.clone()).with_ranked(true),
+            Ok(game) => {
+                let mut game = game.with_room_id(self.room_id.clone()).with_ranked(true);
+                game.apply_env_policy();
+                game
+            }
             Err(error) => {
                 eprintln!(
                     "room-service: 匹配房构造对局失败 room={}: {error}",

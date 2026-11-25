@@ -2164,6 +2164,8 @@ dependencies = [
 name = "room-service"
 version = "0.1.0"
 dependencies = [
+ "ai-core",
+ "ai-model",
  "axum",
  "bot-ai",
  "chrono",
