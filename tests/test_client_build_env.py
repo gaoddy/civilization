@@ -31,6 +31,9 @@ CLEARED = (
     "IOS_LAUNCH",
 )
 DEV_URL = "wss://civilization.satori.host/ws"
+# 固定构建时间戳：命令行变量覆盖 make/client.mk 的时间戳赋值，让跨两次 make
+# 的整行比较不受时钟影响。
+BUILD_TIME_PIN = "CLIENT_BUILD_TIME=2026-01-01T00:00:00Z"
 
 
 class ClientBuildEnvTest(unittest.TestCase):
@@ -102,8 +105,11 @@ class ClientBuildEnvTest(unittest.TestCase):
         self.assertIn("--require-url", line)
 
     def test_lowercase_env_matches_uppercase(self):
-        upper = self._run_make(["-n", "client-export", "ENV=dev"])
-        lower = self._run_make(["-n", "client-export", "env=dev"])
+        # 构建时间戳取生成时刻（make/client.mk 的 CLIENT_BUILD_TIME），两次 make 之间
+        # 跨过秒边界就会得到不同的 BUILD_TIME。这里比的是 ENV/env 展开是否等价，
+        # 把时间戳钉死才有确定性。
+        upper = self._run_make(["-n", "client-export", "ENV=dev", BUILD_TIME_PIN])
+        lower = self._run_make(["-n", "client-export", "env=dev", BUILD_TIME_PIN])
         self.assertEqual(upper.returncode, 0, upper.stdout + upper.stderr)
         self.assertEqual(lower.returncode, 0, lower.stdout + lower.stderr)
         self.assertEqual(self._gen_line(upper), self._gen_line(lower))
