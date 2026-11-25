@@ -178,6 +178,15 @@ impl Engine {
         if params.choose == 0 {
             return Vec::new();
         }
+        // 手牌已满时发现无处落手：`ChooseDiscover` 会被判 `NO_SPACE`，
+        // 登记成待选只会让该座位卡在无法消费的选择上（只能等超时丢弃）。
+        let hand_full = state
+            .players
+            .get(usize::from(ctx.seat))
+            .is_none_or(|player| player.hand.len() >= self.catalog.config.hand_slots);
+        if hand_full {
+            return Vec::new();
+        }
         let candidates = self.draw_discover_candidates(state, level);
         if candidates.is_empty() {
             return Vec::new();

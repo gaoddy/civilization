@@ -44,6 +44,34 @@ fn recruit_done_has_no_actions() {
 }
 
 #[test]
+fn discover_pending_with_full_hand_offers_no_choices() {
+    let (engine, mut state) = started(7);
+    let catalog = test_catalog();
+    let hand_slots = engine.catalog.config.hand_slots;
+    state.players[0].hand = (0..hand_slots)
+        .map(|index| {
+            HandCard::Minion(MinionInstance::new(
+                &catalog,
+                9_100 + index as u64,
+                &minion_id(1),
+                false,
+            ))
+        })
+        .collect();
+    state.pending.push_back(PendingChoice::Discover {
+        seat: 0,
+        candidates: vec![minion_id(1), minion_id(2), minion_id(3)],
+        source: 0,
+    });
+
+    let actions = legal_actions(&engine, &state, 0);
+    assert!(
+        actions.is_empty(),
+        "手牌已满时发现无处落手，不应给出任何动作：{actions:?}"
+    );
+}
+
+#[test]
 fn pending_target_offers_choose_and_abandon_only() {
     let (engine, mut state) = started(7);
     let catalog = test_catalog();

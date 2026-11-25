@@ -356,11 +356,31 @@ fn choose_out_of_range_rejects_invalid_choice() {
 }
 
 #[test]
+fn discover_with_full_hand_registers_no_pending() {
+    let (engine, mut state) = turn_started(2);
+    let hand_slots = engine.catalog.config.hand_slots;
+    state.players[0].hand = (0..hand_slots).map(|_| hand_card("sickly")).collect();
+
+    engine.apply_op(&mut state, &discover_effect(), &ctx(0), None);
+
+    assert_eq!(
+        pending_count(&state),
+        0,
+        "手牌已满时发现无处落手，不登记待选"
+    );
+}
+
+#[test]
 fn choose_with_full_hand_rejects_no_space() {
     let (engine, mut state) = turn_started(2);
     let hand_slots = engine.catalog.config.hand_slots;
     state.players[0].hand = (0..hand_slots).map(|_| hand_card("sickly")).collect();
-    engine.apply_op(&mut state, &discover_effect(), &ctx(0), None);
+    // 手牌满时不会由效果登记发现，这里直接注入待选，验证选择时的拒绝口径。
+    state.pending.push_back(PendingChoice::Discover {
+        seat: 0,
+        candidates: vec!["sickly".to_string()],
+        source: 0,
+    });
     let before = state_hash(&state);
 
     let reject = engine

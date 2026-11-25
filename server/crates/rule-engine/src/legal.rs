@@ -11,8 +11,8 @@ use crate::effects::{EVOLVE_CHOICES, EffectCtx, TargetRef, Trigger};
 use crate::engine::Engine;
 use crate::intent::Intent;
 use crate::recruit::{
-    check_buy, check_end_recruit, check_freeze, check_hero_power, check_minion_ability,
-    check_play_card, check_reroll, check_sell, check_unfreeze, check_upgrade,
+    check_buy, check_choose_discover, check_end_recruit, check_freeze, check_hero_power,
+    check_minion_ability, check_play_card, check_reroll, check_sell, check_unfreeze, check_upgrade,
 };
 use crate::state::{GameState, HandCard, InstanceId, PendingChoice, Phase, Seat};
 use crate::view::{hand_card_targets, hero_power_targets, minion_ability_targets};
@@ -40,14 +40,10 @@ pub fn legal_actions(engine: &Engine, state: &GameState, seat: Seat) -> Vec<Inte
                 actions
             }
             PendingChoice::Discover { candidates, .. } => (0..candidates.len())
-                .map(|choice| Intent::ChooseDiscover {
-                    choice: u8::try_from(choice).unwrap_or(u8::MAX),
-                })
+                .filter_map(|choice| choose_discover_intent(engine, state, seat, choice))
                 .collect(),
             PendingChoice::Evolve { .. } => (0..EVOLVE_CHOICES.len())
-                .map(|choice| Intent::ChooseDiscover {
-                    choice: u8::try_from(choice).unwrap_or(u8::MAX),
-                })
+                .filter_map(|choice| choose_discover_intent(engine, state, seat, choice))
                 .collect(),
         };
     }
@@ -247,6 +243,19 @@ fn pending_for(state: &GameState, seat: Seat) -> Option<&PendingChoice> {
             seat: pending_seat, ..
         } => *pending_seat == seat,
     })
+}
+
+/// 发现/进化的单个选项；预检拒绝时返回 `None`（典型是手牌已满，选了也放不进去）。
+fn choose_discover_intent(
+    engine: &Engine,
+    state: &GameState,
+    seat: Seat,
+    choice: usize,
+) -> Option<Intent> {
+    let choice = u8::try_from(choice).ok()?;
+    check_choose_discover(engine, state, seat, choice)
+        .ok()
+        .map(|()| Intent::ChooseDiscover { choice })
 }
 
 /// 目标待选的合法候选，与 `choose_target` 的结算预检同源。
