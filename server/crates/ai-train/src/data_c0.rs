@@ -205,21 +205,20 @@ impl TurnPolicy for RecordingPolicy {
 /// 把一份棋盘样本编码成与 C2 相同布局的观测：只填本人英雄、玩法与棋盘槽位。
 ///
 /// C0 训练与 C1 奖励共用这份编码，避免两边对棋盘的口径漂移。
-pub fn board_observation(sample: &BoardSample, index: &CardIndex) -> Observation {
+pub fn board_observation(
+    sample: &BoardSample,
+    index: &CardIndex,
+    catalog: &Catalog,
+) -> Observation {
     let mut obs = Observation {
-        seat: 0,
         turn: 0,
         phase: 1,
         hero: index.hero(&sample.hero),
         playstyles: sample.playstyles,
-        hp: 0,
-        gold: 0,
-        era: 0,
         shop: [empty_slot(); 6],
         hand: [empty_slot(); 10],
         board: [empty_slot(); BOARD_SLOTS],
-        players: [Default::default(); 8],
-        pending: 0,
+        ..Observation::default()
     };
     for (slot, minion) in obs.board.iter_mut().zip(&sample.board) {
         *slot = Slot {
@@ -230,6 +229,13 @@ pub fn board_observation(sample: &BoardSample, index: &CardIndex) -> Observation
             frozen: 0.0,
             valid: 1.0,
         };
+    }
+    // 关键词与 C1/C2 用同一份编码，C0 的价值头才与后续阶段同口径。
+    for (slot, minion) in sample.board.iter().enumerate().take(BOARD_SLOTS) {
+        let names = rule_engine::combat::keyword_set(catalog, minion).names();
+        let (bits, layers) = ai_core::encode_keywords(&names);
+        obs.board_keywords[slot] = bits;
+        obs.board_keyword_layers[slot] = layers;
     }
     obs
 }

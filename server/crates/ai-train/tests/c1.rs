@@ -3,7 +3,7 @@
 use std::fs;
 use std::path::PathBuf;
 
-use ai_core::{ACTION_FEATURE_DIM, ActionFeatures, BOARD_SLOTS, OBS_DIM, Observation, Slot};
+use ai_core::{ACTION_FEATURE_DIM, ActionFeatures, OBS_DIM, Observation};
 use ai_model::{ModelConfig, Weights};
 use ai_train::data_c0::BoardSample;
 use ai_train::eval::eval_c1;
@@ -142,19 +142,9 @@ fn checkpoint_round_trips() {
 
 fn zero_obs(hero: i32) -> Observation {
     Observation {
-        seat: 0,
-        turn: 0,
         phase: 1,
         hero,
-        playstyles: 0,
-        hp: 0,
-        gold: 0,
-        era: 0,
-        shop: [Slot::default(); 6],
-        hand: [Slot::default(); 10],
-        board: [Slot::default(); BOARD_SLOTS],
-        players: [Default::default(); 8],
-        pending: 0,
+        ..Observation::default()
     }
 }
 
