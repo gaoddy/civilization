@@ -672,31 +672,13 @@ fn masked_log_softmax(
         .collect();
     let penalty = Tensor::from_vec(penalty, length, device)?;
     let masked = segment.broadcast_add(&penalty)?;
-    let log_normaliser = masked.exp()?.sum_all()?.log()?;
-    masked.broadcast_sub(&log_normaliser)
-}
-
-/// 批次内标准化优势；单条批次不标准化（标准化会把唯一优势压成 0）。
-fn normalise(values: &[f32]) -> Vec<f32> {
-    let count = values.len() as f32;
-    if values.len() < 2 {
-        return values.to_vec();
-    }
-    let mean = values.iter().sum::<f32>() / count;
-    let variance = values
-        .iter()
-        .map(|value| (value - mean) * (value - mean))
-        .sum::<f32>()
-        / count;
-    let deviation = variance.sqrt();
-    if deviation < 1e-6 {
-        values.iter().map(|value| value - mean).collect()
-    } else {
-        values
-            .iter()
-            .map(|value| (value - mean) / deviation)
-            .collect()
-    }
+    // 减掉最大值再算 logsumexp：不减的话 logit 一旦超过 exp 的 f32 上界（约 88.7），
+    // `exp` 溢出成 inf、`log` 仍是 inf，整段 log-softmax 变成 −inf，反传即 NaN。
+    // 最大值按常量处理（detach），不参与梯度，和标准实现一致。
+    let max = masked.max_all()?.detach();
+    let shifted = masked.broadcast_sub(&max)?;
+    let log_normaliser = shifted.exp()?.sum_all()?.log()?;
+    shifted.broadcast_sub(&log_normaliser)
 }
 
 fn validate(batch: &Batch) -> candle_core::Result<()> {
@@ -737,4 +719,79 @@ fn validate(batch: &Batch) -> candle_core::Result<()> {
         }
     }
     Ok(())
+}
+
+/// 批次内标准化优势；单条批次不标准化（标准化会把唯一优势压成 0）。
+fn normalise(values: &[f32]) -> Vec<f32> {
+    let count = values.len() as f32;
+    if values.len() < 2 {
+        return values.to_vec();
+    }
+    let mean = values.iter().sum::<f32>() / count;
+    let variance = values
+        .iter()
+        .map(|value| (value - mean) * (value - mean))
+        .sum::<f32>()
+        / count;
+    let deviation = variance.sqrt();
+    if deviation < 1e-6 {
+        values.iter().map(|value| value - mean).collect()
+    } else {
+        values
+            .iter()
+            .map(|value| (value - mean) / deviation)
+            .collect()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn batch_with_masks(masks: Vec<Vec<bool>>) -> Batch {
+        let count = masks.len();
+        Batch {
+            obs: vec![Observation::default(); count],
+            actions: vec![0; count],
+            masks,
+            logps: vec![0.0; count],
+            values: vec![0.0; count],
+            rewards: vec![0.0; count],
+            dones: vec![false; count],
+            candidates: vec![Vec::new(); count],
+        }
+    }
+
+    #[test]
+    fn masked_log_softmax_stays_finite_for_saturated_logits() {
+        let device = Device::Cpu;
+        // 200 超过 exp 的 f32 上界（约 88.7）：不减最大值时 exp(200) 即 inf，
+        // log(inf) 也是 inf，整个 log-softmax 变成非有限值并污染梯度。
+        let logits = Tensor::from_vec(vec![200.0f32, 199.0], 2, &device).expect("logit");
+        let batch = batch_with_masks(vec![vec![true, true]]);
+        let log_soft =
+            masked_log_softmax(&logits, &batch, 0, 0, 2, &device).expect("掩码 log-softmax");
+        let values = log_soft.to_vec1::<f32>().expect("取值");
+        assert!(
+            values.iter().all(|value| value.is_finite()),
+            "log 概率必须是有限值：{values:?}"
+        );
+        let total: f32 = values.iter().map(|value| value.exp()).sum();
+        assert!((total - 1.0).abs() < 1e-5, "概率和应为 1，实际 {total}");
+    }
+
+    #[test]
+    fn masked_log_softmax_zeroes_masked_candidates() {
+        let device = Device::Cpu;
+        let logits = Tensor::from_vec(vec![0.0f32, 1000.0], 2, &device).expect("logit");
+        let batch = batch_with_masks(vec![vec![true, false]]);
+        let log_soft =
+            masked_log_softmax(&logits, &batch, 0, 0, 2, &device).expect("掩码 log-softmax");
+        let values = log_soft.to_vec1::<f32>().expect("取值");
+        assert!(
+            (values[0]).abs() < 1e-6,
+            "唯一可选动作概率应为 1：{values:?}"
+        );
+        assert!(values[1] < -1e8, "被屏蔽项概率应为 0：{values:?}");
+    }
 }
