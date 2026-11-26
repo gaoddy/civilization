@@ -8,7 +8,7 @@ pub mod features;
 pub mod history;
 pub mod observe;
 
-pub use action::Action;
+pub use action::{Action, MAX_REARRANGE_PER_TURN, rearrange_within_budget};
 pub use catalog::{CardIndex, catalog_hash};
 pub use features::{ACTION_FEATURE_DIM, ActionFeatures};
 pub use history::{BoardSnapshot, History};
@@ -23,12 +23,13 @@ pub use observe::{
 /// 观测/动作编码的 schema 版本；字段顺序或语义变更时递增。
 ///
 /// 2：补齐商店可购买性、关键词与层数、英雄/随从技能次数、待选候选与本回合对手座位。
-pub const SCHEMA_VERSION: u32 = 2;
+/// 3：修正 `History` 的语义——按观察者分份，槽位是对手座位；维度不变，旧检查点需重训。
+pub const SCHEMA_VERSION: u32 = 3;
 
 #[cfg(test)]
 mod tests {
     #[test]
     fn schema_version_matches_observation_layout() {
-        assert_eq!(super::SCHEMA_VERSION, 2);
+        assert_eq!(super::SCHEMA_VERSION, 3);
     }
 }
