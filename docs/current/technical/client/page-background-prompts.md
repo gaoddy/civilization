@@ -9,7 +9,7 @@
 | --- | --- |
 | 服务 | EvoLink CLI，模型 `doubao-seedream-5.5` |
 | 外层氛围图 | `size=1:1`、`quality=2K`，出图后缩放到 512×512 |
-| 结构框架图 | `size=16:9`、`quality=2K`，出图后缩放到 1280×720；大厅手机档位缩放到 960×540 |
+| 结构框架图 | `size=16:9`、`quality=2K`，出图后缩放到 1280×720；大厅与对局的手机档位缩放到 960×540 |
 | 出图日期 | 2026-11-27 |
 | 单张成本 | 约 $0.028 |
 
@@ -53,6 +53,8 @@ Flat page background for a dark strategy game menu, exact 16:9 composition. Deep
 | 排行榜 | `one horizontal band across the top 6 percent of the height; below it a thin status strip of 3 percent of the height; then one large open framed region down to the bottom.` |
 | 个人主页 | `one horizontal band across the top 6 percent of the height; below it a thin strip of 3 percent; then one large open framed region down to the bottom.` |
 | 账号 | `one horizontal band across the top 6 percent of the height; below it a tall centred form column occupying the central 62 percent of the width, with faint horizontal guide rules every 12 percent of its height; empty margins on both sides.` |
+| 对局（桌面） | 见 §3.1，提示词为独立全文，不套用模板抬头与尾句 |
+| 对局（手机） | 见 §3.1，960×540 同构重排，独立出图 |
 
 大厅手机档位（960×540）单独出图，`{layout}` 为：
 
@@ -60,7 +62,21 @@ Flat page background for a dark strategy game menu, exact 16:9 composition. Deep
 no outer margin, the frame runs to the edges; one large empty framed area occupying the left 70 percent of the width from the very top to 90 percent of the height; one vertical column on the right 30 percent of the width, divided by thin gold rules into four stacked rectangles; one thin horizontal band across the bottom 8 percent of the height spanning the full width.
 ```
 
-对局页不重出结构框架，沿用既有 `bg_game_desktop.png` / `bg_game_phone.png`；只新增外层 `bg_game.png`。
+### 3.1 对局页结构框架（桌面 / 手机）
+
+对局页分区最多，提示词单独成文：抬头由 `a dark strategy game menu` 改为 `a dark strategy game board`，保留 `LAYOUT, strictly observed` 与其后的禁止项，尾句 `The artwork must read as a quiet structural frame behind dense UI.` 省略。两张同批提交（合并报价 2 张，合计 $0.032 / 2.176 积分）。
+
+桌面（`bg_game_desktop.png`，1280×720）：
+
+```text
+Flat page background for a dark strategy game board, exact 16:9 composition. Deep indigo navy nautical chart paper (#0a1524 to #122a42), faint engraved latitude and longitude grid across the whole surface, thin muted cyan and antique gold hairlines, subtle watercolor staining, aged paper texture. LAYOUT, strictly observed: a narrow vertical strip on the far left from 1.5 to 8 percent of the width, running from 2 to 97 percent of the height, framed by a thin double gold rule and carrying a column of small circular medallions; a wide central column from 9 to 99 percent of the width, split by thin gold rules into five stacked bands: a tall upper band from 2 to 34 percent of the height, a narrow strip from 35 to 41 percent, a framed arena band from 42 to 62 percent, a short band from 64 to 75 percent, and a deep bottom band from 76 to 99 percent; a slim utility bar across the top from 1.5 to 5 percent of the height with a small octagonal emblem at its centre. A few tiny constellation dots and small compass motifs in empty corners. Very low contrast, muted, quiet. NO text, NO letters, NO numbers, NO characters, NO creatures, NO UI buttons, NO icons, NO bright highlights, NO glowing center, NO vignette.
+```
+
+手机（`bg_game_phone.png`，960×540）：
+
+```text
+Flat page background for a dark strategy game board, exact 16:9 composition. Deep indigo navy nautical chart paper (#0a1524 to #122a42), faint engraved latitude and longitude grid across the whole surface, thin muted cyan and antique gold hairlines, subtle watercolor staining, aged paper texture. LAYOUT, strictly observed: a slim utility bar across the top from 1 to 7 percent of the height; a narrow vertical strip on the far left from 0.5 to 10 percent of the width, running from 8 to 99 percent of the height, framed by a thin double gold rule with a column of small circular medallions; a wide central column from 10.5 to 99 percent of the width, split by thin gold rules into five stacked bands: a tall upper band from 9 to 41 percent of the height, a narrow strip from 42 to 47 percent, a framed arena band from 48 to 67 percent, a short band from 68 to 82 percent, and a bottom hand band from 83 to 99 percent. A few tiny constellation dots and small compass motifs in empty corners. Very low contrast, muted, quiet. NO text, NO letters, NO numbers, NO characters, NO creatures, NO UI buttons, NO icons, NO bright highlights, NO glowing center, NO vignette.
+```
 
 ## 4. 后处理与筛选
 
@@ -74,3 +90,5 @@ no outer margin, the frame runs to the edges; one large empty framed area occupy
 - 排行榜内层图多出一条约 15% 高度处的装饰横线，落在列表区上部；不影响操作，但重出时应收紧「top 6 percent + 3 percent」的表述。
 - 卡牌图鉴、账号的内层图在底角有小型装饰框，属可接受的点缀。
 - 大厅手机档位与对局页按设备档位单独取图；其余页面在 960×540 下由 1280×720 等比缩放，分区比例偏差约 1% 以内，未单独出图。
+- 对局桌面图（1280×720）：顶栏带实际画到 2.1–8.4%，工具条只有 1.7–5.3%，多出的一条金线落在商店区上部；河流带下沿在 40.3%（应为 41.4%）；棋盘带 42.0–61.3% 与 42.2–62.5% 基本对齐；英雄带内多出两条装饰线（63.6–68.5% 徽记横带、71.6% 单线），但 63.6% 与 76.4% 两条边界线与 HeroRow、HandStrip 对齐；左栏内边线在 8.7%（应为 8.1%）。棋盘带内另有约 10.5–71% 宽的装饰框，落在棋盘左三分之二。
+- 对局手机图（960×540）：顶栏 1.5–6.3% 对齐良好；商店区没有 9.4% 顶线与 40.9% 底线，只与顶栏分开，商店靠自身面板成区；河流带整体下移约 1pp，棋盘带下沿高约 1.8pp，英雄带起线在 69.7%（应为 67.6%，为全图最大偏差），手牌带上沿高约 1.2pp；左缘竖栏只有 1.2–4.4% 宽，窄于 0.6–9.8% 的座位栏，徽记列会被不透明座位栏盖住，中央列从约 11% 起。
