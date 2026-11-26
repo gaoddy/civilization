@@ -103,6 +103,8 @@ pub struct C2Config {
     pub seeds: Range<u64>,
     /// 单局最多推进的决策数；超过视为截断，该局不计入名次与回报。
     pub max_steps_per_episode: usize,
+    /// 训练采样时每座位每回合允许的站位次数，见 `ai_core::MAX_REARRANGE_PER_TURN`。
+    pub max_rearrange: usize,
     pub episodes: usize,
     pub batch_episodes: usize,
     pub model: ModelConfig,
@@ -120,6 +122,7 @@ impl Default for C2Config {
             checkpoint_every: 0,
             seeds: 0..10_000,
             max_steps_per_episode: EPISODE_GUARD,
+            max_rearrange: ai_core::MAX_REARRANGE_PER_TURN,
             episodes: 1000,
             batch_episodes: 8,
             model: ModelConfig {
@@ -352,6 +355,7 @@ fn run_c1_episode(
     seed: u64,
     rng: &mut RandomPolicy,
     batch: &mut Batch,
+    max_rearrange: usize,
 ) -> Result<f32, C2Error> {
     let opponent = &distribution[episode_index % distribution.len()];
     let hero = heroes[rng.below(heroes.len() as u64) as usize].clone();
@@ -372,7 +376,9 @@ fn run_c1_episode(
         let candidates: Vec<(Action, ActionFeatures)> = env
             .action_candidates()
             .into_iter()
-            .filter(|(action, _)| ai_core::rearrange_within_budget(action, rearrange_used))
+            .filter(|(action, _)| {
+                ai_core::rearrange_within_limit(action, rearrange_used, max_rearrange)
+            })
             .collect();
         let features: Vec<ActionFeatures> =
             candidates.iter().map(|(_, feature)| *feature).collect();
@@ -433,6 +439,7 @@ fn run_c2_episode(
     rng: &mut RandomPolicy,
     batch: &mut Batch,
     max_steps: usize,
+    max_rearrange: usize,
 ) -> Result<(f32, Option<u8>), C2Error> {
     let candidates = allocate_candidates(seed, &playstyles::draw(seed), catalog);
     env.reset(seed, &candidates)?;
@@ -469,7 +476,9 @@ fn run_c2_episode(
         let candidates: Vec<(Action, ActionFeatures)> = env
             .action_candidates(seat)
             .into_iter()
-            .filter(|(action, _)| ai_core::rearrange_within_budget(action, rearrange_used[index]))
+            .filter(|(action, _)| {
+                ai_core::rearrange_within_limit(action, rearrange_used[index], max_rearrange)
+            })
             .collect();
         if candidates.is_empty() {
             break;
@@ -656,6 +665,7 @@ pub fn train_c2(
                         seed,
                         &mut rng,
                         &mut batch,
+                        cfg.max_rearrange,
                     )?,
                     true,
                 ),
@@ -669,6 +679,7 @@ pub fn train_c2(
                         &mut rng,
                         &mut batch,
                         cfg.max_steps_per_episode,
+                        cfg.max_rearrange,
                     )?;
                     match placement {
                         Some(place) => {
@@ -848,6 +859,7 @@ mod tests {
                 &mut rng,
                 &mut batch,
                 cfg.max_steps_per_episode,
+                cfg.max_rearrange,
             )
             .expect("对局应能跑完");
             for (row, choice) in batch.actions.iter().enumerate() {
@@ -899,6 +911,7 @@ mod tests {
                 &mut rng,
                 &mut batch,
                 cfg.max_steps_per_episode,
+                cfg.max_rearrange,
             )
             .expect("对局应能跑完");
             let dones: Vec<usize> = batch

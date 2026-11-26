@@ -439,6 +439,7 @@ fn train_c2(args: &[String]) -> Result<(), String> {
     let mut distribution = 200usize;
     let mut seed = 0u64;
     let mut checkpoint_every = 20usize;
+    let mut max_rearrange = ai_core::MAX_REARRANGE_PER_TURN;
     let mut iter = args.iter();
     while let Some(flag) = iter.next() {
         let value = iter
@@ -470,6 +471,11 @@ fn train_c2(args: &[String]) -> Result<(), String> {
                     .parse()
                     .map_err(|_| format!("--seed 不是整数：{value}"))?;
             }
+            "--max-rearrange" => {
+                max_rearrange = value
+                    .parse()
+                    .map_err(|_| format!("--max-rearrange 不是整数：{value}"))?;
+            }
             "--checkpoint-every" => {
                 checkpoint_every = value
                     .parse()
@@ -499,6 +505,7 @@ fn train_c2(args: &[String]) -> Result<(), String> {
         // 长训练按更新次数落盘，崩溃后最近的检查点还能拿去评测。
         checkpoint_dir: (checkpoint_every > 0).then(|| out_dir.join("snapshots")),
         checkpoint_every,
+        max_rearrange,
         ..C2Config::default()
     };
     let output =
@@ -521,6 +528,7 @@ fn train_c2(args: &[String]) -> Result<(), String> {
         "league_size": cfg.league_size,
         "snapshot_every": cfg.snapshot_every,
         "checkpoint_every": cfg.checkpoint_every,
+        "max_rearrange": cfg.max_rearrange,
         "snapshots": output.snapshots,
         "seed": cfg.seed,
         "distribution": pool.len(),

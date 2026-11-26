@@ -25,7 +25,7 @@ train-c1:
 	cd server && cargo run --release -p ai-train --features train -- train-c1 --out-dir $(AI_MODELS)/c1 --seed $(SEED)
 
 train-c2:
-	cd server && cargo run --release -p ai-train --features train -- train-c2 --out-dir $(AI_MODELS)/c2 --seed $(SEED) --episodes $(or $(EPISODES),1000)
+	cd server && cargo run --release -p ai-train --features train -- train-c2 --out-dir $(AI_MODELS)/c2 --seed $(SEED) --episodes $(or $(EPISODES),1000) $(if $(MAX_REARRANGE),--max-rearrange $(MAX_REARRANGE),)
 
 ai-eval:
 	cd server && cargo run --release -p ai-train --features train -- eval --seeds $(or $(SEEDS),2000) $(if $(RUN),--run $(RUN),)
