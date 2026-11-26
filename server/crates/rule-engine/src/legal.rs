@@ -1,7 +1,8 @@
 //! 合法动作枚举：训练掩码与服务端兜底的唯一口径。
 //!
-//! 只枚举**会改变状态**的动作：空操作（冻结已经冻结的槽位、解冻没有冻结的商店）
-//! 虽然意图层会接受，但不进候选，否则策略可以在一回合里无限重复同一条动作。
+//! 只枚举**会改变状态**的动作：冻结已经冻结的槽位是空操作，虽然意图层会接受，
+//! 但不进候选；解冻则整体不进候选——它与冻结是一对无成本、可逆的动作，留在候选里
+//! 策略会在两个状态之间来回切换，一个回合全用在打转上。
 //!
 //! 只读：不修改状态、不消耗随机流。返回顺序固定，一次枚举内的下标就是训练侧的
 //! 动作编号；服务端与训练端都从同一函数重建，避免两套编号漂移。
@@ -15,7 +16,7 @@ use crate::engine::Engine;
 use crate::intent::Intent;
 use crate::recruit::{
     check_buy, check_choose_discover, check_end_recruit, check_hero_power, check_minion_ability,
-    check_play_card, check_reroll, check_sell, check_unfreeze, check_upgrade, frozen_differs,
+    check_play_card, check_reroll, check_sell, check_upgrade, frozen_differs,
 };
 use crate::state::{GameState, HandCard, InstanceId, PendingChoice, Phase, Seat};
 use crate::view::{hand_card_targets, hero_power_targets, minion_ability_targets};
@@ -147,17 +148,9 @@ pub fn legal_actions(engine: &Engine, state: &GameState, seat: Seat) -> Vec<Inte
             actions.push(Intent::FreezeShop { slot: Some(slot) });
         }
     }
-    if check_unfreeze(state, seat, None).is_ok() && frozen_differs(state, seat, None, false) {
-        actions.push(Intent::UnfreezeShop { slot: None });
-    }
-    for slot in 0..player.shop.len() {
-        let slot = u8::try_from(slot).unwrap_or(u8::MAX);
-        if check_unfreeze(state, seat, Some(slot)).is_ok()
-            && frozen_differs(state, seat, Some(slot), false)
-        {
-            actions.push(Intent::UnfreezeShop { slot: Some(slot) });
-        }
-    }
+    // 解冻不进候选：冻结与解冻是无成本、可逆的一对动作，留在候选里策略会在两个
+    // 状态之间来回切换（贪心解码下表现为整回合都在冻结/解冻）。解冻只是客户端的
+    // 撤销误点，AI 要冻结子集直接逐槽冻结即可；意图层仍然接受解冻。
 
     // 英雄技能：按英雄卡的技能顺序。
     if let Some(hero_id) = player.hero.as_deref()

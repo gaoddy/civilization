@@ -141,12 +141,13 @@ fn pending_target_offers_choose_and_abandon_only() {
     assert_every_action_accepted(&engine, &state, 0);
 }
 
-/// 枚举出来的冻结/解冻动作必须真的改变冻结状态。
+/// 枚举出来的冻结动作必须真的改变冻结状态，解冻不进候选。
 ///
-/// 冻结已经冻结的槽位、解冻没有任何冻结的商店都不改变状态：这类空操作留在候选里，
-/// 策略就能在一个回合内无限重复同一条动作（训练侧表现为顶满回合决策上限的死循环）。
+/// 冻结已经冻结的槽位是空操作；冻结与解冻还是一对无成本、可逆的动作，留在候选里
+/// 策略会在两个状态之间来回切换（贪心解码下表现为一回合全用在冻结/解冻上）。
+/// 解冻只是给客户端撤销误点用的，AI 要冻结子集直接逐槽冻结即可。
 #[test]
-fn freeze_and_unfreeze_actions_change_state() {
+fn freeze_candidates_change_state_and_exclude_unfreeze() {
     let (engine, mut state) = started(7);
     set_shop(&mut state, 0, &[Some(minion_id(1)), Some(minion_id(2))]);
 
@@ -166,6 +167,12 @@ fn freeze_and_unfreeze_actions_change_state() {
             .any(|action| matches!(action, Intent::FreezeShop { slot: Some(1) })),
         "未冻结的槽位仍应可冻结"
     );
+    assert!(
+        !actions
+            .iter()
+            .any(|action| matches!(action, Intent::UnfreezeShop { .. })),
+        "解冻不应出现在候选里"
+    );
 
     engine
         .apply(&mut state, 0, Intent::FreezeShop { slot: None })
@@ -178,26 +185,21 @@ fn freeze_and_unfreeze_actions_change_state() {
         "全部冻结后不应再有冻结候选"
     );
     assert!(
-        actions
-            .iter()
-            .any(|action| matches!(action, Intent::UnfreezeShop { slot: None })),
-        "本回合冻结过，解冻全部应可用"
-    );
-
-    engine
-        .apply(&mut state, 0, Intent::UnfreezeShop { slot: None })
-        .expect("解冻全部应成功");
-    let actions = legal_actions(&engine, &state, 0);
-    assert!(
         !actions
             .iter()
             .any(|action| matches!(action, Intent::UnfreezeShop { .. })),
-        "没有冻结槽位时不应再给出解冻候选"
+        "冻结之后也不应出现解冻候选"
     );
+
+    // 意图层仍接受解冻：客户端的撤销误点按钮不受影响。
+    engine
+        .apply(&mut state, 0, Intent::UnfreezeShop { slot: None })
+        .expect("解冻意图仍应被接受");
+    let actions = legal_actions(&engine, &state, 0);
     assert!(
         actions
             .iter()
             .any(|action| matches!(action, Intent::FreezeShop { slot: None })),
-        "解冻后应能重新冻结"
+        "解冻后应重新出现冻结候选"
     );
 }
