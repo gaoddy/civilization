@@ -475,6 +475,8 @@ func _check_recruit_river() -> void:
     var gold: Label = river.find_child("RecruitGoldTile", true, false)
     _expect(turn != null and flip != null and timer != null and end_button != null, "招募河道节点应齐全")
     _expect(gold != null and gold.text.contains("6"), "招募河道左侧应显示金币")
+    _expect_plate(timer, "RecruitTimerLabel")
+    _expect_plate(gold, "RecruitGoldTile")
     if turn == null or flip == null or timer == null or end_button == null:
         river.queue_free()
         await get_tree().process_frame
@@ -1440,3 +1442,18 @@ func _check_ghost_stage() -> void:
         )
 
     await _unmount(instance)
+
+
+## 数字表面：胶囊与名次角标应带铺满自身的底板，文字仍压在底板之上。
+func _expect_plate(control: Control, node_name: String) -> void:
+    _expect(control != null, "%s 应存在" % node_name)
+    if control == null:
+        return
+    var plate := control.find_child(FrameMaterial.PLATE_OVERLAY_NAME, true, false) as Control
+    _expect(plate != null, "%s 应带数字底板" % node_name)
+    if plate == null:
+        return
+    _expect(
+        plate.size.is_equal_approx(control.size),
+        "%s 数字底板应铺满控件，实际 %s / %s" % [node_name, str(plate.size), str(control.size)],
+    )

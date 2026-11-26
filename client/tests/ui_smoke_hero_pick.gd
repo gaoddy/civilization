@@ -107,6 +107,13 @@ func _check_overlay_renders_candidates() -> void:
         timer != null and timer.text in ["00:30", "00:29"],
         "倒计时应为 00:30（装载耗时下可为 00:29），实际「%s」" % ("" if timer == null else timer.text),
     )
+    # 倒计时是没有整块底色的数字：由 plate_wrap 提供数字底板。
+    var timer_plate := timer.get_parent().get_parent() if timer != null else null
+    _expect(
+        timer_plate != null
+            and timer_plate.find_child(FrameMaterial.PLATE_OVERLAY_NAME, true, false) != null,
+        "倒计时应带数字底板",
+    )
     var progress := overlay.find_child("HeroPickProgress", true, false) as Label
     _expect(
         progress != null
