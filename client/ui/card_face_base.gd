@@ -81,7 +81,7 @@ static func create_face(card_id: String, show_desc: bool, hero := false) -> Cont
 
 
 ## 顶栏：时代在左、等级居中、费用在右，由共享 `CardTopRow` 绘制并压在封面之上。
-## 等级取卡表 level；棋盘卡没有时代与购买费用，只显示等级星或发动技能费用。
+## 等级取卡表 level；棋盘卡没有购买费用，只显示等级星、时代与发动技能费用。
 ## 金色与潜行都不再占顶栏：金色由金框与金色星点表达，潜行由封面蒙版表达。
 static func add_corner_badges(
     face_node: Control,

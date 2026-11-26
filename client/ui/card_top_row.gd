@@ -17,7 +17,7 @@ const ERA_NAME := "EraGlyph"
 
 ## 等级（1–7）。棋盘卡同样有等级，由卡表取值。
 @export var level := 1
-## 时代 id；棋盘卡面不显示时代，传空串。
+## 时代 id；空串不画时代象形。
 @export var era := ""
 ## 费用位文本：购买卡为展示费用，自己棋盘的随从为发动技能费用；空串不画旋钮。
 @export var cost := ""

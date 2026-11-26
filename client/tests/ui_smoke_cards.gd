@@ -140,15 +140,21 @@ func _ready() -> void:
     _expect(hero_face.find_child("CardDesc", true, false) == null, "英雄卡不应显示技能文本")
     hero_face.queue_free()
 
-    # 棋盘卡：有卡框，无时代象形；空身材不出现底牌装饰（文字仍为「—」）。
+    # 棋盘卡：有卡框与时代象形；空身材不出现底牌装饰（文字仍为「—」）。
     var board_face := BoardCardFace.build({
         "cardId": "aolinpike-jidian", "attack": 2, "health": 3,
         "golden": false, "stealth": false,
     })
     add_child(board_face)
+    board_face.size = Vector2(
+        UITheme.metric("card-width"), UITheme.metric("card-height")
+    )
     await get_tree().process_frame
     _expect(board_face.find_child("CardFrame", true, false) is CardFrame, "棋盘卡应有卡框")
-    _expect(board_face.find_child("EraGlyph", true, false) == null, "棋盘卡不应有时代象形")
+    var board_glyph := board_face.find_child("EraGlyph", true, false)
+    _expect(board_glyph is EraGlyph, "棋盘卡应有时代象形")
+    if board_glyph is EraGlyph:
+        _expect((board_glyph as EraGlyph).era_id == "classical", "棋盘卡时代象形应取卡表 era id")
     var effect_plate := StatPlate.create(StatPlate.ATTACK, "—", UITheme.font_size("font-title"), "CardAttack")
     _expect(effect_plate.get_child(0).text == "—", "效果牌身材文字应保持「—」")
     effect_plate.free()
