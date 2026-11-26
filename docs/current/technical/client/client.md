@@ -13,6 +13,7 @@ client/
   project.godot              # 主场景 login.tscn；autoload：ScreenProfile、WindowSizer、GameStore、CardDB、Net、Sfx、Platform、LocalServer、SystemBack
   export_presets.cfg         # macOS 预设（Universal、未签名）、macOS 本地调试预设（embedded_server）、iOS 预设（开发签名）与 Android APK / AAB 预设（release 签名）
   icon.png                   # 应用图标 1024×1024；iOS 与 Android 导出按尺寸缩放生成
+  icon.svg                   # 应用图标矢量源；改动图标先改此处再导出 PNG
   .gitignore                 # 忽略 .godot/ 与 *.uid
   autoload/
     screen_profile.gd        # 设备类型、逻辑基准、内容框比例、pt→画布换算、安全区与键盘边距
