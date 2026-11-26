@@ -2,14 +2,15 @@
 //!
 //! 只枚举**会改变状态**的动作：冻结已经冻结的槽位是空操作，虽然意图层会接受，
 //! 但不进候选；解冻则整体不进候选——它与冻结是一对无成本、可逆的动作，留在候选里
-//! 策略会在两个状态之间来回切换，一个回合全用在打转上。
+//! 策略会在两个状态之间来回切换，一个回合全用在打转上。同理，有目标可选时「放弃
+//! 目标」也不进候选：它和不带目标的出牌是另一对可逆动作。
 //!
 //! 只读：不修改状态、不消耗随机流。返回顺序固定，一次枚举内的下标就是训练侧的
 //! 动作编号；服务端与训练端都从同一函数重建，避免两套编号漂移。
 //!
 //! 阶段门控与 [`crate::view::view`] 一致：不在招募阶段、已出局或已结束招募时为空。
-//! 有待选时只返回待选相关动作——目标待选给 `ChooseTarget` 与 `AbandonTarget`，
-//! 发现/进化待选给 `ChooseDiscover`。
+//! 有待选时只返回待选相关动作——目标待选给 `ChooseTarget`（没有候选时退化为
+//! `AbandonTarget`），发现/进化待选给 `ChooseDiscover`。
 
 use crate::effects::{EVOLVE_CHOICES, EffectCtx, TargetRef, Trigger};
 use crate::engine::Engine;
@@ -40,7 +41,12 @@ pub fn legal_actions(engine: &Engine, state: &GameState, seat: Seat) -> Vec<Inte
                         .into_iter()
                         .map(|target| Intent::ChooseTarget { target })
                         .collect();
-                actions.push(Intent::AbandonTarget);
+                // 放弃目标只是客户端「点错了」的撤销。留在 AI 候选里会和「不带目标出牌」
+                // 组成零成本的往返（出牌 → 放弃 → 出牌 ……），策略能在一个回合里无限
+                // 重复；只有在没有任何目标可选时，它才是离开待选的唯一出路。
+                if actions.is_empty() {
+                    actions.push(Intent::AbandonTarget);
+                }
                 actions
             }
             PendingChoice::Discover { candidates, .. } => (0..candidates.len())

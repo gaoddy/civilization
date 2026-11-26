@@ -97,7 +97,7 @@ fn discover_pending_with_full_hand_offers_no_choices() {
 }
 
 #[test]
-fn pending_target_offers_choose_and_abandon_only() {
+fn pending_target_offers_only_choices_when_targets_exist() {
     let (engine, mut state) = started(7);
     let catalog = test_catalog();
     // 棋盘上先放一个可被指定的友方随从。
@@ -126,7 +126,12 @@ fn pending_target_offers_choose_and_abandon_only() {
     );
 
     let actions = legal_actions(&engine, &state, 0);
-    assert!(actions.iter().any(|a| matches!(a, Intent::AbandonTarget)));
+    // 放弃目标只是客户端「点错了」的撤销。留在 AI 候选里会和「不带目标出牌」组成
+    // 零成本往返（出牌 → 放弃 → 出牌 ……），策略能在一个回合里无限重复。
+    assert!(
+        !actions.iter().any(|a| matches!(a, Intent::AbandonTarget)),
+        "有可选目标时不应把放弃目标放进候选：{actions:?}"
+    );
     assert!(
         actions
             .iter()
@@ -136,9 +141,32 @@ fn pending_target_offers_choose_and_abandon_only() {
     assert!(
         actions
             .iter()
-            .all(|a| matches!(a, Intent::ChooseTarget { .. } | Intent::AbandonTarget))
+            .all(|a| matches!(a, Intent::ChooseTarget { .. }))
     );
     assert_every_action_accepted(&engine, &state, 0);
+}
+
+/// 没有任何目标可选时，放弃目标才是离开待选的唯一出路。
+#[test]
+fn pending_target_without_candidates_offers_abandon() {
+    let (engine, mut state) = started(7);
+    let catalog = test_catalog();
+    // 棋盘上没有友方随从，bisheng 的「使一个友方随从成长」找不到目标。
+    state.players[0].hand.clear();
+    state.pending.push_back(PendingChoice::Target {
+        seat: 0,
+        source: 9001,
+        hand_card: HandCard::Minion(MinionInstance::new(&catalog, 9002, "bisheng", false)),
+        hand_index: 0,
+        fire_ally_evolve: false,
+    });
+
+    let actions = legal_actions(&engine, &state, 0);
+    assert_eq!(
+        actions,
+        vec![Intent::AbandonTarget],
+        "没有目标候选时只能放弃"
+    );
 }
 
 /// 枚举出来的冻结动作必须真的改变冻结状态，解冻不进候选。
