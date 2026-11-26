@@ -52,7 +52,8 @@ impl Step {
 pub struct Env {
     engine: Engine,
     state: GameState,
-    history: History,
+    /// 按观察者座位分开的对手棋盘历史：槽位是对手座位，不共用。
+    histories: [History; PLAYER_COUNT],
     encoder: Encoder,
     candidates: BTreeMap<Seat, Vec<String>>,
     started: bool,
@@ -66,7 +67,7 @@ impl Env {
         Self {
             engine,
             state,
-            history: History::new(),
+            histories: std::array::from_fn(|_| History::new()),
             encoder,
             candidates: BTreeMap::new(),
             started: true,
@@ -81,7 +82,7 @@ impl Env {
     ) -> Result<(), EngineError> {
         let playstyles = playstyles::draw(seed);
         self.state = self.engine.initial_state(seed_from_u64(seed), playstyles);
-        self.history = History::new();
+        self.histories = std::array::from_fn(|_| History::new());
         self.candidates = candidates.clone();
         self.started = false;
         Ok(())
@@ -100,7 +101,7 @@ impl Env {
     pub fn reset(&mut self, seed: u64, heroes: &BTreeMap<Seat, String>) -> Result<(), EngineError> {
         let playstyles = playstyles::draw(seed);
         self.state = self.engine.initial_state(seed_from_u64(seed), playstyles);
-        self.history = History::new();
+        self.histories = std::array::from_fn(|_| History::new());
         self.candidates = BTreeMap::new();
         self.engine.start_game(&mut self.state, heroes)?;
         self.started = true;
@@ -156,7 +157,13 @@ impl Env {
 
     pub fn observe(&self, seat: Seat) -> Observation {
         let seat_view = view(&self.engine, &self.state, seat).expect("观测座位应存在");
-        self.encoder.encode(&seat_view, &self.history)
+        self.encoder
+            .encode(&seat_view, &self.histories[usize::from(seat)])
+    }
+
+    /// 该座位亲眼见过的对手棋盘；槽位是对手座位。
+    pub fn history(&self, seat: Seat) -> &History {
+        &self.histories[usize::from(seat)]
     }
 
     pub fn placement(&self, seat: Seat) -> Option<u8> {
@@ -263,16 +270,20 @@ impl Env {
     }
 
     /// 记录每个真实对战座位看到的对手棋盘；幽灵战没有可记录的实体棋盘。
+    ///
+    /// `History` 按观察者分份、槽位是对手座位：`a` 看到 `b` 的棋盘，就写进
+    /// `histories[a]` 的 `b` 槽位；反过来同样。8 个座位共用一份会让没交手的座位
+    /// 也看到别人的战果。
     fn record_history(&mut self) {
         let pairings = self.state.pairings.clone();
         for pairing in pairings {
             if pairing.is_ghost() {
                 continue;
             }
-            let opponent_of_a = self.board_cards(pairing.b);
-            self.history.record(pairing.a, &opponent_of_a);
-            let opponent_of_b = self.board_cards(pairing.a);
-            self.history.record(pairing.b, &opponent_of_b);
+            let board_a = self.board_cards(pairing.a);
+            let board_b = self.board_cards(pairing.b);
+            self.histories[usize::from(pairing.a)].record(pairing.b, &board_b);
+            self.histories[usize::from(pairing.b)].record(pairing.a, &board_a);
         }
     }
 
@@ -298,5 +309,74 @@ impl Env {
             done: true,
             terminal_reward,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rule_engine::state::{MinionInstance, Pairing};
+
+    fn catalog() -> Catalog {
+        Catalog::from_json(
+            include_str!("../../../data/v0.1/cards.json"),
+            include_str!("../../../data/v0.1/heroes.json"),
+            include_str!("../../../data/v0.1/skills.json"),
+            include_str!("../../../data/v0.1/config.json"),
+            include_str!("../../../data/v0.1/taxonomy.json"),
+        )
+        .expect("卡表")
+    }
+
+    fn heroes(catalog: &Catalog) -> BTreeMap<Seat, String> {
+        catalog
+            .heroes
+            .values()
+            .take(PLAYER_COUNT)
+            .enumerate()
+            .map(|(seat, hero)| (seat as Seat, hero.id.clone()))
+            .collect()
+    }
+
+    /// History 按观察者分份、槽位是对手座位：`a` 看到 `b` 的棋盘写进
+    /// `histories[a]` 的 `b` 槽位；没交手的座位不受影响。
+    #[test]
+    fn history_is_recorded_per_observer() {
+        let catalog = catalog();
+        let mut env = Env::new(&catalog);
+        env.reset(7, &heroes(&catalog)).expect("重置");
+        for player in &mut env.state.players {
+            player.board.clear();
+            player.eliminated = false;
+        }
+        env.state.players[0].board = vec![MinionInstance::new(&catalog, 1, "bruce-lee", false)];
+        env.state.players[1].board = vec![MinionInstance::new(&catalog, 2, "baiyi", false)];
+        env.state.pairings = vec![Pairing {
+            a: 0,
+            b: 1,
+            ghost: None,
+        }];
+
+        env.record_history();
+
+        let index = env.encoder.index();
+        assert_eq!(
+            env.histories[0].board(1)[0],
+            index.card("baiyi"),
+            "座位 0 应看到对手 1 的棋盘"
+        );
+        assert_eq!(
+            env.histories[1].board(0)[0],
+            index.card("bruce-lee"),
+            "座位 1 应看到对手 0 的棋盘"
+        );
+        assert!(
+            env.histories[0].board(0).iter().all(|card| *card == -1),
+            "自己的槽位不应记录"
+        );
+        assert!(
+            env.histories[2].board(1).iter().all(|card| *card == -1),
+            "未参战座位不应看到别人的战斗"
+        );
     }
 }

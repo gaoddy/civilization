@@ -81,6 +81,10 @@ pub struct EvalReport {
     pub anchor_losses: usize,
     /// 被步数上限截断、未计入统计的局数。
     pub truncated: usize,
+    /// 学习者的决策总数。
+    pub decisions: usize,
+    /// 学习者选择站位的决策数；用来观察站位候选的数量偏置。
+    pub rearrange_decisions: usize,
 }
 
 /// 评测错误。
@@ -192,6 +196,8 @@ pub fn eval_full(
     let mut anchor_wins = 0usize;
     let mut anchor_losses = 0usize;
     let mut truncated = 0usize;
+    let mut decisions = 0usize;
+    let mut rearrange_decisions = 0usize;
 
     for (seed_index, seed) in cfg.seeds.iter().copied().enumerate() {
         let learner = (seed_index % cfg.learner_seats) as Seat;
@@ -247,7 +253,15 @@ pub fn eval_full(
                     }
                 }
             };
-            env.step(candidates[choice].0.clone())
+            let action = candidates[choice].0.clone();
+            let is_rearrange = action.is_rearrange();
+            if seat == learner {
+                decisions += 1;
+                if is_rearrange {
+                    rearrange_decisions += 1;
+                }
+            }
+            env.step(action)
                 .map_err(|error| EvalError::NoData(error.0))?;
             steps += 1;
             per_turn[index] += 1;
@@ -288,6 +302,8 @@ pub fn eval_full(
         anchor_wins,
         anchor_losses,
         truncated,
+        decisions,
+        rearrange_decisions,
     ))
 }
 
@@ -322,6 +338,8 @@ fn report(
     anchor_wins: usize,
     anchor_losses: usize,
     truncated: usize,
+    decisions: usize,
+    rearrange_decisions: usize,
 ) -> EvalReport {
     let games = placements.len();
     let mean = placements.iter().sum::<f32>() / games as f32;
@@ -357,5 +375,7 @@ fn report(
         anchor_wins,
         anchor_losses,
         truncated,
+        decisions,
+        rearrange_decisions,
     }
 }
