@@ -36,7 +36,7 @@
 | 棋盘随从技能角标 | `BoardAbilityBadge`（`client/pages/game/board_ability_badge.gd`） | [board-ability-badge.md](board-ability-badge.md) |
 
 - 共享层按 `class_name` 直接实例化：跨两个及以上页面复用的组件放 `client/ui/`，只服务一个页面的组件放 `client/pages/<页面>/`；页面只做骨架与装配，不内联展示区块。
-- 框体材质 `FrameMaterial` 是卡面、按钮与面板共用的边框层：卡面按时代取合金色、三连换足金，按钮与可拖拽卡带引导流光，页面在 `_ready()` 末尾调用 `dress_page(self)` 补齐静态面板；需要材质的组件清单见 [frame-material.md](frame-material.md#需要材质的组件清单)。
+- 框体材质 `FrameMaterial` 是卡面、按钮与面板共用的边框层：卡面按时代取合金色、三连换足金，按钮与可拖拽卡带引导流光，胶囊、名次角标与数字徽标另铺一层 `surface` 数字底板，页面在 `_ready()` 末尾调用 `dress_page(self)` 补齐静态面板；需要材质的组件清单见 [frame-material.md](frame-material.md#需要材质的组件清单)。
 - 卡牌图鉴与 `Gallery*` 组件由 `client/ui/` 承载，供大厅图鉴页与对局覆盖层共用；它们的卡牌数据仍来自 `CardDB`。
 - `FirstGameGuide` 由对局页实例化并挂载，只服务对局页；高亮层忽略鼠标，提示条自身接收点击。
 - `GameAimLayer` 由对局页实例化并挂载，承接技能与战吼的选目标手势；全屏但忽略鼠标，只有瞄准期间临时接管按下与抬起。

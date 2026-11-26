@@ -19,12 +19,16 @@
 
 | 变体 | 底色与描边 | 文本色 |
 | --- | --- | --- |
-| `neutral` | `color-surface-raised` + `color-border` | `color-text` |
+| `neutral` | `color-surface-raised`（55% 不透明）+ `color-border` | `color-text` |
 | `accent` | 金色 16% 底 + 金色 60% 描边 | `color-accent` |
 | `success` | 成功色 16% 底 + 60% 描边 | `color-success` |
 | `danger` | 危险色 16% 底 + 60% 描边 | `color-danger` |
 | `info` | 信息色 16% 底 + 60% 描边 | `color-info` |
 | `plain` | 透明 | `color-text` |
+
+## 表面
+
+除 `plain` 外，胶囊在创建时叠一层 [框体材质](frame-material.md) 的数字底板：底板铺在胶囊底色之下，文字与边框仍在上层。底板颜色取变体色（`neutral` 取 `color-border`），胶囊底色因此压到 55% 不透明以内，底板才透得出来。
 
 ## 事件
 
