@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='utf-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="1370" height="1822" viewBox="86.88 38.91 1369.60 1822.23">
+  <title>Pioneer spacecraft silhouette</title>
+  <desc>Public domain (NASA). Vector source: Wikimedia Commons Pioneer plaque SVGs; context layers removed, recolored to white.</desc>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <defs id="defs7221" />
+    <g transform="translate(-120.57132,838.49493)" id="layer1">
+      <path d="M 739.69125,947.61704 C 753.01535,966.17214 766.80925,984.51994 781.06985,1002.6464 L 782.35155,900.15774 M 782.35155,-303.85137 L 782.35155,-779.58417 C 387.52535,-277.29819 369.86335,349.64314 675.95765,851.47504" id="path3347" style="fill:none;fill-rule:evenodd;stroke:#ffffff;stroke-width:5;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;display:inline;enable-background:new" />
+      <rect width="210.28777" height="722.03235" ry="4.475502" x="227.45006" y="-247.01859" id="rect4157" style="opacity:1;fill:none;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:6;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;display:inline;enable-background:new" />
+      <path d="M 1124.6549,108.3411 L 1021.6857,108.3411 M 1557.0544,108.3411 L 1447.2481,108.3411" id="path4200" style="fill:none;fill-rule:evenodd;stroke:#ffffff;stroke-width:6;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;display:inline;enable-background:new" />
+      <path d="M 1188.8593,-36.343521 L 897.90865,-150.69218 M 1556.9034,108.30419 L 1437.9507,61.553739" id="path4207" style="fill:none;fill-rule:evenodd;stroke:#ffffff;stroke-width:6;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;display:inline;enable-background:new" />
+      <path d="M 1104.0692,301.01084 L 1003.4325,343.81284 M 1557.0074,108.37051 L 1446.8364,155.2276" id="path4209" style="fill:none;fill-rule:evenodd;stroke:#ffffff;stroke-width:6;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;display:inline;enable-background:new" />
+    </g>
+  </g>
+</svg>

@@ -11,6 +11,7 @@
 | [releases/](releases/README.md) | 已发布版本的更新内容 |
 | [decisions/](decisions/README.md) | 跨版本的已采用决策与已否决请求 |
 | [requirements/](requirements/README.md) | 全部产品需求的总表与单个需求文档 |
+| [assets/](assets/README.md) | 素材原始文件：设计参考用的矢量源与深底预览，不进入运行时 |
 | `plan/` | 实施计划，本地保留、不提交 |
 
 仓库根目录 `.superpowers/` 存放 superpowers 生成的设计、计划与报告，本地保留、不提交；不属于 `docs/` 结构。
