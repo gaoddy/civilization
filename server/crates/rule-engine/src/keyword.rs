@@ -30,7 +30,7 @@ pub enum Keyword {
 }
 
 /// 全部已知关键词，顺序即位图位序。
-const KNOWN: [Keyword; 16] = [
+pub const ALL: [Keyword; 16] = [
     Keyword::Battlecry,
     Keyword::Deathrattle,
     Keyword::Reborn,
@@ -74,12 +74,17 @@ impl Keyword {
 
     /// 由基名解析；未知基名返回 `None`。
     pub fn from_id(id: &str) -> Option<Keyword> {
-        KNOWN.into_iter().find(|keyword| keyword.id() == id)
+        ALL.into_iter().find(|keyword| keyword.id() == id)
     }
 
     /// 位图中使用的单个二进制位。
     fn bit(self) -> u16 {
         1u16 << (self as u8)
+    }
+
+    /// 位序，与 [`ALL`] 下标一致；观测编码按此顺序排位。
+    pub fn index(self) -> usize {
+        self as usize
     }
 }
 
@@ -203,7 +208,7 @@ impl KeywordSet {
     /// 与旧 `BTreeSet<String>` 的遍历顺序一致。
     pub fn names(&self) -> Vec<String> {
         let mut names = Vec::with_capacity(self.unknown.len() + 4);
-        for keyword in KNOWN {
+        for keyword in ALL {
             if !self.contains(keyword) {
                 continue;
             }
