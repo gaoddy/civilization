@@ -1,13 +1,102 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
   <title>文明战旗应用图标</title>
-  <rect width="1024" height="1024" fill="#121925"/>
-  <g transform="translate(512 512) scale(4.444) translate(-128 -128)">
+  <desc>断环托星：断口金环内嵌旅行者金唱片盘面，星落断口。</desc>
+  <defs>
+    <radialGradient id="bg" cx="0.5" cy="0.4" r="0.82">
+      <stop offset="0" stop-color="#1c2635"/><stop offset="1" stop-color="#080c12"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="0.12" y1="0" x2="0.82" y2="1">
+      <stop offset="0" stop-color="#ffeec0"/><stop offset="0.32" stop-color="#f4cd79"/>
+      <stop offset="0.68" stop-color="#d9a94b"/><stop offset="1" stop-color="#a2761f"/>
+    </linearGradient>
+    <linearGradient id="starfill" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#fff9e6"/><stop offset="0.55" stop-color="#f4cd79"/>
+      <stop offset="1" stop-color="#c9962f"/>
+    </linearGradient>
+    <radialGradient id="disc" cx="0.36" cy="0.3" r="0.92">
+      <stop offset="0" stop-color="#e8bd6c"/><stop offset="0.45" stop-color="#c6932f"/>
+      <stop offset="1" stop-color="#745214"/>
+    </radialGradient>
+    <filter id="ds" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#000000" flood-opacity="0.5"/>
+    </filter>
+    <filter id="soft" x="-60%" y="-60%" width="220%" height="220%">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#000000" flood-opacity="0.5"/>
+    </filter>
+  </defs>
 
-  <title>断环托星</title>
-  <path fill="#f0c66b" fill-rule="evenodd" d="
-    M216.87 104.19 A92 92 0 1 1 151.81 39.13 L146.63 58.45 A72 72 0 1 0 197.55 109.37 Z"/>
-  <path fill="#f0c66b" transform="translate(180.33 75.67) rotate(-45)" d="
-    M0 -19 Q3 -3 19 0 Q3 3 0 19 Q-3 3 -19 0 Q-3 -3 0 -19 Z"/>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
 
+  <!-- 盘面：半径 200，比环内径 288 小 88，与环之间留暗色间隙 -->
+  <circle cx="512" cy="512" r="200" fill="url(#disc)" filter="url(#soft)"/>
+  <circle cx="512" cy="512" r="200" fill="url(#disc)"/>
+  <circle cx="512" cy="512" r="198" fill="none" stroke="#ffeec0" stroke-width="3.5" opacity="0.5"/>
+
+  <!-- 音槽：16 圈，自 0.30R 到 0.92R 等距 -->
+  <g stroke="#6b4f16" stroke-width="2" opacity="0.14" fill="none">
+    <circle cx="512" cy="512" r="60.0"/><circle cx="512" cy="512" r="67.8"/>
+    <circle cx="512" cy="512" r="75.5"/><circle cx="512" cy="512" r="83.2"/>
+    <circle cx="512" cy="512" r="91.0"/><circle cx="512" cy="512" r="98.8"/>
+    <circle cx="512" cy="512" r="106.5"/><circle cx="512" cy="512" r="114.2"/>
+    <circle cx="512" cy="512" r="122.0"/><circle cx="512" cy="512" r="129.8"/>
+    <circle cx="512" cy="512" r="137.5"/><circle cx="512" cy="512" r="145.2"/>
+    <circle cx="512" cy="512" r="153.0"/><circle cx="512" cy="512" r="160.8"/>
+    <circle cx="512" cy="512" r="168.5"/><circle cx="512" cy="512" r="176.3"/>
   </g>
+  <circle cx="512" cy="512" r="191" fill="none" stroke="#7d5a1b" stroke-width="2.5" opacity="0.35"/>
+
+  <!-- 中心孔 -->
+  <circle cx="512" cy="512" r="10.4" fill="#0b1018"/>
+  <circle cx="512" cy="512" r="10.4" fill="none" stroke="#fff3cf" stroke-width="2" opacity="0.5"/>
+
+  <!-- 脉冲星图：14 条射线，长短对应脉冲周期 -->
+  <g stroke="#fff8e0" stroke-width="2.6" opacity="0.56">
+    <path d="M432 564 L409.7 474.7"/><path d="M432 564 L433.3 528"/>
+    <path d="M432 564 L450.5 506.9"/><path d="M432 564 L447.7 540.8"/>
+    <path d="M432 564 L490.2 515.1"/><path d="M432 564 L472.2 546.1"/>
+    <path d="M432 564 L455.8 560.7"/><path d="M432 564 L487.5 571.8"/>
+    <path d="M432 564 L461.2 577"/><path d="M432 564 L484.1 607.7"/>
+    <path d="M432 564 L446.5 585.6"/><path d="M432 564 L446.8 609.7"/>
+    <path d="M432 564 L434.8 644"/><path d="M432 564 L424.7 593.1"/>
+  </g>
+  <circle cx="432" cy="564" r="3.6" fill="#fff8e0" opacity="0.56"/>
+
+  <!-- 氢原子符号：两圆一联 -->
+  <g fill="none" stroke="#fff8e0" stroke-width="3" opacity="0.56">
+    <circle cx="544.8" cy="612" r="17"/><circle cx="599.2" cy="612" r="17"/>
+    <path d="M561.8 612 L582.2 612"/>
+  </g>
+
+  <!-- 播放示意图：唱片外框与唱针基座 -->
+  <g fill="none" stroke="#fff8e0" stroke-width="2.6" opacity="0.476">
+    <rect x="534" y="426" width="52" height="36"/>
+    <circle cx="560" cy="444" r="11.9"/>
+  </g>
+
+  <!-- 二进制时间刻线：盘面左下弧 -->
+  <g stroke="#fff8e0" stroke-width="2.2" opacity="0.392">
+    <path d="M404.9 649.1 L398.7 657"/><path d="M384.7 630.7 L377.4 637.5"/>
+    <path d="M367.7 609.3 L359.5 614.9"/><path d="M354.3 585.5 L345.2 589.8"/>
+    <path d="M344.7 560 L335.1 562.7"/><path d="M339.3 533.2 L329.4 534.4"/>
+    <path d="M338.1 505.9 L328.1 505.6"/>
+  </g>
+
+  <!-- 断环：外径 368、内径 288，断口 60° 朝向 -45° -->
+  <path d="M867.46 416.75 A368 368 0 1 1 607.25 156.54 L586.54 233.81 A288 288 0 1 0 790.19 437.46 Z"
+        fill="url(#gold)" filter="url(#ds)"/>
+  <g stroke="#7d5a1b" stroke-width="5" opacity="0.3">
+    <path d="M814 512 L866 512"/><path d="M725.5 725.5 L762.3 762.3"/>
+    <path d="M512 814 L512 866"/><path d="M298.5 725.5 L261.7 762.3"/>
+    <path d="M210 512 L158 512"/><path d="M298.5 298.5 L261.7 261.7"/>
+    <path d="M512 210 L512 158"/>
+  </g>
+  <path d="M863.82 411.12 A366 366 0 1 1 612.88 160.18" fill="none" stroke="#fff0c6"
+        stroke-width="5" opacity="0.55"/>
+  <path d="M790.77 432.07 A290 290 0 1 1 591.93 233.23" fill="none" stroke="#6b4f16"
+        stroke-width="5" opacity="0.55"/>
+
+  <!-- 星：落于断口，半径 76 -->
+  <path transform="translate(732.6 291.4) rotate(-45)"
+        d="M0 -76 Q12 -12 76 0 Q12 12 0 76 Q-12 12 -76 0 Q-12 -12 0 -76 Z"
+        fill="url(#starfill)" stroke="#7d5a1b" stroke-width="2.5" stroke-opacity="0.45"/>
 </svg>
