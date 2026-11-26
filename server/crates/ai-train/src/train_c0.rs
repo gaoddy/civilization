@@ -104,6 +104,7 @@ pub fn split_pairs(pairs: &[BoardPair], held_out: f64) -> (Vec<BoardPair>, Vec<B
 pub fn train_c0(
     pairs: &[BoardPair],
     index: &CardIndex,
+    catalog: &Catalog,
     cfg: &C0Config,
 ) -> Result<Weights, TrainError> {
     if pairs.is_empty() {
@@ -113,11 +114,11 @@ pub fn train_c0(
     let data = if train.is_empty() { pairs } else { &train };
     let obs_a: Vec<Vec<f32>> = data
         .iter()
-        .map(|pair| board_observation(&pair.a, index).to_vec())
+        .map(|pair| board_observation(&pair.a, index, catalog).to_vec())
         .collect();
     let obs_b: Vec<Vec<f32>> = data
         .iter()
-        .map(|pair| board_observation(&pair.b, index).to_vec())
+        .map(|pair| board_observation(&pair.b, index, catalog).to_vec())
         .collect();
     let a_wins: Vec<bool> = data.iter().map(|pair| pair.a_wins).collect();
     Ok(fit(&obs_a, &obs_b, &a_wins, cfg)?)
@@ -128,14 +129,15 @@ pub fn calibrate(
     weights: &Weights,
     cfg: &C0Config,
     index: &CardIndex,
+    catalog: &Catalog,
     pairs: &[BoardPair],
 ) -> Calibration {
     let model = cfg.model_config();
     let mut brier = 0.0f64;
     let mut bins = [(0.0f64, 0.0f64, 0usize); 10];
     for pair in pairs {
-        let a = board_observation(&pair.a, index);
-        let b = board_observation(&pair.b, index);
+        let a = board_observation(&pair.a, index, catalog);
+        let b = board_observation(&pair.b, index, catalog);
         let diff = f64::from(board_value(weights, &model, &a).unwrap_or(0.0))
             - f64::from(board_value(weights, &model, &b).unwrap_or(0.0));
         let probability = 1.0 / (1.0 + (-diff).exp());

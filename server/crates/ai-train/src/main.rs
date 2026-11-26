@@ -232,9 +232,9 @@ fn train_c0(args: &[String]) -> Result<(), String> {
         seed,
         ..C0Config::default()
     };
-    let weights = train(&pairs, &index, &cfg).map_err(|error| error.to_string())?;
+    let weights = train(&pairs, &index, &catalog, &cfg).map_err(|error| error.to_string())?;
     let (train_pairs, held) = split_pairs(&pairs, cfg.held_out);
-    let calibration = calibrate(&weights, &cfg, &index, &held);
+    let calibration = calibrate(&weights, &cfg, &index, &catalog, &held);
     weights
         .save(&out_dir.join("weights.json"))
         .map_err(|error| error.to_string())?;

@@ -1,8 +1,6 @@
 #![cfg(feature = "train")]
 
-use ai_core::{
-    ACTION_FEATURE_DIM, Action, ActionFeatures, BOARD_SLOTS, OBS_DIM, Observation, Slot,
-};
+use ai_core::{ACTION_FEATURE_DIM, Action, ActionFeatures, OBS_DIM, Observation};
 use ai_model::ModelConfig;
 use ai_train::ppo::{
     Batch, PpoConfig, TrainModel, log_prob, masked_probs, sample_action, train_step,
@@ -21,19 +19,9 @@ fn model_config() -> ModelConfig {
 
 fn zero_obs() -> Observation {
     Observation {
-        seat: 0,
-        turn: 0,
         phase: 1,
         hero: 0,
-        playstyles: 0,
-        hp: 0,
-        gold: 0,
-        era: 0,
-        shop: [Slot::default(); 6],
-        hand: [Slot::default(); 10],
-        board: [Slot::default(); BOARD_SLOTS],
-        players: [Default::default(); 8],
-        pending: 0,
+        ..Observation::default()
     }
 }
 

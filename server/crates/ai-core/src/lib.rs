@@ -13,16 +13,22 @@ pub use catalog::{CardIndex, catalog_hash};
 pub use features::{ACTION_FEATURE_DIM, ActionFeatures};
 pub use history::{BoardSnapshot, History};
 pub use observe::{
-    BOARD_SLOTS, Encoder, HAND_SLOTS, OBS_DIM, Observation, SEATS, SHOP_SLOTS, Slot, playstyle_mask,
+    ABILITY_FEATURES, Ability, BOARD_KEYWORD_FEATURES, BOARD_SLOTS, DISCOVER_FEATURES,
+    DISCOVER_SLOTS, Encoder, HAND_SLOTS, HERO_POWER_FEATURES, HERO_POWER_SLOTS, HeroPower,
+    KEYWORD_BITS, KEYWORD_LAYERS, MAX_TARGET_CANDIDATES, MAX_USES_PER_TURN, OBS_DIM,
+    OPPONENT_SEAT_FEATURES, Observation, SEATS, SHOP_AFFORD_FEATURES, SHOP_SLOTS, Slot,
+    TARGET_FEATURES, encode_keywords, playstyle_mask,
 };
 
 /// 观测/动作编码的 schema 版本；字段顺序或语义变更时递增。
-pub const SCHEMA_VERSION: u32 = 1;
+///
+/// 2：补齐商店可购买性、关键词与层数、英雄/随从技能次数、待选候选与本回合对手座位。
+pub const SCHEMA_VERSION: u32 = 2;
 
 #[cfg(test)]
 mod tests {
     #[test]
-    fn schema_version_is_one() {
-        assert_eq!(super::SCHEMA_VERSION, 1);
+    fn schema_version_matches_observation_layout() {
+        assert_eq!(super::SCHEMA_VERSION, 2);
     }
 }

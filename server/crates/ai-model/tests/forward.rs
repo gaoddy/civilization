@@ -1,7 +1,6 @@
 use std::path::PathBuf;
 
-use ai_core::observe::Opponent;
-use ai_core::{ACTION_FEATURE_DIM, Action, ActionFeatures, CardIndex, OBS_DIM, Observation, Slot};
+use ai_core::{ACTION_FEATURE_DIM, Action, ActionFeatures, CardIndex, OBS_DIM, Observation};
 use ai_model::{ModelConfig, Weights, forward, forward_hero};
 use rule_engine::data::Catalog;
 
@@ -17,21 +16,7 @@ fn catalog() -> Catalog {
 }
 
 fn zero_obs() -> Observation {
-    Observation {
-        seat: 0,
-        turn: 0,
-        phase: 0,
-        hero: -1,
-        playstyles: 0,
-        hp: 0,
-        gold: 0,
-        era: 0,
-        shop: [Slot::default(); 6],
-        hand: [Slot::default(); 10],
-        board: [Slot::default(); 7],
-        players: [Opponent::default(); 8],
-        pending: 0,
-    }
+    Observation::default()
 }
 
 /// 构造一份只有骨架张量的权重：卡/英雄/技能表按给定数量置零。

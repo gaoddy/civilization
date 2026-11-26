@@ -285,13 +285,13 @@ impl RecruitEnv {
                     let own_score = board_value(
                         weights,
                         &self.model,
-                        &board_observation(&own, self.encoder.index()),
+                        &board_observation(&own, self.encoder.index(), &self.catalog),
                     )
                     .unwrap_or(0.0);
                     let opponent_score = board_value(
                         weights,
                         &self.model,
-                        &board_observation(opponent, self.encoder.index()),
+                        &board_observation(opponent, self.encoder.index(), &self.catalog),
                     )
                     .unwrap_or(0.0);
                     own_score - opponent_score

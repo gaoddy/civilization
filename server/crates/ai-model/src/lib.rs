@@ -52,8 +52,10 @@ impl From<serde_json::Error> for ModelError {
 
 #[cfg(test)]
 mod tests {
+    /// 观测布局从 250 扩到 431，旧的 `trunk.*` 输入维度不再匹配：
+    /// 版本必须递增，否则加载端会按错位维度静默读错权重。
     #[test]
-    fn weights_version_is_one() {
-        assert_eq!(super::WEIGHTS_VERSION, 1);
+    fn weights_version_tracks_observation_layout() {
+        assert_eq!(super::WEIGHTS_VERSION, 2);
     }
 }

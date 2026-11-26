@@ -86,7 +86,7 @@ fn separable_data_meets_calibration_targets() {
         seed: 3,
         held_out: 0.2,
     };
-    let weights = train_c0(&pairs, &index, &cfg).expect("训练");
+    let weights = train_c0(&pairs, &index, &catalog, &cfg).expect("训练");
     for (name, data) in &weights.tensors {
         assert!(
             data.iter().all(|value| value.is_finite()),
@@ -95,7 +95,7 @@ fn separable_data_meets_calibration_targets() {
     }
     let (_, held) = split_pairs(&pairs, cfg.held_out);
     assert!(!held.is_empty());
-    let calibration = calibrate(&weights, &cfg, &index, &held);
+    let calibration = calibrate(&weights, &cfg, &index, &catalog, &held);
     assert!(calibration.brier <= 0.25, "Brier 过高：{calibration:?}");
     assert!(calibration.ece <= 0.03, "ECE 过高：{calibration:?}");
 }
@@ -128,8 +128,8 @@ fn same_seed_trains_same_weights() {
         seed: 7,
         held_out: 0.0,
     };
-    let first = train_c0(&pairs, &index, &cfg).expect("第一次训练");
-    let second = train_c0(&pairs, &index, &cfg).expect("第二次训练");
+    let first = train_c0(&pairs, &index, &catalog, &cfg).expect("第一次训练");
+    let second = train_c0(&pairs, &index, &catalog, &cfg).expect("第二次训练");
     assert_eq!(
         first.tensors, second.tensors,
         "同一随机种子的训练结果不一致"
@@ -170,7 +170,7 @@ fn candle_and_handwritten_forward_agree() {
     let weights = extract_weights(&var_map).expect("导出");
 
     let sample = board(&catalog, &minion_card(&catalog), 7, 9);
-    let obs = board_observation(&sample, &index);
+    let obs = board_observation(&sample, &index, &catalog);
     let input = Tensor::from_vec(obs.to_vec(), (1, OBS_DIM), &device).expect("输入");
     let candle_value = net
         .forward(&input)

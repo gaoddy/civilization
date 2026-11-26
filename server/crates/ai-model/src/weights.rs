@@ -13,7 +13,10 @@ use serde::{Deserialize, Serialize};
 use crate::ModelError;
 
 /// 权重格式版本；张量语义或布局变更时递增。
-pub const WEIGHTS_VERSION: u32 = 1;
+/// 权重格式版本；观测布局或张量语义变化时递增。
+///
+/// 2：观测维度 250 → 431（补齐商店可购买性、关键词、技能次数、待选与对手座位）。
+pub const WEIGHTS_VERSION: u32 = 2;
 
 /// 一份模型权重。
 #[derive(Debug, Clone, Default, PartialEq)]

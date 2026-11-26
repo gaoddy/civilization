@@ -9,7 +9,7 @@
 
 | crate | 职责 |
 | --- | --- |
-| `ai-core` | 观测与动作编码：`Observation`（`OBS_DIM = 250`）、`Action`（15 种，含 `PickHero`）、`ActionFeatures`、`CardIndex`、`History`、`Encoder`；`legal_actions` 在 `rule-engine`，这里是唯一的编码口径 |
+| `ai-core` | 观测与动作编码：`Observation`（`OBS_DIM = 431`，`SCHEMA_VERSION = 2`）、`Action`（15 种，含 `PickHero`）、`ActionFeatures`、`CardIndex`、`History`、`Encoder`；`legal_actions` 在 `rule-engine`，这里是唯一的编码口径 |
 | `ai-model` | 权重格式与纯 Rust 推理：`Weights`（`weights.json` 清单 + `weights.bin` 扁平 `f32`）、`ModelConfig::from_weights`（从张量形状反推结构）、`forward` / `board_value` / `forward_hero`；不依赖任何 ML 运行时 |
 | `ai-train` | 数据与训练：`data_c0`（棋盘对生成）、`env`（8 人完整对局）、`env_recruit`（C1 单座位局）、`env_full` + `league`（C2 联盟）、`ppo`（`TrainModel` 与 PPO 更新）、`train_c0` / `train_c1` / `train_c2`、`eval_c1` / `eval_full`；`candle` 依赖只在 `train` feature 后 |
 | `bot-ai` | 对局策略：现有启发式 `plan`、`Policy` trait、`HeuristicPolicy`、`NeuralPolicy`（用 `ai-model` 推理，不引入 `candle`） |
@@ -29,7 +29,7 @@
 
 现有实测（`output/` 为缓存，数值随重训变化）：C0（20000 步、release）Brier 0.0614、ECE 0.0241；C1（200 局训练、32 局评测）胜率 0.125、均差 −0.719；C2（40 局训练）训练内平均名次 4.43。C1/C2 的验收口径尚未复核。
 
-候选特征归一化：位置类（打牌插入点、站位目标）按最大合法下标 6 归一化（`BOARD_POSITION_DIVISOR`），发现/进化选项按「实际候选数 − 1」归一化；最大合法取值恒为 1.0。
+候选特征归一化：位置类（打牌插入点、站位目标）按最大合法下标 6 归一化（`BOARD_POSITION_DIVISOR`），发现/进化选项按「实际候选数 − 1」归一化；最大合法取值恒为 1.0。观测里的新字段同口径：技能剩余次数按 `uses_per_turn` 上限 2 归一（`MAX_USES_PER_TURN`），关键词层数按 3 归一（`KEYWORD_LAYER_DIVISOR`），目标待选候选数按候选上限 23（7 棋盘 + 10 手牌 + 6 商店）归一（`MAX_TARGET_CANDIDATES`）。
 
 `make ai-eval` 的评测口径对应 C2 门槛：每局 1 个学习者座位 + 7 个锚点座位（默认启发式机器人），贪心策略、座位轮换；报告平均名次、锚点平均名次、按局配对的名次优势 `anchor_mean − mean_placement` 及其 95% 置信区间。评测种子从 `EVAL_SEED_BASE = 1_000_000` 起，与训练种子池（`C2Config::seeds`，默认 `0..10_000`）不相交，避免在训练过的种子上评测。单局超过 `max_steps_per_game` 视为截断：跳过该局、计入报告的 `truncated`，全部截断时报错而不是返回空报告。C2 训练同理：`C2Config::max_steps_per_episode` 截断的对局只计入 `truncated_episodes`，不进入 `mean_placement` 与 `mean_return`。
 
@@ -94,7 +94,9 @@ output/models/c2/eval.json          # ai-eval 的检查点对比与最佳路径
 
 权重按（目录，卡表指纹）进程级共享加载（`NeuralPolicy::load_shared`）：同一份权重只读一次，所有 `GameTask` 复用同一实例；缓存不失效，替换权重文件后需要重启进程。
 
-**观测覆盖缺口（已知，未实现）**：`Observation` 只实现了 spec §5.1 的一部分。已给：金币、时代、血量、英雄 id、商店（冻结）、手牌、棋盘（攻防/金色/冻结）、本局玩法、回合与阶段、其余 7 人的存活/血量/时代/英雄/上阵数/名次、上一场对手棋盘。未给：卡牌关键词、随从技能的剩余次数、英雄主动技能及剩余次数、商店是否买得起、待选的候选内容（待选只有类型码）、本回合对手座位。补这些字段会改变 `OBS_DIM` 与观测布局（`observation_layout_is_stable` 的基准），必须同时递增 `WEIGHTS_VERSION` 并重训，因此不在本次修复范围内。
+`Observation` 已覆盖 spec §5.1 的全部字段：框头（座位、回合、阶段、英雄、玩法掩码、血量、金币、时代）、商店/手牌/棋盘槽位、其余 7 人与本人亲自见过的最近棋盘、商店可购买性（引擎 affordance 口径）、棋盘关键词 16 位 multi-hot 与 `breed`/`assemble`/`armor` 层数、英雄与随从主动技能的剩余次数与可用性、发现候选卡索引与目标待选候选数、本回合对手座位。
+
+观测布局变化会改 `OBS_DIM`（`observation_layout_is_stable` 的金样本基准），必须同时递增 `ai_core::SCHEMA_VERSION` 与 `ai_model::WEIGHTS_VERSION` 并重训；旧权重因版本不匹配被拒绝加载。当前版本：`OBS_DIM = 431`、`SCHEMA_VERSION = 2`、`WEIGHTS_VERSION = 2`。
 
 **已知观测缺口（C3 范围）**：观测里有「本人亲自对战过的对手最近一次棋盘」（`History`）。训练环境在战斗结算时记录它，但房间服务目前不重建，`NeuralPolicy` 始终用全 `-1` 的 `History` 推理，因此这 56 维在线上是训练分布外的常数。影响是神经策略在这部分信息上偏弱，不影响正确性；按 spec 的 C3（接入房间服务后的真实对局复核）补服务端重建。在 C3 完成前，神经策略只作为非默认选项，默认仍是启发式。
 
@@ -103,7 +105,7 @@ output/models/c2/eval.json          # ai-eval 的检查点对比与最佳路径
 ## 6. 重训
 
 1. 卡表或规则变化后按 `make ai-data` → C0 → C1 → C2 顺序重跑；`catalog_hash` 变化即说明旧权重与旧棋盘对都不再对应。`train-c2` 每 `--checkpoint-every`（默认 20）次更新把权重写到 `output/models/c2/snapshots/`，崩溃后可从最近检查点继续评测或作为续训初始化；检查点只含权重，不含优化器状态，因此不是逐位可复现的断点续训。
-2. 权重格式变化时递增 `ai-model::WEIGHTS_VERSION`，加载端按版本拒绝。
+2. 权重格式或观测布局变化时递增 `ai-model::WEIGHTS_VERSION`（观测布局同时递增 `ai_core::SCHEMA_VERSION`），加载端按版本拒绝；`OBS_DIM` 改变后 `output/models` 下的旧权重全部作废，必须按 C0 → C1 → C2 重训。
 3. 训练可复现：初始化种子化（`seed_weights`），同一 seed 与步数得到同一份权重。
 4. 检查点选择只看固定种子集上的评测指标（平均名次），不看训练损失或训练内胜率。
 5. 选英雄独立头启用后，C1/C2 的旧权重需要重训（缺 `hero_head.*`）；C1/C2 的全局分布对手来自 `distribution_boards`，按「玩法 + 随从集合（卡、金色、当前攻血）」去重，只在英雄或实例编号上不同的棋盘算同一份对手。

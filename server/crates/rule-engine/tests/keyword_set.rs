@@ -86,3 +86,12 @@ fn base_keywords_falls_back_for_directly_inserted_card() {
     assert!(base.contains_name("taunt"));
     assert!(!base.contains(Keyword::Poison));
 }
+
+/// 观测编码依赖「位序 = 枚举声明顺序 = `ALL` 下标」这一约定。
+#[test]
+fn all_is_ordered_like_bits() {
+    for (index, keyword) in rule_engine::keyword::ALL.into_iter().enumerate() {
+        assert_eq!(keyword.index(), index, "{} 的位序", keyword.id());
+    }
+    assert_eq!(rule_engine::keyword::ALL.len(), 16);
+}
