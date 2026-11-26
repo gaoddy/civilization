@@ -1,5 +1,8 @@
 //! 合法动作枚举：训练掩码与服务端兜底的唯一口径。
 //!
+//! 只枚举**会改变状态**的动作：空操作（冻结已经冻结的槽位、解冻没有冻结的商店）
+//! 虽然意图层会接受，但不进候选，否则策略可以在一回合里无限重复同一条动作。
+//!
 //! 只读：不修改状态、不消耗随机流。返回顺序固定，一次枚举内的下标就是训练侧的
 //! 动作编号；服务端与训练端都从同一函数重建，避免两套编号漂移。
 //!
@@ -11,8 +14,8 @@ use crate::effects::{EVOLVE_CHOICES, EffectCtx, TargetRef, Trigger};
 use crate::engine::Engine;
 use crate::intent::Intent;
 use crate::recruit::{
-    check_buy, check_choose_discover, check_end_recruit, check_freeze, check_hero_power,
-    check_minion_ability, check_play_card, check_reroll, check_sell, check_unfreeze, check_upgrade,
+    check_buy, check_choose_discover, check_end_recruit, check_hero_power, check_minion_ability,
+    check_play_card, check_reroll, check_sell, check_unfreeze, check_upgrade, frozen_differs,
 };
 use crate::state::{GameState, HandCard, InstanceId, PendingChoice, Phase, Seat};
 use crate::view::{hand_card_targets, hero_power_targets, minion_ability_targets};
@@ -132,21 +135,26 @@ pub fn legal_actions(engine: &Engine, state: &GameState, seat: Seat) -> Vec<Inte
     }
 
     // 冻结与解冻：先全部槽位，再逐槽位。
-    if check_freeze(state, seat, None).is_ok() {
+    //
+    // 只枚举会改变冻结状态的动作：已经冻结的槽位不再冻结、没有冻结槽位时不解冻。
+    // 这类空操作不改变状态，留在候选里策略就会在一回合内无限重复它。
+    if frozen_differs(state, seat, None, true) {
         actions.push(Intent::FreezeShop { slot: None });
     }
     for slot in 0..player.shop.len() {
         let slot = u8::try_from(slot).unwrap_or(u8::MAX);
-        if check_freeze(state, seat, Some(slot)).is_ok() {
+        if frozen_differs(state, seat, Some(slot), true) {
             actions.push(Intent::FreezeShop { slot: Some(slot) });
         }
     }
-    if check_unfreeze(state, seat, None).is_ok() {
+    if check_unfreeze(state, seat, None).is_ok() && frozen_differs(state, seat, None, false) {
         actions.push(Intent::UnfreezeShop { slot: None });
     }
     for slot in 0..player.shop.len() {
         let slot = u8::try_from(slot).unwrap_or(u8::MAX);
-        if check_unfreeze(state, seat, Some(slot)).is_ok() {
+        if check_unfreeze(state, seat, Some(slot)).is_ok()
+            && frozen_differs(state, seat, Some(slot), false)
+        {
             actions.push(Intent::UnfreezeShop { slot: Some(slot) });
         }
     }
