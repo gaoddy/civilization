@@ -9,7 +9,7 @@
 ## 1. 视觉语言
 
 - 深色酒馆基调：近黑的背景、分层卡片、金色强调，状态色只表达结果（成功、危险、信息）。
-- 资源约束：工程没有字体与主题资源文件，界面由 Godot 内置控件与 `StyleBoxFlat` 构建；位图资源只有卡牌立绘、头像、卡面、页面背景与大厅图，槽位、尺寸、使用组件与回退规则见[纹理登记册](../../technical/client/textures.md)。英雄「头像」无素材时仍是玩法色块加名字首字的排版块。
+- 资源约束：工程没有字体与主题资源文件，界面由 Godot 内置控件与 `StyleBoxFlat` 构建；位图资源只有卡牌立绘、头像、卡面、每页专属的氛围背景与内容区结构框架图、大厅图，槽位、尺寸、使用组件与回退规则见[纹理登记册](../../technical/client/textures.md)。英雄「头像」无素材时仍是玩法色块加名字首字的排版块。
 - 代码绘制：卡框（`CardFrame`）、顶部星级、时代象形（`EraGlyph`）与攻防底牌（`StatPlate`）由代码绘制，不占位图；入口见第 4 节组件表。稀有度不是展示维度，卡面以 `level` 的 1–7 星表达成长档位。
 - 深浅色：只有深色一套，不实现浅色主题与主题切换，UI 评审不做浅色检查。
 
@@ -22,6 +22,7 @@
 | `client/ui/navigation.gd`（`UINavigation`） | 页面路径常量、统一导航入口 `navigate` 与错误码去向 `error_route` |
 | `client/ui/wording.gd`（`UIWording`） | 枚举展示与错误文案取用（`enum_text` / `error_text` / `error_tooltip`） |
 | `client/ui/layout.gd`（`UILayout`） | 安全区包裹、内容框与共享图层 |
+| `client/ui/page_backgrounds.gd`（`PageBackgrounds`） | 页面名到外层氛围图与内容区结构框架图的映射，图片缺失时回退统一底图 |
 | `client/ui/art.gd`（`UIArt`） | 图片取用与铺层（`texture` / `layer`） |
 | `client/ui/avatar.gd`、`hp_bar.gd`、`rank_badge.gd`、`skill_list.gd` | 单组件：头像块、血量条、名次角标、技能列表 |
 | `client/ui/selectable_box.gd`（`SelectableBox`） | 可选项框：内容容器、常态 / 悬停 / 选中描边与框内点击；见 [components/selectable-box.md](components/selectable-box.md) |

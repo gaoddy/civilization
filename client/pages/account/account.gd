@@ -24,7 +24,7 @@ var _countdown_left := 0.0
 
 
 func _ready() -> void:
-    UILayout.safe_area(self)
+    UILayout.safe_area(self, PageBackgrounds.surface("account"))
     _build()
     FrameMaterial.dress_page(self)
     GameStore.account_changed.connect(_on_account_changed)
@@ -43,7 +43,7 @@ func _process(delta: float) -> void:
 
 
 func _build() -> void:
-    add_child(UIControls.background())
+    add_child(UIControls.background(PageBackgrounds.ambient("account")))
 
     var margin := MarginContainer.new()
     margin.set_anchors_preset(Control.PRESET_FULL_RECT)

@@ -9,7 +9,7 @@ var _received := false
 
 
 func _ready() -> void:
-    UILayout.safe_area(self)
+    UILayout.safe_area(self, PageBackgrounds.surface("leaderboard"))
     _build()
     FrameMaterial.dress_page(self)
     GameStore.leaderboard_changed.connect(_on_leaderboard_changed)
@@ -18,7 +18,7 @@ func _ready() -> void:
 
 
 func _build() -> void:
-    add_child(UIControls.background())
+    add_child(UIControls.background(PageBackgrounds.ambient("leaderboard")))
 
     var margin := MarginContainer.new()
     margin.set_anchors_preset(Control.PRESET_FULL_RECT)

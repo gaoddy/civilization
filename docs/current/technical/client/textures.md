@@ -21,13 +21,48 @@
 - `portrait` 是派生源而非运行时纹理：当前没有组件调用 `art_path(id, "portrait")`；替换源立绘后重跑 `make assets` 即可更新头像与卡面。
 - 卡面展示框宽高比固定 112:146，只给宽度时高度由 `UITheme.card_face_height(width)` 计算；头像位不参与卡面比例，方形头像统一由 `AvatarFrame` 按 `radius-md` 裁切。
 
+### 1.1 页面氛围背景
+
+整窗 cover 的最外层图，只给页面身份，不放主体、任意裁切成立；取用入口统一为 `PageBackgrounds.ambient(page)`（`client/ui/page_backgrounds.gd`），图片缺失时回退 `bg_main.png`。
+
+| 页面 | 资源 | 像素尺寸 |
+| --- | --- | --- |
+| 登录 | `client/assets/ui/bg/bg_login.png` | 512×512 |
+| 大厅 | `client/assets/ui/bg/bg_lobby.png` | 512×512 |
+| 房间等待区 | `client/assets/ui/bg/bg_room.png` | 512×512 |
+| 对局 | `client/assets/ui/bg/bg_game.png` | 512×512 |
+| 结算 | `client/assets/ui/bg/bg_result.png` | 512×512 |
+| 卡牌图鉴 | `client/assets/ui/bg/bg_gallery.png` | 512×512 |
+| 排行榜 | `client/assets/ui/bg/bg_leaderboard.png` | 512×512 |
+| 个人主页 | `client/assets/ui/bg/bg_profile.png` | 512×512 |
+| 账号 | `client/assets/ui/bg/bg_account.png` | 512×512 |
+
+### 1.2 页面结构框架
+
+设计画布内的 16:9 结构框架图，分区边界与页面控件矩形对齐，按容器尺寸整张拉伸；取用入口统一为 `PageBackgrounds.surface(page)`，图片缺失时回退统一语义面板。
+
+| 页面 | 资源 | 像素尺寸 |
+| --- | --- | --- |
+| 登录 | `client/assets/ui/bg/bg_login_surface.png` | 1280×720 |
+| 大厅 | `client/assets/ui/bg/bg_lobby_surface.png` | 1280×720 |
+| 大厅（手机档位） | `client/assets/ui/bg/bg_lobby_surface_phone.png` | 960×540 |
+| 房间等待区 | `client/assets/ui/bg/bg_room_surface.png` | 1280×720 |
+| 对局 | `client/assets/ui/bg/bg_game_desktop.png` | 1280×720 |
+| 对局（手机档位） | `client/assets/ui/bg/bg_game_phone.png` | 960×540 |
+| 结算 | `client/assets/ui/bg/bg_result_surface.png` | 1280×720 |
+| 卡牌图鉴 | `client/assets/ui/bg/bg_gallery_surface.png` | 1280×720 |
+| 排行榜 | `client/assets/ui/bg/bg_leaderboard_surface.png` | 1280×720 |
+| 个人主页 | `client/assets/ui/bg/bg_profile_surface.png` | 1280×720 |
+| 账号 | `client/assets/ui/bg/bg_account_surface.png` | 1280×720 |
+
 ## 2. 组件登记
 
 | 组件 | 入口 | 槽位 | 纹理节点 | 铺法 | 源码 | 使用位置 |
 | --- | --- | --- | --- | --- | --- | --- |
 | 共享取图 | `UIArt.texture` / `UIArt.layer` | 全部 | 由调用方命名 | 由调用方指定 | `client/ui/art.gd` | 下列所有组件 |
-| 软件背景 | `UIControls.background` | 软件背景 | `PageBackground` | `STRETCH_KEEP_ASPECT_COVERED` | `client/ui/controls.gd` | 登录、大厅、房间、对局、图鉴、结算、排行榜、账号、个人资料共 9 个页面 |
-| 对局页面背景 | `UIControls.page_surface` | 对局分区背景 | `PageSurface` | `STRETCH_SCALE` | `client/ui/controls.gd` | 对局页，由 `UILayout.safe_area` 传入设备档位图 |
+| 软件背景 | `UIControls.background` | 软件背景 | `PageBackground` | `STRETCH_KEEP_ASPECT_COVERED` | `client/ui/controls.gd` | 登录、大厅、房间、对局、图鉴、结算、排行榜、账号、个人资料共 9 个页面，路径由 `PageBackgrounds.ambient(page)` 提供 |
+| 页面结构框架 | `UIControls.page_surface` | 页面结构框架 | `PageSurface` | `STRETCH_SCALE` | `client/ui/controls.gd` | 9 个页面，路径由 `PageBackgrounds.surface(page)` 提供；无图时回退语义面板 |
+| 页面背景映射 | `PageBackgrounds.ambient` / `PageBackgrounds.surface` | 软件背景、页面结构框架 | 由调用方传入 | 由调用方指定 | `client/ui/page_backgrounds.gd` | 上述两行的取图入口，图片缺失时返回空串 |
 | 大厅主视觉 | `LobbyHallImage` | 大厅主视觉 | `HallTexture` | `STRETCH_KEEP_ASPECT_COVERED` | `client/pages/lobby/lobby_hall_image.gd` | 大厅左栏 |
 | 卡面 | `CardFaceBase.create_face` | 卡面 | `CoverArt` | `STRETCH_KEEP_ASPECT_COVERED` | `client/ui/card_face_base.gd` | `ShopCardFace`、`HandCardFace`、`BoardCardFace`、`GalleryCardFace`（图鉴网格与图鉴英雄视图） |
 | 图鉴详情封面 | `GalleryDetail._build_preview` | 卡面 | `GalleryDetailArt` | `STRETCH_KEEP_ASPECT_COVERED` | `client/ui/gallery_detail.gd` | 图鉴详情浮层 |
@@ -52,7 +87,7 @@
 
 ## 4. 替换与新增
 
-1. 换软件背景、对局分区背景或大厅主视觉：替换同名文件 → `make asset-compress` → `make client-import`，再按第 2 节对应的使用位置检查。
+1. 换页面氛围背景、页面结构框架或大厅主视觉：替换 `client/assets/ui/bg/` 下对应 `bg_<page>*.png` 或 `lobby_hall.png` → `make asset-compress` → `make client-import`，再按第 2 节对应的使用位置检查。结构框架图的分区边界必须与该页控件矩形一致，重新出图后按 `output/wireframes/<page>.json` 的实测矩形核对。
 2. 换卡面：人物与随从走 `make assets`，效果牌走 `make assets-covers`，两者都会重写 `asset_manifest.json` 与 PNG；随后 `make asset-compress`、`make client-import`。
 3. 换头像：替换 `characters/avatars/ch_<id>_ava.png`，或替换源立绘后重跑 `make assets`。
 4. 新增纹理组件或槽位：先在第 1、2、3 节补行，再运行 `make data-check`；校验通过后才算完成。

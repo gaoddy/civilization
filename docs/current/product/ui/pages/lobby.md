@@ -17,8 +17,8 @@
 
 ```text
 页面根 Control
-├─ PageBackground：软件背景，内容框外整窗铺满
-└─ ContentFrame → ContentRoot（设计画布）→ PageBody（PageSurface 语义面板）
+├─ PageBackground：大厅氛围图 bg_lobby.png，内容框外整窗铺满
+└─ ContentFrame → ContentRoot（设计画布）→ PageBody（PageSurface 结构框架 bg_lobby_surface.png）
    └─ SafeAreaMargin
       ├─ MarginContainer：内边距 space-2xl
       │  └─ LobbyColumns：横向两栏，间距 space-2xl，左右 7:3

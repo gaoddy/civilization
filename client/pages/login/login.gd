@@ -18,7 +18,7 @@ var _local_failed := false
 
 
 func _ready() -> void:
-    UILayout.safe_area(self)
+    UILayout.safe_area(self, PageBackgrounds.surface("login"))
     _build()
     FrameMaterial.dress_page(self)
     Net.connected.connect(_on_connected)
@@ -42,7 +42,7 @@ func _ready() -> void:
 
 
 func _build() -> void:
-    add_child(UIControls.background())
+    add_child(UIControls.background(PageBackgrounds.ambient("login")))
 
     var center := CenterContainer.new()
     center.set_anchors_preset(Control.PRESET_FULL_RECT)

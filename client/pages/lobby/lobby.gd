@@ -34,7 +34,7 @@ var _steam_invite_blocked := false
 
 
 func _ready() -> void:
-    UILayout.safe_area(self)
+    UILayout.safe_area(self, PageBackgrounds.surface("lobby"))
     _build()
     FrameMaterial.dress_page(self)
     _connect_signals()
@@ -50,7 +50,7 @@ func _ready() -> void:
 
 
 func _build() -> void:
-    add_child(UIControls.background())
+    add_child(UIControls.background(PageBackgrounds.ambient("lobby")))
 
     var margin := MarginContainer.new()
     margin.set_anchors_preset(Control.PRESET_FULL_RECT)

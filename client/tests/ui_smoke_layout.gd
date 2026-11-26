@@ -209,16 +209,18 @@ func _check_desktop() -> void:
                             "%s 的 PageSurface 应放行输入" % page_case["path"])
                         _check(surface.size.is_equal_approx(Vector2(ScreenProfile.base_canvas())),
                             "%s 的 PageSurface 应铺满页面容器" % page_case["path"])
-                        if str(page_case["path"]).ends_with("game.tscn"):
+                        var page_key := str(page_case["path"]).get_file().get_basename()
+                        var mapped := PageBackgrounds.surface(page_key)
+                        if mapped != "":
                             _check(surface is TextureRect,
-                                "%s 的对局页 PageSurface 应为纹理图" % page_case["path"])
+                                "%s 有结构框架图时 PageSurface 应为纹理图" % page_case["path"])
                             if surface is TextureRect:
                                 var texture := (surface as TextureRect).texture
-                                _check(texture != null and str(texture.resource_path).ends_with("bg_game_desktop.png"),
-                                    "%s 的桌面档位应使用 bg_game_desktop.png" % page_case["path"])
+                                _check(texture != null and str(texture.resource_path) == mapped,
+                                    "%s 的 PageSurface 应使用 %s" % [page_case["path"], mapped])
                         else:
                             _check(surface is Panel,
-                                "%s 的非对局页 PageSurface 应为语义面板" % page_case["path"])
+                                "%s 没有结构框架图时 PageSurface 应为语义面板" % page_case["path"])
                 _check(area.get_parent() == body,
                     "%s 的 SafeAreaMargin 应挂在 PageBody 下" % page_case["path"])
             _check(page.get_child_count() == 2, "%s 根节点应为背景 + ContentFrame" % page_case["path"])
@@ -400,13 +402,15 @@ func _check_compact() -> void:
         if page != null:
             _check(page.size.is_equal_approx(compact),
                 "%s 在 960×540 下应铺满宿主，实际 %s" % [page_case["path"], str(page.size)])
-            if str(page_case["path"]).ends_with("game.tscn"):
+            var compact_key := str(page_case["path"]).get_file().get_basename()
+            var compact_mapped := PageBackgrounds.surface(compact_key)
+            if compact_mapped != "":
                 var surface := page.find_child(UILayout.PAGE_SURFACE_NAME, true, false) as Control
-                _check(surface is TextureRect, "手机档位对局页 PageSurface 应为纹理图")
+                _check(surface is TextureRect, "%s 手机档位 PageSurface 应为纹理图" % compact_key)
                 if surface is TextureRect:
                     var texture := (surface as TextureRect).texture
-                    _check(texture != null and str(texture.resource_path).ends_with("bg_game_phone.png"),
-                        "手机档位对局页应使用 bg_game_phone.png")
+                    _check(texture != null and str(texture.resource_path) == compact_mapped,
+                        "%s 手机档位应使用 %s" % [compact_key, compact_mapped])
             for node_name in page_case["deep_names"]:
                 var node := page.find_child(str(node_name), true, false)
                 _check(node is Control, "%s 的 %s 应为 Control" % [page_case["path"], node_name])

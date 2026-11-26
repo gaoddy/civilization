@@ -513,6 +513,7 @@ func _ready() -> void:
     await _check_avatar_frame()
     _check_page_background()
     _check_page_surface()
+    _check_page_background_map()
     recruit.queue_free()
     _finish()
 
@@ -613,6 +614,20 @@ func _check_page_surface() -> void:
         _expect(rect.expand_mode == TextureRect.EXPAND_IGNORE_SIZE, "页面容器背景应忽略纹理原始尺寸")
         _expect(rect.stretch_mode == TextureRect.STRETCH_SCALE, "页面容器背景应按容器尺寸拉伸")
     surface.free()
+
+
+## 页面背景映射：每个页面都有专属氛围图与结构框架图，路径真实存在。
+func _check_page_background_map() -> void:
+    for page_key in PageBackgrounds.AMBIENT:
+        _expect(
+            PageBackgrounds.ambient(str(page_key)) != "",
+            "页面 %s 应登记专属氛围背景" % page_key,
+        )
+    for page_key in PageBackgrounds.SURFACE:
+        _expect(
+            PageBackgrounds.surface(str(page_key)) != "",
+            "页面 %s 应登记结构框架背景" % page_key,
+        )
 
 
 ## 手牌介绍不被截断：信息区向上扩展，字号缩到能放下全文；介绍不压名称与角标。

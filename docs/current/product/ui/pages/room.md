@@ -16,7 +16,7 @@
 
 ```text
 软件背景 PageBackground
-└─ 页面容器 PageBody → PageSurface（语义面板，设计画布尺寸）
+└─ 页面容器 PageBody → PageSurface（结构框架 bg_room_surface.png，设计画布尺寸）
    └─ RoomPanel：卡片面板（surface，铺满整屏）
       └─ RoomColumn：纵向容器（内边距 space-lg，间距 space-lg）
          ├─ RoomTopBar：标题 + RoomMeta（「已准备 N/8 · 机器人补位 开/关」）

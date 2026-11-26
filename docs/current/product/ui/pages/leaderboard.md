@@ -14,7 +14,8 @@
 ## 2. 结构层级
 
 ```text
-软件背景 PageBackground
+软件背景 PageBackground（bg_leaderboard.png，整窗 cover）
+└─ 页面容器 PageBody → PageSurface（结构框架 bg_leaderboard_surface.png，设计画布尺寸）
 └─ 外边距 space-2xl
    └─ 纵向根容器（间距 space-lg）
       ├─ 头部：标题「全服排行榜」 + 弹性空隙 + BackButton「返回大厅」

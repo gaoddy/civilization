@@ -17,8 +17,8 @@
 ## 2. 结构层级
 
 ```text
-软件背景 PageBackground（bg_main，整窗 cover）
-└─ 页面容器 PageBody → PageSurface（语义面板，设计画布尺寸）
+软件背景 PageBackground（bg_result.png，整窗 cover）
+└─ 页面容器 PageBody → PageSurface（结构框架 bg_result_surface.png，设计画布尺寸）
    └─ CenterContainer（全屏）
       └─ 面板（最小宽 760）
          └─ 外边距 24

@@ -15,7 +15,7 @@
 ## 2. 结构层级
 
 ```text
-软件背景 PageBackground（bg_main.png，整窗 cover）
+软件背景 PageBackground（bg_game.png，整窗 cover）
 └─ 内容框 ContentFrame（16:9 contain 居中）
    └─ 逻辑画布 ContentRoot（设计基准尺寸，整体缩放）
       └─ 页面容器 PageBody（设计画布尺寸）
