@@ -1,6 +1,6 @@
 class_name BoardCardFace
 extends RefCounted
-## 棋盘随从卡面：等级星、潜行蒙版与当前身材；无费用、时代与介绍。
+## 棋盘随从卡面：等级星、时代、潜行蒙版与当前身材；无购买费用与介绍。
 ##
 ## 招募棋盘与战斗只读共用同一卡面与卡容器；战斗演示通过 `set_stats`
 ## 就地更新身材，不重建整张卡。
@@ -39,12 +39,13 @@ static func build(minion: Dictionary) -> Control:
         false,
     )
     CardFaceBase.add_frame(face_node)
-    # 卡框压在信息区之上、顶栏之下。费用位显示主动技能的发动费用：对手棋盘
-    # 不下发 `abilities`，无主动技能的随从也没有该字段，两种情况都留空。
+    # 卡框压在信息区之上、顶栏之下。时代取卡表，与其他卡面一致；费用位显示主动
+    # 技能的发动费用：对手棋盘不下发 `abilities`，无主动技能的随从也没有该字段，
+    # 两种情况都留空。
     CardFaceBase.add_corner_badges(
         face_node,
         _skill_cost(minion),
-        "",
+        str(entry.get("era", "")),
         "",
     )
     return face_node

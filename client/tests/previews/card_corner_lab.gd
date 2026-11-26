@@ -133,7 +133,7 @@ func _states_line(width: int, tag_text: String, host_device: String) -> Control:
 	var phone := _enter_phone(width)
 	var line := _line_head(tag_text)
 	for state in STATES.size():
-		# 潜行只出现在棋盘卡上：棋盘卡面没有时代，费用位也空着。
+		# 潜行只出现在棋盘卡上：这一行用空费用位展示棋盘卡面。
 		line.add_child(_specimen(state, width, CARD_ID, "", state == 3))
 	if phone:
 		ScreenProfile.set_device_for_test(host_device)
@@ -195,8 +195,8 @@ static func _specimen(
 	var stealth := state == 3
 	var frozen := state == 4
 	var entry := CardDB.card(card_id)
-	# 棋盘卡面不显示时代（沿用现状）；潜行只出现在棋盘卡上，所以也不带费用。
-	var era := "" if board else str(entry.get("era", ""))
+	# 棋盘卡与商店卡一样显示时代；潜行只出现在棋盘卡上，所以也不带费用。
+	var era := str(entry.get("era", ""))
 	var cost := ""
 	if board:
 		# 自己棋盘的费用位改显示发动技能的费用；对手棋盘与无主动技能的卡留空。
