@@ -69,7 +69,12 @@ pub const MAX_REARRANGE_PER_TURN: usize = 2;
 /// 非站位恒为可候选；站位在 `used < MAX_REARRANGE_PER_TURN` 时可候选。只给
 /// `ai-train` 的训练采样用，评测与线上解码不要加这道过滤。
 pub fn rearrange_within_budget(action: &Action, used: usize) -> bool {
-    !action.is_rearrange() || used < MAX_REARRANGE_PER_TURN
+    rearrange_within_limit(action, used, MAX_REARRANGE_PER_TURN)
+}
+
+/// 同 [`rearrange_within_budget`]，预算由调用方给定；用于扫预算取值的对照训练。
+pub fn rearrange_within_limit(action: &Action, used: usize, limit: usize) -> bool {
+    !action.is_rearrange() || used < limit
 }
 
 impl Action {

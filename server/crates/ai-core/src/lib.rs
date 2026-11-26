@@ -8,7 +8,7 @@ pub mod features;
 pub mod history;
 pub mod observe;
 
-pub use action::{Action, MAX_REARRANGE_PER_TURN, rearrange_within_budget};
+pub use action::{Action, MAX_REARRANGE_PER_TURN, rearrange_within_budget, rearrange_within_limit};
 pub use catalog::{CardIndex, catalog_hash};
 pub use features::{ACTION_FEATURE_DIM, ActionFeatures};
 pub use history::{BoardSnapshot, History};
