@@ -5,6 +5,7 @@
 
 use std::collections::BTreeMap;
 
+use ai_core::History;
 use rule_engine::combat::{effective_attack, effective_health};
 use rule_engine::data::{Card, CardType, Catalog, CategoryKind, Playstyle, Skill};
 use rule_engine::effects::{
@@ -16,6 +17,12 @@ use rule_engine::state::{GameState, MinionInstance, PendingChoice, Phase, Player
 
 pub mod neural;
 
+/// AI 决策的单局上下文；启发式不需要，默认忽略。
+pub struct DecisionContext<'a> {
+    /// 本人座位亲眼见过的对手棋盘，槽位按对手座位索引。
+    pub history: &'a History,
+}
+
 /// 策略抽象：房间服务按同一接口切换启发式与神经策略。
 pub trait Policy {
     /// 给出该座位下一条意图；无法决策时返回 `None`，由调用方回退启发式。
@@ -26,6 +33,18 @@ pub trait Policy {
         engine: &Engine,
         blocked: &[Intent],
     ) -> Option<Intent>;
+
+    /// 带单局上下文的决策；默认忽略上下文，只有神经策略读取。
+    fn plan_with_context(
+        &self,
+        state: &GameState,
+        seat: Seat,
+        engine: &Engine,
+        blocked: &[Intent],
+        _context: &DecisionContext<'_>,
+    ) -> Option<Intent> {
+        self.plan(state, seat, engine, blocked)
+    }
 }
 
 /// 现有启发式策略的 trait 包装。
