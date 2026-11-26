@@ -20,6 +20,9 @@ const GUIDE_META := "frame_guide"
 ## 材质层挂在 Node2D 下：容器只排列 Control 子节点，这样 PanelContainer 的
 ## 内容内边距不会把材质层挤进内容区；Node2D 仍是 CanvasItem，祖先缩放照常生效。
 const HOLDER_NAME := "FrameMaterialHolder"
+## 数字底板层：铺在内容之下，给段位、倒计时与数字这类没有整块底色的信息表面。
+const PLATE_HOLDER_NAME := "FramePlateHolder"
+const PLATE_OVERLAY_NAME := "FramePlate"
 const SHADER_PATH := "res://ui/frame_material.gdshader"
 ## 线宽按短边比例取，夹在区间内：小按钮不掉到 1px，大面板不粗成色块。
 const BAND_RATIO := 0.022
@@ -61,7 +64,8 @@ static func golden_tint() -> Color:
 
 
 ## 给单个控件叠材质；重复调用只更新参数，不叠加多份。
-## `opts` 支持 `tint: Color`、`golden: bool`、`guide: bool`。
+## `opts` 支持 `tint: Color`、`golden: bool`、`guide: bool`、`surface: bool`。
+## `surface` 打开时额外铺一层数字底板：底板画在内容之下，边框仍压在内容之上。
 static func apply(target: Control, style: int, opts: Dictionary = {}) -> ColorRect:
 	if target == null or shader() == null:
 		return null
@@ -90,12 +94,53 @@ static func apply(target: Control, style: int, opts: Dictionary = {}) -> ColorRe
 	overlay.set_meta("tint", opts.get("tint", default_tint()))
 	overlay.set_meta("golden", bool(opts.get("golden", false)))
 	overlay.set_meta("guide", bool(opts.get("guide", false)))
+	overlay.set_meta("surface", false)
 	var material := overlay.material as ShaderMaterial
 	if material == null:
 		return overlay
 	material.set_shader_parameter("style", style)
 	_sync(overlay, target)
+	if bool(opts.get("surface", false)):
+		_ensure_plate(target, style, opts)
 	return overlay
+
+
+## 数字底板：铺在内容之下的一整块表面。
+## `Label` 的文字由控件自身绘制，子节点默认压在文字上，底板用 `show_behind_parent`
+## 落到文字后面；`PanelContainer` 的底色先于子节点绘制，底板插到第一个子节点即可。
+static func _ensure_plate(target: Control, style: int, opts: Dictionary) -> void:
+	var holder := target.get_node_or_null(PLATE_HOLDER_NAME) as Node2D
+	var plate := holder.get_node_or_null(PLATE_OVERLAY_NAME) as ColorRect if holder != null else null
+	if plate == null:
+		holder = Node2D.new()
+		holder.name = PLATE_HOLDER_NAME
+		var material := ShaderMaterial.new()
+		material.shader = shader()
+		plate = ColorRect.new()
+		plate.name = PLATE_OVERLAY_NAME
+		plate.color = UITheme.color("color-white")
+		plate.material = material
+		plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		plate.position = Vector2.ZERO
+		plate.size = target.size
+		holder.add_child(plate)
+		if target is Label:
+			holder.show_behind_parent = true
+			target.add_child(holder)
+		else:
+			target.add_child(holder)
+			target.move_child(holder, 0)
+		plate.ready.connect(func() -> void: _sync(plate, target), CONNECT_ONE_SHOT)
+		target.resized.connect(func() -> void: _sync(plate, target))
+	plate.set_meta("surface", true)
+	plate.set_meta("tint", opts.get("tint", default_tint()))
+	plate.set_meta("golden", bool(opts.get("golden", false)))
+	plate.set_meta("guide", false)
+	var material := plate.material as ShaderMaterial
+	if material == null:
+		return
+	material.set_shader_parameter("style", style)
+	_sync(plate, target)
 
 
 ## 切换引导流光：只为需要玩家操作的元素打开。`root` 自身与全部后代一起处理，
@@ -143,17 +188,22 @@ static func _overlays(root: Node) -> Array[ColorRect]:
 static func clear(target: Control) -> void:
 	if target == null:
 		return
-	var holder := target.get_node_or_null(HOLDER_NAME)
-	if holder != null:
-		target.remove_child(holder)
-		holder.queue_free()
+	for holder_name in [HOLDER_NAME, PLATE_HOLDER_NAME]:
+		var holder := target.get_node_or_null(holder_name)
+		if holder != null:
+			target.remove_child(holder)
+			holder.queue_free()
 
 
 static func clear_tree(root: Node) -> void:
 	for node in root.find_children("*", "ColorRect", true, false):
-		if node.name == OVERLAY_NAME:
+		if node.name == OVERLAY_NAME or node.name == PLATE_OVERLAY_NAME:
 			var holder := node.get_parent()
-			var victim: Node = holder if holder != null and holder.name == HOLDER_NAME else node
+			var victim: Node = (
+				holder
+				if holder != null and str(holder.name) in [HOLDER_NAME, PLATE_HOLDER_NAME]
+				else node
+			)
 			var parent := victim.get_parent()
 			if parent != null:
 				parent.remove_child(victim)
@@ -286,7 +336,9 @@ static func _sync(overlay: ColorRect, target: Control) -> void:
 		band += GOLDEN_BAND_BONUS
 	material.set_shader_parameter("box_size", size)
 	material.set_shader_parameter("band", band)
-	material.set_shader_parameter("corner", _corner(target))
+	# 圆角不能超过短边的一半：胶囊与小角标按自身圆角绘制，避免倒角在矩形内溢出。
+	material.set_shader_parameter("corner", minf(_corner(target), minf(size.x, size.y) * 0.5))
+	material.set_shader_parameter("surface", 1.0 if bool(overlay.get_meta("surface", false)) else 0.0)
 	var tint: Color = overlay.get_meta("tint", default_tint())
 	material.set_shader_parameter("tint", Vector3(tint.r, tint.g, tint.b))
 	var gold := golden_tint()

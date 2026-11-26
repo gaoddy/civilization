@@ -96,7 +96,11 @@ func _expect_frame_fill(panel: Node, node_name: String) -> void:
     _expect(panel != null, "大厅缺少 %s" % node_name)
     if panel == null:
         return
-    var overlay := panel.find_child(FrameMaterial.OVERLAY_NAME, true, false) as Control
+    # 只取面板自己的材质层：面板内可能嵌有带数字底板的胶囊，递归查找会命中子控件的层。
+    var holder := panel.get_node_or_null(FrameMaterial.HOLDER_NAME)
+    var overlay := (
+        holder.get_node_or_null(FrameMaterial.OVERLAY_NAME) as Control if holder != null else null
+    )
     _expect(overlay != null, "%s 应带框体材质" % node_name)
     if overlay == null:
         return
@@ -106,6 +110,21 @@ func _expect_frame_fill(panel: Node, node_name: String) -> void:
         "%s 框体材质应铺满面板，实际 %s / %s" % [
             node_name, str(overlay.size), str((panel as Control).size),
         ],
+    )
+
+
+## 数字表面：胶囊与角标应带铺满自身的底板。
+func _expect_plate(control: Control, node_name: String) -> void:
+    _expect(control != null, "大厅缺少 %s" % node_name)
+    if control == null:
+        return
+    var plate := control.find_child(FrameMaterial.PLATE_OVERLAY_NAME, true, false) as Control
+    _expect(plate != null, "%s 应带数字底板" % node_name)
+    if plate == null:
+        return
+    _expect(
+        plate.size.is_equal_approx(control.size),
+        "%s 数字底板应铺满控件，实际 %s / %s" % [node_name, str(plate.size), str(control.size)],
     )
 
 
@@ -251,6 +270,8 @@ func _check_queue_timer(lobby: Node) -> void:
     # 排队卡在页面装载时隐藏，进入排队后才显示；材质不能只在页面装载时接一次。
     await get_tree().process_frame
     _expect_frame_fill(lobby.find_child("LobbyQueueCard", true, false), "LobbyQueueCard")
+    _expect_plate(lobby.find_child("QueueCount", true, false), "QueueCount")
+    _expect_plate(timer.get_parent().get_parent(), "QueueTimerPlate")
 
     # 计时器每 0.5 秒刷新一次，采样留出一个刷新周期的余量。
     await get_tree().create_timer(1.8).timeout

@@ -91,7 +91,7 @@ func _build() -> void:
 	_timer.name = "HeroPickTimer"
 	_timer.add_theme_color_override("font_color", UITheme.color("color-accent"))
 	_timer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	status.add_child(_timer)
+	status.add_child(UIControls.plate_wrap(_timer))
 
 	_progress = UIControls.label("", UITheme.font_size("font-body"), false)
 	_progress.name = "HeroPickProgress"

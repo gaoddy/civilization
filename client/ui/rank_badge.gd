@@ -17,6 +17,11 @@ static func create(rank: int) -> PanelContainer:
     box.set_border_width_all(1)
     box.set_corner_radius_all(size / 2)
     node.add_theme_stylebox_override("panel", box)
+    # 名次是数字表面：底板铺在底色之上、数字之下，与胶囊同一套黄铜材质。
+    FrameMaterial.apply(node, FrameMaterial.Style.BEVEL, {
+        "tint": UITheme.color("color-accent"),
+        "surface": true,
+    })
 
     var text := UIControls.label(str(rank) if rank > 0 else "—", UITheme.font_size("font-caption"), false)
     text.name = "RankText"

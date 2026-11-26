@@ -286,6 +286,12 @@ func _check_seat_rows() -> void:
                     and rank_text.get_theme_color("font_color") == UITheme.color("color-white"),
                 "名次角标数字应为白色",
             )
+            var plate := badge.find_child(FrameMaterial.PLATE_OVERLAY_NAME, true, false) as Control
+            _expect(plate != null, "名次角标应带数字底板")
+            _expect(
+                plate != null and plate.size.is_equal_approx(badge.size),
+                "名次角标数字底板应铺满角标",
+            )
     # 已淘汰仍然显示名次数字，整行压暗。
     var dead := _row_of(rail, "p7")
     var dead_badge = dead.find_child("SeatRankBadge", true, false) if dead != null else null

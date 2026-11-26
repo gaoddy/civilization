@@ -38,7 +38,7 @@ func _init(icon_name := "", badge_prefix := "", show_cost := true) -> void:
 		_cost_badge = _make_badge(
 			badge_prefix + "CostBadge",
 			UITheme.color("color-accent"),
-			UITheme.color("color-bg"),
+			UITheme.color("color-accent"),
 			true,
 		)
 	_uses_badge = _make_badge(
@@ -152,11 +152,16 @@ func _make_badge(node_name: String, background: Color, text_color: Color, right_
 	badge.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	badge.add_theme_color_override("font_color", text_color)
 	var box := StyleBoxFlat.new()
-	box.bg_color = background
+	# 徽标是数字表面：底色压到下层的数字底板之上，底色只保留变体色相。
+	box.bg_color = UITheme.fade(background, 0.35)
 	box.border_color = UITheme.color("color-transparent")
 	box.set_corner_radius_all(UITheme.radius("radius-sm"))
 	box.set_content_margin_all(0)
 	badge.add_theme_stylebox_override("normal", box)
+	FrameMaterial.apply(badge, FrameMaterial.Style.BEVEL, {
+		"tint": UITheme.color("color-accent"),
+		"surface": true,
+	})
 	add_child(badge)
 	_layout_badge(badge, right_side)
 	return badge

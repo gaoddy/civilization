@@ -5,6 +5,8 @@ render_mode blend_mix;
 // tint   时代合金色：每个时代换一种铜/钢/陶的基色，形状与光照保持一致。
 // golden 三连金框：更亮的金、内圈再压一道金线、外发光更强。
 // guide  引导流光：只有需要玩家操作的元素才开启，其余保持静态。
+// surface 数字底板：默认只画边框、中间透出内容；打开后内部铺满深铜面，
+//         供段位、倒计时与数字这类没有整块底色的信息表面使用。
 
 uniform vec2 box_size = vec2(200.0, 120.0);
 uniform float corner = 8.0;
@@ -15,6 +17,7 @@ uniform vec3 tint = vec3(0.88, 0.70, 0.34);
 uniform vec3 golden_tint = vec3(0.94, 0.78, 0.42);
 uniform float golden = 0.0;
 uniform float guide = 0.0;
+uniform float surface = 0.0;
 
 float sd_rbox(vec2 p, vec2 b, float r) {
 	vec2 q = abs(p) - b + vec2(r);
@@ -115,5 +118,18 @@ void fragment() {
 
 	float total = max(max(max(ring_a, shadow_a), glow_a), grain_a);
 	vec3 col = (ring_col * ring_a + glow_col * glow_a + grain_col * grain_a) / max(total, 0.0001);
+	if (surface > 0.5) {
+		// 数字底板：整块深铜面，左上受光、右下压暗，颗粒只作质感。
+		// 边圈、流光与颗粒仍按各自权重叠在底板之上，形状语言与边框材质一致。
+		float top_light = clamp(0.55 - p.y / box_size.y * 1.05, 0.0, 1.0);
+		float sheen = 0.5 + 0.5 * light;
+		float grain = vnoise(UV * box_size * 0.30);
+		vec3 base = mix(vec3(0.070, 0.056, 0.038), tint * 0.34, 0.62);
+		vec3 plate = base * (0.82 + 0.22 * grain);
+		plate += tint * (0.030 + 0.085 * top_light * sheen);
+		float edge = clamp(max(max(ring_a, glow_a), grain_a), 0.0, 1.0) * inner_a;
+		col = mix(plate, col, edge);
+		total = max(total, inner_a * 0.96);
+	}
 	COLOR = vec4(col, total);
 }

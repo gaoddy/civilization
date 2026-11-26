@@ -27,7 +27,7 @@ func _init() -> void:
     _clock.name = "QueueTimer"
     _clock.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     _clock.add_theme_color_override("font_color", UITheme.color("color-accent"))
-    box.add_child(_clock)
+    box.add_child(UIControls.plate_wrap(_clock))
 
     var count_row := CenterContainer.new()
     box.add_child(count_row)

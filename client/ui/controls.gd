@@ -109,12 +109,61 @@ static func card_panel(variant := "surface") -> PanelContainer:
 
 
 ## 胶囊标签：数值、状态与计时使用。variant：neutral / accent / success / danger / info / plain。
+## 胶囊是数字与计时的承载面：带底色的变体统一铺一层数字底板；
+## `plain` 只留文字，不参与底板，避免在已有面板上再叠一层框。
 static func pill_label(text: String, variant := "neutral", font_token := "font-body") -> Label:
     var node := label(text, UITheme.font_size(font_token), false)
-    node.add_theme_stylebox_override("normal", UITheme.pill_style(variant))
+    var box := UITheme.pill_style(variant)
+    # 底板铺在胶囊底色之下：不透明变体把底色压半透，底板才透得出来。
+    box.bg_color.a = minf(box.bg_color.a, 0.55)
+    node.add_theme_stylebox_override("normal", box)
     node.add_theme_color_override("font_color", _pill_text_color(variant))
     node.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+    if variant != "plain":
+        FrameMaterial.apply(node, FrameMaterial.Style.BEVEL, {
+            "tint": _pill_tint(variant),
+            "surface": true,
+        })
     return node
+
+
+## 给单个标签补数字底板：透明面板 + 内边距 + 底板材质。
+## 用于没有整块底色的倒计时与数字；调用方仍持有标签本身，面板只承担表面。
+static func plate_wrap(label: Label, tint = null) -> PanelContainer:
+    var panel := PanelContainer.new()
+    panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    # 底板贴着数字收口，不随容器拉成整条横带。
+    panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+    var style := StyleBoxFlat.new()
+    style.bg_color = UITheme.color("color-transparent")
+    style.set_corner_radius_all(UITheme.radius("radius-md"))
+    panel.add_theme_stylebox_override("panel", style)
+    var pad := MarginContainer.new()
+    for side in ["left", "right"]:
+        pad.add_theme_constant_override("margin_" + side, UITheme.space("space-lg"))
+    for side in ["top", "bottom"]:
+        pad.add_theme_constant_override("margin_" + side, UITheme.space("space-sm"))
+    pad.add_child(label)
+    panel.add_child(pad)
+    FrameMaterial.apply(panel, FrameMaterial.Style.BEVEL, {
+        "tint": tint if tint != null else UITheme.color("color-accent"),
+        "surface": true,
+    })
+    return panel
+
+
+static func _pill_tint(variant: String) -> Color:
+    match variant:
+        "accent":
+            return UITheme.color("color-accent")
+        "success":
+            return UITheme.color("color-success")
+        "danger":
+            return UITheme.color("color-danger")
+        "info":
+            return UITheme.color("color-info")
+        _:
+            return UITheme.color("color-border")
 
 
 static func _pill_text_color(variant: String) -> Color:
