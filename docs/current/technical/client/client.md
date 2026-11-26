@@ -300,7 +300,7 @@ client/
 - 构建号 = `<git 短号>[-dirty]-<环境>`：环境取 `CLIENT_ENV`（`local` / `dev` / `prod`），Steam 固定 `steam`，`PLATFORM=local` 调试包固定 `local`，Android AAB 追加 `-aab`。
 - 直接产物统一在 `output/client/`，文件名 `Civilization-<平台>-<构建号>.<扩展名>`；中间产物在 `output/client/build/<平台>/<构建号>/`；戳记在 `output/client/stamps/<产物基名>.json`。
 - 戳记记录提交、分支、dirty、源码指纹、`SERVER_URL`、`STEAM_APP_ID`、Godot 版本与产物清单。macOS 系 `.app` 还把戳记复制进 `Contents/Resources/build-stamp.json`，iOS 包内的 `Civilization.app` 为 app 根的 `build-stamp.json`。
-- `make export-*` 与 `make run-ios-*` 每次先比对戳记：源码指纹（HEAD + `git status` + 变更文件大小/mtime）与配置一致且产物齐全时直接复用，打印「复用 …」并跳过 Godot 导出与 `xcodebuild`；否则重建并覆盖同名产物。dirty 工作区同样可复用，内容一变戳记即失效。
+- `make export-*` 与 `make run-ios-*` 每次先比对戳记：源码指纹（HEAD + `git status` + 变更文件大小/mtime）与配置一致且产物齐全时直接复用，打印「复用 …」并跳过 Godot 导出与 `xcodebuild`；iOS 的 `client-import` 排在复用判定之后，命中时一并跳过，`make run-ios-*` 直接进入设备安装；否则重建并覆盖同名产物。dirty 工作区同样可复用，内容一变戳记即失效。
 - `BuildConfig` 同时写入 `BUILD_ENV`、`GIT_COMMIT`、`GIT_DIRTY`、`BUILD_TIME`，安装包内可直接读到构建来源；提交版 `client/generated/build_config.gd` 保留这些常量的空默认值。
 
 Godot 可执行文件通过 `GODOT` 变量覆盖，默认自动探测 `godot` 或 `/Applications/Godot.app/Contents/MacOS/Godot`。引擎补丁版本固定为 `4.7.2`（`Makefile` 的 `GODOT_VERSION`）；`make client-import` 及所有依赖它的客户端目标会先校验本机引擎，版本不符直接失败。
@@ -471,8 +471,8 @@ make ui-preview SETUP=res://tests/previews/game_rail.gd     # 无 .tscn 的组�
 
 | 命令 | 内容 |
 | --- | --- |
-| `make client-export PLATFORM=ios` | 依赖 `client-export-templates` 与 `client-import`；按 `ENV`/`env` 写入对应环境地址（默认 `local` 写空配置），导出 `output/client/build/ios/<构建号>/Civilization.xcodeproj`，用 `xcodebuild`（scheme `Civilization`、`-allowProvisioningUpdates`）构建 Release，再把 `Civilization.app` 装入 `Payload/` 打包为 `output/client/Civilization-ios-<构建号>.ipa` |
-| `make client-run PLATFORM=ios` | 依赖 `client-export PLATFORM=ios`，用 `xcrun devicectl` 把 `output/client/build/ios/<构建号>/build/Build/Products/Release-iphoneos/Civilization.app` 安装到 iPhone 并启动 `com.civilization.banner`；导出被复用时直接安装已有产物 |
+| `make client-export PLATFORM=ios` | 依赖 `client-export-templates`；先比对戳记，未复用时才执行 `client-import`，再按 `ENV`/`env` 写入对应环境地址（默认 `local` 写空配置），导出 `output/client/build/ios/<构建号>/Civilization.xcodeproj`，用 `xcodebuild`（scheme `Civilization`、`-allowProvisioningUpdates`）构建 Release，再把 `Civilization.app` 装入 `Payload/` 打包为 `output/client/Civilization-ios-<构建号>.ipa` |
+| `make client-run PLATFORM=ios` | 依赖 `client-export PLATFORM=ios`，用 `xcrun devicectl` 把 `output/client/build/ios/<构建号>/build/Build/Products/Release-iphoneos/Civilization.app` 安装到 iPhone 并启动 `com.civilization.banner`；导出被复用时跳过导入与导出，直接安装已有产物 |
 
 - 只在 macOS 上可用；模板目录缺少 `ios.zip` 时直接退出非 0。
 - 构建环境与桌面导出一致：`make client-export PLATFORM=ios` 与 `make client-run PLATFORM=ios` 接受 `ENV`/`env`（默认 `local`）。`local` 写空配置，真机按移动端回落 `ws://cooter.local:8080/ws`；`ENV=dev` 写入 dev 公网入口，`ENV=prod` 取 `CLIENT_PROD_SERVER_URL`。
