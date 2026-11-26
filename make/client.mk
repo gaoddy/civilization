@@ -194,7 +194,7 @@ _client-run-macos: client-env-check client-import $(if $(filter 1,$(LOCAL_SERVER
 
 # 真机联调默认走 local：空配置，客户端按移动端回落开发机局域网地址。
 # 环境由 ENV 指定；设备类型交给 ios_run.sh 自动选已连接的同类型设备。
-# 安装目标取 client-export 的同一构建号目录；导出被复用时直接装已有产物。
+# 安装目标取 client-export 的同一构建号目录；导出被复用时跳过导入与导出，直接装已有产物。
 client-run-ios-check:
 	@$(if $(filter iphone ipad,$(IOS_DEVICE_TYPE)),,$(error IOS_DEVICE_TYPE 只能是 iphone / ipad，收到：$(IOS_DEVICE_TYPE)))
 
@@ -473,8 +473,12 @@ steam-upload:
 # iOS 真机开发签名包：先导出 Xcode 工程，再由 xcodebuild 自动签名并打包 .ipa。
 # 需要 Xcode 已登录 Apple 团队 Q62EFJPV3C，且目标真机已登记；否则 xcodebuild 失败。
 # 中间产物在 output/client/build/ios/<构建号>/，最终 ipa 在 output/client/；
-# 同一源码状态重复执行只校验戳记并复用，不重跑 Godot 导出与 xcodebuild。
-_client-export-ios: client-env-check client-export-templates client-import
+# 同一源码状态重复执行只校验戳记并复用，不重跑导入、Godot 导出与 xcodebuild。
+# 导入不放进前置依赖：复用命中时完全跳过，make run-ios-* 直接安装已有产物。
+# 嵌套 make 用变量间接引用 $(MAKE)：这条配方后面还跟着真实导出，直接写 $(MAKE) 会被
+# make 当作递归调用，在 `make -n` 下整行执行，真的跑起 Godot 导出与 xcodebuild。
+CLIENT_NESTED_MAKE := $(MAKE)
+_client-export-ios: client-env-check client-export-templates
 	@[ "$$(uname -s)" = "Darwin" ] || { echo "client-export PLATFORM=ios 仅支持 macOS（当前 $$(uname -s)）" >&2; exit 1; }
 	@[ -f "$(GODOT_TEMPLATE_DIR)/ios.zip" ] || { echo "缺少 iOS 导出模板：$(GODOT_TEMPLATE_DIR)/ios.zip" >&2; exit 1; }
 	@set -e; \
@@ -489,6 +493,7 @@ _client-export-ios: client-env-check client-export-templates client-import
 	     --server-url "$(CLIENT_SERVER_URL)" --godot-version "$(GODOT_VERSION)"; then \
 	  echo "复用 iOS 产物：$$ipa"; exit 0; \
 	fi; \
+	$(CLIENT_NESTED_MAKE) --no-print-directory client-import; \
 	$(CLIENT_BACKUP_CONFIG); \
 	SERVER_URL="$(CLIENT_SERVER_URL)" STEAM_APP_ID="" BUILD_ENV="$$env" BUILD_TIME="$(CLIENT_BUILD_TIME)" $(PYTHON) scripts/gen_build_config.py $(CLIENT_REQUIRE_SERVER); \
 	mkdir -p "$(CLIENT_OUTPUT_DIR)"; \

@@ -212,6 +212,17 @@ class ClientBuildEnvTest(unittest.TestCase):
         self.assertIn("output/client/build/ios/$id", proc.stdout)
         self.assertIn('IOS_APP=', proc.stdout)
 
+    def test_ios_export_checks_reuse_before_import(self):
+        """复用判定先于导入：命中时跳过 client-import、Godot 导出与 xcodebuild。"""
+        proc = self._run_make(["-n", "client-export", "PLATFORM=ios"])
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        self.assertIn("scripts/client_build.py reuse", proc.stdout)
+        self.assertIn("client-import", proc.stdout)
+        self.assertLess(
+            proc.stdout.index("scripts/client_build.py reuse"),
+            proc.stdout.index("client-import"),
+        )
+
     def test_android_aab_uses_aab_script(self):
         proc = self._run_make(["-n", "client-export", "PLATFORM=android", "AAB=1"])
         self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)

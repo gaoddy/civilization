@@ -69,7 +69,7 @@
 
 - `output/` 是纯缓存目录：任何内容都可随时整体删除，不保证下次还在。真源（素材源、发布记录、实验结论）一律不放这里。
 - 固定路径只由 `make` 目标写入，不手改：`client/`（直接产物 `Civilization-<平台>-<构建号>.{app,zip,ipa,apk,aab}`、中间产物 `build/<平台>/<构建号>/`、戳记 `stamps/`）、`wireframes/`、`logs/<分支>/`、`loadtest-*.json`、`sim-batch.json`。
-- 客户端构建号 = `<git 短号>[-dirty]-<环境>`；`make export-*` / `run-ios-*` 比对产物戳记，源码与配置未变时直接复用，不重复导出。
+- 客户端构建号 = `<git 短号>[-dirty]-<环境>`；`make export-*` / `run-ios-*` 比对产物戳记，源码与配置未变时直接复用，不重复导出；`run-ios-*` 命中时连导入一并跳过，直接安装已有产物。
 - 日志统一写 `output/logs/<当前分支>/`（分支名中的 `/` 换成 `-`；detached HEAD 用短提交号，取不到时回落 `local`）：`ui_smoke_<场景>.log`、`ui_preview.log`、`sim-report.log`、`loadtest-server.log`，以及 `client-e2e/`、`dev-bots/` 子目录；切分支后日志互不覆盖。
 - 一次性探针、截图与临时数据统一放 `output/scratch/<日期>-<主题>/`；任务结束前要么迁到真源位置，要么删除。
 - 效果牌封面源按需临时放到 `output/effect-covers/generated/`（`ASSET_COVERS` 默认值），`make assets-covers` 处理完即可删除。
