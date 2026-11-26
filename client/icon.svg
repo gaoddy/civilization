@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <title>文明战旗应用图标</title>
+  <rect width="1024" height="1024" fill="#121925"/>
+  <g transform="translate(512 512) scale(4.444) translate(-128 -128)">
+
+  <title>断环托星</title>
+  <path fill="#f0c66b" fill-rule="evenodd" d="
+    M216.87 104.19 A92 92 0 1 1 151.81 39.13 L146.63 58.45 A72 72 0 1 0 197.55 109.37 Z"/>
+  <path fill="#f0c66b" transform="translate(180.33 75.67) rotate(-45)" d="
+    M0 -19 Q3 -3 19 0 Q3 3 0 19 Q-3 3 -19 0 Q-3 -3 0 -19 Z"/>
+
+  </g>
+</svg>
