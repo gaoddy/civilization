@@ -109,7 +109,7 @@ fn observation_layout_is_stable() {
     let values = obs.to_vec();
     assert_eq!(values.len(), OBS_DIM);
     assert_eq!(ai_core::OBS_DIM, 431);
-    assert_eq!(ai_core::SCHEMA_VERSION, 2);
+    assert_eq!(ai_core::SCHEMA_VERSION, 3);
     assert_eq!(values[0], 0.0);
     assert_eq!(values[1], 1.0 / 20.0);
     assert_eq!(values[2], 1.0);

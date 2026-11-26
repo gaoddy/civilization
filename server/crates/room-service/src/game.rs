@@ -287,6 +287,13 @@ pub struct GameTask {
     /// 只存在 `GameTask` 上，不写入 [`GameState`]，因此不影响 `state_hash` 与
     /// 确定性重放；重连快照从当前视图自然带出。
     combat_log: Vec<CombatLogEntry>,
+    /// 各座位亲眼见过的对手最近棋盘；槽位是对手座位。
+    ///
+    /// 只存在 `GameTask` 上，不写入 [`GameState`]，因此不影响 `state_hash` 与
+    /// 确定性重放；与训练环境 `ai-train::env::Env` 同口径。
+    histories: [ai_core::History; SEAT_COUNT],
+    /// 卡牌索引：把棋盘上的卡 id 编成 History 使用的整数索引。
+    card_index: ai_core::CardIndex,
     /// 机器人策略；默认启发式，可按环境变量换成神经策略。
     policy: Box<dyn bot_ai::Policy + Send + Sync>,
     /// 本局主动弃权的玩家；座位保留到本局结束，仅用于停止推送。
@@ -372,6 +379,8 @@ impl GameTask {
         let (engine, mut state) = Engine::new(catalog, seed_from_u64(seed), playstyles);
         engine.start_game(&mut state, &heroes)?;
 
+        let card_index = ai_core::CardIndex::build(&engine.catalog);
+
         // 下标即座位号：`Room::players` 按 `BTreeMap<Seat, _>` 升序遍历，
         // 开局要求 8 个座位全满，因此下标 0..8 与座位 0..8 一一对应。
         let seats: [SeatInfo; SEAT_COUNT] = std::array::from_fn(|index| SeatInfo {
@@ -429,6 +438,8 @@ impl GameTask {
             combat_acks: [false; SEAT_COUNT],
             combat_participants: [false; SEAT_COUNT],
             combat_log: Vec::new(),
+            histories: std::array::from_fn(|_| ai_core::History::new()),
+            card_index,
             policy: Box::new(bot_ai::HeuristicPolicy),
             departed: BTreeSet::new(),
             senders: BTreeMap::new(),
@@ -473,6 +484,7 @@ impl GameTask {
         }
 
         let (engine, state) = Engine::new(catalog, seed_from_u64(seed), playstyles);
+        let card_index = ai_core::CardIndex::build(&engine.catalog);
         let seats: [SeatInfo; SEAT_COUNT] = std::array::from_fn(|index| SeatInfo {
             player_id: players[index].player_id.clone(),
             display_name: players[index].display_name.clone(),
@@ -527,6 +539,8 @@ impl GameTask {
             combat_acks: [false; SEAT_COUNT],
             combat_participants: [false; SEAT_COUNT],
             combat_log: Vec::new(),
+            histories: std::array::from_fn(|_| ai_core::History::new()),
+            card_index,
             policy: Box::new(bot_ai::HeuristicPolicy),
             departed: BTreeSet::new(),
             senders: BTreeMap::new(),
@@ -1022,6 +1036,32 @@ impl GameTask {
         updates
     }
 
+    /// 记录每个真实配对座位看到的对手棋盘；幽灵战没有可记录的实体棋盘。
+    ///
+    /// 与 `ai-train::env::Env::record_history` 同口径：槽位是对手座位，按观察者
+    /// 分份。必须在 `resolve_combat` 之前调用，记录的是双方战前阵容。
+    fn record_history(&mut self) {
+        let pairings = self.state.pairings.clone();
+        for pairing in pairings {
+            if pairing.is_ghost() {
+                continue;
+            }
+            let board_a = self.board_cards(pairing.a);
+            let board_b = self.board_cards(pairing.b);
+            self.histories[usize::from(pairing.a)].record(pairing.b, &board_b);
+            self.histories[usize::from(pairing.b)].record(pairing.a, &board_a);
+        }
+    }
+
+    /// 座位棋盘上的卡牌索引，按站位顺序。
+    fn board_cards(&self, seat: Seat) -> Vec<i32> {
+        self.state.players[usize::from(seat)]
+            .board
+            .iter()
+            .map(|minion| self.card_index.card(&minion.card_id))
+            .collect()
+    }
+
     /// 驱动机器人完成当前招募回合；返回需要广播的更新。
     ///
     /// 与模拟器的 `run_turn` 同一循环：`plan` → `apply`，成功清空 `blocked` 并记录
@@ -1041,10 +1081,13 @@ impl GameTask {
             let mut blocked: Vec<EngineIntent> = Vec::new();
             let mut replans = 0usize;
             loop {
+                let context = bot_ai::DecisionContext {
+                    history: &self.histories[index],
+                };
                 // 神经策略推理失败或拒绝决策时回退启发式；启发式也返回 `None` 才停手。
                 let intent = self
                     .policy
-                    .plan(&self.state, seat, &self.engine, &blocked)
+                    .plan_with_context(&self.state, seat, &self.engine, &blocked, &context)
                     .or_else(|| bot_ai::plan(&self.state, seat, &self.engine, &blocked));
                 let Some(intent) = intent else {
                     break;
@@ -1619,6 +1662,8 @@ impl GameTask {
         mut events: Vec<EngineEvent>,
     ) -> Result<Vec<SeatUpdate>, EngineError> {
         events.extend(self.engine.finish_recruit(&mut self.state)?);
+        // 历史棋盘取战前阵容，且必须早于 `resolve_combat`；训练环境同一位置。
+        self.record_history();
         // 演示期间左栏名次必须停在战前值：`resolve_combat` 会立即改写伤害与
         // 胜者，因此在这之前按下标（即座位）取一次快照。
         self.combat_ranks = Some(std::array::from_fn(|seat| {
@@ -2731,5 +2776,89 @@ mod tests {
         assert_eq!(json["survivors"], 8);
         assert_eq!(json["durationMs"], 0, "固定时钟下开赛即结束");
         assert!(json["seed"].as_str().is_some_and(|seed| seed.len() == 16));
+    }
+
+    /// 战斗结算前按观察者记录对手棋盘：槽位是对手座位，不写自己的槽位，
+    /// 没交手的座位也看不到。
+    #[test]
+    fn combat_records_history_per_observer() {
+        let mut task = task();
+        prepare_two_seat_combat(&mut task);
+        task.enter_combat(Vec::new()).expect("进入战斗");
+
+        let baiyi = task.card_index.card("baiyi");
+        let bruce_lee = task.card_index.card("bruce-lee");
+        assert_eq!(
+            task.histories[0].board(1)[0],
+            baiyi,
+            "座位 0 应看到对手 1 的战前棋盘"
+        );
+        assert_eq!(
+            task.histories[1].board(0)[0],
+            bruce_lee,
+            "座位 1 应看到对手 0 的战前棋盘"
+        );
+        assert!(
+            task.histories[0].board(0).iter().all(|card| *card == -1),
+            "自己的槽位不应记录"
+        );
+        assert!(
+            task.histories[2].board(1).iter().all(|card| *card == -1),
+            "未参战座位不应看到别人的战斗"
+        );
+        assert!(
+            task.histories[2].board(0).iter().all(|card| *card == -1),
+            "未参战座位的历史应保持为空"
+        );
+    }
+
+    /// 机器人决策拿到的是本座位那份历史：座位 0 的上下文里是它自己见过的棋盘。
+    type Seen = std::sync::Arc<std::sync::Mutex<Vec<(Seat, [i32; 7])>>>;
+
+    struct HistoryProbe {
+        seen: Seen,
+    }
+
+    impl bot_ai::Policy for HistoryProbe {
+        fn plan(
+            &self,
+            _state: &rule_engine::state::GameState,
+            _seat: Seat,
+            _engine: &rule_engine::engine::Engine,
+            _blocked: &[rule_engine::intent::Intent],
+        ) -> Option<rule_engine::intent::Intent> {
+            None
+        }
+
+        fn plan_with_context(
+            &self,
+            _state: &rule_engine::state::GameState,
+            seat: Seat,
+            _engine: &rule_engine::engine::Engine,
+            _blocked: &[rule_engine::intent::Intent],
+            context: &bot_ai::DecisionContext<'_>,
+        ) -> Option<rule_engine::intent::Intent> {
+            self.seen
+                .lock()
+                .expect("探针锁")
+                .push((seat, context.history.board(1)));
+            None
+        }
+    }
+
+    #[test]
+    fn bot_context_carries_seat_history() {
+        let mut task = task();
+        task.bot_seats.insert(0);
+        let baiyi = task.card_index.card("baiyi");
+        task.histories[0].record(1, &[baiyi]);
+        let seen = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
+        task.set_policy(Box::new(HistoryProbe { seen: seen.clone() }));
+
+        task.drive_bots();
+
+        let first = *seen.lock().expect("探针锁").first().expect("应有决策");
+        assert_eq!(first.0, 0, "决策座位应是机器人座位");
+        assert_eq!(first.1[0], baiyi, "上下文应带本座位记录的历史");
     }
 }

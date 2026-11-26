@@ -55,9 +55,31 @@ pub enum Action {
     },
 }
 
+/// 训练采样时每座位每回合最多允许的站位次数。
+///
+/// 站位候选是「把某个随从移到某个位置」的全排列，7 个随从时 42 个候选，远多于
+/// 其他动作类别；训练 rollout 里它会吃掉大半决策，同一局能学到的有效决策变少。
+/// 只在训练采样的候选集上过滤：评测与线上（`bot_ai::NeuralPolicy`）不加这个上限
+/// ——实测解码侧限流会把策略逼到别的空转动作上（站位用完后退到反复冻结商店），
+/// 名次反而变差。引擎规则、协议意图与人类玩家可用动作都不受影响。
+pub const MAX_REARRANGE_PER_TURN: usize = 2;
+
+/// 训练采样时，本回合已用 `used` 次站位后该动作是否仍可作为候选。
+///
+/// 非站位恒为可候选；站位在 `used < MAX_REARRANGE_PER_TURN` 时可候选。只给
+/// `ai-train` 的训练采样用，评测与线上解码不要加这道过滤。
+pub fn rearrange_within_budget(action: &Action, used: usize) -> bool {
+    !action.is_rearrange() || used < MAX_REARRANGE_PER_TURN
+}
+
 impl Action {
     /// 选英雄的类别编号；选英雄走独立头（设计 D2），训练与推理都按它分派。
     pub const PICK_HERO_KIND: u8 = 14;
+
+    /// 是否站位。
+    pub fn is_rearrange(&self) -> bool {
+        matches!(self, Self::Rearrange { .. })
+    }
 
     /// 动作类别编号，供候选特征的 one-hot 使用。
     pub fn kind_index(&self) -> u8 {

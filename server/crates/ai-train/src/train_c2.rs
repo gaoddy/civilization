@@ -361,13 +361,19 @@ fn run_c1_episode(
     let mut steps = 0usize;
     let mut turn = env.turn();
     let mut per_turn = 0usize;
+    let mut rearrange_used = 0usize;
     while !env.is_done() && steps < EPISODE_GUARD {
         if env.turn() != turn {
             turn = env.turn();
             per_turn = 0;
+            rearrange_used = 0;
         }
         let obs = env.observe();
-        let candidates = env.action_candidates();
+        let candidates: Vec<(Action, ActionFeatures)> = env
+            .action_candidates()
+            .into_iter()
+            .filter(|(action, _)| ai_core::rearrange_within_budget(action, rearrange_used))
+            .collect();
         let features: Vec<ActionFeatures> =
             candidates.iter().map(|(_, feature)| *feature).collect();
         let (logits, value) = model.logits(&obs, &features)?;
@@ -389,7 +395,11 @@ fn run_c1_episode(
         let logp = log_prob(&logits, &mask, choice);
         let action = candidates[choice].0.clone();
         let is_end = matches!(action, Action::End);
+        let is_rearrange = action.is_rearrange();
         let stepped = env.step(action)?;
+        if is_rearrange {
+            rearrange_used += 1;
+        }
         let reward = decision_reward(stepped.reward, is_end);
         episode_return += reward;
         record(
@@ -441,6 +451,7 @@ fn run_c2_episode(
     let mut steps = 0usize;
     let mut turn = env.turn();
     let mut per_turn = vec![0usize; PLAYER_COUNT];
+    let mut rearrange_used = vec![0usize; PLAYER_COUNT];
     // 学习者最后一次采样；若对局在别人手里结束，要用它补一条终局 transition。
     let mut learner_sample: Option<LearnerSample> = None;
     let mut learner_recorded_done = false;
@@ -451,10 +462,15 @@ fn run_c2_episode(
         if env.turn() != turn {
             turn = env.turn();
             per_turn = vec![0usize; PLAYER_COUNT];
+            rearrange_used = vec![0usize; PLAYER_COUNT];
         }
         let index = usize::from(seat);
         let obs = env.observe(seat);
-        let candidates = env.action_candidates(seat);
+        let candidates: Vec<(Action, ActionFeatures)> = env
+            .action_candidates(seat)
+            .into_iter()
+            .filter(|(action, _)| ai_core::rearrange_within_budget(action, rearrange_used[index]))
+            .collect();
         if candidates.is_empty() {
             break;
         }
@@ -493,7 +509,11 @@ fn run_c2_episode(
         };
         let action = candidates[choice].0.clone();
         let is_end = matches!(action, Action::End);
+        let is_rearrange = action.is_rearrange();
         let stepped = env.step(action)?;
+        if is_rearrange {
+            rearrange_used[index] += 1;
+        }
         let reward = if stepped.done {
             stepped.terminal_reward[index]
         } else {
@@ -791,6 +811,60 @@ mod tests {
         assert_eq!(output.truncated_episodes, 4, "每局都应在上限处被截断");
         assert_eq!(output.mean_placement, 0.0, "截断局没有名次");
         assert_eq!(output.mean_return, 0.0, "截断局回报不计入均值");
+    }
+
+    /// 训练循环按「每座位每回合」限制站位：超过预算的站位不会成为候选。
+    #[test]
+    fn c2_training_keeps_rearrange_within_budget() {
+        use std::collections::BTreeMap;
+
+        let catalog = catalog();
+        let cfg = C2Config {
+            seeds: 0..8,
+            ..C2Config::default()
+        };
+        let mut env = FullEnv::new(&catalog, League::new(cfg.seed, cfg.league_size));
+        let index = ai_core::CardIndex::build(&catalog);
+        let mut model = TrainModel::new(
+            &cfg.model,
+            index.card_count(),
+            index.hero_count(),
+            index.skill_count(),
+            cfg.seed,
+        )
+        .expect("模型");
+        let mut rng = RandomPolicy::new(cfg.seed);
+        let rearrange_kind = Action::Rearrange { from: 0, to: 0 }.kind_index();
+
+        let mut counts: BTreeMap<(u8, u8), usize> = BTreeMap::new();
+        for episode in 0..4usize {
+            let mut batch = empty_batch();
+            run_c2_episode(
+                &catalog,
+                &mut env,
+                &mut model,
+                episode,
+                episode as u64,
+                &mut rng,
+                &mut batch,
+                cfg.max_steps_per_episode,
+            )
+            .expect("对局应能跑完");
+            for (row, choice) in batch.actions.iter().enumerate() {
+                if batch.candidates[row][*choice].kind != rearrange_kind {
+                    continue;
+                }
+                let key = (batch.obs[row].turn, batch.obs[row].seat);
+                *counts.entry(key).or_default() += 1;
+            }
+        }
+        assert!(!counts.is_empty(), "短训练应出现站位决策");
+        for ((turn, seat), count) in counts {
+            assert!(
+                count <= ai_core::MAX_REARRANGE_PER_TURN,
+                "回合 {turn} 座位 {seat} 站位 {count} 次，超过预算"
+            );
+        }
     }
 
     /// 学习者不是最后行动者时，也必须恰有一条带名次奖励的终局 transition，

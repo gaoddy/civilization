@@ -209,3 +209,32 @@ fn position_and_choice_features_reach_one_at_the_last_legal_value() {
         );
     }
 }
+
+/// 站位预算只限制站位，不限制其他动作；达到上限后站位退出训练采样候选。
+#[test]
+fn rearrange_budget_caps_only_rearrange() {
+    use ai_core::{MAX_REARRANGE_PER_TURN, rearrange_within_budget};
+
+    let rearrange = Action::Rearrange { from: 0, to: 1 };
+    for used in 0..MAX_REARRANGE_PER_TURN {
+        assert!(
+            rearrange_within_budget(&rearrange, used),
+            "已用 {used} 次时站位仍应可候选"
+        );
+    }
+    assert!(
+        !rearrange_within_budget(&rearrange, MAX_REARRANGE_PER_TURN),
+        "达到上限后站位不应再进候选"
+    );
+
+    for used in [0, MAX_REARRANGE_PER_TURN, MAX_REARRANGE_PER_TURN + 1] {
+        assert!(
+            rearrange_within_budget(&Action::Buy { slot: 0 }, used),
+            "买入不受站位预算影响"
+        );
+        assert!(
+            rearrange_within_budget(&Action::End, used),
+            "结束招募不受站位预算影响"
+        );
+    }
+}

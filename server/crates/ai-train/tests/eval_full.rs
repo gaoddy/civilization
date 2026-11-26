@@ -133,3 +133,25 @@ fn truncated_games_are_skipped_and_counted() {
         "错误信息应说明截断：{error}"
     );
 }
+
+/// 评测报告统计学习者座位的决策数与站位决策数，用于观察候选数量偏置。
+#[test]
+fn report_counts_learner_rearrange_decisions() {
+    let catalog = tiny_catalog();
+    let learner = weights_for(&catalog, 7);
+    let league = League::new(0, 0);
+    let cfg = EvalConfig {
+        seeds: (0..2).collect(),
+        learner_seats: 1,
+        anchors: vec![Anchor::Heuristic],
+        max_decisions_per_turn: 16,
+        max_steps_per_game: 200_000,
+    };
+
+    let report = eval_full(&catalog, &learner, &league, &cfg).expect("评测");
+    assert!(report.decisions > 0, "学习者应有决策");
+    assert!(
+        report.rearrange_decisions <= report.decisions,
+        "站位决策不能多于总决策"
+    );
+}

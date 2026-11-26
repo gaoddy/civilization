@@ -16,7 +16,7 @@ use rule_engine::legal::legal_actions;
 use rule_engine::state::{GameState, PendingChoice, Phase, Seat};
 use rule_engine::view::view;
 
-use crate::Policy;
+use crate::{DecisionContext, Policy};
 
 /// 神经策略的加载与结构错误。
 #[derive(Debug)]
@@ -54,7 +54,6 @@ pub struct NeuralPolicy {
     weights: Weights,
     model: ModelConfig,
     encoder: Encoder,
-    history: History,
 }
 
 impl NeuralPolicy {
@@ -80,7 +79,6 @@ impl NeuralPolicy {
             weights,
             model,
             encoder: Encoder::new(index),
-            history: History::new(),
         })
     }
 
@@ -123,43 +121,34 @@ impl Policy for Arc<NeuralPolicy> {
     ) -> Option<Intent> {
         Policy::plan(self.as_ref(), state, seat, engine, blocked)
     }
-}
 
-/// 清单里记录训练时的卡表指纹；与当前卡表不一致即拒绝加载。
-fn verify_catalog_hash(dir: &Path, catalog: &Catalog) -> Result<(), PolicyError> {
-    let Ok(bytes) = std::fs::read(dir.join("manifest.json")) else {
-        return Ok(());
-    };
-    let manifest: serde_json::Value = serde_json::from_slice(&bytes)
-        .map_err(|error| PolicyError::Manifest(format!("manifest.json 解析失败：{error}")))?;
-    let Some(expected) = manifest
-        .get("catalog_hash")
-        .and_then(|value| value.as_str())
-    else {
-        return Ok(());
-    };
-    let actual = ai_core::catalog_hash(catalog);
-    if expected != actual {
-        return Err(PolicyError::Catalog(format!(
-            "清单 catalog_hash {expected} 与当前卡表 {actual} 不符"
-        )));
-    }
-    Ok(())
-}
-
-impl Policy for NeuralPolicy {
-    fn plan(
+    fn plan_with_context(
         &self,
         state: &GameState,
         seat: Seat,
         engine: &Engine,
         blocked: &[Intent],
+        context: &DecisionContext<'_>,
+    ) -> Option<Intent> {
+        Policy::plan_with_context(self.as_ref(), state, seat, engine, blocked, context)
+    }
+}
+
+impl NeuralPolicy {
+    /// 用给定的单局上下文推理；`plan` 用空历史调用它。
+    fn plan_inner(
+        &self,
+        state: &GameState,
+        seat: Seat,
+        engine: &Engine,
+        blocked: &[Intent],
+        history: &History,
     ) -> Option<Intent> {
         if state.phase != Phase::Recruit {
             return None;
         }
         let seat_view = view(engine, state, seat)?;
-        let obs = self.encoder.encode(&seat_view, &self.history);
+        let obs = self.encoder.encode(&seat_view, history);
 
         let mut intents = Vec::new();
         let mut features = Vec::new();
@@ -192,6 +181,51 @@ impl Policy for NeuralPolicy {
         }
         let (logits, _) = forward(&self.weights, &self.model, &obs, &features).ok()?;
         intents.get(argmax(&logits)).cloned()
+    }
+}
+
+/// 清单里记录训练时的卡表指纹；与当前卡表不一致即拒绝加载。
+fn verify_catalog_hash(dir: &Path, catalog: &Catalog) -> Result<(), PolicyError> {
+    let Ok(bytes) = std::fs::read(dir.join("manifest.json")) else {
+        return Ok(());
+    };
+    let manifest: serde_json::Value = serde_json::from_slice(&bytes)
+        .map_err(|error| PolicyError::Manifest(format!("manifest.json 解析失败：{error}")))?;
+    let Some(expected) = manifest
+        .get("catalog_hash")
+        .and_then(|value| value.as_str())
+    else {
+        return Ok(());
+    };
+    let actual = ai_core::catalog_hash(catalog);
+    if expected != actual {
+        return Err(PolicyError::Catalog(format!(
+            "清单 catalog_hash {expected} 与当前卡表 {actual} 不符"
+        )));
+    }
+    Ok(())
+}
+
+impl Policy for NeuralPolicy {
+    fn plan(
+        &self,
+        state: &GameState,
+        seat: Seat,
+        engine: &Engine,
+        blocked: &[Intent],
+    ) -> Option<Intent> {
+        self.plan_inner(state, seat, engine, blocked, &History::new())
+    }
+
+    fn plan_with_context(
+        &self,
+        state: &GameState,
+        seat: Seat,
+        engine: &Engine,
+        blocked: &[Intent],
+        context: &DecisionContext<'_>,
+    ) -> Option<Intent> {
+        self.plan_inner(state, seat, engine, blocked, context.history)
     }
 }
 

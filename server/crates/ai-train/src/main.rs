@@ -625,7 +625,7 @@ fn eval(args: &[String]) -> Result<(), String> {
         let report =
             eval_full(&catalog, &weights, &league, &cfg).map_err(|error| error.to_string())?;
         println!(
-            "{}：{} 局，平均名次 {:.2} ±{:.2}，锚点 {:.2}，优势 {:+.2} ±{:.2}，吃鸡 {:.2}，前四 {:.2}",
+            "{}：{} 局，平均名次 {:.2} ±{:.2}，锚点 {:.2}，优势 {:+.2} ±{:.2}，吃鸡 {:.2}，前四 {:.2}，站位 {}/{}",
             path.display(),
             report.games,
             report.mean_placement,
@@ -634,7 +634,9 @@ fn eval(args: &[String]) -> Result<(), String> {
             report.advantage,
             report.advantage_ci95,
             report.win_rate,
-            report.top4_rate
+            report.top4_rate,
+            report.rearrange_decisions,
+            report.decisions
         );
         let better = best
             .as_ref()
