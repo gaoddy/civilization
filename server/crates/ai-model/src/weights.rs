@@ -42,7 +42,15 @@ struct Manifest {
 
 impl Weights {
     /// 写入权重；`path` 为 JSON 清单，同名 `.bin` 存放数据。
+    ///
+    /// 写入前先校验所有张量都是有限值：训练发散得到的 NaN 权重一旦落盘，加载端
+    /// 的 ReLU 会把 NaN 吃掉，评测会给出一个看起来正常的分数，掩盖真正的故障。
     pub fn save(&self, path: &Path) -> Result<(), ModelError> {
+        for (name, data) in &self.tensors {
+            if let Some(index) = data.iter().position(|value| !value.is_finite()) {
+                return Err(ModelError::NonFinite(format!("{name}（第 {index} 项）")));
+            }
+        }
         let manifest = Manifest {
             version: WEIGHTS_VERSION,
             card_count: self.card_count,
@@ -92,6 +100,10 @@ impl Weights {
             let mut data = Vec::with_capacity(len);
             for chunk in bytes[offset..offset + len * 4].chunks_exact(4) {
                 data.push(f32::from_le_bytes([chunk[0], chunk[1], chunk[2], chunk[3]]));
+            }
+            // 长度对得上不代表内容有效：发散训练的产物会在这里被挡住。
+            if let Some(index) = data.iter().position(|value| !value.is_finite()) {
+                return Err(ModelError::NonFinite(format!("{name}（第 {index} 项）")));
             }
             tensors.insert(name, data);
             offset += len * 4;

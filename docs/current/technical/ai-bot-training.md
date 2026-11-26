@@ -31,6 +31,10 @@
 
 候选特征归一化：位置类（打牌插入点、站位目标）按最大合法下标 6 归一化（`BOARD_POSITION_DIVISOR`），发现/进化选项按「实际候选数 − 1」归一化；最大合法取值恒为 1.0。观测里的新字段同口径：技能剩余次数按 `uses_per_turn` 上限 2 归一（`MAX_USES_PER_TURN`），关键词层数按 3 归一（`KEYWORD_LAYER_DIVISOR`），目标待选候选数按候选上限 23（7 棋盘 + 10 手牌 + 6 商店）归一（`MAX_TARGET_CANDIDATES`）。
 
+动作空间不变量：`legal_actions` 只枚举**会改变状态**的动作。冻结已经冻结的槽位、解冻没有冻结的商店这类空操作，意图层照旧接受（客户端重复点击不报错），但不会进入候选；否则策略可以在一个回合里无限重复同一条动作，训练数据里全是打转的轨迹。`ai-train` 的 `DECISIONS_PER_TURN = 40` 只是兜底上限：正常回合十几次决策就结束，打满即强制结束招募。
+
+权重数值门槛：`Weights::save` 与 `Weights::load` 都拒绝非有限值。训练发散得到的 NaN 权重不会被落盘、也不会被当成模型加载——推理侧的 ReLU 会把 NaN 吃成 0，让无效权重给出一个看似正常的评测分数。
+
 `make ai-eval` 的评测口径对应 C2 门槛：每局 1 个学习者座位 + 7 个锚点座位（默认启发式机器人），贪心策略、座位轮换；报告平均名次、锚点平均名次、按局配对的名次优势 `anchor_mean − mean_placement` 及其 95% 置信区间。评测种子从 `EVAL_SEED_BASE = 1_000_000` 起，与训练种子池（`C2Config::seeds`，默认 `0..10_000`）不相交，避免在训练过的种子上评测。单局超过 `max_steps_per_game` 视为截断：跳过该局、计入报告的 `truncated`，全部截断时报错而不是返回空报告。C2 训练同理：`C2Config::max_steps_per_episode` 截断的对局只计入 `truncated_episodes`，不进入 `mean_placement` 与 `mean_return`。
 
 ## 3. 命令

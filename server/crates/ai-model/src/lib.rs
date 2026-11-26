@@ -20,7 +20,12 @@ pub enum ModelError {
     Version(u32),
     MissingTensor(String),
     Shape(String),
-    Index { table: String, index: i32 },
+    Index {
+        table: String,
+        index: i32,
+    },
+    /// 张量含 NaN/无穷：训练发散或文件损坏，不能当成模型用。
+    NonFinite(String),
 }
 
 impl fmt::Display for ModelError {
@@ -32,6 +37,7 @@ impl fmt::Display for ModelError {
             Self::MissingTensor(name) => write!(f, "缺少张量 {name}"),
             Self::Shape(message) => write!(f, "形状不匹配：{message}"),
             Self::Index { table, index } => write!(f, "{table} 索引越界：{index}"),
+            Self::NonFinite(name) => write!(f, "张量 {name} 含非有限值"),
         }
     }
 }

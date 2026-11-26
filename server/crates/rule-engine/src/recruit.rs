@@ -784,12 +784,44 @@ fn check_shop_slot(state: &GameState, seat: Seat, slot: Option<u8>) -> Result<()
     Ok(())
 }
 
+/// 指定槽位（或全部槽位）的冻结标记是否与 `wanted` 不同。
+///
+/// `false` 表示这条冻结/解冻动作不改变状态，即空操作。
+pub(crate) fn frozen_differs(
+    state: &GameState,
+    seat: Seat,
+    slot: Option<u8>,
+    wanted: bool,
+) -> bool {
+    let Some(player) = state.players.get(usize::from(seat)) else {
+        return false;
+    };
+    match slot {
+        Some(slot) => player
+            .shop
+            .get(usize::from(slot))
+            .and_then(Option::as_ref)
+            .is_some_and(|shop_slot| shop_slot.frozen != wanted),
+        None => player
+            .shop
+            .iter()
+            .flatten()
+            .any(|shop_slot| shop_slot.frozen != wanted),
+    }
+}
+
 /// `FreezeShop` 的只读预检，规则见 [`check_shop_slot`]。
+///
+/// 冻结已经冻结的槽位不改变状态。这种空操作仍然被接受（客户端重复点击不该报错），
+/// 但不会被 [`crate::legal::legal_actions`] 枚举出来——训练侧的动作空间不能包含它，
+/// 否则策略会在一个回合里无限重复同一条动作。
 pub(crate) fn check_freeze(state: &GameState, seat: Seat, slot: Option<u8>) -> Result<(), Reject> {
     check_shop_slot(state, seat, slot)
 }
 
-/// `UnfreezeShop` 的只读预检：槽位规则同 [`check_shop_slot`]，且本回合必须冻结过商店。
+/// `UnfreezeShop` 的只读预检：槽位规则同 [`check_shop_slot`]，本回合必须冻结过商店。
+///
+/// 同 [`check_freeze`]：没有冻结槽位时的解冻是空操作，接受但不在候选里。
 ///
 /// 解冻只在冻结的当回合可用；跨回合保留的冻结状态不能直接解冻，只能靠刷新换新卡
 /// 或买走。下一回合重新按「冻结」会再次取得解冻权。
