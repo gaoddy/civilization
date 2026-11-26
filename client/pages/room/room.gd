@@ -26,7 +26,7 @@ var _steam_invite_blocked := false
 
 
 func _ready() -> void:
-    UILayout.safe_area(self)
+    UILayout.safe_area(self, PageBackgrounds.surface("room"))
     _build()
     FrameMaterial.dress_page(self)
     GameStore.room_changed.connect(_on_room_changed)
@@ -44,7 +44,7 @@ func _ready() -> void:
 
 
 func _build() -> void:
-    add_child(UIControls.background())
+    add_child(UIControls.background(PageBackgrounds.ambient("room")))
 
     var panel := UIControls.card_panel("surface")
     panel.name = "RoomPanel"
@@ -92,7 +92,7 @@ func _build() -> void:
     _leave_dialog.cancel_button_text = tr("ui.lobby.close")
     _leave_dialog.confirmed.connect(_confirm_leave)
     # 挂到 PageBody 而不是页面根：避免被安全区收纳，保持安全区内只有 RoomPanel。
-    var safe := UILayout.safe_area(self)
+    var safe := UILayout.safe_area(self, PageBackgrounds.surface("room"))
     safe.get_parent().add_child(_leave_dialog)
 
 

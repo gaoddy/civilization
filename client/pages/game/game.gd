@@ -136,6 +136,9 @@ func _on_hero_confirmed(card_id: String) -> void:
 
 ## 对局页页面容器背景：按设备档位取分区构图，坐标对齐设计画布内的真实控件矩形。
 func _page_texture() -> String:
+	var mapped := PageBackgrounds.surface("game")
+	if mapped != "":
+		return mapped
 	if ScreenProfile.device_kind() == ScreenProfile.DEVICE_PHONE:
 		return "res://assets/ui/bg/bg_game_phone.png"
 	return "res://assets/ui/bg/bg_game_desktop.png"
@@ -143,7 +146,7 @@ func _page_texture() -> String:
 
 func _build() -> void:
 	# 最底层是软件背景；对局分区图挂在 PageBody 的 PageSurface 上，随 16:9 内容框缩放。
-	add_child(UIControls.background())
+	add_child(UIControls.background(PageBackgrounds.ambient("game")))
 
 	# iPhone 基准 960×540：页边距、页面间距与舞台间距整体收紧，结构与桌面一致。
 	var compact := ScreenProfile.device_kind() == ScreenProfile.DEVICE_PHONE

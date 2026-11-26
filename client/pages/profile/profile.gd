@@ -10,7 +10,7 @@ var _return_page := ""
 
 
 func _ready() -> void:
-    UILayout.safe_area(self)
+    UILayout.safe_area(self, PageBackgrounds.surface("profile"))
     _return_page = GameStore.profile_return_page
     if _return_page == "":
         _return_page = UINavigation.PAGE_LOBBY
@@ -22,7 +22,7 @@ func _ready() -> void:
 
 
 func _build() -> void:
-    add_child(UIControls.background())
+    add_child(UIControls.background(PageBackgrounds.ambient("profile")))
 
     var margin := MarginContainer.new()
     margin.set_anchors_preset(Control.PRESET_FULL_RECT)

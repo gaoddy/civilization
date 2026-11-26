@@ -11,13 +11,13 @@ const TIER_ORDER := [
 
 
 func _ready() -> void:
-    UILayout.safe_area(self)
+    UILayout.safe_area(self, PageBackgrounds.surface("result"))
     _build()
     FrameMaterial.dress_page(self)
 
 
 func _build() -> void:
-    add_child(UIControls.background())
+    add_child(UIControls.background(PageBackgrounds.ambient("result")))
 
     var center := CenterContainer.new()
     center.set_anchors_preset(Control.PRESET_FULL_RECT)

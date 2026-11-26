@@ -13,9 +13,9 @@ var _rendered_version := ""
 
 
 func _ready() -> void:
-    UILayout.safe_area(self)
+    UILayout.safe_area(self, PageBackgrounds.surface("gallery"))
     # 页面自带整屏背景，图鉴组件不再叠一层；安全区只约束内容。
-    add_child(UIControls.background())
+    add_child(UIControls.background(PageBackgrounds.ambient("gallery")))
     _gallery = CardGallery.new()
     _gallery.set_anchors_preset(Control.PRESET_FULL_RECT)
     _gallery.set_background_visible(false)

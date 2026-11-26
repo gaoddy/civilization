@@ -54,7 +54,7 @@ static func panel() -> PanelContainer:
 
 
 ## 软件背景：铺满整个窗口的深底纹理；纹理缺失时退回纯色，不留空白页。
-## 所有页面统一使用共用底图，页面自己的背景交给 `page_surface`。
+## 页面传入自己的氛围图（`PageBackgrounds.ambient(page)`），不传时用共用底图。
 static func background(path := "res://assets/ui/bg/bg_main.png") -> Control:
     if ResourceLoader.exists(path):
         var texture := ResourceLoader.load(path) as Texture2D
@@ -76,8 +76,8 @@ static func background(path := "res://assets/ui/bg/bg_main.png") -> Control:
 
 
 ## 页面容器背景：设计画布内的一层，覆盖 `PageBody` 整块。
-## 传入对局分区图时按同尺寸拉伸（内容框与图同为 16:9，不产生裁切）；
-## 不传或纹理缺失时退回统一语义面板，不留空白页。
+## 各页面传入自己的 16:9 结构框架图（`PageBackgrounds.surface(page)`），按同尺寸拉伸，
+## 分区边界与控件矩形对齐；不传或纹理缺失时退回统一语义面板，不留空白页。
 static func page_surface(texture_path := "") -> Control:
     if texture_path != "" and ResourceLoader.exists(texture_path):
         var texture := ResourceLoader.load(texture_path) as Texture2D
