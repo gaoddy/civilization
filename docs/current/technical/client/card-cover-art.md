@@ -73,6 +73,7 @@ Game character portrait, stylized flat vector illustration, half-body front-faci
 
 ## 相关文档
 
+- [卡面美术方向](../../../decisions/0002-card-art-direction.md)：新增与重画卡采用的单线平涂版画与七时代方言指引
 - [Godot 客户端](client.md) §10 美术素材层：素材路径、加载、展示位与回退
 - [设计总纲](../../product/overview/design-overview.md) §9：卡牌美术风格只约定科学史气质、不做奇幻
 - [卡面容器](../../product/ui/components/card-panel.md)：卡面在 UI 中的封面与信息区结构
