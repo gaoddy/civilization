@@ -28,6 +28,24 @@ use crate::random_policy::RandomPolicy;
 /// 单局最多推进的决策数；正常对局远小于这个上限，超过视为异常并截断。
 const EPISODE_GUARD: usize = 200_000;
 
+/// 学习者每个非 `End` 决策扣掉的时间成本。
+pub const STEP_COST: f32 = 0.0005;
+
+/// 学习者一步的奖励：名次奖励与塑形照旧，非 `End` 决策再扣一点时间成本。
+///
+/// 站位、刷新、冻结都是零成本且可逆的动作。没有时间成本时策略会在一个回合里反复
+/// 挪位置直到 `DECISIONS_PER_TURN` 上限——实测 C2 每回合 40 次决策里八成是
+/// `Rearrange`，训练数据被无效动作淹没。正常回合十几次决策、打转回合四十次，一局
+/// 下来差约 0.2 回报，约等于一到两个名次档；成本小到不会改变「买牌优于不买」这类
+/// 真实偏好。
+pub fn decision_reward(terminal_reward: f32, is_end: bool) -> f32 {
+    if is_end {
+        terminal_reward
+    } else {
+        terminal_reward - STEP_COST
+    }
+}
+
 /// 一局从哪个环境采样。
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EnvMix {
@@ -139,6 +157,8 @@ pub enum C2Error {
     MissingTensor(String),
     Shape(String),
     NoData(String),
+    /// 训练中途出现 NaN/无穷：观测、logit 或权重。
+    NonFinite(String),
 }
 
 impl std::fmt::Display for C2Error {
@@ -150,6 +170,7 @@ impl std::fmt::Display for C2Error {
             Self::MissingTensor(name) => write!(f, "缺少张量：{name}"),
             Self::Shape(message) => write!(f, "张量形状不符：{message}"),
             Self::NoData(message) => write!(f, "没有可用数据：{message}"),
+            Self::NonFinite(message) => write!(f, "出现非有限值：{message}"),
         }
     }
 }
@@ -278,6 +299,48 @@ fn empty_batch() -> Batch {
     }
 }
 
+/// 决策输入与打分结果必须是有限值。
+///
+/// NaN 一旦进入前向就会污染整批梯度，最终全体权重变 NaN；在这里按决策拦截，
+/// 报错里带上是第几局、哪个座位、第几回合，才能定位到触发它的对局状态。
+fn check_decision(
+    obs: &Observation,
+    logits: &[f32],
+    value: f32,
+    context: &str,
+) -> Result<(), C2Error> {
+    let features = obs.to_vec();
+    if let Some(index) = features.iter().position(|item| !item.is_finite()) {
+        return Err(C2Error::NonFinite(format!(
+            "{context} 观测第 {index} 项 = {}",
+            features[index]
+        )));
+    }
+    if let Some(index) = logits.iter().position(|logit| !logit.is_finite()) {
+        return Err(C2Error::NonFinite(format!(
+            "{context} logit 第 {index} 项 = {}",
+            logits[index]
+        )));
+    }
+    if !value.is_finite() {
+        return Err(C2Error::NonFinite(format!("{context} 价值 = {value}")));
+    }
+    Ok(())
+}
+
+/// 权重里不能有非有限值；一个 NaN 参数会让之后所有决策都是 NaN。
+fn check_weights(weights: &Weights, context: &str) -> Result<(), C2Error> {
+    for (name, values) in &weights.tensors {
+        if let Some(index) = values.iter().position(|value| !value.is_finite()) {
+            return Err(C2Error::NonFinite(format!(
+                "{context} 权重张量 {name} 第 {index} 项 = {}",
+                values[index]
+            )));
+        }
+    }
+    Ok(())
+}
+
 /// 跑一局 C1 单座位局，把学习者的决策写进批次。
 #[allow(clippy::too_many_arguments)]
 fn run_c1_episode(
@@ -308,6 +371,12 @@ fn run_c1_episode(
         let features: Vec<ActionFeatures> =
             candidates.iter().map(|(_, feature)| *feature).collect();
         let (logits, value) = model.logits(&obs, &features)?;
+        check_decision(
+            &obs,
+            &logits,
+            value,
+            &format!("C1 第 {episode_index} 局第 {} 回合", env.turn()),
+        )?;
         let mask = vec![true; features.len()];
         let forced = if per_turn >= DECISIONS_PER_TURN {
             candidates
@@ -318,8 +387,11 @@ fn run_c1_episode(
         };
         let choice = forced.unwrap_or_else(|| sample_action(&masked_probs(&logits, &mask), rng));
         let logp = log_prob(&logits, &mask, choice);
-        let stepped = env.step(candidates[choice].0.clone())?;
-        episode_return += stepped.reward;
+        let action = candidates[choice].0.clone();
+        let is_end = matches!(action, Action::End);
+        let stepped = env.step(action)?;
+        let reward = decision_reward(stepped.reward, is_end);
+        episode_return += reward;
         record(
             batch,
             obs,
@@ -327,7 +399,7 @@ fn run_c1_episode(
             mask,
             logp,
             value,
-            stepped.reward,
+            reward,
             stepped.done,
             features,
         );
@@ -399,6 +471,15 @@ fn run_c2_episode(
         let (choice, recorded) = if seat == learner {
             let mask = vec![true; features.len()];
             let (logits, value) = model.logits(&obs, &features)?;
+            check_decision(
+                &obs,
+                &logits,
+                value,
+                &format!(
+                    "C2 第 {episode_index} 局座位 {learner} 第 {} 回合",
+                    env.turn()
+                ),
+            )?;
             let choice =
                 forced.unwrap_or_else(|| sample_action(&masked_probs(&logits, &mask), rng));
             let logp = log_prob(&logits, &mask, choice);
@@ -410,7 +491,9 @@ fn run_c2_episode(
             let choice = opponent_choice(opponent, &obs, &features, model, forced, rng)?;
             (choice, None)
         };
-        let stepped = env.step(candidates[choice].0.clone())?;
+        let action = candidates[choice].0.clone();
+        let is_end = matches!(action, Action::End);
+        let stepped = env.step(action)?;
         let reward = if stepped.done {
             stepped.terminal_reward[index]
         } else {
@@ -418,6 +501,7 @@ fn run_c2_episode(
         };
         if let Some((mask, logp, value)) = recorded {
             // 对局回报只统计学习者自己的奖励；最后行动者的名次奖励与学习者无关。
+            let reward = decision_reward(reward, is_end);
             episode_return += reward;
             learner_recorded_done = stepped.done;
             learner_sample = Some((obs, choice, mask.clone(), logp, value, features.clone()));
@@ -588,6 +672,19 @@ pub fn train_c2(
         if !batch.is_empty() {
             last_metrics = train_step(&mut model, &batch, &cfg.ppo)?;
             updates += 1;
+            check_weights(&model.weights()?, &format!("第 {updates} 次更新"))?;
+            let mean_placement = if placements.is_empty() {
+                0.0
+            } else {
+                placements.iter().sum::<f32>() / placements.len() as f32
+            };
+            println!(
+                "更新 {updates}：局 {episodes}，名次 {mean_placement:.2}，策略损失 {:.4}，价值损失 {:.4}，熵 {:.3}，clip {:.2}",
+                last_metrics.policy_loss,
+                last_metrics.value_loss,
+                last_metrics.entropy,
+                last_metrics.clip_fraction
+            );
             if cfg.snapshot_every > 0 && updates.is_multiple_of(cfg.snapshot_every) {
                 let snapshot = model.weights()?;
                 env.league_mut().add_snapshot(snapshot);
@@ -741,14 +838,27 @@ mod tests {
             assert_eq!(dones[0], batch.len() - 1, "终局 transition 应在最末");
             let place = placement.expect("终局应有名次");
             let expected = (PLAYER_COUNT as f32 - f32::from(place)) / (PLAYER_COUNT as f32 - 1.0);
+            // 终局奖励就是名次奖励；若这一手不是 End，还要扣一次时间成本。
+            let terminal = batch.rewards[dones[0]];
             assert!(
-                (batch.rewards[dones[0]] - expected).abs() < 1e-6,
-                "终局奖励应等于名次奖励：{} vs {expected}",
-                batch.rewards[dones[0]]
+                (terminal - expected).abs() < 1e-6
+                    || (terminal - (expected - STEP_COST)).abs() < 1e-6,
+                "终局奖励应为名次奖励（或再扣一次时间成本）：{terminal} vs {expected}"
+            );
+            // 非终局决策只带时间成本：要么 0，要么 −STEP_COST。
+            for reward in batch.rewards.iter().take(batch.len() - 1) {
+                assert!(
+                    reward.abs() < 1e-6 || (*reward + STEP_COST).abs() < 1e-6,
+                    "非终局决策的奖励只能是 0 或 −{STEP_COST}，实际 {reward}"
+                );
+            }
+            assert!(
+                episode_return <= terminal + 1e-6,
+                "对局回报不应高于终局奖励：{episode_return} vs {terminal}"
             );
             assert!(
-                (episode_return - expected).abs() < 1e-6,
-                "对局回报应只含终局名次奖励：{episode_return} vs {expected}，place {place}"
+                episode_return >= terminal - STEP_COST * batch.len() as f32 - 1e-6,
+                "对局回报最多扣掉每个决策的时间成本：{episode_return} vs {terminal}"
             );
         }
     }

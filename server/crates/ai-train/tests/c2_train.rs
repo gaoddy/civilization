@@ -5,7 +5,9 @@
 use ai_core::CardIndex;
 use ai_model::ModelConfig;
 use ai_train::ppo::TrainModel;
-use ai_train::train_c2::{C2Config, EnvMix, MixSampler, load_actor, train_c2};
+use ai_train::train_c2::{
+    C2Config, EnvMix, MixSampler, STEP_COST, decision_reward, load_actor, train_c2,
+};
 use rule_engine::data::Catalog;
 
 fn catalog() -> Catalog {
@@ -53,6 +55,23 @@ fn missing_tensor_fails_with_clear_error() {
     assert!(
         error.to_string().contains("trunk.0.weight"),
         "报错要指出张量名：{error}"
+    );
+}
+
+/// 零成本且可逆的动作（站位、冻结、重排）要付时间成本，`End` 免费。
+///
+/// 没有这一步成本时，策略会在一回合里把 40 次决策全花在站位上调来调去：实测 C2
+/// 快照的动作分布里 `Rearrange` 占八成以上，训练数据被无效动作淹没。
+#[test]
+fn step_cost_is_charged_for_every_action_but_end() {
+    assert_eq!(decision_reward(0.0, true), 0.0, "End 不应付费");
+    assert!(
+        (decision_reward(0.0, false) + STEP_COST).abs() < 1e-7,
+        "非 End 决策应扣 {STEP_COST}"
+    );
+    assert!(
+        (decision_reward(0.5, false) - (0.5 - STEP_COST)).abs() < 1e-7,
+        "名次奖励与时间成本应叠加"
     );
 }
 
