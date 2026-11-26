@@ -13,9 +13,18 @@
       <stop offset="0" stop-color="#fff9e6"/><stop offset="0.55" stop-color="#f4cd79"/>
       <stop offset="1" stop-color="#c9962f"/>
     </linearGradient>
-    <radialGradient id="disc" cx="0.36" cy="0.3" r="0.92">
-      <stop offset="0" stop-color="#e8bd6c"/><stop offset="0.45" stop-color="#c6932f"/>
-      <stop offset="1" stop-color="#745214"/>
+    <radialGradient id="disc" cx="0.34" cy="0.28" r="0.95">
+      <stop offset="0" stop-color="#e6ab6c"/><stop offset="0.45" stop-color="#b0782f"/>
+      <stop offset="1" stop-color="#5f3d10"/>
+    </radialGradient>
+    <linearGradient id="sheen" x1="0.05" y1="0" x2="0.85" y2="1">
+      <stop offset="0" stop-color="#fff8e4" stop-opacity="0"/>
+      <stop offset="0.34" stop-color="#fff8e4" stop-opacity="0.13"/>
+      <stop offset="0.56" stop-color="#fff8e4" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="vig" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0.62" stop-color="#0a0e14" stop-opacity="0"/>
+      <stop offset="1" stop-color="#0a0e14" stop-opacity="0.62"/>
     </radialGradient>
     <filter id="ds" x="-30%" y="-30%" width="160%" height="160%">
       <feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#000000" flood-opacity="0.5"/>
@@ -23,63 +32,90 @@
     <filter id="soft" x="-60%" y="-60%" width="220%" height="220%">
       <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#000000" flood-opacity="0.5"/>
     </filter>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="24"/>
+    </filter>
+    <filter id="blur6" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="6"/>
+    </filter>
+    <filter id="grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="4" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+    </filter>
+
+    <!-- 盘面图形：蚀刻线条，用两次 use 做出暗底与亮面 -->
+    <g id="engraving" fill="none" stroke-linecap="round">
+      <path d="M432 564 L432 564" stroke-width="7.2"/>
+      <path d="M432 564 L409.7 474.7" stroke-width="2.6"/><path d="M432 564 L433.3 528" stroke-width="2.6"/>
+      <path d="M432 564 L450.5 506.9" stroke-width="2.6"/><path d="M432 564 L447.7 540.8" stroke-width="2.6"/>
+      <path d="M432 564 L490.2 515.1" stroke-width="2.6"/><path d="M432 564 L472.2 546.1" stroke-width="2.6"/>
+      <path d="M432 564 L455.8 560.7" stroke-width="2.6"/><path d="M432 564 L487.5 571.8" stroke-width="2.6"/>
+      <path d="M432 564 L461.2 577" stroke-width="2.6"/><path d="M432 564 L484.1 607.7" stroke-width="2.6"/>
+      <path d="M432 564 L446.5 585.6" stroke-width="2.6"/><path d="M432 564 L446.8 609.7" stroke-width="2.6"/>
+      <path d="M432 564 L434.8 644" stroke-width="2.6"/><path d="M432 564 L424.7 593.1" stroke-width="2.6"/>
+      <circle cx="544.8" cy="612" r="17" stroke-width="3"/><circle cx="599.2" cy="612" r="17" stroke-width="3"/>
+      <path d="M561.8 612 L582.2 612" stroke-width="3"/>
+      <rect x="534" y="426" width="52" height="36" stroke-width="2.6"/>
+      <circle cx="560" cy="444" r="11.9" stroke-width="2.6"/>
+      <path d="M404.9 649.1 L398.7 657" stroke-width="2.2"/><path d="M384.7 630.7 L377.4 637.5" stroke-width="2.2"/>
+      <path d="M367.7 609.3 L359.5 614.9" stroke-width="2.2"/><path d="M354.3 585.5 L345.2 589.8" stroke-width="2.2"/>
+      <path d="M344.7 560 L335.1 562.7" stroke-width="2.2"/><path d="M339.3 533.2 L329.4 534.4" stroke-width="2.2"/>
+      <path d="M338.1 505.9 L328.1 505.6" stroke-width="2.2"/>
+    </g>
   </defs>
 
   <rect width="1024" height="1024" fill="url(#bg)"/>
 
-  <!-- 盘面：半径 200，比环内径 288 小 88，与环之间留暗色间隙 -->
+  <!-- 盘面：半径 200 的暖铜盘，比环内径 288 小 88 -->
   <circle cx="512" cy="512" r="200" fill="url(#disc)" filter="url(#soft)"/>
   <circle cx="512" cy="512" r="200" fill="url(#disc)"/>
-  <circle cx="512" cy="512" r="198" fill="none" stroke="#ffeec0" stroke-width="3.5" opacity="0.5"/>
+  <circle cx="512" cy="512" r="200" fill="#ffffff" filter="url(#grain)"
+          opacity="0.12" style="mix-blend-mode:overlay"/>
+  <ellipse cx="460" cy="450" rx="104" ry="74" fill="#fff6dc" opacity="0.11" filter="url(#glow)"/>
+  <circle cx="512" cy="512" r="200" fill="url(#sheen)"/>
 
-  <!-- 音槽：16 圈，自 0.30R 到 0.92R 等距 -->
-  <g stroke="#6b4f16" stroke-width="2" opacity="0.14" fill="none">
-    <circle cx="512" cy="512" r="60.0"/><circle cx="512" cy="512" r="67.8"/>
-    <circle cx="512" cy="512" r="75.5"/><circle cx="512" cy="512" r="83.2"/>
-    <circle cx="512" cy="512" r="91.0"/><circle cx="512" cy="512" r="98.8"/>
-    <circle cx="512" cy="512" r="106.5"/><circle cx="512" cy="512" r="114.2"/>
-    <circle cx="512" cy="512" r="122.0"/><circle cx="512" cy="512" r="129.8"/>
-    <circle cx="512" cy="512" r="137.5"/><circle cx="512" cy="512" r="145.2"/>
-    <circle cx="512" cy="512" r="153.0"/><circle cx="512" cy="512" r="160.8"/>
-    <circle cx="512" cy="512" r="168.5"/><circle cx="512" cy="512" r="176.3"/>
+  <!-- 音槽：20 圈，暗槽 + 紧邻外侧的亮棱 -->
+  <g fill="none" stroke="#5f4514" stroke-width="1.7" opacity="0.32">
+    <circle cx="512" cy="512" r="56.0"/><circle cx="512" cy="512" r="62.9"/>
+    <circle cx="512" cy="512" r="69.9"/><circle cx="512" cy="512" r="76.8"/>
+    <circle cx="512" cy="512" r="83.8"/><circle cx="512" cy="512" r="90.7"/>
+    <circle cx="512" cy="512" r="97.7"/><circle cx="512" cy="512" r="104.6"/>
+    <circle cx="512" cy="512" r="111.6"/><circle cx="512" cy="512" r="118.5"/>
+    <circle cx="512" cy="512" r="125.5"/><circle cx="512" cy="512" r="132.4"/>
+    <circle cx="512" cy="512" r="139.4"/><circle cx="512" cy="512" r="146.3"/>
+    <circle cx="512" cy="512" r="153.3"/><circle cx="512" cy="512" r="160.2"/>
+    <circle cx="512" cy="512" r="167.2"/><circle cx="512" cy="512" r="174.1"/>
+    <circle cx="512" cy="512" r="181.1"/><circle cx="512" cy="512" r="188.0"/>
   </g>
-  <circle cx="512" cy="512" r="191" fill="none" stroke="#7d5a1b" stroke-width="2.5" opacity="0.35"/>
+  <g fill="none" stroke="#ffeec8" stroke-width="1.1" opacity="0.12">
+    <circle cx="512" cy="512" r="57.6"/><circle cx="512" cy="512" r="64.5"/>
+    <circle cx="512" cy="512" r="71.5"/><circle cx="512" cy="512" r="78.4"/>
+    <circle cx="512" cy="512" r="85.4"/><circle cx="512" cy="512" r="92.3"/>
+    <circle cx="512" cy="512" r="99.3"/><circle cx="512" cy="512" r="106.2"/>
+    <circle cx="512" cy="512" r="113.2"/><circle cx="512" cy="512" r="120.1"/>
+    <circle cx="512" cy="512" r="127.1"/><circle cx="512" cy="512" r="134.0"/>
+    <circle cx="512" cy="512" r="141.0"/><circle cx="512" cy="512" r="147.9"/>
+    <circle cx="512" cy="512" r="154.9"/><circle cx="512" cy="512" r="161.8"/>
+    <circle cx="512" cy="512" r="168.8"/><circle cx="512" cy="512" r="175.7"/>
+    <circle cx="512" cy="512" r="182.7"/><circle cx="512" cy="512" r="189.6"/>
+  </g>
+  <circle cx="512" cy="512" r="200" fill="url(#vig)"/>
 
-  <!-- 中心孔 -->
+  <!-- 盘缘：左上受光、右下压暗，外加一圈收尾槽 -->
+  <path d="M342.3 610 A196 196 0 0 1 610 342.3" fill="none" stroke="#fff3cf"
+        stroke-width="4" opacity="0.5" filter="url(#blur6)"/>
+  <path d="M680.9 414.5 A195 195 0 0 1 414.5 680.9" fill="none" stroke="#2b1c06"
+        stroke-width="10" opacity="0.45" filter="url(#blur6)"/>
+  <circle cx="512" cy="512" r="192.5" fill="none" stroke="#ffeec8" stroke-width="2.2" opacity="0.22"/>
+
+  <!-- 蚀刻图形：暗底偏移 + 亮面 -->
+  <use href="#engraving" transform="translate(1.2 1.5)" stroke="#3f2d0b" opacity="0.35"/>
+  <use href="#engraving" stroke="#fff6dd" opacity="0.6"/>
+
+  <!-- 中心孔与孔环 -->
   <circle cx="512" cy="512" r="10.4" fill="#0b1018"/>
-  <circle cx="512" cy="512" r="10.4" fill="none" stroke="#fff3cf" stroke-width="2" opacity="0.5"/>
-
-  <!-- 脉冲星图：14 条射线，长短对应脉冲周期 -->
-  <g stroke="#fff8e0" stroke-width="2.6" opacity="0.56">
-    <path d="M432 564 L409.7 474.7"/><path d="M432 564 L433.3 528"/>
-    <path d="M432 564 L450.5 506.9"/><path d="M432 564 L447.7 540.8"/>
-    <path d="M432 564 L490.2 515.1"/><path d="M432 564 L472.2 546.1"/>
-    <path d="M432 564 L455.8 560.7"/><path d="M432 564 L487.5 571.8"/>
-    <path d="M432 564 L461.2 577"/><path d="M432 564 L484.1 607.7"/>
-    <path d="M432 564 L446.5 585.6"/><path d="M432 564 L446.8 609.7"/>
-    <path d="M432 564 L434.8 644"/><path d="M432 564 L424.7 593.1"/>
-  </g>
-  <circle cx="432" cy="564" r="3.6" fill="#fff8e0" opacity="0.56"/>
-
-  <!-- 氢原子符号：两圆一联 -->
-  <g fill="none" stroke="#fff8e0" stroke-width="3" opacity="0.56">
-    <circle cx="544.8" cy="612" r="17"/><circle cx="599.2" cy="612" r="17"/>
-    <path d="M561.8 612 L582.2 612"/>
-  </g>
-
-  <!-- 播放示意图：唱片外框与唱针基座 -->
-  <g fill="none" stroke="#fff8e0" stroke-width="2.6" opacity="0.476">
-    <rect x="534" y="426" width="52" height="36"/>
-    <circle cx="560" cy="444" r="11.9"/>
-  </g>
-
-  <!-- 二进制时间刻线：盘面左下弧 -->
-  <g stroke="#fff8e0" stroke-width="2.2" opacity="0.392">
-    <path d="M404.9 649.1 L398.7 657"/><path d="M384.7 630.7 L377.4 637.5"/>
-    <path d="M367.7 609.3 L359.5 614.9"/><path d="M354.3 585.5 L345.2 589.8"/>
-    <path d="M344.7 560 L335.1 562.7"/><path d="M339.3 533.2 L329.4 534.4"/>
-    <path d="M338.1 505.9 L328.1 505.6"/>
-  </g>
+  <circle cx="512" cy="512" r="13" fill="none" stroke="#ffeec0" stroke-width="2.4" opacity="0.4"/>
+  <circle cx="512" cy="512" r="10.4" fill="none" stroke="#40290a" stroke-width="1.8" opacity="0.9"/>
 
   <!-- 断环：外径 368、内径 288，断口 60° 朝向 -45° -->
   <path d="M867.46 416.75 A368 368 0 1 1 607.25 156.54 L586.54 233.81 A288 288 0 1 0 790.19 437.46 Z"
